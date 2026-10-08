@@ -235,7 +235,6 @@ Contraintes en attente de spike :
   `cgo`, `unsafe`, la réflexion avancée et `go:embed` ; génériques, goroutines et `context` à confirmer.
 - **Kotlin (R8)** : compilation vers JS ou Wasm, donc **aucune API `java.*`** ni bibliothèque JVM. Coroutines à
   confirmer en cible JS / Wasm ; ne pas en dépendre tant que R8 n'est pas conclu.
-- **TS / JS (R1)** : les templates du catalogue n'utilisent pas le runtime `node`.
 
 ## 9. Licence
 

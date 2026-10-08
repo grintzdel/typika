@@ -20,7 +20,7 @@
 | Document | Contenu |
 |---|---|
 | [Manifeste](specs/manifest.md) | Spec normative de `typika.toml` |
-| [Runtimes](specs/runtimes.md) | Contrat `RuntimePort`, runtimes `browser-js`, `node`, `go`, `kotlin` |
+| [Runtimes](specs/runtimes.md) | Contrat `RuntimePort`, runtimes `browser-js`, `go`, `kotlin` |
 | [Architecture](specs/architecture.md) | Monorepo, modules, flux de données, tests |
 | [Sécurité](specs/security.md) | Modèle de menaces et mitigations |
 | [Spikes](spikes.md) | Questions ouvertes à trancher au M0 |

@@ -43,6 +43,11 @@ Critères :
 
 Sortie : ADR « Runtime Node ».
 
+**Conclusion (2026-10-08) : Plan B.** WebContainers exige une licence pour tout usage en production qui sert des
+clients ou des employés, et dépend des serveurs de StackBlitz. Nodebox est sous une licence non OSI, réservée aux
+usages non commerciaux. Aucun template du catalogue n'a besoin de Node : `browser-js` couvre les 19 variantes TS et JS.
+Le runtime `node` sort de la V1 et du schéma 1. Voir [0017](decisions/0017-node-runtime.md).
+
 ## R2 — Embed sous COOP/COEP
 
 **Question** : un template embarqué en iframe sur un domaine tiers peut-il exécuter son runtime, sachant que

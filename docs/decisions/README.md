@@ -24,3 +24,4 @@ Statuts : `Proposée` (en attente d'un spike), `Acceptée`, `Remplacée par NNNN
 | [0014](0014-name-typika.md) | Nom : Typika | Acceptée — recherche de marques au M0 |
 | [0015](0015-editor.md) | Éditeur : CodeMirror 6 et adaptateur TypeScript maison | Acceptée |
 | [0016](0016-isolation-and-embed.md) | Isolation cross-origin et embed | Acceptée — Firefox et Safari réel à vérifier |
+| [0017](0017-node-runtime.md) | Pas de runtime `node` en V1 | Acceptée |

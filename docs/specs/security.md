@@ -70,7 +70,7 @@ Service kotlin-compiler: compile du code non fiable. N'exécute pas le code comp
 |---|---|---|
 | Un template ajoute du code malveillant après acceptation | Code exécuté chez tous les visiteurs | Le registre épingle chaque template sur un **SHA de commit**, pas une branche ; toute mise à jour passe par une PR revue |
 | Dépendance npm compromise (typosquatting, paquet piraté) | Exécution dans la sandbox et chez ceux qui font `typika create` | Lockfile obligatoire ; dépendances minimales (la revue refuse les dépendances non justifiées) ; Renovate avec délai de quarantaine sur les nouvelles versions |
-| Scripts `postinstall` | Exécution à l'installation (runtime `node`, CLI) | `npm install --ignore-scripts` dans le runtime `node` si l'outil le permet ([R1](../spikes.md)) ; le CLI n'installe rien et n'exécute rien |
+| Scripts `postinstall` | Exécution à l'installation (CLI) | Aucun `npm install` dans la sandbox ([ADR 0017](../decisions/0017-node-runtime.md)) ; le CLI n'installe rien et n'exécute rien |
 | CDN ESM compromis (`browser-js`) | Code injecté dans les dépendances | Versions épinglées ; assets propres à Typika avec SRI ; le risque résiduel du CDN pour les dépendances tierces est assumé et documenté |
 | Tour Markdown contenant du HTML ou du JavaScript | XSS sur l'origine app | Markdown rendu **sans HTML brut**, sortie assainie, liens externes en `rel="noopener noreferrer"`, pas d'URL `javascript:` |
 | Template de tiers trompeur (faux « officiel ») | Confiance abusée | Badge « officiel » réservé à `typika/*` ; les autres sont étiquetés « communauté » |
@@ -180,7 +180,7 @@ canal (§2.2), pas sur `frame-ancestors`.
 - Lockfile obligatoire, `pnpm install --frozen-lockfile` en CI.
 - Renovate, avec délai avant adoption des nouvelles versions.
 - Assets publiés (WASM, test runner) versionnés et accompagnés de leur hash SRI.
-- Paquets npm (`cli`, `test-runner`, `vitest-reporter`) publiés depuis la CI avec provenance.
+- Paquets npm (`cli`, `test-runner`) publiés depuis la CI avec provenance.
 - Image Docker construite en CI depuis le dépôt, avec une image de base épinglée par digest.
 
 ## 6. Signalement

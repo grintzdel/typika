@@ -3,18 +3,19 @@
 Statut : spec · détaille le §7 de la [spec V1](./2026-10-08-typika-v1-design.md)
 
 Un runtime exécute un projet dans le navigateur : il écrit les fichiers, lance une commande, exécute les tests et expose
-éventuellement une preview. Quatre runtimes sont prévus :
+éventuellement une preview. Trois runtimes sont prévus :
 
 | `kind` | Langages | Palier | Jalon | Spike bloquant |
 |---|---|---|---|---|
 | `browser-js` | TS, JS | 1 | M1 | — |
-| `node` | TS, JS (avec npm, serveur HTTP) | — | après R1 | [R1](../spikes.md) |
 | `go` | Go | 2 | M4 | [R7](../spikes.md) |
 | `kotlin` | Kotlin (cible JS / Wasm) | 3 | M6 | [R8](../spikes.md), [R9](../spikes.md) |
 
 Le format des templates, le panneau tests et les exercices ne connaissent que le contrat décrit ici. Un runtime qui
 échoue en spike est remplacé derrière ce contrat (plan de repli : runner serveur auto-hébergeable, V2) sans toucher aux
 templates.
+
+Le runtime `node` (WebContainers) est écarté de la V1 ([ADR 0017](../decisions/0017-node-runtime.md)).
 
 ## 1. Contrat
 
@@ -78,7 +79,6 @@ fichiers, plutôt que d'exposer ces opérations au niveau du port.
 ```ts
 export const RuntimeKind = {
   BROWSER_JS: 'browser-js',
-  NODE: 'node',
   GO: 'go',
   KOTLIN: 'kotlin',
 } as const
@@ -115,7 +115,7 @@ export interface PreviewHandle {
 ```
 
 `RunCommand` vient de `[commands]` du manifeste ([manifest.md](./manifest.md)). Chaque runtime interprète la commande
-dans son propre langage : `browser-js` attend un point d'entrée, `node` une ligne shell, `go` un package, `kotlin` une
+dans son propre langage : `browser-js` attend un point d'entrée, `go` un package, `kotlin` une
 fonction `main`.
 
 ## 2. Événements de test
@@ -222,7 +222,6 @@ export type TestEvent = Schema.Schema.Type<typeof TestEventSchema>
 | Runtime | Source native | Traduction |
 |---|---|---|
 | `browser-js` | `@typika/test-runner` émet directement des `TestEvent` | Aucune |
-| `node` | Vitest avec un reporter personnalisé `@typika/vitest-reporter` qui écrit des lignes JSON sur un descripteur dédié | Parsing ligne à ligne, validation Schema |
 | `go` | Format `test2json` (`go test -json`) : `Action` = `run` / `pass` / `fail` / `skip` / `output` | `run` → aucun événement, `pass` → `TestPassed`, `fail` → `TestFailed` (message = sorties `output` accumulées du test), `skip` → `TestSkipped`, `output` → `Output` ; sous-tests `TestX/sub` → `SuiteStarted` pour `TestX` |
 | `kotlin` | Harness généré qui exécute les classes `kotlin.test` et écrit des lignes JSON (format à définir au spike [R8](../spikes.md)) | Parsing ligne à ligne, validation Schema |
 
@@ -239,7 +238,7 @@ projet, jamais dans le runtime. Le runtime reçoit une **copie** :
 2. Chaque modification du projet est relayée par `fs.writeFile` / `deleteFile` / `rename`.
 3. `fs.sync(snapshot)` réaligne tout (après un reset, un import, ou si le runtime signale une désynchronisation).
 
-Les fichiers produits par le runtime (`node_modules`, artefacts de build) ne remontent **jamais** dans le projet : ils
+Les fichiers produits par le runtime (artefacts de build, binaires compilés) ne remontent **jamais** dans le projet : ils
 ne sont ni persistés, ni partagés, ni exportés.
 
 ### 3.2 Règles
@@ -254,7 +253,6 @@ ne sont ni persistés, ni partagés, ni exportés.
 | Runtime | FS cible |
 |---|---|
 | `browser-js` | `Map` en mémoire dans le worker de build ; le plugin esbuild résout les imports dessus |
-| `node` | FS de WebContainers (`mount`, `fs.writeFile`) |
 | `go` | FS en mémoire exposé au module WASM (selon l'option retenue en [R7](../spikes.md)) |
 | `kotlin` | Aucun FS persistant : les sources sont envoyées au service de compilation à chaque `run` / `test` |
 
@@ -270,8 +268,7 @@ Idle ──────────▶ Loaded ──────────▶ 
   └──────── fermeture du Scope ───────┘
 ```
 
-- **Une seule exécution de premier plan par session.** Lancer `test` pendant un `run` interrompt le `run`, sauf pour le
-  runtime `node` où un serveur (`run`) et une suite de tests (`test`) peuvent coexister.
+- **Une seule exécution de premier plan par session.** Lancer `test` pendant un `run` interrompt le `run`.
 - **Interruption dure.** Une boucle infinie dans du code utilisateur ne rend jamais la main : on ne compte pas sur une
   interruption coopérative. Interrompre le fiber appelle `worker.terminate()` ; la session recrée un worker propre au
   prochain `run` / `test`, à partir de son FS.
@@ -308,7 +305,7 @@ pure.
 3. Pour `test`, le bundle inclut `@typika/test-runner`, qui découvre les fichiers `*.test.ts` / `*.test.js` (ou ceux de
    `TestOptions.files`) et émet directement des `TestEvent`.
 4. Preview : si le template a un `index.html`, le bundle est servi dans une iframe de preview sur l'origine runtime par
-   le Service Worker. Pas de DOM dans les workers : un template qui a besoin du DOM passe par la preview ou par `node`.
+   le Service Worker. Pas de DOM dans les workers : un template qui a besoin du DOM passe par la preview.
 
 **Compatibilité Vitest**
 
@@ -329,24 +326,14 @@ supportée ci-dessous ; la CI du registre exécute les tests dans les deux envir
 
 Résolues depuis un CDN ESM. Le CDN doit renvoyer des en-têtes compatibles COEP (`Cross-Origin-Resource-Policy` ou CORS) :
 à vérifier pour chaque CDN candidat pendant M1. Les paquets qui dépendent d'API Node (`fs`, `net`, `child_process`)
-ne fonctionnent pas : le template doit utiliser `node`.
+ne sont pas supportés en V1.
 
-### 6.2 `node`
+### 6.2 `node` — hors V1
 
-Pour les templates qui ont besoin de `npm install`, d'un serveur HTTP ou d'un Vite complet.
-
-- **Technologie visée** : WebContainers. **Bloqué par [R1](../spikes.md)** : la licence de l'API doit être compatible
-  avec un projet open source gratuit, et le fonctionnement sous les en-têtes de l'origine runtime doit être confirmé.
-- `run` = `spawn` d'une ligne shell, sortie vers xterm.js. `test` = `vitest run` avec `@typika/vitest-reporter`.
-- `preview` = URL émise par l'événement « serveur prêt » de WebContainers.
-- `npm install` avec `--ignore-scripts` (voir [security.md](./security.md)), si l'outil le permet — à vérifier en R1.
-
-**Plan B si R1 est négatif**, dans l'ordre :
-
-1. Une alternative équivalente (Nodebox ou autre), sous réserve de sa propre licence.
-2. Retirer `node` de la V1 : les templates concernés passent sur `browser-js` quand c'est possible, sinon attendent le
-   runner serveur (V2). Le catalogue initial étant majoritairement de la logique pure, l'impact est limité ; le spike
-   R1 mesure cette couverture.
+Écarté par le spike [R1](../spikes.md) ([ADR 0017](../decisions/0017-node-runtime.md)) : WebContainers et Nodebox
+exigent une licence commerciale pour une partie des instances et dépendent des serveurs de leur éditeur. Aucun
+template du catalogue n'en a besoin. Les templates qui exigent un serveur HTTP ou `npm install` attendent le runner
+auto-hébergeable (V2).
 
 ### 6.3 `go`
 
@@ -438,7 +425,7 @@ Toutes en `Data.TaggedError`, dans `packages/runtime-core/src/errors/`.
 |---|---|---|---|
 | `RuntimeUnsupportedError` | `kind` | Runtime désactivé (Kotlin sans service) ou inconnu | Template masqué ; message si ouvert par lien |
 | `RuntimeAssetLoadError` | `asset`, `cause` | Réseau, CDN, échec SRI | Bandeau avec « Réessayer » |
-| `RuntimeBootError` | `kind`, `cause` | Échec d'initialisation (WASM, WebContainers) | Écran d'erreur de la sandbox |
+| `RuntimeBootError` | `kind`, `cause` | Échec d'initialisation (WASM, worker) | Écran d'erreur de la sandbox |
 | `RuntimeFsError` | `path`, `reason` | Chemin invalide, limite dépassée | Toast, fichier non écrit |
 | `RuntimeCompileError` | `diagnostics` | Erreur de build / compilation sur `run` | Console + soulignement dans l'éditeur |
 | `RuntimeProcessError` | `cause` | Crash du worker, mémoire épuisée | Console, worker recréé |
@@ -460,7 +447,7 @@ les spikes.
 | Taille d'un fichier | 1 Mio | `project` |
 | Timeout `test` (run complet) | 30 s | Watchdog de session |
 | Timeout par test | 5 s (surchargeable par test) | Test runner |
-| Timeout `run` | 30 s, sauf `node` (processus longs autorisés) | Watchdog de session |
+| Timeout `run` | 30 s | Watchdog de session |
 | Mémoire WASM (`go`, `kotlin` Wasm) | 512 Mio max par instance | `WebAssembly.Memory` `maximum` |
 | Sortie console conservée | 1 Mio par run (tampon circulaire) | UI |
 | Requête de compilation Kotlin | 256 Kio de sources | Client + service |

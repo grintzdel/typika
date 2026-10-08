@@ -143,7 +143,7 @@ Pistes, à prioriser le moment venu :
 
 | # | Risque | Traitement |
 |---|---|---|
-| R1 | Licence WebContainers | Spike M0 |
+| R1 | Licence WebContainers | Levé : pas de runtime `node` en V1 ([0017](decisions/0017-node-runtime.md)) |
 | R2 | COOP/COEP casse l'embed | Levé pour `browser-js` ([0016](decisions/0016-isolation-and-embed.md)) ; Firefox et Safari réel à vérifier |
 | R3 | Poids des runtimes | Lazy-load, cache Service Worker, CDN — M1 / M4 |
 | R4 | IntelliSense TS dans CodeMirror 6 | Levé : CodeMirror 6 confirmé ([0015](decisions/0015-editor.md)) |

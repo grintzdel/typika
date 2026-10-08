@@ -31,7 +31,7 @@ Ces états s'appliquent à tous les écrans qui chargent un template ou un runti
 | État | Comportement |
 |---|---|
 | **Chargement de l'index** | Squelettes de cartes ; jamais d'écran blanc. |
-| **Chargement d'un runtime lourd** (Go, Kotlin, `node`) | Barre de progression avec taille téléchargée / taille totale, nom du runtime, mention « mis en cache pour les prochaines fois ». L'éditeur est utilisable en lecture pendant le chargement ; Run et Test sont désactivés avec la raison en infobulle. |
+| **Chargement d'un runtime lourd** (Go, Kotlin) | Barre de progression avec taille téléchargée / taille totale, nom du runtime, mention « mis en cache pour les prochaines fois ». L'éditeur est utilisable en lecture pendant le chargement ; Run et Test sont désactivés avec la raison en infobulle. |
 | **Runtime indisponible** | Navigateur non compatible (pas de WASM, pas d'isolation cross-origin) ou service de compilation Kotlin désactivé : message explicite, lecture du code et du tour toujours possibles, bouton d'export. |
 | **Erreur de chargement** | Message, cause lisible (réseau, ref introuvable, manifeste invalide), bouton Réessayer. |
 | **Template `degraded`** | Badge orange sur carte et page ; aucune restriction. |
@@ -126,7 +126,7 @@ Objectif : amener l'apprenant vers un concept en deux clics.
 │ tour/      │ ▌5   …                               │                      │
 │            │                                      │ [← Préc.] [Suiv. →]  │
 ├────────────┴──────────────────────────────────────┴──────────────────────┤
-│ Console │ Terminal │ Tests (12 ✓ 1 ✕)                                    │
+│ Console │ Tests (12 ✓ 1 ✕)                                               │
 │ ✕ pricing › applies shipping rule   expected 12 to be 15  tests/pri…:22  │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
@@ -134,7 +134,7 @@ Objectif : amener l'apprenant vers un concept en deux clics.
 ### 6.1 Layout
 
 - Trois colonnes redimensionnables : arbre de fichiers, éditeur à onglets, panneau latéral (Tour, Preview, Diff,
-  Exercice). Panneau bas : Console, Terminal (runtime `node` uniquement), Tests.
+  Exercice). Panneau bas : Console, Tests.
 - Chaque panneau est repliable ; la disposition est mémorisée par appareil.
 - Panneau latéral par défaut : Tour si le template en a un, sinon Preview si le runtime en expose une.
 

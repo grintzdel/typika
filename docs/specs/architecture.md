@@ -37,11 +37,10 @@ packages/
   manifest/               # schema Effect de typika.toml, parser TOML, résolution des refs github:
   runtime-core/           # RuntimePort, RuntimeSession, TestEvent, erreurs et limites des runtimes
   runtime-browser-js/     # esbuild-wasm + workers
-  runtime-node/           # adaptateur WebContainers (sous réserve R1)
   runtime-go/             # selon R7
   runtime-kotlin/         # client du service de compilation + exécution
   test-runner/            # runner compatible Vitest pour browser-js, sans dépendance
-  vitest-reporter/        # reporter JSON pour le runtime node
+  vitest-reporter/        # reporter Vitest → TestEvent, pour la conformité du test-runner (privé)
   cli/                    # npx typika create
   registry-tools/         # génération de l'index, CI de santé, précompilation Kotlin
 services/
@@ -268,5 +267,5 @@ Tests transverses obligatoires :
 - **CI (GitHub Actions)**, à chaque PR : `pnpm install --frozen-lockfile` → `turbo run lint format:check typecheck test
   build` → E2E Playwright → `docker build` + E2E en-têtes sur l'image.
 - **Dépendances** : Renovate, lockfile obligatoire.
-- **Publication** : `cli`, `test-runner` et `vitest-reporter` publiés sur npm avec provenance ; noms de paquets sous le
+- **Publication** : `cli` et `test-runner` publiés sur npm avec provenance ; noms de paquets sous le
   scope `@typika` ([ADR 0014](../decisions/0014-name-typika.md)).

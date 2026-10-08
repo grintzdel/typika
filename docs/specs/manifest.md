@@ -110,31 +110,30 @@ useCase = ["backend"]
 
 | Champ | Type | Requis | Défaut | Contraintes |
 |---|---|---|---|---|
-| `kind` | chaîne | oui | — | `browser-js` \| `node` \| `go` \| `kotlin` |
-| `entry` | chemin | oui sauf `node` | — | Fichier existant, relatif à la racine du template. Point d'entrée de « Run ». |
+| `kind` | chaîne | oui | — | `browser-js` \| `go` \| `kotlin` |
+| `entry` | chemin | oui | — | Fichier existant, relatif à la racine du template. Point d'entrée de « Run ». |
 | `target` | `"js"` \| `"wasm"` | non, `kotlin` uniquement | `"js"` | Cible de compilation Kotlin (cf. design §7.2, spike R8). |
 
 Compatibilité langage / runtime (sinon `E_RUNTIME_LANGUAGE_MISMATCH`) :
 
 | `language` | `kind` autorisés |
 |---|---|
-| `typescript`, `javascript` | `browser-js`, `node` |
+| `typescript`, `javascript` | `browser-js` |
 | `go` | `go` |
 | `kotlin` | `kotlin` |
 
-`node` est réservé aux templates qui ont réellement besoin de `npm install` ou d'un serveur ; sa disponibilité dépend du
-spike R1. Les templates du catalogue officiel utilisent `browser-js`.
+Le runtime `node` n'existe pas en schéma 1 ([ADR 0017](../decisions/0017-node-runtime.md)). L'ajouter plus tard
+sera un changement de version (§10).
 
 ### 4.2 `[commands]`
 
-| Champ | `browser-js` | `go` | `kotlin` | `node` |
-|---|---|---|---|---|
-| `start` | Chemin du fichier à exécuter. Défaut : `runtime.entry`. | Idem. | Idem. | Commande shell (ex. `pnpm dev`). Requis. |
-| `test` | Identifiant du runner : `"vitest"` (seule valeur, défaut). | `"go test"` (seule valeur, défaut). | `"kotlin.test"` (seule valeur, défaut). | Commande shell. Requis si le template a des tests. |
+| Champ | `browser-js` | `go` | `kotlin` |
+|---|---|---|---|
+| `start` | Chemin du fichier à exécuter. Défaut : `runtime.entry`. | Idem. | Idem. |
+| `test` | Identifiant du runner : `"vitest"` (seule valeur, défaut). | `"go test"` (seule valeur, défaut). | `"kotlin.test"` (seule valeur, défaut). |
 
-Sur `browser-js`, `go` et `kotlin`, la sandbox n'exécute pas de shell : les valeurs ne sont pas des commandes mais des
-sélecteurs. Le runner `vitest` désigne le runner intégré compatible avec un sous-ensemble de l'API Vitest
-([runtimes.md](./runtimes.md)).
+La sandbox n'exécute pas de shell : les valeurs ne sont pas des commandes mais des sélecteurs. Le runner `vitest`
+désigne le runner intégré compatible avec un sous-ensemble de l'API Vitest ([runtimes.md](./runtimes.md)).
 
 ### 4.3 `[tests]`
 

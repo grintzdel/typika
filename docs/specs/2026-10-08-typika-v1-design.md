@@ -42,7 +42,7 @@ Règle d'arbitrage : en cas de conflit, la fonctionnalité qui sert l'apprenant 
 - Catalogue initial (§6.1) : 5 patterns d'architecture, 5 principes SOLID, 5 design patterns GoF et 1 template de
   fondamentaux POO. TS couvre tout le catalogue ; les autres langages en couvrent une sélection (§6.1).
 - Hub : navigation par facettes, recherche, page template, badge de santé.
-- Sandbox : éditeur, arbre de fichiers, console/terminal, preview, panneau tests.
+- Sandbox : éditeur, arbre de fichiers, console, preview, panneau tests.
 - Visites guidées, mode comparaison, vue « diff depuis la base », exercices (tests rouges → verts).
 - Embed iframe.
 - Partage par URL / gist, export zip / GitHub, CLI `create`.
@@ -69,7 +69,7 @@ Règle d'arbitrage : en cas de conflit, la fonctionnalité qui sert l'apprenant 
 | **Tour** | Suite d'étapes Markdown ancrées sur des fichiers / plages de lignes. |
 | **Exercise** | Défi attaché à un template. `fix` : des tests sont rouges, il faut les passer au vert. `refactor` : les tests sont verts, il faut ajouter une nouvelle exigence (tests rouges fournis) qui n'est simple qu'après avoir restructuré le code. |
 | **Project** | Instance locale (IndexedDB) d'un template, modifiable par l'utilisateur. |
-| **Runtime** | Environnement d'exécution navigateur (`browser-js`, `node`, `go`, `kotlin`). |
+| **Runtime** | Environnement d'exécution navigateur (`browser-js`, `go`, `kotlin`). |
 | **Registry** | Dépôt Git qui référence les templates publiés ; génère l'index statique du hub. |
 | **Health** | État calculé par la CI du registre : `healthy`, `degraded`, `broken`, `deprecated`. |
 
@@ -202,7 +202,6 @@ Soit environ 44 templates.
 | Runtime | Techno | Usage |
 |---|---|---|
 | `browser-js` | esbuild-wasm + Web Worker, test runner maison compatible API Vitest (describe/it/expect) | Patterns en TS pur, librairies, front Vite simple. Couvre la majorité des templates d'architecture. |
-| `node` | WebContainers (à valider §7.3) | Templates qui ont besoin de `npm install`, d'un serveur HTTP, de Vite complet. |
 | `go` | Interpréteur Yaegi compilé en WASM, ou toolchain Go en WASM | Templates Go. Spike R7. |
 | `kotlin` | Compilation vers Kotlin/JS ou Kotlin/Wasm par un service de compilation (§7.2), exécution et `kotlin.test` dans le navigateur | Templates Kotlin. Spike R8. |
 
@@ -214,8 +213,7 @@ Paliers :
 | 2 | `go` | M4 |
 | 3 | `kotlin` | M6 |
 
-`node` n'a pas de jalon : aucun template du catalogue n'en dépend, et l'ADR du spike R1 décidera s'il est livré et
-quand.
+Pas de runtime `node` en V1 (§7.3).
 
 Tests : chaque runtime traduit la sortie de son outil natif (reporter Vitest, `go test -json`, reporter
 `kotlin.test`) vers les événements normalisés du §7.4.
@@ -235,11 +233,11 @@ Le compilateur Kotlin est un programme JVM ; il n'existe pas de version officiel
 - **Contrainte pour les templates** : cibles JS / Wasm uniquement, donc pas d'API spécifique JVM (`java.*`). Sans
   impact pour du code d'architecture et de patterns.
 
-### 7.3 Point bloquant : licence WebContainers
+### 7.3 Licence WebContainers : pas de runtime `node`
 
-L'API WebContainers est propriétaire et soumise à licence pour certains usages. Spike obligatoire avant d'en dépendre :
-conditions pour un projet open source gratuit, alternatives (Nodebox, runtime maison sur `browser-js`). Le runtime
-`node` est isolé derrière un port pour rester remplaçable.
+L'API WebContainers exige une licence commerciale dès qu'une instance sert des clients ou des employés, et dépend des
+serveurs de StackBlitz. Nodebox est sous une licence non OSI réservée aux usages non commerciaux. Aucun template du
+catalogue n'a besoin de Node : le runtime `node` sort de la V1 ([ADR 0017](../decisions/0017-node-runtime.md)).
 
 ### 7.4 Contrat de runtime
 
@@ -253,7 +251,7 @@ Chaque runtime implémente le même port (`RuntimePort`, `Context.Tag`) :
 
 ### 7.5 Isolation cross-origin
 
-`SharedArrayBuffer` (WebContainers, threads WASM) impose COOP/COEP sur la page. Une iframe dans une page tierce ne
+`SharedArrayBuffer` (threads WASM) impose COOP/COEP sur la page. Une iframe dans une page tierce ne
 peut pas être isolée : l'embed exécute `browser-js`, qui n'en a pas besoin, et renvoie vers l'app pour les autres
 runtimes ([0016](../decisions/0016-isolation-and-embed.md)).
 
@@ -267,9 +265,8 @@ runtimes ([0016](../decisions/0016-isolation-and-embed.md)).
 
 ### Sandbox
 
-- Layout : arbre de fichiers · éditeur · panneau bas (console / terminal / tests) · preview ou tour à droite.
+- Layout : arbre de fichiers · éditeur · panneau bas (console / tests) · preview ou tour à droite.
 - Éditeur **CodeMirror 6** ; TS via un language service TypeScript en worker.
-- Terminal `xterm.js` pour le runtime `node`, console simple pour les autres.
 - Reset au template d'origine, diff de mes modifications.
 
 ### Pédagogie
@@ -365,7 +362,6 @@ packages/
   manifest/                    # schema Effect du manifeste, parser TOML, résolution des refs
   runtime-core/                # RuntimePort, événements de test normalisés
   runtime-browser-js/
-  runtime-node/
   runtime-go/
   runtime-kotlin/
   test-runner/                 # runner compatible Vitest pour browser-js
@@ -412,7 +408,7 @@ Topologie d'un module :
 Progression pas à pas, sans date ni lancement : chaque jalon livre quelque chose d'utilisable, et on décide du suivant
 une fois le précédent terminé.
 
-1. **M0 — Spikes** R1, R2, R4, R7, R8. Décision runtime `node`, choix techniques Go et Kotlin.
+1. **M0 — Spikes** R1, R2, R4, R7, R8. Choix techniques Go et Kotlin.
 2. **M1 — Socle** : `manifest`, `runtime-browser-js`, `test-runner`, sandbox minimale (arbre + éditeur + console + tests).
 3. **M2 — Pédagogie** : tour, diff depuis la base, exercices `fix` et `refactor`. Catalogue §6.1 en TS, variantes JS.
 4. **M3 — Hub** : registre, index, CI de santé, pages hub prérendues, recherche.
@@ -435,5 +431,5 @@ une fois le précédent terminé.
 
 ## 18. Questions ouvertes
 
-1. Résultat des spikes R1 (licence WebContainers) et R2 (embed sous COOP/COEP).
+1. Résultat des spikes R7 (Go dans le navigateur) et R8 (service de compilation Kotlin).
 2. Recherche de marques sur « Typika » (R6).

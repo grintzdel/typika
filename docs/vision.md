@@ -86,7 +86,7 @@ Le hub est le produit ; la sandbox est le moyen de l'explorer. Un template reste
 | **Tour** | Suite d'étapes Markdown ancrées sur des fichiers et des lignes. |
 | **Exercise** | `fix` : faire passer des tests rouges. `refactor` : ajouter une exigence qui n'est simple qu'après restructuration. |
 | **Project** | Copie locale (IndexedDB) d'un template, modifiable. |
-| **Runtime** | Environnement d'exécution : `browser-js`, `node`, `go`, `kotlin`. Voir [runtimes](specs/runtimes.md). |
+| **Runtime** | Environnement d'exécution : `browser-js`, `go`, `kotlin`. Voir [runtimes](specs/runtimes.md). |
 | **Registry** | Dépôt Git qui référence les templates publiés. Voir [registry](specs/registry.md). |
 | **Health** | `healthy`, `degraded`, `broken`, `deprecated`, calculé par la CI du registre. |
 
