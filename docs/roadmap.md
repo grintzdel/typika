@@ -144,7 +144,7 @@ Pistes, à prioriser le moment venu :
 | # | Risque | Traitement |
 |---|---|---|
 | R1 | Licence WebContainers | Spike M0 |
-| R2 | COOP/COEP casse l'embed | Spike M0 |
+| R2 | COOP/COEP casse l'embed | Levé pour `browser-js` ([0016](decisions/0016-isolation-and-embed.md)) ; Firefox et Safari réel à vérifier |
 | R3 | Poids des runtimes | Lazy-load, cache Service Worker, CDN — M1 / M4 |
 | R4 | IntelliSense TS dans CodeMirror 6 | Levé : CodeMirror 6 confirmé ([0015](decisions/0015-editor.md)) |
 | R5 | Pourrissement des templates | CI de santé + Renovate — M3 |

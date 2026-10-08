@@ -120,9 +120,9 @@ la permission la plus fine disponible.
 | Le site hôte pilote l'embed par `postMessage` | Injection d'état | API hôte limitée à des options d'affichage (thème, fichier, étape de tour), validées par schema ; aucune lecture d'état de l'utilisateur |
 | L'embed lit l'état de l'utilisateur | Fuite de projets | En contexte tiers, le stockage est partitionné par le navigateur ; l'embed n'utilise que le template public demandé |
 
-Point ouvert : l'isolation cross-origin d'une iframe dans une page tierce non isolée est l'objet de
-[R2](../spikes.md). Les runtimes qui exigent `SharedArrayBuffer` peuvent ne pas fonctionner en embed ; l'embed affiche
-alors « Ouvrir dans Typika ».
+Une iframe dans une page tierce non isolée ne peut pas être isolée ([0016](../decisions/0016-isolation-and-embed.md)).
+L'embed exécute `browser-js`, qui n'utilise pas `SharedArrayBuffer` ; un runtime qui en a besoin n'y démarre pas, et
+l'embed affiche « Ouvrir dans Typika ».
 
 ## 4. En-têtes
 
@@ -130,14 +130,15 @@ alors « Ouvrir dans Typika ».
 |---|---|---|---|
 | `Content-Security-Policy` | stricte (ci-dessous) | stricte + `frame-ancestors *` | permissive pour les scripts, `connect-src` fermé (ci-dessous) |
 | `Cross-Origin-Opener-Policy` | `same-origin` sur les routes isolées ([architecture.md](./architecture.md) §5) | — (sans effet dans une iframe) | `same-origin` |
-| `Cross-Origin-Embedder-Policy` | `require-corp` sur les routes isolées | `require-corp` | `require-corp` |
+| `Cross-Origin-Embedder-Policy` | `require-corp` sur les routes isolées | — (aucune isolation possible dans une page tierce) | `require-corp`, y compris scripts de worker et `.wasm` |
 | `Cross-Origin-Resource-Policy` | `same-origin` | `same-origin` | `cross-origin` (chargée en iframe par l'app) |
 | `X-Content-Type-Options` | `nosniff` | `nosniff` | `nosniff` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | `strict-origin-when-cross-origin` | `no-referrer` |
 | `Strict-Transport-Security` | `max-age=31536000` | idem | idem |
 
-`credentialless` au lieu de `require-corp` pour COEP est une option si des ressources tierces posent problème ; le choix
-se fait en [R2](../spikes.md).
+COEP vaut `require-corp`, pas `credentialless` : WebKit ignore `credentialless` et n'isole alors jamais la page
+([0016](../decisions/0016-isolation-and-embed.md)). Sans CORP `cross-origin` sur l'origine runtime, la runtime frame
+est bloquée par la COEP de l'app ; sans `allow="cross-origin-isolated"` sur l'iframe, Chromium ne l'isole pas.
 
 CSP de l'origine app (base, à affiner au M1) :
 

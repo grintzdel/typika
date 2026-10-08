@@ -150,7 +150,7 @@ volumes:
 		-Server
 	}
 
-	@isolated path /play* /compare* /s /s/* /embed/*
+	@isolated path /play* /compare* /s /s/*
 	header @isolated {
 		Cross-Origin-Opener-Policy "same-origin"
 		Cross-Origin-Embedder-Policy "require-corp"
@@ -258,7 +258,8 @@ manifeste d'assets qui liste chaque fichier et son hash SRI.
 - [ ] Instance publique : le domaine runtime est un **site différent** de l'app (pas un sous-domaine).
 - [ ] `curl -I <app>/play/new` montre `Cross-Origin-Opener-Policy: same-origin` et
       `Cross-Origin-Embedder-Policy: require-corp`.
-- [ ] `curl -I <app>/` montre `frame-ancestors 'none'` ; `curl -I <app>/embed/<template>` montre `frame-ancestors *`.
+- [ ] `curl -I <app>/` montre `frame-ancestors 'none'` ; `curl -I <app>/embed/<template>` montre `frame-ancestors *`,
+      sans COOP ni COEP.
 - [ ] Dans la sandbox, la console de la runtime frame renvoie `self.crossOriginIsolated === true`.
 - [ ] Une page de l'app demandée sur le domaine runtime n'est pas servie.
 - [ ] Un template TS s'ouvre, ses tests passent ; le premier chargement télécharge les assets depuis

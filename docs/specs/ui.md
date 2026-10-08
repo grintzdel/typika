@@ -237,6 +237,8 @@ UI réduite : éditeur + sortie (Console ou Tests), barre minimale avec Run, Tes
   blog à l'ouverture.
 - L'éditeur s'ouvre sans language service TypeScript ; l'IntelliSense se charge à la demande
   ([0015](../decisions/0015-editor.md)).
+- Un runtime qui exige l'isolation cross-origin (`SharedArrayBuffer`) ne démarre pas en embed : la barre propose
+  « Ouvrir dans Typika » à la place de Run et Tests ([0016](../decisions/0016-isolation-and-embed.md)).
 - Aucune persistance locale dans l'embed ; « Ouvrir dans Typika » transfère l'état courant via un partage URL.
 
 ### postMessage

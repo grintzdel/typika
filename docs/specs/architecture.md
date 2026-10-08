@@ -202,7 +202,7 @@ Le prérendu du hub dépend de l'index au moment du build : une mise à jour de 
 | `/compare?left=…&right=…` | `compare/compare.page.tsx` | SPA | oui |
 | `/projects` | `projects/projects.page.tsx` | SPA | non |
 | `/s` (état dans le fragment `#…`) | `share/open-shared.page.tsx` | SPA | oui |
-| `/embed/$templateId` | `embed/embed.page.tsx` | SPA | oui (voir [R2](../spikes.md)) |
+| `/embed/$templateId` | `embed/embed.page.tsx` | SPA | non ([0016](../decisions/0016-isolation-and-embed.md)) |
 | `/auth/github/callback` | `github/callback.page.tsx` | SPA | non |
 | `/api/github/token` | server route | — | — |
 | `/runtime/frame.html` (origine runtime) | hors router | statique | oui |

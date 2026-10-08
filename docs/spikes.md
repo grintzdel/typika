@@ -64,6 +64,11 @@ Critères :
 
 Sortie : ADR « Isolation et embed », mise à jour de [security](specs/security.md) et [hosting](guides/hosting.md).
 
+**Conclusion (2026-10-08) : Go pour `browser-js`, Plan B pour les runtimes à `SharedArrayBuffer`.** Aucune isolation
+n'est possible dans une page tierce, mais `browser-js` n'en a pas besoin : bundle, tests et kill dur fonctionnent sur
+Chromium et WebKit. L'embed ne pose plus ni COOP ni COEP ; COEP `require-corp` partout ailleurs. Firefox et Safari
+réel restent à vérifier à la main. Voir [0016](decisions/0016-isolation-and-embed.md).
+
 ## R4 — TypeScript dans CodeMirror 6
 
 **Question** : peut-on offrir complétion, diagnostics et survol de types de qualité suffisante dans CodeMirror 6 ?

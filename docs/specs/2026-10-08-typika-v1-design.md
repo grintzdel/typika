@@ -253,8 +253,9 @@ Chaque runtime implémente le même port (`RuntimePort`, `Context.Tag`) :
 
 ### 7.5 Isolation cross-origin
 
-`SharedArrayBuffer` (WebContainers, threads WASM) impose COOP/COEP sur la page. Conséquence pour l'embed : le
-runtime tourne dans une iframe de l'origine Typika, isolée, quel que soit le site hôte. À valider dans le spike.
+`SharedArrayBuffer` (WebContainers, threads WASM) impose COOP/COEP sur la page. Une iframe dans une page tierce ne
+peut pas être isolée : l'embed exécute `browser-js`, qui n'en a pas besoin, et renvoie vers l'app pour les autres
+runtimes ([0016](../decisions/0016-isolation-and-embed.md)).
 
 ## 8. Fonctionnalités UI
 
@@ -313,9 +314,10 @@ OAuth, sans stockage).
 - **Docker (cible principale, VPS)** : image multi-stage — build pnpm, puis runtime Node minimal qui sert le statique
   et l'endpoint. Caddy en frontal pour le TLS automatique et les headers. `docker-compose.yml` fourni.
 - **Vercel / Cloudflare / autres** : même build ; headers déclarés dans la config de la plateforme (`vercel.ts`, etc.).
-- **Headers obligatoires partout** : `Cross-Origin-Opener-Policy: same-origin` et
-  `Cross-Origin-Embedder-Policy: require-corp` (ou `credentialless`) sur les routes sandbox et embed. Vérifiés par un
-  test E2E pour qu'aucune cible de déploiement ne les oublie.
+- **Headers obligatoires sur toutes les cibles** : `Cross-Origin-Opener-Policy: same-origin` et
+  `Cross-Origin-Embedder-Policy: require-corp` sur les routes sandbox, pas sur l'embed
+  ([0016](../decisions/0016-isolation-and-embed.md)). Vérifiés par un test E2E pour qu'aucune cible de déploiement ne
+  les oublie.
 - **Assets lourds** (runtime Go, esbuild-wasm) : servis depuis un CDN public compatible COEP (jsDelivr) par défaut,
   auto-hébergeables via une variable d'env pour les instances privées. Évite de payer la bande passante sur un VPS.
 
