@@ -417,8 +417,10 @@ Les erreurs bloquent ; les avertissements (`W_`) n'empêchent pas l'ouverture da
 | `W_VARIANT_TOPIC_DIVERGES` | registre | `Variant "{key}" has a different primary topic.` |
 | `W_BASE_NOT_BASE_ROLE` | registre | `Base "{ref}" does not declare role = "base".` |
 
-Chaque code correspond à une `TaggedError` du package `manifest`, portant `path` (chemin du champ ou du fichier) pour que
-l'éditeur puisse souligner l'endroit fautif.
+Le package `manifest` renvoie chaque problème sous la forme d'un `ManifestIssue` (`code`, `path`, `message`). `path` est
+le chemin du champ (`exercises[1].failing`) ou du fichier (`tour/02-context.md`), pour que l'éditeur souligne l'endroit
+fautif. Un manifeste ou un workspace invalide échoue avec une seule `ManifestInvalidError` qui porte tous les problèmes
+trouvés, avertissements compris : l'auteur les voit tous en une fois.
 
 ## 12. Exemple complet
 

@@ -10,7 +10,7 @@ Chaque template est un vrai projet, accompagné :
 - d'**exercices** — notamment `refactor` : une exigence pénible sans le pattern, triviale avec ;
 - de **variantes** en TypeScript, JavaScript, Go et Kotlin, comparables côte à côte.
 
-> Statut : conception. Aucun code pour l'instant — voir la [roadmap](docs/roadmap.md).
+> Statut : M1 (socle) en cours — voir la [roadmap](docs/roadmap.md).
 
 ## Documentation
 
