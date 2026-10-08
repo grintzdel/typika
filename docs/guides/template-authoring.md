@@ -227,7 +227,22 @@ Le `tsconfig.json` le vérifie :
 }
 ```
 
-Scripts attendus dans `package.json` : `start` (`node src/main.ts`), `test` (`vitest run`), `typecheck` (`tsc`).
+Scripts attendus dans `package.json` : `start` (`node src/main.ts`), `test` (`vitest run --dir tests`, pour ignorer les tests de `exercises/`), `typecheck` (`tsc`).
+
+### 8.2 Go
+
+Un template Go s'exécute hors de Typika avec `go run ./cmd/shop` et `go test ./...`. Go compile et lance les tests par
+package, ce qui impose :
+
+- **Un `exercises/go.mod`** (`module example.com/shop/exercises`). Les surcouches `start/` et `solution/` ne compilent
+  pas seules ; un module imbriqué les sort des motifs `./...` du template.
+- **Des tests `failing` qui compilent contre l'état de départ.** Un fichier de test qui ne compile pas casse tout son
+  package, donc tous ses tests. Pour une valeur que la base ne connaît pas encore, écrire la conversion
+  (`checkout.ShippingOption("pickup-point")`) plutôt que la constante de la solution.
+- **Un `start/` de `fix` qui ne panique pas.** Un `panic` dans un test arrête le binaire de test : les tests suivants
+  ne tournent pas. Renvoyer une valeur fausse (`shop.Zero`), pas `panic("not implemented")`.
+- Tests boîte noire dans le package `<pkg>_test`, avec des sous-tests `t.Run("<phrase de comportement>", …)` : les
+  noms restent ceux de la variante TS.
 
 Contraintes en attente de spike :
 

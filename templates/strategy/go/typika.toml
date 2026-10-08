@@ -1,0 +1,56 @@
+schema = 1
+name = "strategy-go"
+title = "Strategy: shipping options"
+summary = "Pick an algorithm at runtime without the caller knowing which one runs."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "go"
+paradigm = ["functional"]
+topic = ["design-pattern/behavioral/strategy", "principle/open-closed"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "go"
+entry = "cmd/shop/main.go"
+
+[commands]
+test = "go test"
+
+[tests]
+include = ["**/*_test.go"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-the-problem.md",
+  "tour/03-strategy-interface.md",
+  "tour/04-context.md",
+  "tour/05-choosing-at-runtime.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/strategy-base/go"
+focus = ["internal/checkout/**"]
+
+[variants]
+typescript = "github:typika/templates/strategy/ts"
+kotlin = "github:typika/templates/strategy/kotlin"
+
+[[exercises]]
+name = "add-pickup-point-option"
+kind = "refactor"
+title = "Add a pickup-point shipping option"
+from = "base"
+solutionFrom = "self"
+failing = ["internal/checkout/pickup_point_test.go"]
+
+[[exercises]]
+name = "implement-express"
+kind = "fix"
+title = "Implement the express shipping strategy"
+failing = ["internal/checkout/express_shipping_test.go"]
+hints = ["hint-1.md", "hint-2.md"]

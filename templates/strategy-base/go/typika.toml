@@ -1,0 +1,24 @@
+schema = 1
+name = "strategy-base-go"
+title = "Strategy base: shipping options"
+summary = "Shipping prices computed by one chain of if statements, before the Strategy pattern."
+license = "MIT-0"
+authors = ["github:maoudin"]
+role = "base"
+
+[facets]
+language = "go"
+paradigm = ["procedural"]
+topic = ["design-pattern/behavioral/strategy"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "go"
+entry = "cmd/shop/main.go"
+
+[commands]
+test = "go test"
+
+[tests]
+include = ["**/*_test.go"]
