@@ -205,7 +205,9 @@ la volée. Cela impose :
 - des imports relatifs avec l'extension `.ts` (`import { money } from './money.ts'`) ;
 - uniquement de la syntaxe effaçable : pas d'`enum`, de `namespace` ni de propriétés déclarées dans les paramètres du
   constructeur ;
-- `import type` pour les imports de types seuls.
+- `import type` pour les imports de types seuls ;
+- aucune API du DOM hors preview : le runtime `browser-js` s'exécute dans un worker, et l'éditeur ne charge que
+  `lib.es2022` ([0015](../decisions/0015-editor.md)).
 
 Le `tsconfig.json` le vérifie :
 

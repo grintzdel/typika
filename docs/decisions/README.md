@@ -15,10 +15,11 @@ Statuts : `Proposée` (en attente d'un spike), `Acceptée`, `Remplacée par NNNN
 | [0005](0005-client-side-search.md) | Recherche et filtres côté client | Acceptée |
 | [0006](0006-effect-atom-instead-of-redux.md) | Effect Atom plutôt que Redux | Acceptée |
 | [0007](0007-no-business-backend.md) | Pas de backend métier | Acceptée |
-| [0008](0008-codemirror-6.md) | CodeMirror 6 comme éditeur | Proposée — à confirmer par le spike R4 |
+| [0008](0008-codemirror-6.md) | CodeMirror 6 comme éditeur | Remplacée par 0015 |
 | [0009](0009-typescript-reference-language.md) | TypeScript langue de référence, couverture sélective | Acceptée |
 | [0010](0010-english-template-content.md) | Contenu des templates en anglais, interface bilingue | Acceptée |
 | [0011](0011-licenses.md) | Licences | Acceptée |
 | [0012](0012-language-scope.md) | Langages : TS, JS, Go, Kotlin | Acceptée |
 | [0013](0013-dedicated-runtime-origin.md) | Origine dédiée à l'exécution | Acceptée |
 | [0014](0014-name-typika.md) | Nom : Typika | Acceptée — recherche de marques au M0 |
+| [0015](0015-editor.md) | Éditeur : CodeMirror 6 et adaptateur TypeScript maison | Acceptée |

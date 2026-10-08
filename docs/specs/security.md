@@ -143,7 +143,7 @@ CSP de l'origine app (base, à affiner au M1) :
 
 ```
 default-src 'self';
-script-src 'self' 'wasm-unsafe-eval' <TYPIKA_ASSETS_BASE_URL>;
+script-src 'self' <TYPIKA_ASSETS_BASE_URL>;
 worker-src 'self' blob:;
 connect-src 'self' https://api.github.com <TYPIKA_REGISTRY_INDEX_URL> <KOTLIN_COMPILER_URL> <TYPIKA_ASSETS_BASE_URL>;
 frame-src <TYPIKA_RUNTIME_ORIGIN>;
@@ -154,8 +154,8 @@ base-uri 'none';
 frame-ancestors 'none';
 ```
 
-`'wasm-unsafe-eval'` sert au language service TypeScript et au parseur si l'un d'eux est en WASM ; à retirer si ce
-n'est pas le cas.
+Pas de `'wasm-unsafe-eval'` : le language service TypeScript et le parseur Lezer sont en JavaScript
+([0015](../decisions/0015-editor.md)). Le WASM ne tourne que sur l'origine runtime.
 
 CSP de l'origine runtime :
 

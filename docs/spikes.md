@@ -83,6 +83,10 @@ Critères :
 
 Sortie : ADR « Éditeur » (confirme ou remplace [0008](decisions/0008-codemirror-6.md)).
 
+**Conclusion (2026-10-08) : Go.** Complétion médiane à 31 ms sur desktop (Monaco : 130 ms), diagnostics
+multi-fichiers corrects, 140 Kio pour l'éditeur seul. Adaptateur TypeScript maison au M1. Voir
+[0015](decisions/0015-editor.md).
+
 ## R7 — Go dans le navigateur
 
 **Question** : interpréteur ou compilateur ?

@@ -146,7 +146,7 @@ Pistes, à prioriser le moment venu :
 | R1 | Licence WebContainers | Spike M0 |
 | R2 | COOP/COEP casse l'embed | Spike M0 |
 | R3 | Poids des runtimes | Lazy-load, cache Service Worker, CDN — M1 / M4 |
-| R4 | IntelliSense TS dans CodeMirror 6 | Spike M0 |
+| R4 | IntelliSense TS dans CodeMirror 6 | Levé : CodeMirror 6 confirmé ([0015](decisions/0015-editor.md)) |
 | R5 | Pourrissement des templates | CI de santé + Renovate — M3 |
 | R6 | Nom du projet | Typika retenu ([0014](decisions/0014-name-typika.md)) ; recherche de marques au M0 |
 | R7 | Go dans le navigateur | Spike M0 |

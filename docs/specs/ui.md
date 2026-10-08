@@ -235,6 +235,8 @@ UI réduite : éditeur + sortie (Console ou Tests), barre minimale avec Run, Tes
 
 - Le runtime ne démarre qu'à la première interaction (ou `run=auto`), pour ne pas charger des Mo dans une page de
   blog à l'ouverture.
+- L'éditeur s'ouvre sans language service TypeScript ; l'IntelliSense se charge à la demande
+  ([0015](../decisions/0015-editor.md)).
 - Aucune persistance locale dans l'embed ; « Ouvrir dans Typika » transfère l'état courant via un partage URL.
 
 ### postMessage

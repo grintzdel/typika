@@ -1,6 +1,6 @@
 # 0008 — CodeMirror 6 comme éditeur
 
-**Statut** : Proposée — à confirmer par le spike R4 · 2026-10-08
+**Statut** : Remplacée par [0015](0015-editor.md) · 2026-10-08
 
 ## Contexte
 
