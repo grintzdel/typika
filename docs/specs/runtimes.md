@@ -253,7 +253,7 @@ ne sont ni persistés, ni partagés, ni exportés.
 | Runtime | FS cible |
 |---|---|
 | `browser-js` | `Map` en mémoire dans le worker de build ; le plugin esbuild résout les imports dessus |
-| `go` | FS en mémoire exposé au module WASM (selon l'option retenue en [R7](../spikes.md)) |
+| `go` | FS en mémoire installé sous l'API `fs` qu'attend `wasm_exec.js` ; partagé par `compile`, `link` et le programme |
 | `kotlin` | Aucun FS persistant : les sources sont envoyées au service de compilation à chaque `run` / `test` |
 
 ## 4. Cycle de vie et interruption
@@ -337,21 +337,26 @@ auto-hébergeable (V2).
 
 ### 6.3 `go`
 
-**Deux options, choix au spike [R7](../spikes.md)** :
+**Toolchain Go officielle compilée en WASM** ([ADR 0018](../decisions/0018-go-runtime.md)) : `compile.wasm`,
+`link.wasm` et une stdlib précompilée pour `GOOS=js GOARCH=wasm`, dans le worker d'exécution, sur un FS en mémoire.
 
-| Option | Principe | À mesurer |
-|---|---|---|
-| A — Interpréteur | Yaegi (interpréteur Go écrit en Go) compilé en WASM, exécuté dans un worker | Couverture du langage : génériques, `testing`, `embed` ; fidélité des messages d'erreur |
-| B — Toolchain | Compilateur Go lui-même compilé en WASM ; compile vers `GOOS=js GOARCH=wasm` puis exécute | Poids téléchargé, temps de première compilation, mémoire |
-
-Contrat commun aux deux options :
-
-- `run` exécute le package `main` désigné par `[commands].start`.
-- `test` produit du `test2json` (natif en option B ; en option A, un harness découvre les fonctions `TestXxx` et émet le
-  même format) puis passe par le mapping du §2.3.
-- Pas de preview en V1 (pas de `net/http` serveur dans le navigateur).
-- Contrainte templates : bibliothèque standard uniquement en V1 (pas de `go mod download` dans le navigateur), sauf si
-  R7 montre une solution simple pour des modules vendorés.
+- **Pilote** : le runtime fait le travail de la commande `go`. Il lit `go.mod`, ordonne les packages du module selon
+  leurs imports, écrit l'`importcfg`, compile chaque package (`-p`, `-complete`, `-pack`), puis linke.
+- `run` compile le package `main` qui contient `[commands].start` et exécute le binaire produit.
+- `test` compile le package testé avec ses tests internes, le package `_test` externe s'il existe, puis un
+  `_testmain.go` généré. Celui-ci liste les `TestXxx` découverts et fournit sa propre implémentation de `testDeps`, pour
+  ne pas tirer `testing/internal/testdeps`. Le binaire tourne avec `-test.v=test2json` ; le pilote convertit la sortie
+  au format `test2json`, puis le mapping du §2.3 s'applique.
+- **Cache** : archives compilées en mémoire, par hash des sources et de l'`importcfg` ; seul ce qui a changé est
+  recompilé.
+- **Assets** : versionnés par version de Go, avec la licence BSD de Go. La stdlib est un jeu fermé (76 packages à
+  l'ADR 0018), étendu à la demande ; la CI du registre refuse un import hors du jeu.
+- **Isolation** : aucune exigence. Pas de `SharedArrayBuffer`, le runtime tourne aussi en embed.
+- Erreurs de compilation : `fichier:ligne:colonne: message`, chemins relatifs à la racine du projet après retrait du
+  préfixe du FS.
+- Pas de preview en V1 (pas de serveur `net/http` dans le navigateur).
+- Contrainte templates : bibliothèque standard du jeu précompilé uniquement ; pas de `cgo`, de `go:embed` ni
+  d'`os/exec`.
 
 ### 6.4 `kotlin`
 

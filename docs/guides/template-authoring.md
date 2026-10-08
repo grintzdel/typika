@@ -244,10 +244,12 @@ package, ce qui impose :
 - Tests boîte noire dans le package `<pkg>_test`, avec des sous-tests `t.Run("<phrase de comportement>", …)` : les
   noms restent ceux de la variante TS.
 
+Le runtime `go` est la toolchain Go officielle ([0018](../decisions/0018-go-runtime.md)) : tout le langage est
+disponible, goroutines, génériques et `context` compris. Restent interdits : les modules tiers, les packages de la stdlib
+hors du jeu précompilé (la CI du registre les signale), `cgo`, `go:embed`, `os/exec` et les serveurs `net/http`.
+
 Contraintes en attente de spike :
 
-- **Go (R7)** : le runtime navigateur (interpréteur Yaegi ou toolchain WASM) n'est pas choisi. En attendant, éviter
-  `cgo`, `unsafe`, la réflexion avancée et `go:embed` ; génériques, goroutines et `context` à confirmer.
 - **Kotlin (R8)** : compilation vers JS ou Wasm, donc **aucune API `java.*`** ni bibliothèque JVM. Coroutines à
   confirmer en cible JS / Wasm ; ne pas en dépendre tant que R8 n'est pas conclu.
 

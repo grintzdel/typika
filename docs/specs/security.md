@@ -121,8 +121,8 @@ la permission la plus fine disponible.
 | L'embed lit l'état de l'utilisateur | Fuite de projets | En contexte tiers, le stockage est partitionné par le navigateur ; l'embed n'utilise que le template public demandé |
 
 Une iframe dans une page tierce non isolée ne peut pas être isolée ([0016](../decisions/0016-isolation-and-embed.md)).
-L'embed exécute `browser-js`, qui n'utilise pas `SharedArrayBuffer` ; un runtime qui en a besoin n'y démarre pas, et
-l'embed affiche « Ouvrir dans Typika ».
+L'embed exécute `browser-js` et `go` ([0018](../decisions/0018-go-runtime.md)), qui n'utilisent pas
+`SharedArrayBuffer` ; un runtime qui en a besoin n'y démarre pas, et l'embed affiche « Ouvrir dans Typika ».
 
 ## 4. En-têtes
 

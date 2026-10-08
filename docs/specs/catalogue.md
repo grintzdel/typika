@@ -150,7 +150,7 @@ template restreint la vue diff à ses fichiers via `base.focus`.
   - `refactor` `survive-broker-outage` (from base) : aucune commande ne doit perdre son événement quand le broker est
     indisponible.
   - `fix` `deduplicate-deliveries` : le consommateur traite deux fois le même message.
-- **Variantes** : Go — relais en goroutine avec `context` pour l'arrêt (sous réserve du spike R7). Kotlin — relais
+- **Variantes** : Go — relais en goroutine avec `context` pour l'arrêt. Kotlin — relais
   synchrone piloté par le test (pas de coroutines tant que R8 n'a pas validé leur support en cible JS / Wasm).
 - **Liens** : Observer (la version non fiable), CQRS (projection asynchrone), event sourcing (l'event store comme
   outbox).
@@ -374,7 +374,7 @@ vague 3.
 
 - TS et Kotlin : systématiques.
 - Go : seulement quand le pattern a une forme idiomatique (Command, Chain of Responsibility, Iterator via `range` sur
-  func — sous réserve du spike R7) ; sinon absent plutôt que traduit.
+  func) ; sinon absent plutôt que traduit.
 - JS : seulement quand la plateforme apporte quelque chose (Iterator avec les générateurs, Proxy avec `Proxy`).
 
 ### 8.4 Autres catégories

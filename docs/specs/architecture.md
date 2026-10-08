@@ -37,7 +37,7 @@ packages/
   manifest/               # schema Effect de typika.toml, parser TOML, résolution des refs github:
   runtime-core/           # RuntimePort, RuntimeSession, TestEvent, erreurs et limites des runtimes
   runtime-browser-js/     # esbuild-wasm + workers
-  runtime-go/             # selon R7
+  runtime-go/             # toolchain Go (compile, link) en WASM et pilote de build
   runtime-kotlin/         # client du service de compilation + exécution
   test-runner/            # runner compatible Vitest pour browser-js, sans dépendance
   vitest-reporter/        # reporter Vitest → TestEvent, pour la conformité du test-runner (privé)

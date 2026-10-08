@@ -117,6 +117,12 @@ Critères :
 
 Sortie : ADR « Runtime Go ».
 
+**Conclusion (2026-10-08) : Go, option B.** La toolchain Go officielle compilée en WASM reproduit `go test` à
+l'identique, sans `SharedArrayBuffer`, donc aussi en embed : build de test en 250 à 300 ms sur desktop (Chromium,
+WebKit), 1,2 s à CPU ×4, pour 11,7 Mo en brotli au premier chargement. Yaegi est écarté : quatre défauts sur
+`strategy-go`, dont une sortie fausse sans erreur. Firefox reste à vérifier à la main. Voir
+[0018](decisions/0018-go-runtime.md).
+
 ## R8 — Service de compilation Kotlin
 
 **Question** : `kotlin-compiler-server` peut-il servir de service de compilation sans état, vers JS ou Wasm, à un

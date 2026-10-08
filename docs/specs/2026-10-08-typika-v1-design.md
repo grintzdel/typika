@@ -202,7 +202,7 @@ Soit environ 44 templates.
 | Runtime | Techno | Usage |
 |---|---|---|
 | `browser-js` | esbuild-wasm + Web Worker, test runner maison compatible API Vitest (describe/it/expect) | Patterns en TS pur, librairies, front Vite simple. Couvre la majorité des templates d'architecture. |
-| `go` | Interpréteur Yaegi compilé en WASM, ou toolchain Go en WASM | Templates Go. Spike R7. |
+| `go` | Toolchain Go (`cmd/compile`, `cmd/link`) compilée en WASM ([ADR 0018](../decisions/0018-go-runtime.md)) | Templates Go. |
 | `kotlin` | Compilation vers Kotlin/JS ou Kotlin/Wasm par un service de compilation (§7.2), exécution et `kotlin.test` dans le navigateur | Templates Kotlin. Spike R8. |
 
 Paliers :
@@ -431,5 +431,5 @@ une fois le précédent terminé.
 
 ## 18. Questions ouvertes
 
-1. Résultat des spikes R7 (Go dans le navigateur) et R8 (service de compilation Kotlin).
+1. Résultat du spike R8 (service de compilation Kotlin).
 2. Recherche de marques sur « Typika » (R6).

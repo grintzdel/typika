@@ -92,7 +92,7 @@ apparaît sur le hub.
 
 Livrables :
 
-- `packages/runtime-go` selon la conclusion du spike R7.
+- `packages/runtime-go` : toolchain Go en WASM et pilote de build ([0018](decisions/0018-go-runtime.md)).
 - Variantes Go prévues au catalogue.
 - Mode comparaison : deux variantes côte à côte, synchronisées par étape de tour.
 
@@ -149,6 +149,6 @@ Pistes, à prioriser le moment venu :
 | R4 | IntelliSense TS dans CodeMirror 6 | Levé : CodeMirror 6 confirmé ([0015](decisions/0015-editor.md)) |
 | R5 | Pourrissement des templates | CI de santé + Renovate — M3 |
 | R6 | Nom du projet | Typika retenu ([0014](decisions/0014-name-typika.md)) ; recherche de marques au M0 |
-| R7 | Go dans le navigateur | Spike M0 |
+| R7 | Go dans le navigateur | Levé : toolchain Go en WASM ([0018](decisions/0018-go-runtime.md)) ; Firefox à vérifier |
 | R8 | Service de compilation Kotlin | Spike M0 |
 | R9 | Abus du service de compilation | Limites et isolation — M6 |
