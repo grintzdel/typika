@@ -1,0 +1,24 @@
+{
+  "name": "typika",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "oxlint -c packages/config/oxlint.json --ignore-path .oxlintignore --type-aware",
+    "lint:fix": "oxlint -c packages/config/oxlint.json --ignore-path .oxlintignore --type-aware --fix",
+    "format": "oxfmt -c packages/config/oxfmt.json --ignore-path .gitignore --ignore-path .oxfmtignore",
+    "format:check": "oxfmt -c packages/config/oxfmt.json --ignore-path .gitignore --ignore-path .oxfmtignore --check",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test"
+  },
+  "devDependencies": {
+    "oxfmt": "0.72.0",
+    "oxlint": "1.87.0",
+    "oxlint-tsgolint": "^7.0.2003",
+    "turbo": "2.11.7",
+    "typescript": "7.0.2"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@10.32.1"
+}

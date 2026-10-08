@@ -1,0 +1,8 @@
+{
+  "name": "@typika/config",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig.json": "./tsconfig.json"
+  }
+}
