@@ -83,7 +83,7 @@ Service kotlin-compiler: compile du code non fiable. N'exécute pas le code comp
 | Déni de service (requêtes en masse, compilations longues) | Service indisponible, VPS saturé | Rate limiting par IP au reverse proxy ; file à concurrence bornée ; timeout 15 s ; corps limité à 256 Kio ; `429` avec `Retry-After` |
 | Code conçu pour exploiter le compilateur | Exécution dans le conteneur | Conteneur non-root, système de fichiers en lecture seule (sauf un `tmpfs` borné), `cap_drop: ALL`, `no-new-privileges`, CPU et mémoire plafonnés |
 | Exfiltration ou rebond depuis le conteneur | Le VPS sert de relais d'attaque | **Aucun réseau sortant** : réseau Docker `internal`, seul le reverse proxy y accède |
-| Exécution de code à la compilation (plugins, processeurs d'annotations) | Exécution arbitraire | Plugins du compilateur désactivés, classpath figé dans l'image ; à confirmer en [R8](../spikes.md) / [R9](../spikes.md) |
+| Exécution de code à la compilation (plugins, processeurs d'annotations) | Exécution arbitraire | Le service passe lui-même tous les arguments du compilateur : aucun plugin, aucun argument venu de la requête, bibliothèques figées dans l'image ([0019](../decisions/0019-kotlin-runtime.md)). Aucun endpoint n'exécute le code compilé |
 | Fuite des sources dans les logs | Code privé exposé | Logs sans corps de requête : taille, durée, statut, hash |
 | Abus d'un service exposé publiquement par des tiers | Coût pour l'instance | CORS limité à l'origine app ; le rate limiting s'applique quand même (CORS ne protège pas contre les clients hors navigateur) |
 

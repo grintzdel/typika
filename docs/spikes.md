@@ -145,6 +145,13 @@ Critères :
 
 Sortie : ADR « Runtime Kotlin » (confirme ou remplace [0002](decisions/0002-kotlin-compilation-service.md)).
 
+**Conclusion (2026-10-08) : Go, avec un service maison.** `kotlin.test` compilé en JS ou en Wasm tourne dans le
+navigateur avec les mêmes résultats que sur JVM ; à chaud, `strategy-kotlin` compile en 0,9 à 1,3 s sur 2 vCPU et
+1 Gio, pour 656 Mio au pic. `kotlin-compiler-server` (Apache 2.0) ne démarre pas sans correctif, n'a pas `kotlin-test`
+en JS ni en Wasm et exécute les tests JUnit sur le serveur : un service d'une centaine de lignes sur
+`kotlin-compiler-embeddable` le remplace. Cible JS seule en V1. CheerpJ est écarté par sa licence. Firefox reste à
+vérifier à la main. Voir [0019](decisions/0019-kotlin-runtime.md).
+
 ## R6 — Nom
 
 **Question** : « Typika » est-il libre côté marques ? Temenos (Temenos AG) puis Palaestra (pris sur npm)

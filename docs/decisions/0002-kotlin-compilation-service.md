@@ -1,6 +1,6 @@
 # 0002 — Kotlin via un service de compilation
 
-**Statut** : Proposée — à confirmer par le spike R8 · 2026-10-08
+**Statut** : Remplacée par [0019](0019-kotlin-runtime.md) · 2026-10-08
 
 ## Contexte
 

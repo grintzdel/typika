@@ -203,7 +203,7 @@ Soit environ 44 templates.
 |---|---|---|
 | `browser-js` | esbuild-wasm + Web Worker, test runner maison compatible API Vitest (describe/it/expect) | Patterns en TS pur, librairies, front Vite simple. Couvre la majorité des templates d'architecture. |
 | `go` | Toolchain Go (`cmd/compile`, `cmd/link`) compilée en WASM ([ADR 0018](../decisions/0018-go-runtime.md)) | Templates Go. |
-| `kotlin` | Compilation vers Kotlin/JS ou Kotlin/Wasm par un service de compilation (§7.2), exécution et `kotlin.test` dans le navigateur | Templates Kotlin. Spike R8. |
+| `kotlin` | Compilation vers Kotlin/JS par un service de compilation maison (§7.2, [ADR 0019](../decisions/0019-kotlin-runtime.md)), exécution et `kotlin.test` dans le navigateur | Templates Kotlin. |
 
 Paliers :
 
@@ -224,14 +224,14 @@ Bases de données : PGlite et SQLite WASM, exposées comme dépendances de templ
 
 Le compilateur Kotlin est un programme JVM ; il n'existe pas de version officielle exécutable dans le navigateur.
 
-- **Option retenue** : service de compilation basé sur `kotlin-compiler-server` (JetBrains, open source — licence à
-  confirmer), le même que celui de play.kotlinlang.org. Il reçoit des sources, renvoie du JS ou du Wasm ; le navigateur
-  exécute le résultat et les tests `kotlin.test`. Sans état, sans stockage, conteneur Docker à part, rate limiting par
-  IP, sources limitées en taille.
-- **Option explorée** : `kotlinc` exécuté dans le navigateur via une JVM WASM (CheerpJ). Supprimerait le service, mais
-  téléchargement de plusieurs dizaines de Mo et compilation lente.
-- **Contrainte pour les templates** : cibles JS / Wasm uniquement, donc pas d'API spécifique JVM (`java.*`). Sans
-  impact pour du code d'architecture et de patterns.
+- **Option retenue** ([ADR 0019](../decisions/0019-kotlin-runtime.md)) : un service de compilation maison autour de
+  `kotlin-compiler-embeddable` (Apache 2.0). Il reçoit des sources et renvoie un module JS ; le navigateur exécute le
+  résultat et les tests `kotlin.test`. Sans état, sans stockage, conteneur Docker à part, rate limiting par IP, sources
+  limitées en taille. Environ 1 s par compilation à chaud sur 2 vCPU et 1 Gio.
+- **Options écartées par le spike R8** : `kotlin-compiler-server` (sans `kotlin-test` en JS, exécution JVM côté
+  serveur, image de 1,7 Go) et `kotlinc` dans le navigateur via CheerpJ (licence sans auto-hébergement).
+- **Contrainte pour les templates** : cible JS, donc pas d'API spécifique JVM (`java.*`). Sans impact pour du code
+  d'architecture et de patterns.
 
 ### 7.3 Licence WebContainers : pas de runtime `node`
 
@@ -400,7 +400,7 @@ Topologie d'un module :
 | R5 | Pourrissement des templates | CI de santé + Renovate dès le premier template. |
 | R6 | Nom du projet | Premier nom, Temenos, abandonné (Temenos AG, éditeur de logiciels bancaires coté). Typika retenu, recherche de marques à faire ([ADR 0014](../decisions/0014-name-typika.md)). |
 | R7 | Go dans le navigateur | Couverture du langage par Yaegi (génériques, `testing`) contre poids de la toolchain complète. |
-| R8 | Kotlin | Déployer `kotlin-compiler-server` en conteneur, mesurer latence de compilation et RAM ; confirmer sa licence ; tester `kotlinc` via CheerpJ comme alternative. |
+| R8 | Kotlin | Levé : service de compilation maison, cible JS ([ADR 0019](../decisions/0019-kotlin-runtime.md)). |
 | R9 | Abus du service de compilation | Rate limiting, taille max des sources, timeout de compilation, aucun accès réseau sortant depuis le conteneur. |
 
 ## 16. Jalons
@@ -431,5 +431,4 @@ une fois le précédent terminé.
 
 ## 18. Questions ouvertes
 
-1. Résultat du spike R8 (service de compilation Kotlin).
-2. Recherche de marques sur « Typika » (R6).
+1. Recherche de marques sur « Typika » (R6).

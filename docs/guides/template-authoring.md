@@ -188,14 +188,14 @@ Chaque template a **au moins un exercice `refactor`** ; un `fix` est recommandé
 
 | | TypeScript / JavaScript | Go | Kotlin |
 |---|---|---|---|
-| Runtime | `browser-js` | `go` | `kotlin` (`target = "js"` par défaut) |
+| Runtime | `browser-js` | `go` | `kotlin` |
 | Disposition | `src/`, `tests/` | `go.mod` (`module example.com/shop`), `cmd/shop/main.go`, `internal/<package>/` | `src/main/kotlin/`, `src/test/kotlin/` |
 | Tests | API compatible Vitest : `describe`, `it` / `test`, `expect`, `beforeEach` — sous-ensemble exact dans [runtimes.md](../specs/runtimes.md) | Package `testing`, fichiers `*_test.go` | `kotlin.test` (`@Test`, `assertEquals`…) |
 | `commands.test` | `"vitest"` | `"go test"` | `"kotlin.test"` |
 | Dépendances | Aucune | Bibliothèque standard uniquement | Bibliothèque standard Kotlin + `kotlin.test` |
 | Formatage | oxfmt (config du repo) | `gofmt` | Style officiel Kotlin |
 | Fichiers | kebab-case (`shipping-quote.ts`) | snake_case (`shipping_quote.go`) | PascalCase (`ShippingQuote.kt`) |
-| Hors Typika | `package.json` (`vitest`, `typescript` en devDependencies), `tsconfig.json`, Node ≥ 23.6 | `go.mod` | Gradle (à définir après R8) |
+| Hors Typika | `package.json` (`vitest`, `typescript` en devDependencies), `tsconfig.json`, Node ≥ 23.6 | `go.mod` | `settings.gradle.kts`, `build.gradle.kts` (JVM), JDK ≥ 17, Gradle ≥ 8 |
 
 ### 8.1 TypeScript sans outil de build
 
@@ -248,10 +248,25 @@ Le runtime `go` est la toolchain Go officielle ([0018](../decisions/0018-go-runt
 disponible, goroutines, génériques et `context` compris. Restent interdits : les modules tiers, les packages de la stdlib
 hors du jeu précompilé (la CI du registre les signale), `cgo`, `go:embed`, `os/exec` et les serveurs `net/http`.
 
-Contraintes en attente de spike :
+### 8.3 Kotlin
 
-- **Kotlin (R8)** : compilation vers JS ou Wasm, donc **aucune API `java.*`** ni bibliothèque JVM. Coroutines à
-  confirmer en cible JS / Wasm ; ne pas en dépendre tant que R8 n'est pas conclu.
+Un template Kotlin s'exécute hors de Typika avec `gradle run` et `gradle test`, sur la JVM. Dans Typika, le même code
+est compilé en JavaScript ([0019](../decisions/0019-kotlin-runtime.md)) : il doit donc compiler et passer ses tests
+sur les deux plateformes. Cela impose :
+
+- **Stdlib et `kotlin.test` uniquement** : pas d'API `java.*` (`String.format` compris), pas de `kotlinx.coroutines`
+  ni d'autre bibliothèque. Le compilateur JS refuse `java.*`, donc la CI du registre l'attrape.
+- **Un build Gradle JVM minimal** : plugins `kotlin("jvm")` et `application`, `testImplementation(kotlin("test"))`,
+  `tasks.test { useJUnitPlatform() }`. `main` dans `src/main/kotlin/Main.kt`, sans package, d'où
+  `mainClass = "MainKt"`. Pas de wrapper Gradle : il ajouterait un binaire au template.
+- **Des noms de tests sans `.`** : la JVM refuse `.`, `;`, `[`, `]`, `/`, `<`, `>`, `:` et `\` dans un nom de méthode,
+  même entre backticks. Les montants s'écrivent avec une virgule : ``fun `charges 12,90 for orders up to 2 kg`()``.
+  Une classe de test par fichier de test TS, une méthode par `it`.
+- **Des tests `failing` qui compilent contre l'état de départ.** Tous les tests d'un projet sont compilés ensemble : un
+  seul fichier qui ne compile pas, et aucun test ne tourne. Pour une valeur que la base ne connaît pas encore, la
+  chercher à l'exécution (`ShippingOption.entries.find { it.label == "pickup-point" }`) plutôt que de nommer la
+  constante de la solution.
+- Les surcouches d'exercice vivent hors de `src/` : Gradle ne les voit pas, aucun fichier en plus n'est nécessaire.
 
 ## 9. Licence
 

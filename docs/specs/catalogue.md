@@ -151,7 +151,7 @@ template restreint la vue diff à ses fichiers via `base.focus`.
     indisponible.
   - `fix` `deduplicate-deliveries` : le consommateur traite deux fois le même message.
 - **Variantes** : Go — relais en goroutine avec `context` pour l'arrêt. Kotlin — relais
-  synchrone piloté par le test (pas de coroutines tant que R8 n'a pas validé leur support en cible JS / Wasm).
+  synchrone piloté par le test (pas de coroutines : `kotlinx.coroutines` n'est pas dans la stdlib).
 - **Liens** : Observer (la version non fiable), CQRS (projection asynchrone), event sourcing (l'event store comme
   outbox).
 

@@ -44,7 +44,7 @@ packages/
   cli/                    # npx typika create
   registry-tools/         # génération de l'index, CI de santé, précompilation Kotlin
 services/
-  kotlin-compiler/        # image Docker : adaptateur du protocole Typika + kotlin-compiler-server
+  kotlin-compiler/        # image Docker : service de compilation (kotlin-compiler-embeddable), protocole Typika
 ```
 
 Note : la spec V1 (§14) range par erreur `test-runner`, `cli` et `registry-tools` sous `services/`. Ce sont des

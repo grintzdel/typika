@@ -20,7 +20,7 @@ M0 ──► M1 ──► M2 ──► M3 ──┬──► M4 ──► M6
                           └──► M5
 ```
 
-M4 et M5 sont indépendants ; M6 dépend de M4 (mode comparaison) et du spike R8.
+M4 et M5 sont indépendants ; M6 dépend de M4 (mode comparaison).
 
 ---
 
@@ -119,7 +119,8 @@ produit un projet qui passe ses tests hors de Typika.
 
 Livrables :
 
-- `services/kotlin-compiler` (conteneur, limites, rate limiting) selon le spike R8 — voir [security](specs/security.md).
+- `services/kotlin-compiler` : service maison sur `kotlin-compiler-embeddable`, cible JS ([0019](decisions/0019-kotlin-runtime.md)), avec
+  limites et rate limiting — voir [security](specs/security.md).
 - `packages/runtime-kotlin`.
 - Variantes Kotlin des 16 concepts.
 
@@ -150,5 +151,5 @@ Pistes, à prioriser le moment venu :
 | R5 | Pourrissement des templates | CI de santé + Renovate — M3 |
 | R6 | Nom du projet | Typika retenu ([0014](decisions/0014-name-typika.md)) ; recherche de marques au M0 |
 | R7 | Go dans le navigateur | Levé : toolchain Go en WASM ([0018](decisions/0018-go-runtime.md)) ; Firefox à vérifier |
-| R8 | Service de compilation Kotlin | Spike M0 |
+| R8 | Service de compilation Kotlin | Levé : service maison, cible JS ([0019](decisions/0019-kotlin-runtime.md)) ; Firefox à vérifier |
 | R9 | Abus du service de compilation | Limites et isolation — M6 |

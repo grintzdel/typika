@@ -112,7 +112,6 @@ useCase = ["backend"]
 |---|---|---|---|---|
 | `kind` | chaîne | oui | — | `browser-js` \| `go` \| `kotlin` |
 | `entry` | chemin | oui | — | Fichier existant, relatif à la racine du template. Point d'entrée de « Run ». |
-| `target` | `"js"` \| `"wasm"` | non, `kotlin` uniquement | `"js"` | Cible de compilation Kotlin (cf. design §7.2, spike R8). |
 
 Compatibilité langage / runtime (sinon `E_RUNTIME_LANGUAGE_MISMATCH`) :
 

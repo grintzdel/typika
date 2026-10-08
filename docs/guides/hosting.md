@@ -48,8 +48,9 @@ Variables du service `kotlin-compiler` :
 | `KOTLIN_COMPILER_QUEUE_MAX` | `20` | Au-delà, réponse `503` |
 | `KOTLIN_COMPILER_CACHE_MB` | `128` | Cache mémoire des artefacts (`0` pour désactiver) |
 
-Valeurs alignées sur [runtimes.md](../specs/runtimes.md) §8. Le dimensionnement réel (RAM par compilation) sort du
-spike [R8](../spikes.md).
+Valeurs alignées sur [runtimes.md](../specs/runtimes.md) §8. Dimensionnement mesuré au spike R8
+([0019](../decisions/0019-kotlin-runtime.md)) : 2 compilations simultanées tiennent dans 1 Gio (pic à 656 Mio) ; en
+dessous, le ramasse-miettes s'effondre.
 
 ## 3. Build
 
@@ -76,8 +77,8 @@ Multi-stage, image de base Node 24 épinglée par digest :
 3. **`runtime`** : image Node minimale, copie uniquement la sortie du preset serveur de TanStack Start (le dossier exact
    dépend du preset, fixé au M1), utilisateur non-root, `EXPOSE 3000`, `HEALTHCHECK` sur `GET /`.
 
-Le service `kotlin-compiler` a sa propre image (`services/kotlin-compiler/Dockerfile`) : JVM +
-`kotlin-compiler-server` + l'adaptateur du protocole Typika ([runtimes.md](../specs/runtimes.md) §6.4).
+Le service `kotlin-compiler` a sa propre image (`services/kotlin-compiler/Dockerfile`) : un JRE, le service de
+compilation et ses bibliothèques Kotlin ([runtimes.md](../specs/runtimes.md) §6.4). Environ 630 Mo.
 
 ### 4.2 docker-compose.yml — exemple
 
@@ -115,7 +116,7 @@ services:
     tmpfs: ['/tmp:size=256m']
     cap_drop: [ALL]
     security_opt: ['no-new-privileges:true']
-    mem_limit: 2g
+    mem_limit: 1g
     cpus: 2
     environment:
       KOTLIN_COMPILER_CONCURRENCY: '2'
@@ -134,7 +135,8 @@ volumes:
 - Le service Kotlin est dans un **profil** : `docker compose --profile kotlin up -d` l'active, `docker compose up -d`
   sans profil l'omet. Dans ce cas, ne pas définir `KOTLIN_COMPILER_URL`.
 - Le réseau `compiler` est `internal` : le conteneur n'a pas d'accès sortant ; seul Caddy le joint.
-- `mem_limit` et `cpus` sont des valeurs de départ, à recalibrer après [R8](../spikes.md).
+- `mem_limit` et `cpus` : 1 Gio et 2 vCPU suffisent pour 2 compilations simultanées, environ 1 s chacune à chaud ;
+  4 vCPU et 2 Gio doublent le débit ([0019](../decisions/0019-kotlin-runtime.md)).
 
 ### 4.3 Caddyfile — exemple
 

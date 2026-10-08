@@ -9,7 +9,7 @@ Statuts : `Proposée` (en attente d'un spike), `Acceptée`, `Remplacée par NNNN
 | # | Décision | Statut |
 |---|---|---|
 | [0001](0001-browser-first.md) | Exécution dans le navigateur | Acceptée |
-| [0002](0002-kotlin-compilation-service.md) | Kotlin via un service de compilation | Proposée — à confirmer par le spike R8 |
+| [0002](0002-kotlin-compilation-service.md) | Kotlin via un service de compilation | Remplacée par 0019 |
 | [0003](0003-static-templates.md) | Templates statiques en V1 | Acceptée |
 | [0004](0004-git-registry-static-index.md) | Registre Git et index statique | Acceptée |
 | [0005](0005-client-side-search.md) | Recherche et filtres côté client | Acceptée |
@@ -26,3 +26,4 @@ Statuts : `Proposée` (en attente d'un spike), `Acceptée`, `Remplacée par NNNN
 | [0016](0016-isolation-and-embed.md) | Isolation cross-origin et embed | Acceptée — Firefox et Safari réel à vérifier |
 | [0017](0017-node-runtime.md) | Pas de runtime `node` en V1 | Acceptée |
 | [0018](0018-go-runtime.md) | Runtime Go : la toolchain Go compilée en WASM | Acceptée — Firefox à vérifier |
+| [0019](0019-kotlin-runtime.md) | Runtime Kotlin : un service de compilation maison, cible JS | Acceptée — Firefox à vérifier |

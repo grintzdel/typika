@@ -9,7 +9,7 @@ Un runtime exécute un projet dans le navigateur : il écrit les fichiers, lance
 |---|---|---|---|---|
 | `browser-js` | TS, JS | 1 | M1 | — |
 | `go` | Go | 2 | M4 | [R7](../spikes.md) |
-| `kotlin` | Kotlin (cible JS / Wasm) | 3 | M6 | [R8](../spikes.md), [R9](../spikes.md) |
+| `kotlin` | Kotlin (cible JS) | 3 | M6 | [R9](../spikes.md) (R8 levé : [ADR 0019](../decisions/0019-kotlin-runtime.md)) |
 
 Le format des templates, le panneau tests et les exercices ne connaissent que le contrat décrit ici. Un runtime qui
 échoue en spike est remplacé derrière ce contrat (plan de repli : runner serveur auto-hébergeable, V2) sans toucher aux
@@ -223,7 +223,7 @@ export type TestEvent = Schema.Schema.Type<typeof TestEventSchema>
 |---|---|---|
 | `browser-js` | `@typika/test-runner` émet directement des `TestEvent` | Aucune |
 | `go` | Format `test2json` (`go test -json`) : `Action` = `run` / `pass` / `fail` / `skip` / `output` | `run` → aucun événement, `pass` → `TestPassed`, `fail` → `TestFailed` (message = sorties `output` accumulées du test), `skip` → `TestSkipped`, `output` → `Output` ; sous-tests `TestX/sub` → `SuiteStarted` pour `TestX` |
-| `kotlin` | Harness généré qui exécute les classes `kotlin.test` et écrit des lignes JSON (format à définir au spike [R8](../spikes.md)) | Parsing ligne à ligne, validation Schema |
+| `kotlin` | Le compilateur enregistre chaque classe de test comme suite et chaque `@Test` comme test auprès de l'adaptateur de `kotlin.test` ; le harness du runtime fournit cet adaptateur (`describe` / `it`) | Suite racine = package, puis une suite par classe ; test réussi → `TestPassed`, exception → `TestFailed` (message de l'`AssertionError`, `location` tirée de la source map), `@Ignore` → `TestSkipped` |
 
 Une ligne qui ne valide pas le schéma est transmise en `Output` `stderr` et logguée ; elle ne casse pas le run.
 
@@ -366,7 +366,7 @@ Le compilateur Kotlin est un programme JVM ; aucune version officielle ne tourne
 **Chaîne**
 
 ```
-Projet (app) ──POST /compile──▶ kotlin-compiler (service) ──▶ JS ou Wasm
+Projet (app) ──POST /compile──▶ kotlin-compiler (service) ──▶ module JS
      │                                                          │
      └──────────── artefact transmis à la session ◀─────────────┘
                               │
@@ -375,15 +375,23 @@ Projet (app) ──POST /compile──▶ kotlin-compiler (service) ──▶ JS
 
 - L'appel au service part de l'**app**, pas de l'origine runtime (voir [security.md](./security.md) : l'origine runtime
   n'a pas d'accès réseau sortant).
-- Le service s'appuie sur `kotlin-compiler-server` (JetBrains). Sa licence, sa capacité à compiler des tests
-  `kotlin.test` pour la cible JS ou Wasm, et sa consommation mémoire sont à confirmer en [R8](../spikes.md).
-- Cible par défaut : JS. Wasm si R8 montre un intérêt (taille, vitesse).
-- Contrainte templates : pas d'API spécifique JVM (`java.*`).
+- Le service est maison ([ADR 0019](../decisions/0019-kotlin-runtime.md)) : un serveur HTTP minimal autour de
+  `kotlin-compiler-embeddable`, avec la stdlib et `kotlin.test` de la même version comme seules bibliothèques. Il ne
+  fait que compiler ; aucun endpoint n'exécute de code.
+- Compilation en deux phases : sources vers klib, puis klib vers un module ES avec DCE et source map. En mode `test`,
+  sources et tests sont compilés ensemble et `main` n'est pas appelé.
+- **Cible : JS.** Le harness sait exécuter Wasm, mais Wasm n'apporte rien en V1 (artefact trois fois plus lourd, pas de
+  position d'échec). La cible est un choix du runtime, pas du template.
+- `run` importe le module produit : `main` s'exécute au chargement, `println` est capturé en `Stdout`.
+- `test` installe l'adaptateur `kotlin.test` du harness (`describe`, `it`, `xit`), importe le module, puis exécute les
+  tests enregistrés et émet les `TestEvent` (§2.3).
+- **Isolation** : aucune exigence. Pas de `SharedArrayBuffer`, le runtime tourne aussi en embed.
+- Contrainte templates : pas d'API spécifique JVM (`java.*`), stdlib et `kotlin.test` uniquement.
 
 **Protocole**
 
-Un contrat propre à Typika, implémenté par un adaptateur fin devant `kotlin-compiler-server`. On peut ainsi changer de
-backend (option CheerpJ de R8, autre serveur) sans toucher au client.
+Un contrat propre à Typika, implémenté directement par le service. Le client ne dépend que de ce contrat : changer de
+compilateur ou ajouter la cible Wasm ne le touche pas.
 
 ```http
 POST /compile
@@ -392,7 +400,7 @@ Content-Type: application/json
 {
   "protocol": 1,
   "target": "js",
-  "kotlinVersion": "2.x",
+  "kotlinVersion": "2.4",
   "mode": "test",
   "files": [{ "path": "src/main/kotlin/Order.kt", "content": "..." }]
 }
@@ -400,13 +408,14 @@ Content-Type: application/json
 
 | Réponse | Corps | Effet côté client |
 |---|---|---|
-| `200` | `{ "ok": true, "artifact": { "kind": "js", "code": "..." }, "diagnostics": [...] }` | Exécution ; les warnings vont en `Diagnostics` |
+| `200` | `{ "ok": true, "artifact": { "kind": "js", "code": "...", "sourceMap": "..." }, "diagnostics": [...] }` | Exécution ; les warnings vont en `Diagnostics` |
 | `200` | `{ "ok": false, "diagnostics": [...] }` | `Diagnostics` puis `RunFinished` `errored` (ou `RuntimeCompileError` pour `run`) |
 | `413` | — | `RuntimeCompileError` « projet trop gros » |
 | `429` | `Retry-After` | `KotlinCompilerRateLimitedError { retryAfterSeconds }` |
 | `503` / `504` / réseau | — | `KotlinCompilerUnavailableError` |
 
-`mode: "test"` demande au service d'inclure le harness de test (§2.3). Les diagnostics suivent `DiagnosticSchema`.
+`mode: "test"` compile les tests avec les sources et n'appelle pas `main` ; le harness reste côté navigateur. Les
+diagnostics suivent `DiagnosticSchema`, chemins relatifs à la racine du projet.
 
 **Cache de compilation**
 
@@ -453,7 +462,7 @@ les spikes.
 | Timeout `test` (run complet) | 30 s | Watchdog de session |
 | Timeout par test | 5 s (surchargeable par test) | Test runner |
 | Timeout `run` | 30 s | Watchdog de session |
-| Mémoire WASM (`go`, `kotlin` Wasm) | 512 Mio max par instance | `WebAssembly.Memory` `maximum` |
+| Mémoire WASM (`go`) | 512 Mio max par instance | `WebAssembly.Memory` `maximum` |
 | Sortie console conservée | 1 Mio par run (tampon circulaire) | UI |
 | Requête de compilation Kotlin | 256 Kio de sources | Client + service |
 | Timeout de compilation Kotlin | 15 s service, 20 s client | Service + client |
