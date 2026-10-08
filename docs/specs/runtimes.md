@@ -8,7 +8,7 @@ Un runtime exécute un projet dans le navigateur : il écrit les fichiers, lance
 | `kind` | Langages | Palier | Jalon | Spike bloquant |
 |---|---|---|---|---|
 | `browser-js` | TS, JS | 1 | M1 | — |
-| `node` | TS, JS (avec npm, serveur HTTP) | 1 | M1 | [R1](../spikes.md) |
+| `node` | TS, JS (avec npm, serveur HTTP) | — | après R1 | [R1](../spikes.md) |
 | `go` | Go | 2 | M4 | [R7](../spikes.md) |
 | `kotlin` | Kotlin (cible JS / Wasm) | 3 | M6 | [R8](../spikes.md), [R9](../spikes.md) |
 

@@ -210,9 +210,12 @@ Paliers :
 
 | Palier | Runtimes | Jalon |
 |---|---|---|
-| 1 | `browser-js`, `node` | M1 |
+| 1 | `browser-js` | M1 |
 | 2 | `go` | M4 |
 | 3 | `kotlin` | M6 |
+
+`node` n'a pas de jalon : aucun template du catalogue n'en dépend, et l'ADR du spike R1 décidera s'il est livré et
+quand.
 
 Tests : chaque runtime traduit la sortie de son outil natif (reporter Vitest, `go test -json`, reporter
 `kotlin.test`) vers les événements normalisés du §7.4.
