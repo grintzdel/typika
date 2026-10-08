@@ -38,6 +38,9 @@ Livrables :
 
 Terminé quand : chaque spike a une conclusion écrite (go / no-go / plan B) et le manifeste est figé en `schema = 1`.
 
+État (2026-10-08) : R1, R2, R4, R7 et R8 sont conclus, et le [manifeste](specs/manifest.md) est figé en `schema = 1`.
+Il reste R6.
+
 ## M1 — Socle
 
 **Objectif** : la boucle de base fonctionne de bout en bout pour un template TS.

@@ -75,11 +75,13 @@ Règle d'arbitrage : en cas de conflit, la fonctionnalité qui sert l'apprenant 
 
 ## 5. Format du manifeste
 
+La spec normative, figée en schéma 1, est [manifest.md](./manifest.md). Cet exemple en donne la forme.
+
 ```toml
 schema = 1
 name = "hexagonal-architecture"
-title = "Architecture hexagonale"
-summary = "Ports & adapters : le domaine ne dépend de rien, les adapters dépendent du domaine."
+title = "Hexagonal architecture"
+summary = "Ports and adapters: the domain depends on nothing, adapters depend on the domain."
 license = "MIT-0"
 authors = ["github:maoudin"]
 
@@ -91,7 +93,7 @@ level = "intermediate"
 useCase = ["backend"]
 
 [runtime]
-kind = "browser-js"          # browser-js | node | go | kotlin
+kind = "browser-js"          # browser-js | go | kotlin
 entry = "src/main.ts"
 
 [commands]
@@ -111,14 +113,14 @@ go = "github:typika/templates/hexagonal/go"
 [[exercises]]
 kind = "fix"
 name = "add-email-adapter"
-title = "Ajouter un adapter d'envoi d'e-mail"
+title = "Add an e-mail adapter"
 failing = ["tests/notification.test.ts"]
 ```
 
 Règles :
 
 - Le manifeste est validé par un schema Effect partagé entre l'app, le CLI et la CI du registre (package `manifest`).
-- Les étapes de tour ancrent du code via un front-matter `file` + `lines` (`src/domain/order.ts#L10-L24`).
+- Les étapes de tour ancrent du code via un front-matter `file` + `region` (marqueurs dans le code) ou `lines`.
 - Une référence de template est toujours `github:<owner>/<repo>[/<path>][@<ref>]`.
 - `schema` est versionné ; l'app refuse un manifeste de version inconnue avec un message explicite.
 

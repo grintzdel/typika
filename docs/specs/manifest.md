@@ -1,6 +1,10 @@
 # Spec — Manifeste de template (`typika.toml`)
 
-Statut : normatif · schéma `1` · détaille le §5 de la [spec de conception](./2026-10-08-typika-v1-design.md)
+Statut : normatif · schéma `1`, figé le 2026-10-08 · détaille le §5 de la
+[spec de conception](./2026-10-08-typika-v1-design.md)
+
+Le schéma 1 est figé : toute modification de ce document qui change ce qu'un manifeste valide peut contenir suit les
+règles de versionnement (§10).
 
 Ce document définit le format du manifeste d'un template, des étapes de tour et des exercices, ainsi que les règles de
 validation. Il fait foi pour le package `manifest` (schema Effect partagé entre l'app, le CLI et la CI du registre).
@@ -21,6 +25,7 @@ Les mots **DOIT**, **NE DOIT PAS**, **DEVRAIT** et **PEUT** ont le sens de la RF
 │   ├── 02-….md
 │   └── <locale>/                # réservé (V2), ignoré en schéma 1
 └── exercises/                   # exercices (optionnel)
+    ├── <fichiers>               # ignorés par Typika (ex. exercises/go.mod, voir guide d'auteur)
     └── <exercise-name>/
         ├── README.md            # énoncé
         ├── start/               # surcouche appliquée à l'état de départ
@@ -65,7 +70,8 @@ Dépassement : avertissement `W_SIZE` en local, erreur à l'entrée dans le regi
 | `[x-*]` | table | non | — | Espace d'extension, ignoré par la validation. Ne DOIT PAS être requis pour qu'un template fonctionne. |
 
 Toute autre clé → `E_UNKNOWN_FIELD`. La rigueur est volontaire : une faute de frappe (`varaints`) ne doit pas passer
-silencieusement.
+silencieusement. Elle s'applique à toutes les tables du manifeste (`[facets]`, `[runtime]`, `[[exercises]]`…) et au
+front-matter des étapes (§5.1) ; seul le premier niveau admet `[x-*]`.
 
 ## 3. Facettes
 
@@ -272,8 +278,13 @@ Pour chaque exercice, la CI du registre DOIT constater :
 1. État de départ : chaque fichier `failing` a au moins un test rouge ; aucun autre test n'est rouge.
 2. État solution (§6.2) : tous les tests sont verts.
 
-Seuls les tests comptent : un état de départ qui ne passe pas le typecheck (un test qui utilise une valeur que la base
-ne connaît pas encore) est valide.
+Seuls les tests comptent. En TypeScript et JavaScript, un état de départ qui ne passe pas le typecheck (un test qui
+utilise une valeur que la base ne connaît pas encore) est valide : l'exécution ignore les types. En Go et en Kotlin,
+les tests sont compilés ensemble : un fichier `failing` qui ne compile pas rend rouges tous les tests, ce qui viole la
+règle 1. Il DOIT donc compiler contre l'état de départ (cf. guide d'auteur).
+
+Un sous-dossier de `exercises/` qu'aucun `[[exercises]]` ne déclare → `W_EXERCISE_UNDECLARED`. Les fichiers placés
+directement sous `exercises/` ne sont pas des exercices et sont ignorés.
 
 Échec → template `broken` (voir [registry.md](./registry.md)).
 
@@ -341,10 +352,14 @@ le hub l'utilise pour afficher la filiation et le diff avec le parent.
 ## 10. Versionnement du schéma
 
 - `schema` est un entier. Une version de l'app supporte la version courante **et la précédente**.
-- **Sans changement de version** : ajout d'un champ optionnel avec défaut, ajout d'une valeur à une énumération ouverte
-  par le registre (`framework`, `library`, topics).
-- **Avec changement de version** : suppression ou renommage de champ, champ optionnel devenu requis, changement de
-  sémantique, ajout d'une valeur aux énumérations fermées (`language`, `runtime.kind`, `kind` d'exercice).
+- **Sans changement de version** : ajout d'une valeur à une énumération ouverte par le registre (`framework`,
+  `library`, topics), changement des limites de taille (§1) et des règles propres au registre (§5.3 règle 5, §9).
+- **Avec changement de version** : tout ajout, suppression ou renommage de champ, champ optionnel devenu requis,
+  changement de sémantique ou de défaut, nouvelle erreur `E_` au niveau manifeste ou workspace, ajout d'une valeur aux
+  énumérations fermées (`language`, `runtime.kind`, `kind` d'exercice, `paradigm`, `level`, `useCase`).
+  Un champ ajouté est une nouvelle version parce que la validation refuse les clés inconnues : sans nouvelle version, une app
+  qui ne connaît que l'ancien schéma rejetterait un manifeste valide.
+- Un nouvel avertissement `W_` ne change pas la version : il n'empêche pas l'ouverture.
 - Chaque changement de version s'accompagne d'une migration automatique dans le package `manifest`, exposée par le CLI.
 - Le registre refuse les nouvelles entrées dans une version dépréciée et ouvre une PR de migration sur les templates
   `typika/*`.
@@ -356,7 +371,7 @@ Trois niveaux, du plus local au plus global :
 | Niveau | Où | Vérifie |
 |---|---|---|
 | Manifeste | app, CLI, CI | TOML valide, champs, types, énumérations, formats. |
-| Workspace | CLI, CI | Fichiers référencés (`entry`, étapes, exercices, `LICENSE`), front-matter, ancres, tailles. |
+| Workspace | CLI, CI | Fichiers référencés (`entry`, étapes, exercices, `LICENSE`, `README.md`), front-matter, ancres, tailles. |
 | Registre | CI du registre | Refs résolubles, base / variantes cohérentes, unicité de `name`, topics connus, licence OSI, exécution des tests et exercices. |
 
 ### 11.1 Codes
@@ -380,6 +395,7 @@ Les erreurs bloquent ; les avertissements (`W_`) n'empêchent pas l'ouverture da
 | `E_BASE_FORBIDDEN_FIELD` | manifeste | `A base template cannot declare [{field}].` |
 | `E_ENTRY_NOT_FOUND` | workspace | `Entry file "{path}" does not exist.` |
 | `E_LICENSE_FILE_MISSING` | workspace | `LICENSE file is missing.` |
+| `E_README_FILE_MISSING` | workspace | `README.md file is missing.` |
 | `E_TOUR_STEP_NOT_FOUND` | workspace | `Tour step "{path}" does not exist.` |
 | `E_TOUR_FRONTMATTER` | workspace | `Tour step "{path}": {reason}.` |
 | `E_TOUR_DUPLICATE_ID` | workspace | `Tour step id "{id}" is used more than once.` |
@@ -395,6 +411,7 @@ Les erreurs bloquent ; les avertissements (`W_`) n'empêchent pas l'ouverture da
 | `E_EXERCISE_SOLUTION_FAILS` | registre | `Exercise "{name}": reference solution does not pass all tests.` |
 | `W_SIZE` | workspace | `Template exceeds {limit}: {actual}.` |
 | `W_UNKNOWN_TOPIC` | workspace | `Topic "{topic}" is not in the registry vocabulary yet.` |
+| `W_EXERCISE_UNDECLARED` | workspace | `Folder "exercises/{name}" is not declared in [[exercises]].` |
 | `W_TOUR_ORDER_DIVERGES` | registre | `Tour steps {ids} are not in the same order as the reference variant.` |
 | `W_VARIANT_NOT_SYMMETRIC` | registre | `"{other}" does not list this template as a variant.` |
 | `W_VARIANT_TOPIC_DIVERGES` | registre | `Variant "{key}" has a different primary topic.` |
@@ -415,7 +432,7 @@ authors = ["github:maoudin"]
 
 [facets]
 language = "typescript"
-paradigm = ["oop", "functional"]
+paradigm = ["oop"]
 topic = ["design-pattern/behavioral/strategy", "principle/open-closed"]
 level = "intermediate"
 useCase = ["backend"]
@@ -461,5 +478,5 @@ name = "implement-express"
 kind = "fix"
 title = "Implement the express shipping strategy"
 failing = ["tests/express-shipping.test.ts"]
-hints = ["hint-1.md"]
+hints = ["hint-1.md", "hint-2.md"]
 ```
