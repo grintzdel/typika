@@ -14,15 +14,23 @@ strategy-ts/
 ├── typika.toml
 ├── README.md
 ├── LICENSE
+├── package.json
+├── tsconfig.json
 ├── src/
 │   ├── main.ts
+│   ├── shop/
+│   │   ├── money.ts
+│   │   └── order.ts
 │   └── checkout/
+│       ├── checkout.ts
 │       ├── shipping-cost.ts
 │       ├── shipping-quote.ts
 │       └── options/
 │           ├── standard.ts
 │           └── express.ts
 ├── tests/
+│   ├── standard-shipping.test.ts
+│   ├── express-shipping.test.ts
 │   └── shipping-quote.test.ts
 ├── tour/
 │   ├── 01-overview.md
@@ -30,15 +38,17 @@ strategy-ts/
 │   ├── …
 │   └── 06-trade-offs.md
 └── exercises/
-    ├── add-pickup-point-option/
+    ├── add-pickup-point-option/          # from = "base", solutionFrom = "self"
     │   ├── README.md
     │   ├── start/tests/pickup-point.test.ts
-    │   └── solution/src/checkout/options/pickup-point.ts
+    │   └── solution/src/checkout/
+    │       ├── checkout.ts
+    │       ├── shipping-option.ts
+    │       └── options/pickup-point.ts
     └── implement-express/
         ├── README.md
         ├── hint-1.md
         ├── start/src/checkout/options/express.ts
-        ├── start/tests/express-shipping.test.ts
         └── solution/src/checkout/options/express.ts
 ```
 
@@ -134,9 +144,11 @@ Chaque template a **au moins un exercice `refactor`** ; un `fix` est recommandé
   Test de conception : écris la solution dans la base sans restructurer. Si c'est rapide et propre, l'exigence ne
   démontre rien ; choisis-en une autre.
 - Les tests `failing` décrivent l'exigence par le comportement public, jamais par la structure : aucune vérification ne
-  porte sur la forme du code ([manifest.md §6.2](../specs/manifest.md)). Un apprenant qui réussit sans appliquer le
+  porte sur la forme du code ([manifest.md §6.3](../specs/manifest.md)). Un apprenant qui réussit sans appliquer le
   pattern a réussi l'exercice ; la solution de référence et le tour montrent l'autre chemin.
-- `solution/` contient la version restructurée + l'exigence, cohérente avec le template.
+- `solution/` contient la version restructurée + l'exigence, cohérente avec le template. Déclarer
+  `solutionFrom = "self"` : `solution/` ne contient alors que l'écart entre le template et la solution, au lieu de
+  recopier le template.
 
 ### 5.2 `fix`
 
@@ -183,6 +195,37 @@ Chaque template a **au moins un exercice `refactor`** ; un `fix` est recommandé
 | Dépendances | Aucune | Bibliothèque standard uniquement | Bibliothèque standard Kotlin + `kotlin.test` |
 | Formatage | oxfmt (config du repo) | `gofmt` | Style officiel Kotlin |
 | Fichiers | kebab-case (`shipping-quote.ts`) | snake_case (`shipping_quote.go`) | PascalCase (`ShippingQuote.kt`) |
+| Hors Typika | `package.json` (`vitest`, `typescript` en devDependencies), `tsconfig.json`, Node ≥ 23.6 | `go.mod` | Gradle (à définir après R8) |
+
+### 8.1 TypeScript sans outil de build
+
+Un template TS s'exécute hors de Typika avec `node src/main.ts`, sans `tsx` ni compilation : Node retire les types à
+la volée. Cela impose :
+
+- des imports relatifs avec l'extension `.ts` (`import { money } from './money.ts'`) ;
+- uniquement de la syntaxe effaçable : pas d'`enum`, de `namespace` ni de propriétés déclarées dans les paramètres du
+  constructeur ;
+- `import type` pour les imports de types seuls.
+
+Le `tsconfig.json` le vérifie :
+
+```json
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "nodenext",
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true
+  },
+  "include": ["src", "tests"]
+}
+```
+
+Scripts attendus dans `package.json` : `start` (`node src/main.ts`), `test` (`vitest run`), `typecheck` (`tsc`).
 
 Contraintes en attente de spike :
 

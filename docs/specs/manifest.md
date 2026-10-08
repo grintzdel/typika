@@ -229,6 +229,7 @@ failing = ["tests/pickup-point.test.ts"]
 | `level` | niveau | non | `facets.level` | Même vocabulaire que `facets.level`. |
 | `from` | `"self"` \| `"base"` | non | `"self"` | État de départ avant surcouche : le template lui-même ou sa `base`. `"base"` requiert `[base]`. |
 | `failing` | tableau de chemins | oui | — | ≥ 1. Fichiers de test qui DOIVENT être rouges dans l'état de départ. |
+| `solutionFrom` | `"start"` \| `"self"` | non | `"start"` | État sur lequel `solution/` est appliquée (§6.2). `"self"` requiert `from = "base"`. |
 | `hints` | tableau de chemins | non | `[]` | Fichiers Markdown sous `exercises/<name>/`, dévoilés un par un. |
 
 Contenu attendu de `exercises/<name>/` :
@@ -238,7 +239,7 @@ Contenu attendu de `exercises/<name>/` :
 | `README.md` | oui | Énoncé, en anglais. |
 | `start/` | non | Surcouche appliquée à l'état `from` : fichiers ajoutés ou remplacés (dont les tests `failing`). |
 | `start/.typika-remove` | non | Liste de chemins (un par ligne) supprimés de l'état `from`. |
-| `solution/` | oui | Surcouche appliquée à l'état de départ pour obtenir une solution de référence. |
+| `solution/` | oui | Surcouche qui produit une solution de référence, appliquée selon `solutionFrom` (§6.2). |
 
 ### 6.1 Sémantique des deux types
 
@@ -249,18 +250,32 @@ Contenu attendu de `exercises/<name>/` :
 | Ce que l'apprenant fait | Compléter l'implémentation | Restructurer, puis implémenter l'exigence |
 | Leçon | Comprendre la mécanique du pattern | Ressentir pourquoi le pattern existe |
 
-### 6.2 Critères de réussite
+### 6.2 État solution
+
+| `solutionFrom` | État solution |
+|---|---|
+| `"start"` | état de départ + `solution/` |
+| `"self"` | template + fichiers `failing` de `start/` + `solution/` |
+
+`"self"` sert les exercices `refactor` partis de la base : leur solution est le template restructuré plus l'exigence.
+Avec `"start"`, `solution/` devrait recopier tous les fichiers que le template change par rapport à la base, copies
+qui divergeraient du template à chaque modification.
+
+### 6.3 Critères de réussite
 
 Un exercice est **réussi** quand, dans le projet de l'apprenant, **tous** les tests sélectionnés par `[tests]` (y compris
 `failing`) passent. Aucune vérification structurelle en schéma 1 : on ne vérifie pas *comment* l'exigence a été
 implémentée. La pertinence d'un `refactor` repose donc sur la conception de l'exigence (cf. guide d'auteur).
 
-### 6.3 Vérifications de la CI
+### 6.4 Vérifications de la CI
 
 Pour chaque exercice, la CI du registre DOIT constater :
 
 1. État de départ : chaque fichier `failing` a au moins un test rouge ; aucun autre test n'est rouge.
-2. État de départ + `solution/` : tous les tests sont verts.
+2. État solution (§6.2) : tous les tests sont verts.
+
+Seuls les tests comptent : un état de départ qui ne passe pas le typecheck (un test qui utilise une valeur que la base
+ne connaît pas encore) est valide.
 
 Échec → template `broken` (voir [registry.md](./registry.md)).
 
@@ -362,6 +377,7 @@ Les erreurs bloquent ; les avertissements (`W_`) n'empêchent pas l'ouverture da
 | `E_VARIANT_SELF` | manifeste | `A template cannot declare a variant in its own language ("{language}").` |
 | `E_EXERCISE_DUPLICATE_NAME` | manifeste | `Exercise name "{name}" is used more than once.` |
 | `E_EXERCISE_FROM_BASE_WITHOUT_BASE` | manifeste | `Exercise "{name}" starts from base but the template has no [base].` |
+| `E_EXERCISE_SOLUTION_FROM_SELF` | manifeste | `Exercise "{name}": solutionFrom = "self" requires from = "base".` |
 | `E_LICENSE_INVALID` | manifeste | `"{license}" is not a valid SPDX license identifier.` |
 | `E_BASE_FORBIDDEN_FIELD` | manifeste | `A base template cannot declare [{field}].` |
 | `E_ENTRY_NOT_FOUND` | workspace | `Entry file "{path}" does not exist.` |
@@ -439,6 +455,7 @@ name = "add-pickup-point-option"
 kind = "refactor"
 title = "Add a pickup-point shipping option"
 from = "base"
+solutionFrom = "self"
 failing = ["tests/pickup-point.test.ts"]
 
 [[exercises]]

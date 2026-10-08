@@ -48,7 +48,9 @@ langage) :
 | Base d'un principe / pattern / fondamental | `<concept>-base-<lang>` | `strategy-base-kotlin` |
 | Base des architectures (partagée) | `naive-crud-<lang>` | `naive-crud-ts` |
 
-`<lang>` ∈ `ts`, `js`, `go`, `kotlin`.
+`<lang>` ∈ `ts`, `js`, `go`, `kotlin`. `<concept>` est le dernier segment du topic principal : `strategy-ts`
+(`design-pattern/behavioral/strategy`), `open-closed-ts` (`principle/open-closed`),
+`composition-over-inheritance-go`. C'est aussi la cible des liens de tour (`typika:open-closed-ts`).
 
 ## 2. Couverture
 
