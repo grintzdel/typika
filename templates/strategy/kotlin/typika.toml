@@ -1,0 +1,56 @@
+schema = 1
+name = "strategy-kotlin"
+title = "Strategy: shipping options"
+summary = "Pick an algorithm at runtime without the caller knowing which one runs."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop", "functional"]
+topic = ["design-pattern/behavioral/strategy", "principle/open-closed"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-the-problem.md",
+  "tour/03-strategy-interface.md",
+  "tour/04-context.md",
+  "tour/05-choosing-at-runtime.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/strategy-base/kotlin"
+focus = ["src/main/kotlin/checkout/**"]
+
+[variants]
+typescript = "github:typika/templates/strategy/ts"
+go = "github:typika/templates/strategy/go"
+
+[[exercises]]
+name = "add-pickup-point-option"
+kind = "refactor"
+title = "Add a pickup-point shipping option"
+from = "base"
+solutionFrom = "self"
+failing = ["src/test/kotlin/checkout/PickupPointShippingTest.kt"]
+
+[[exercises]]
+name = "implement-express"
+kind = "fix"
+title = "Implement the express shipping strategy"
+failing = ["src/test/kotlin/checkout/ExpressShippingTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]
