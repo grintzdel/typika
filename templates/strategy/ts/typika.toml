@@ -1,0 +1,56 @@
+schema = 1
+name = "strategy-ts"
+title = "Strategy: shipping options"
+summary = "Pick an algorithm at runtime without the caller knowing which one runs."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["design-pattern/behavioral/strategy", "principle/open-closed"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-the-problem.md",
+  "tour/03-strategy-interface.md",
+  "tour/04-context.md",
+  "tour/05-choosing-at-runtime.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/strategy-base/ts"
+focus = ["src/checkout/**"]
+
+[variants]
+go = "github:typika/templates/strategy/go"
+kotlin = "github:typika/templates/strategy/kotlin"
+
+[[exercises]]
+name = "add-pickup-point-option"
+kind = "refactor"
+title = "Add a pickup-point shipping option"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/pickup-point.test.ts"]
+
+[[exercises]]
+name = "implement-express"
+kind = "fix"
+title = "Implement the express shipping strategy"
+failing = ["tests/express-shipping.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]
