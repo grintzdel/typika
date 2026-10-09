@@ -21,7 +21,8 @@ Le runtime `node` (WebContainers) est écarté de la V1 ([ADR 0017](../decisions
 
 ### 1.1 Port
 
-`packages/runtime-core` expose le contrat. Il dépend uniquement d'`effect`.
+`packages/runtime-core` expose le contrat. Il dépend d'`effect` et de `@typika/manifest` (types du manifeste,
+`RuntimeKind`, validation des chemins).
 
 ```ts
 import * as Context from 'effect/Context'
@@ -40,8 +41,8 @@ export interface RuntimePort {
 
 export interface RuntimeSession {
   readonly fs: RuntimeFs
-  readonly run: (command: RunCommand) => Stream.Stream<ProcessOutput, RuntimeCompileError | RuntimeProcessError>
-  readonly test: (options: TestOptions) => Stream.Stream<TestEvent, RuntimeCompileError | RuntimeProcessError>
+  readonly run: (command: RunCommand) => Stream.Stream<ProcessOutput, RuntimeExecutionError>
+  readonly test: (options: TestOptions) => Stream.Stream<TestEvent, RuntimeExecutionError>
   readonly preview: Effect.Effect<Option.Option<PreviewHandle>>
 }
 
@@ -52,10 +53,19 @@ export interface RuntimeFs {
   readonly sync: (snapshot: ProjectSnapshot) => Effect.Effect<void, RuntimeFsError>
 }
 
-export class RuntimeRegistry extends Context.Tag('@typika/RuntimeRegistry')<
+export type RuntimeExecutionError =
+  | RuntimeCompileError
+  | RuntimeProcessError
+  | RuntimeTimeoutError
+  | KotlinCompilerRateLimitedError
+  | KotlinCompilerUnavailableError
+
+export class RuntimeRegistry extends Context.Service<
   RuntimeRegistry,
-  { readonly get: (kind: RuntimeKind) => Effect.Effect<RuntimePort, RuntimeUnsupportedError> }
->() {}
+  {
+    readonly get: (kind: RuntimeKind) => Effect.Effect<RuntimePort, RuntimeUnsupportedError | RuntimeAssetLoadError>
+  }
+>()('@typika/RuntimeRegistry') {}
 ```
 
 Points de conception :
@@ -69,7 +79,11 @@ Points de conception :
 - **`run` et `test` renvoient des `Stream`.** Interrompre le fiber consommateur interrompt le processus (§4).
 - **`preview`** renvoie `Option.none()` pour les runtimes sans preview (`go`, `kotlin` en V1).
 - **`RuntimeRegistry`** résout un `kind` en `RuntimePort` par import dynamique : le code d'un runtime n'est chargé que
-  si un template de ce langage est ouvert.
+  si un template de ce langage est ouvert. `makeRuntimeRegistry(loaders)` le construit à partir d'un import par `kind` ;
+  un `kind` sans import donne `RuntimeUnsupportedError`, un import qui échoue donne `RuntimeAssetLoadError` et sera
+  retenté au prochain appel. Un port chargé est gardé pour la durée de vie du registre.
+- **`RuntimeExecutionError`** regroupe tout ce qui peut interrompre un `run` ou un `test`, watchdog et service Kotlin
+  compris.
 
 Ce contrat raffine le §7.4 de la spec V1 : `boot` renvoie une session qui porte `run`, `test`, `preview` et le système de
 fichiers, plutôt que d'exposer ces opérations au niveau du port.
@@ -77,14 +91,10 @@ fichiers, plutôt que d'exposer ces opérations au niveau du port.
 ### 1.2 Types d'entrée
 
 ```ts
-export const RuntimeKind = {
-  BROWSER_JS: 'browser-js',
-  GO: 'go',
-  KOTLIN: 'kotlin',
-} as const
-export type RuntimeKind = (typeof RuntimeKind)[keyof typeof RuntimeKind]
+// RuntimeKind vient de @typika/manifest.
 
-export type ProjectPath = string & Brand.Brand<'ProjectPath'>
+export const ProjectPathSchema = Schema.String.pipe(Schema.check(/* chemin relatif, §3.2 */), Schema.brand('ProjectPath'))
+export type ProjectPath = typeof ProjectPathSchema.Type
 export type FileContent = string | Uint8Array
 
 export interface ProjectSnapshot {
@@ -103,10 +113,12 @@ export interface TestOptions {
   readonly namePattern?: string
 }
 
-export type ProcessOutput =
-  | { readonly _tag: 'Stdout'; readonly chunk: string }
-  | { readonly _tag: 'Stderr'; readonly chunk: string }
-  | { readonly _tag: 'Exit'; readonly code: number }
+export const ProcessOutputSchema = Schema.Union([
+  Schema.TaggedStruct('Stdout', { chunk: Schema.String }),
+  Schema.TaggedStruct('Stderr', { chunk: Schema.String }),
+  Schema.TaggedStruct('Exit', { code: Schema.Int }),
+])
+export type ProcessOutput = typeof ProcessOutputSchema.Type
 
 export interface PreviewHandle {
   readonly url: string
@@ -125,7 +137,8 @@ santé du registre et le mode comparaison ne consomment que lui.
 
 ### 2.1 Schéma
 
-Défini en Effect Schema dans `packages/runtime-core/src/test-event.domain-model.ts`.
+Défini en Effect Schema dans `packages/runtime-core/src/domain/test-event.domain-model.ts`. Les champs facultatifs
+sont des `Schema.optionalKey` : absents, jamais `undefined`, pour traverser `postMessage` et JSON sans perte.
 
 ```ts
 export const TestLocationSchema = Schema.Struct({
@@ -204,7 +217,9 @@ export type TestEvent = Schema.Schema.Type<typeof TestEventSchema>
 
 ### 2.2 Règles
 
-- **Identifiant stable.** `testId = hash(file + chemin des suites + nom)`. Le même test garde le même id d'un run à
+- **Identifiant stable.** `testId = makeTestId(file, chemin des suites, nom)` et `suiteId = makeSuiteId(file, chemin
+  des suites)` : FNV-1a 64 bits, 16 caractères hexadécimaux. On n'utilise pas `effect/Hash`, dont la valeur peut changer
+  d'une version d'Effect à l'autre. Le même test garde le même id d'un run à
   l'autre et d'une session à l'autre : le panneau tests peut afficher « était rouge, maintenant vert », et un exercice
   peut suivre sa progression.
 - **Ordre garanti** : `RunStarted` en premier, `RunFinished` en dernier, chaque `SuiteStarted` fermé par son
@@ -214,6 +229,9 @@ export type TestEvent = Schema.Schema.Type<typeof TestEventSchema>
 - **Interruption** : le `Stream` est interrompu, aucun `RunFinished` n'est émis. Le consommateur affiche « interrompu ».
 - **`RunFinished.status`** : `passed` si `failed === 0`, `failed` sinon, `errored` si le run n'a pas pu exécuter les
   tests (compilation, crash du worker, timeout global).
+- **Conformité** : `checkTestEventSequence(events)` vérifie ces règles sur un run complet (ordre, `runId` unique,
+  imbrication des suites, `testId` uniques, compteurs et `status` de `RunFinished`) et renvoie la liste des violations.
+  Les tests de chaque runtime et la CI de santé du registre s'en servent.
 - Un exercice est validé quand un `RunFinished` `passed` couvre tous les fichiers listés dans `failing` (voir
   [manifest.md](./manifest.md)).
 
@@ -225,7 +243,8 @@ export type TestEvent = Schema.Schema.Type<typeof TestEventSchema>
 | `go` | Format `test2json` (`go test -json`) : `Action` = `run` / `pass` / `fail` / `skip` / `output` | `run` → aucun événement, `pass` → `TestPassed`, `fail` → `TestFailed` (message = sorties `output` accumulées du test), `skip` → `TestSkipped`, `output` → `Output` ; sous-tests `TestX/sub` → `SuiteStarted` pour `TestX` |
 | `kotlin` | Le compilateur enregistre chaque classe de test comme suite et chaque `@Test` comme test auprès de l'adaptateur de `kotlin.test` ; le harness du runtime fournit cet adaptateur (`describe` / `it`) | Suite racine = package, puis une suite par classe ; test réussi → `TestPassed`, exception → `TestFailed` (message de l'`AssertionError`, `location` tirée de la source map), `@Ignore` → `TestSkipped` |
 
-Une ligne qui ne valide pas le schéma est transmise en `Output` `stderr` et logguée ; elle ne casse pas le run.
+Une ligne qui ne valide pas le schéma est transmise en `Output` `stderr` et logguée ; elle ne casse pas le run
+(`decodeTestEventLine(runId, line)`).
 
 ## 3. Système de fichiers virtuel
 
@@ -433,12 +452,12 @@ diagnostics suivent `DiagnosticSchema`, chemins relatifs à la racine du projet.
 
 ## 7. Erreurs
 
-Toutes en `Data.TaggedError`, dans `packages/runtime-core/src/errors/`.
+Toutes en `Data.TaggedError`, dans `packages/runtime-core/src/domain/errors/`.
 
 | Erreur | Champs | Cause typique | Affichage |
 |---|---|---|---|
 | `RuntimeUnsupportedError` | `kind` | Runtime désactivé (Kotlin sans service) ou inconnu | Template masqué ; message si ouvert par lien |
-| `RuntimeAssetLoadError` | `asset`, `cause` | Réseau, CDN, échec SRI | Bandeau avec « Réessayer » |
+| `RuntimeAssetLoadError` | `asset`, `cause` | Réseau, CDN, échec SRI, chunk du runtime introuvable | Bandeau avec « Réessayer » |
 | `RuntimeBootError` | `kind`, `cause` | Échec d'initialisation (WASM, worker) | Écran d'erreur de la sandbox |
 | `RuntimeFsError` | `path`, `reason` | Chemin invalide, limite dépassée | Toast, fichier non écrit |
 | `RuntimeCompileError` | `diagnostics` | Erreur de build / compilation sur `run` | Console + soulignement dans l'éditeur |
@@ -451,8 +470,8 @@ Une erreur de test (assertion qui échoue) n'est **jamais** une erreur Effect : 
 
 ## 8. Limites
 
-Valeurs initiales, centralisées dans `packages/runtime-core/src/constants/runtime-limits.constant.ts`, à ajuster après
-les spikes.
+Valeurs initiales, centralisées dans `RuntimeLimit` (`packages/runtime-core/src/domain/constants/runtime-limits.constant.ts`),
+à ajuster après les spikes.
 
 | Limite | Valeur initiale | Appliquée par |
 |---|---|---|

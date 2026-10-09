@@ -56,7 +56,7 @@ packages TypeScript ; `services/` ne contient que des services déployables.
 |---|---|
 | `config` | — |
 | `manifest` | `effect`, `smol-toml` (parser TOML), `spdx-license-ids` (liste SPDX) |
-| `runtime-core` | `effect`, `manifest` (types) |
+| `runtime-core` | `effect`, `manifest` |
 | `runtime-*` | `runtime-core`, `manifest`, ses dépendances techniques |
 | `test-runner` | rien (il est injecté dans le bundle de code utilisateur : zéro dépendance, taille minimale) |
 | `vitest-reporter` | `vitest` (peer) |

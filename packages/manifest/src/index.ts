@@ -19,6 +19,7 @@ export { ManifestNotFoundError } from './domain/errors/manifest-not-found.error.
 export { isWarning, ManifestIssueSchema, type ManifestIssue } from './domain/manifest-issue.domain-model.ts'
 export {
   ExerciseKind,
+  isRelativePath,
   ManifestSchema,
   SUPPORTED_SCHEMA_VERSIONS,
   type Exercise,
