@@ -30,6 +30,7 @@ valeurs publiques au client via `/config.json`.
 | `TYPIKA_RUNTIME_ORIGIN` | oui | oui | `https://typika-run.example.net` | Origine de la runtime frame, site différent de l'app |
 | `TYPIKA_REGISTRY_INDEX_URL` | non | oui | `https://…/index.json` | Index du registre ; défaut : registre officiel |
 | `TYPIKA_ASSETS_BASE_URL` | non | oui | `https://cdn.jsdelivr.net/npm/@typika/runtime-assets@1.0.0/` | Base des assets de runtime ; défaut : CDN public |
+| `TYPIKA_PACKAGE_URL_TEMPLATE` | non | oui | `https://esm.sh/{name}@{version}{path}` | CDN ESM des dépendances npm des templates `browser-js` ; défaut : jsDelivr ([runtimes](../specs/runtimes.md) §6.1) |
 | `TYPIKA_EMBED_ENABLED` | non | oui | `true` | Active `/embed/*` |
 | `KOTLIN_COMPILER_URL` | non | oui | `/api/kotlin` ou `https://kotlin.example.org` | Service de compilation ; absent ⇒ Kotlin désactivé |
 | `GITHUB_CLIENT_ID` | non | oui | `Iv1.…` | Application OAuth ; absent ⇒ fonctions GitHub désactivées |
@@ -241,7 +242,7 @@ Les assets de runtime (WASM d'esbuild, runtime Go, harness de test, test runner)
 manifeste d'assets qui liste chaque fichier et son hash SRI.
 
 - **Par défaut** : CDN public (jsDelivr). Le CDN doit servir `Cross-Origin-Resource-Policy: cross-origin` ou des
-  en-têtes CORS compatibles avec COEP ; à vérifier au M1 pour chaque CDN candidat.
+  en-têtes CORS compatibles avec COEP ; jsDelivr envoie les deux (vérifié le 2026-10-09).
 - **Auto-hébergé** : télécharger l'archive d'assets de la version de l'app, la servir sous un chemin (par exemple
   `/assets/runtime/<version>/` sur le domaine runtime) et pointer `TYPIKA_ASSETS_BASE_URL` dessus. En-têtes requis :
   `Cache-Control: public, max-age=31536000, immutable`, `Cross-Origin-Resource-Policy: cross-origin`,

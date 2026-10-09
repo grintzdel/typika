@@ -1,7 +1,7 @@
 import { AssertionError } from './assertion-error.ts'
 import { collectFile, type Hook, type SuiteNode, type TestNode } from './collector.ts'
-import { format } from './each.ts'
 import type { TestEvent, TestFailure } from './events.ts'
+import { formatLog } from './format-log.ts'
 import { pretty } from './pretty.ts'
 import { makeSuiteId, makeTestId } from './test-id.ts'
 
@@ -168,8 +168,7 @@ export const runTests = async ({ runId, files, namePattern, emit }: RunTestsOpti
   for (const [method, stream] of Object.entries(CONSOLE_STREAMS)) {
     Object.assign(console, {
       [method]: (...args: Array<unknown>) => {
-        const [first, ...rest] = args
-        const chunk = typeof first === 'string' ? format(first, rest) : format('', args).trimStart()
+        const chunk = formatLog(args)
         emit({
           _tag: 'Output',
           runId,

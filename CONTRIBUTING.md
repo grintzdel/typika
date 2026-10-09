@@ -20,7 +20,8 @@ Ouvrez une issue avant tout changement important. Pour remettre en cause une dé
 
 - Architecture et conventions : [architecture](docs/specs/architecture.md).
 - TDD : tests E2E puis tests unitaires rouges avant l'implémentation.
-- `pnpm lint`, `pnpm format:check` et `pnpm test` doivent passer.
+- `pnpm lint`, `pnpm format:check` et `pnpm test` doivent passer. Les tests de `runtime-browser-js` tournent dans
+  Chromium : installez-le une fois avec `pnpm --filter @typika/runtime-browser-js exec playwright install chromium`.
 - Messages de commit en anglais, à l'impératif.
 
 ## Licence

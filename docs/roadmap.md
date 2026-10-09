@@ -59,8 +59,9 @@ Livrables :
 Terminé quand : on ouvre le template Strategy, on le modifie, on lance ses tests, on recharge la page et les
 modifications sont toujours là.
 
-État (2026-10-09) : le monorepo, `packages/manifest`, `packages/runtime-core` et `packages/test-runner` (avec sa suite
-de conformité contre Vitest) sont livrés.
+État (2026-10-09) : le monorepo, `packages/manifest`, `packages/runtime-core`, `packages/test-runner` (avec sa suite
+de conformité contre Vitest) et `packages/runtime-browser-js` (testé dans Chromium avec le template Strategy) sont
+livrés. La preview de `browser-js` attend un template qui en a besoin.
 
 ## M2 — Pédagogie
 

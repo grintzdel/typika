@@ -1,0 +1,28 @@
+{
+  "name": "@typika/runtime-browser-js",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@typika/manifest": "workspace:*",
+    "@typika/runtime-core": "workspace:*",
+    "@typika/test-runner": "workspace:*",
+    "effect": "4.0.2",
+    "esbuild-wasm": "0.28.2"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "@typika/config": "workspace:*",
+    "@vitest/browser-playwright": "5.0.3",
+    "playwright": "1.64.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.3"
+  }
+}

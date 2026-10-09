@@ -58,6 +58,7 @@ packages TypeScript ; `services/` ne contient que des services déployables.
 | `manifest` | `effect`, `smol-toml` (parser TOML), `spdx-license-ids` (liste SPDX) |
 | `runtime-core` | `effect`, `manifest` |
 | `runtime-*` | `runtime-core`, `manifest`, ses dépendances techniques |
+| `runtime-browser-js` | en plus : `test-runner` (embarqué dans le worker d'exécution), `esbuild-wasm` |
 | `test-runner` | rien (il est injecté dans le bundle de code utilisateur : zéro dépendance, taille minimale) |
 | `vitest-reporter` | `vitest` (peer), `runtime-core` |
 | `cli` | `manifest`, `effect` |

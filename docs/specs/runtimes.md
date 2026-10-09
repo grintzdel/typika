@@ -271,7 +271,7 @@ ne sont ni persistés, ni partagés, ni exportés.
 
 | Runtime | FS cible |
 |---|---|
-| `browser-js` | `Map` en mémoire dans le worker de build ; le plugin esbuild résout les imports dessus |
+| `browser-js` | `Map` en mémoire dans la session, qui applique les limites du §8 ; elle est transmise au worker de build à chaque build, et le plugin esbuild résout les imports dessus |
 | `go` | FS en mémoire installé sous l'API `fs` qu'attend `wasm_exec.js` ; partagé par `compile`, `link` et le programme |
 | `kotlin` | Aucun FS persistant : les sources sont envoyées au service de compilation à chaque `run` / `test` |
 
@@ -317,14 +317,27 @@ pure.
 
 **Pipeline**
 
-1. Un worker de build exécute **esbuild-wasm**. Un plugin résout les imports relatifs sur le FS virtuel et les imports de
-   paquets vers un CDN ESM, en versions épinglées depuis le `package.json` du template.
-2. Le bundle est exécuté dans un **worker d'exécution** dédié, recréé à chaque `run` / `test`. `console.*` est capturé
-   et émis en `Stdout` / `Stderr`.
-3. Pour `test`, le bundle inclut `@typika/test-runner`, qui découvre les fichiers `*.test.ts` / `*.test.js` (ou ceux de
-   `TestOptions.files`) et émet directement des `TestEvent`.
+1. Un worker de build, créé au `boot` et gardé pour la session, exécute **esbuild-wasm** à partir du module WASM compilé
+   par `load`. Un plugin résout les imports relatifs sur le FS virtuel (extension absente, `index`, `.js` qui désigne un
+   `.ts`) et les imports de paquets vers un CDN ESM, en versions lues dans le `package.json` du projet. Le
+   `tsconfig.json` du projet est passé à esbuild : `verbatimModuleSyntax` y garde les imports inutilisés, comme `tsc`.
+2. Le bundle est exécuté dans un **worker d'exécution** dédié, recréé à chaque `run` / `test`, qui importe le code par
+   une URL `blob:`. `console.*` est capturé et émis en `Stdout` / `Stderr`.
+3. Pour `test`, la session sélectionne les fichiers selon `[tests]` (ou `TestOptions.files`) et produit **un bundle par
+   fichier de test** : chaque fichier a ses propres modules, comme l'isolation par défaut de Vitest. Le worker
+   d'exécution embarque `@typika/test-runner` ; dans les bundles, `vitest` est un module qui relit l'API du runner sur
+   le global du worker. Le runner émet directement des `TestEvent`.
 4. Preview : si le template a un `index.html`, le bundle est servi dans une iframe de preview sur l'origine runtime par
-   le Service Worker. Pas de DOM dans les workers : un template qui a besoin du DOM passe par la preview.
+   le Service Worker. Pas de DOM dans les workers : un template qui a besoin du DOM passe par la preview. Pas encore
+   implémenté : `preview` renvoie `Option.none()` tant qu'aucun template du catalogue n'en a besoin.
+
+**`run`**
+
+- `RunCommand.command` est le chemin du fichier à exécuter ; `args` et `env` sont ignorés en V1.
+- Comme Node, le programme se termine quand il n'a plus de timer en attente (`setTimeout`, `setInterval` non annulé) :
+  `Exit` `0`. Une erreur non rattrapée, au chargement ou plus tard, est écrite sur `Stderr` et donne `Exit` `1`.
+- Une erreur de build donne `RuntimeCompileError`. Pour `test`, elle donne `Diagnostics` puis `RunFinished` `errored`.
+- Le watchdog couvre le build et l'exécution.
 
 **Compatibilité Vitest**
 
@@ -363,9 +376,19 @@ Là où Vitest n'a pas d'équivalent dans le schéma, la traduction est fixée a
 
 **Dépendances npm**
 
-Résolues depuis un CDN ESM. Le CDN doit renvoyer des en-têtes compatibles COEP (`Cross-Origin-Resource-Policy` ou CORS) :
-à vérifier pour chaque CDN candidat pendant M1. Les paquets qui dépendent d'API Node (`fs`, `net`, `child_process`)
-ne sont pas supportés en V1.
+Résolues depuis un CDN ESM par un gabarit d'URL (`{name}`, `{version}`, `{path}`) ; par défaut jsDelivr,
+`https://cdn.jsdelivr.net/npm/{name}@{version}{path}/+esm`, déjà utilisé pour les assets. Un paquet absent du
+`package.json` est une erreur de build ; la version est celle du `package.json`, telle quelle.
+
+Un module importé par un worker est chargé en CORS, donc compatible avec COEP `require-corp` si le CDN répond
+`Access-Control-Allow-Origin`. Vérifié au M1 (2026-10-09) : jsDelivr (`+esm`) envoie `Access-Control-Allow-Origin: *` et
+`Cross-Origin-Resource-Policy: cross-origin` ; esm.sh envoie `Access-Control-Allow-Origin: *` et peut remplacer jsDelivr
+par le gabarit `https://esm.sh/{name}@{version}{path}`. Les imports `node:*` et les modules intégrés de Node (`fs`,
+`path`…) sont refusés au build ; les paquets qui en dépendent ne sont pas supportés en V1.
+
+**Poids** (mesuré le 2026-10-09, esbuild minifié) : `esbuild.wasm` 13,3 Mio (3,6 Mio en gzip, 2,6 Mio en brotli) ; worker
+d'exécution avec le test runner 32 Kio (11 Kio en gzip), dont 30 Kio (10 Kio en gzip) pour le runner ; worker de build
+4,5 Kio hors esbuild-wasm.
 
 ### 6.2 `node` — hors V1
 
