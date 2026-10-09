@@ -334,12 +334,32 @@ supportée ci-dessous ; la CI du registre exécute les tests dans les deux envir
 
 | Supporté en V1 | Non supporté en V1 |
 |---|---|
-| `describe`, `it` / `test`, `.skip`, `.only`, `.todo`, `.each` | Snapshots (`toMatchSnapshot`, inline) |
+| `describe`, `it` / `test`, `.skip`, `.only`, `.todo`, `.each`, `.skipIf`, `.runIf` | Snapshots (`toMatchSnapshot`, inline) |
 | `beforeAll`, `afterAll`, `beforeEach`, `afterEach` | `vi.mock` (mock de module) |
-| `expect` : `toBe`, `toEqual`, `toStrictEqual`, `toBeTruthy`, `toBeFalsy`, `toBeNull`, `toBeUndefined`, `toBeDefined`, `toBeInstanceOf`, `toContain`, `toContainEqual`, `toHaveLength`, `toHaveProperty`, `toMatch`, `toMatchObject`, `toThrow`, `toBeGreaterThan(OrEqual)`, `toBeLessThan(OrEqual)`, `toBeCloseTo`, `.not`, `.resolves`, `.rejects` | Couverture de code |
-| `vi.fn`, `vi.spyOn`, `toHaveBeenCalled*` | Environnements DOM (`jsdom`, `happy-dom`) |
-| `vi.useFakeTimers` (minimal : `advanceTimersByTime`, `runAllTimers`) | Configuration `vitest.config.*` (ignorée) |
+| `expect` : `toBe`, `toEqual`, `toStrictEqual`, `toBeTruthy`, `toBeFalsy`, `toBeNull`, `toBeUndefined`, `toBeDefined`, `toBeNaN`, `toBeTypeOf`, `toBeInstanceOf`, `toContain`, `toContainEqual`, `toHaveLength`, `toHaveProperty`, `toMatch`, `toMatchObject`, `toThrow`, `toBeGreaterThan(OrEqual)`, `toBeLessThan(OrEqual)`, `toBeCloseTo`, `.not`, `.resolves`, `.rejects` | Couverture de code |
+| `expect.any`, `anything`, `objectContaining`, `arrayContaining`, `stringContaining`, `stringMatching` | `expect.extend`, `expect.soft`, `expect.assertions` |
+| `vi.fn`, `vi.spyOn`, `toHaveBeenCalled*`, `toHaveReturned(With)` | Environnements DOM (`jsdom`, `happy-dom`) |
+| `vi.useFakeTimers` (minimal : `advanceTimersByTime`, `runAllTimers`, `runOnlyPendingTimers`, `setSystemTime`, `Date`) | Configuration `vitest.config.*` (ignorée) |
 | Timeout par test (`it(name, fn, ms)`) | Exécution parallèle de fichiers |
+
+**Conformité et traduction**
+
+`@typika/test-runner` est vérifié contre le vrai Vitest : les fixtures de `packages/test-runner/conformance/` passent
+dans les deux, `@typika/vitest-reporter` traduit la sortie de Vitest en `TestEvent`, et les deux suites d'événements
+doivent être identiques (identifiants, ordre, statuts, première ligne des messages d'échec, sorties console des tests).
+Les tests TS des templates du dépôt tournent aussi dans le runner et doivent être verts.
+
+Là où Vitest n'a pas d'équivalent dans le schéma, la traduction est fixée ainsi, des deux côtés :
+
+| Situation | Vitest | `TestEvent` |
+|---|---|---|
+| `beforeAll` en échec | Suite en échec, tests non exécutés | `TestFailed` pour chaque test, avec l'erreur du hook et `durationMs: 0` |
+| `afterAll` en échec | Suite en échec, tests passés | `Diagnostics` avant `SuiteFinished`, `RunFinished` `errored` |
+| Erreur au chargement du fichier ou dans le corps d'un `describe` | Module en échec, aucun test | `Diagnostics`, aucun test, `RunFinished` `errored` |
+| Test écarté par un `.only` | Mode `skip` | `TestSkipped` `skip` |
+| Test écarté par `TestOptions.namePattern` | — | `TestSkipped` `filtered` |
+| Valeur lancée qui n'est pas une `Error` | Message absent | `message` = la chaîne lancée, ou `Thrown value: <JSON>` |
+| `console.*` dans un `beforeAll` / `afterAll` | Rattaché à la suite | `Output` sans `testId` (hors conformité) |
 
 **Dépendances npm**
 

@@ -59,7 +59,8 @@ Livrables :
 Terminé quand : on ouvre le template Strategy, on le modifie, on lance ses tests, on recharge la page et les
 modifications sont toujours là.
 
-État (2026-10-09) : le monorepo, `packages/manifest` et `packages/runtime-core` sont livrés.
+État (2026-10-09) : le monorepo, `packages/manifest`, `packages/runtime-core` et `packages/test-runner` (avec sa suite
+de conformité contre Vitest) sont livrés.
 
 ## M2 — Pédagogie
 

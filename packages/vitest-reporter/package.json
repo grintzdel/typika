@@ -1,0 +1,23 @@
+{
+  "name": "@typika/vitest-reporter",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@typika/runtime-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "@typika/config": "workspace:*",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  },
+  "peerDependencies": {
+    "vitest": "5.0.3"
+  }
+}

@@ -59,7 +59,7 @@ packages TypeScript ; `services/` ne contient que des services déployables.
 | `runtime-core` | `effect`, `manifest` |
 | `runtime-*` | `runtime-core`, `manifest`, ses dépendances techniques |
 | `test-runner` | rien (il est injecté dans le bundle de code utilisateur : zéro dépendance, taille minimale) |
-| `vitest-reporter` | `vitest` (peer) |
+| `vitest-reporter` | `vitest` (peer), `runtime-core` |
 | `cli` | `manifest`, `effect` |
 | `registry-tools` | `manifest`, `runtime-core`, `runtime-*` |
 | `apps/web` | tous les packages sauf `cli` et `registry-tools` |

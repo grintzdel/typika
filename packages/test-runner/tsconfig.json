@@ -1,0 +1,7 @@
+{
+  "extends": "@typika/config/tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["src", "conformance"]
+}

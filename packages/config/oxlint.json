@@ -38,6 +38,13 @@
         "no-unused-vars": "off",
         "typescript/no-unused-vars": "off"
       }
+    },
+    {
+      "files": ["**/test-runner/src/**"],
+      "rules": {
+        "eslint/no-await-in-loop": "off",
+        "typescript/no-unsafe-type-assertion": "off"
+      }
     }
   ]
 }
