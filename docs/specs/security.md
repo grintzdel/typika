@@ -171,6 +171,9 @@ base-uri 'none';
 frame-ancestors *;
 ```
 
+`<CDN ESM>` est l'origine de `TYPIKA_PACKAGE_URL_TEMPLATE` ; par défaut jsDelivr, la même que les assets.
+`'unsafe-eval'` sert aussi au harness de `browser-js`, qui importe le bundle par un `import()` construit dynamiquement.
+
 `frame-ancestors *` est nécessaire parce que la directive vérifie **toute** la chaîne d'ancêtres : dans un embed, la page
 du site hôte est un ancêtre de la runtime frame. La protection de la frame repose donc sur la vérification d'origine du
 canal (§2.2), pas sur `frame-ancestors`.

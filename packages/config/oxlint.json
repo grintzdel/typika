@@ -45,6 +45,12 @@
         "eslint/no-await-in-loop": "off",
         "typescript/no-unsafe-type-assertion": "off"
       }
+    },
+    {
+      "files": ["**/runtime-browser-js/src/**"],
+      "rules": {
+        "unicorn/require-post-message-target-origin": "off"
+      }
     }
   ]
 }
