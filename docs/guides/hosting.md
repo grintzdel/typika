@@ -153,7 +153,7 @@ volumes:
 		-Server
 	}
 
-	@isolated path /play* /compare* /s /s/*
+	@isolated path /play* /p/* /compare* /s /s/*
 	header @isolated {
 		Cross-Origin-Opener-Policy "same-origin"
 		Cross-Origin-Embedder-Policy "require-corp"

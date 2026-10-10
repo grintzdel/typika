@@ -12,7 +12,7 @@ Spécification fonctionnelle de chaque écran. Le design visuel n'est pas couver
 | `/` | Accueil du hub |
 | `/templates` | Liste à facettes, filtres dans la query string |
 | `/templates/<name>` | Page template |
-| `/play/<name>` | Sandbox ouverte depuis un template |
+| `/play/<name>` | Sandbox ouverte depuis un template (`<name>` = `name` du manifeste, ex. `strategy-ts`) |
 | `/play/<name>?exercise=<id>` | Sandbox en mode exercice |
 | `/compare/<name>?a=<lang>&b=<lang>` | Comparaison de deux variantes |
 | `/projects` | Mes projets locaux |

@@ -2,3 +2,4 @@ templates/
 docs/
 *.md
 pnpm-lock.yaml
+apps/web/src/routeTree.gen.ts
