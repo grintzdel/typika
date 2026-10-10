@@ -22,6 +22,9 @@ Ouvrez une issue avant tout changement important. Pour remettre en cause une dé
 - TDD : tests E2E puis tests unitaires rouges avant l'implémentation.
 - `pnpm lint`, `pnpm format:check` et `pnpm test` doivent passer. Les tests de `runtime-browser-js` tournent dans
   Chromium : installez-le une fois avec `pnpm --filter @typika/runtime-browser-js exec playwright install chromium`.
+- App : `pnpm --filter @typika/web dev` sert l'app sur `http://localhost:3000` et la runtime frame sur
+  `http://127.0.0.1:3001`. Les tests E2E (`pnpm --filter @typika/web test:e2e`) démarrent ce serveur s'il ne tourne
+  pas déjà.
 - Messages de commit en anglais, à l'impératif.
 
 ## Licence

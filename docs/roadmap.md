@@ -63,6 +63,11 @@ modifications sont toujours là.
 de conformité contre Vitest) et `packages/runtime-browser-js` (testé dans Chromium avec le template Strategy) sont
 livrés. La preview de `browser-js` attend un template qui en a besoin.
 
+État (2026-10-10) : `apps/web` ouvre un template du dépôt sur `/play/<name>` : arbre de fichiers, éditeur CodeMirror,
+Run et Tests exécutés dans la runtime frame, sur une origine séparée et isolée. Restent : la persistance des projets
+en IndexedDB et le reset, l'image Docker avec le test E2E des en-têtes, et le language service TypeScript de
+l'éditeur.
+
 ## M2 — Pédagogie
 
 **Objectif** : ce qui distingue Typika d'une sandbox existe.

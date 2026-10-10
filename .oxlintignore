@@ -1,2 +1,3 @@
 templates/
 packages/test-runner/conformance/fixtures/
+apps/web/src/routeTree.gen.ts

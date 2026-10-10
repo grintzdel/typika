@@ -171,6 +171,17 @@ au `RuntimeFs`. Un atom ne reçoit jamais une frappe clavier.
 `RuntimeSession` est un proxy qui sérialise les appels ; côté frame, les vrais runtimes s'exécutent. Messages validés
 par Effect Schema des deux côtés.
 
+La frame annonce `RuntimeFrameReady` à l'origine de l'app (lue dans sa propre `config.json`) ; l'app répond `Connect`
+avec un port de `MessageChannel`, et la frame n'accepte ce message que de son parent et de cette origine. Ensuite, le
+protocole (`runtime-frame-protocol.domain-model.ts`) suit `RuntimeSession` : une requête par opération, identifiée par
+un entier ; les flux renvoient `Emitted` puis `Ended` ou `Failed`, et l'app envoie `Interrupt` quand son consommateur
+s'arrête. Les erreurs traversent le canal sous forme de données (`RuntimeErrorData`) et redeviennent des
+`TaggedError` côté app.
+
+La frame est une entrée Vite séparée (`vite.runtime.config.ts`, base `/runtime/`, sortie `dist/runtime/`). En dev,
+`pnpm dev` lance l'app sur `http://localhost:3000` et la frame sur `http://127.0.0.1:3001` : deux sites distincts,
+avec les en-têtes d'isolation de [hosting](../guides/hosting.md).
+
 ### 3.5 Serveur
 
 Un seul handler serveur, `POST /api/github/token`, en server route TanStack Start
@@ -197,14 +208,15 @@ Le prérendu du hub dépend de l'index au moment du build : une mise à jour de 
 | `/` | `hub/home.page.tsx` | prérendu | non |
 | `/templates` (facettes en search params) | `hub/templates.page.tsx` | prérendu + client | non |
 | `/t/$templateId` | `hub/template.page.tsx` | prérendu | non |
-| `/play/new?template=…` | `play/new-project.page.tsx` | SPA | oui |
-| `/play/$projectId` | `play/project.page.tsx` | SPA | oui |
+| `/play/$templateName` | `play/play-template.page.tsx` | SPA | oui |
+| `/p/$projectId` | `projects/project.page.tsx` | SPA | oui |
 | `/compare?left=…&right=…` | `compare/compare.page.tsx` | SPA | oui |
 | `/projects` | `projects/projects.page.tsx` | SPA | non |
 | `/s` (état dans le fragment `#…`) | `share/open-shared.page.tsx` | SPA | oui |
 | `/embed/$templateId` | `embed/embed.page.tsx` | SPA | non ([0016](../decisions/0016-isolation-and-embed.md)) |
 | `/auth/github/callback` | `github/callback.page.tsx` | SPA | non |
 | `/api/github/token` | server route | — | — |
+| `/config.json` | server route | — | — |
 | `/runtime/frame.html` (origine runtime) | hors router | statique | oui |
 
 « En-têtes d'isolation » = `Cross-Origin-Opener-Policy` + `Cross-Origin-Embedder-Policy` (détail dans
