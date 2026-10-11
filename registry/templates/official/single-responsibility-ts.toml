@@ -1,0 +1,4 @@
+ref = "github:typika/templates/single-responsibility/ts@7612309700b5"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11

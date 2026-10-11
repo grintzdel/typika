@@ -1,0 +1,4 @@
+ref = "github:typika/templates/strategy/kotlin@17f8f058901a"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-08

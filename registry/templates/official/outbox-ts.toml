@@ -1,0 +1,4 @@
+ref = "github:typika/templates/outbox/ts@50edf8f1a0fb"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11

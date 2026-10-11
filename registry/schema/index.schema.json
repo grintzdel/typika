@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Typika registry index",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "type": "number",
+      "enum": [1]
+    },
+    "generatedAt": {
+      "type": "string"
+    },
+    "registryCommit": {
+      "type": "string"
+    },
+    "vocabulary": {
+      "type": "object",
+      "properties": {
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "family": {
+                "type": "string"
+              }
+            },
+            "required": ["id", "label", "category"],
+            "additionalProperties": true
+          }
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["typescript", "javascript", "go", "kotlin"]
+          }
+        }
+      },
+      "required": ["topics", "languages"],
+      "additionalProperties": true
+    },
+    "templates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": ["official", "community"]
+          },
+          "maintainers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "addedAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "manifest": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "license": {
+                "type": "string"
+              },
+              "authors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "role": {
+                "type": "string",
+                "enum": ["template", "base"]
+              },
+              "facets": {
+                "type": "object",
+                "properties": {
+                  "language": {
+                    "type": "string",
+                    "enum": ["typescript", "javascript", "go", "kotlin"]
+                  },
+                  "framework": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "library": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "paradigm": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["oop", "functional", "procedural", "reactive"]
+                    }
+                  },
+                  "topic": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "level": {
+                    "type": "string",
+                    "enum": ["beginner", "intermediate", "advanced"]
+                  },
+                  "useCase": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": ["backend", "frontend", "fullstack", "library", "cli"]
+                    }
+                  }
+                },
+                "required": ["language", "framework", "library", "paradigm", "topic", "level", "useCase"],
+                "additionalProperties": true
+              },
+              "runtime": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": ["browser-js", "go", "kotlin"]
+                  }
+                },
+                "required": ["kind"],
+                "additionalProperties": true
+              },
+              "base": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "variants": {
+                "type": "object",
+                "properties": {
+                  "typescript": {
+                    "type": "string"
+                  },
+                  "javascript": {
+                    "type": "string"
+                  },
+                  "go": {
+                    "type": "string"
+                  },
+                  "kotlin": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "tour": {
+                "type": "object",
+                "properties": {
+                  "steps": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["id", "title"],
+                      "additionalProperties": true
+                    }
+                  }
+                },
+                "required": ["steps"],
+                "additionalProperties": true
+              },
+              "exercises": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": ["fix", "refactor"]
+                    },
+                    "title": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["name", "kind", "title"],
+                  "additionalProperties": true
+                }
+              }
+            },
+            "required": [
+              "title",
+              "summary",
+              "license",
+              "authors",
+              "role",
+              "facets",
+              "runtime",
+              "base",
+              "variants",
+              "tour",
+              "exercises"
+            ],
+            "additionalProperties": true
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "health": {
+            "type": "null"
+          },
+          "search": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": ["text"],
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "name",
+          "ref",
+          "category",
+          "maintainers",
+          "addedAt",
+          "updatedAt",
+          "manifest",
+          "parent",
+          "health",
+          "search"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": ["schema", "generatedAt", "registryCommit", "vocabulary", "templates"],
+  "additionalProperties": true
+}

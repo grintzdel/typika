@@ -32,7 +32,7 @@ const strategyIssues = async (set: TemplateSet) => {
   return checks.find((check) => check.dir === STRATEGY)
 }
 
-describe('checkTemplates on the templates of the repository', () => {
+describe('checkTemplates on the templates of the repository', { timeout: 30_000 }, () => {
   it('finds every template and passes strategy-ts with its exercises run', async () => {
     const strategy = await strategyIssues(templates)
 

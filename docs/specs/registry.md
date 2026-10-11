@@ -17,6 +17,7 @@ registry/
 │   └── community/
 │       └── <name>.toml
 ├── maintainers.toml           # équipe de curation, rôles
+├── vocabulary.toml            # topics connus et leur libellé
 ├── health/                    # état calculé, écrit uniquement par la CI
 │   └── <name>.json
 ├── schema/
@@ -98,18 +99,24 @@ Les templates communautaires restent libres de leur organisation (un dépôt, un
 
 ### 2.2 Validations automatiques (bloquantes)
 
-| # | Vérification |
-|---|---|
-| V1 | Le fichier d'entrée respecte le schéma (§1.1), `ref` épinglée sur un SHA existant. |
-| V2 | Le manifeste `typika.toml` est présent à la ref et valide (schéma partagé `manifest`). |
-| V3 | `name` unique ; nom de fichier = `name`. |
-| V4 | Licence présente et approuvée OSI ; `official` ⇒ MIT-0. |
-| V5 | Toutes les refs internes (`base`, `variants`, `parent`) existent et sont elles-mêmes au registre ou dans la même PR. |
-| V6 | Les fichiers référencés existent : `runtime.entry`, étapes de tour, ancres `file#Lx-Ly` dans les bornes du fichier. |
-| V7 | Topics connus du vocabulaire contrôlé (`<category>/<slug>`) ; facettes valides. |
-| V8 | Run de santé complet (§4) en état `healthy`. Un template ne peut pas entrer en `degraded` ou `broken`. |
-| V9 | Exercices : pour `fix`, les tests listés échouent à l'état initial et tout le reste passe ; pour `refactor`, les tests de l'exigence échouent et passent sur la solution fournie. |
-| V10 | Taille totale du template sous la limite de [security](security.md). Pas de binaire hors liste blanche. |
+| # | Vérification | Codes |
+|---|---|---|
+| V1 | Le fichier d'entrée respecte le schéma (§1.1), `ref` épinglée sur un SHA existant. | `E_MISSING_FIELD`, `E_UNKNOWN_FIELD`, `E_INVALID_VALUE`, `E_INVALID_REF`, `E_REF_NOT_PINNED`, `E_REF_UNRESOLVABLE` |
+| V2 | Le manifeste `typika.toml` est présent à la ref et valide (schéma partagé `manifest`). | codes `manifeste` de [manifest §11](manifest.md) |
+| V3 | `name` unique ; nom de fichier = `name`. | `E_NAME_TAKEN`, `E_ENTRY_NAME_MISMATCH` |
+| V4 | Licence présente et approuvée OSI ; `official` ⇒ MIT-0, hébergé sous `typika/*`, et rangé dans `templates/official/`. | `E_LICENSE_NOT_OSI`, `E_LICENSE_NOT_MIT0`, `E_CATEGORY_MISMATCH`, `E_INVALID_VALUE` |
+| V5 | Toutes les refs internes (`base`, `variants`, `parent`) existent et sont elles-mêmes au registre ou dans la même PR. | `E_REF_UNRESOLVABLE`, `E_BASE_MISMATCH`, `E_VARIANT_LANGUAGE_MISMATCH` |
+| V6 | Les fichiers référencés existent : `runtime.entry`, étapes de tour, ancres `file#Lx-Ly` dans les bornes du fichier. Un tour officiel commence par `overview` et finit par `trade-offs` ([manifest §5.3](manifest.md)). | codes `workspace` de [manifest §11](manifest.md), `E_TOUR_REQUIRED_STEP` |
+| V7 | Topics connus de `vocabulary.toml` (`<category>/<slug>`) ; facettes valides. | `E_INVALID_VALUE` |
+| V8 | Run de santé complet (§4) en état `healthy`. Un template ne peut pas entrer en `degraded` ou `broken`. | — |
+| V9 | Exercices : pour `fix`, les tests listés échouent à l'état initial et tout le reste passe ; pour `refactor`, les tests de l'exigence échouent et passent sur la solution fournie. Un principe ou un design pattern a au moins un exercice `refactor` (§2.3). | `E_EXERCISE_START_STATE`, `E_EXERCISE_SOLUTION_FAILS`, `E_REFACTOR_EXERCISE_MISSING` |
+| V10 | Taille totale du template sous la limite de [security](security.md). Pas de binaire hors liste blanche. | `E_SIZE` |
+
+`packages/registry-tools` porte ces vérifications : `registry-tools build <registre> --out <index.json>` les exécute,
+puis écrit l'index. Elle lit chaque template à son SHA épinglé. Tant que `typika/templates` n'existe pas (lot 7 du M3),
+le dossier `registry/` du monorepo tient lieu de registre, et `github:typika/templates/<chemin>@<sha>` se lit dans le
+dossier `templates/` du monorepo, à ce commit. V8 arrive avec la CI de santé ; les exercices Go et Kotlin ne sont pas
+encore exécutés (V9).
 
 ### 2.3 Revue humaine — critères d'acceptation
 
@@ -163,9 +170,10 @@ l'app, et sous une URL stable pour les instances auto-hébergées. L'app ne lit 
         "summary": "Replace a growing switch with interchangeable behaviours.",
         "license": "MIT-0",
         "authors": ["github:maoudin"],
+        "role": "template",
         "facets": {
           "language": "typescript",
-          "framework": null,
+          "framework": [],
           "library": [],
           "paradigm": ["oop"],
           "topic": ["design-pattern/behavioral/strategy", "principle/open-closed"],
@@ -194,7 +202,12 @@ l'app, et sous une URL stable pour les instances auto-hébergées. L'app ne lit 
 
 Règles :
 
-- Les `variants` de l'index sont résolues en **noms** de templates du registre, pas en refs.
+- Les `variants` de l'index sont résolues en **noms** de templates du registre, pas en refs ; `base` est résolue en
+  ref épinglée de l'entrée de la base.
+- `manifest.role` est repris pour que le hub masque les bases. `facets.framework` est un tableau, comme dans le
+  manifeste.
+- `health` vaut `null` tant que la CI de santé n'a pas tourné sur le template.
+- `schema/index.schema.json` est généré depuis le schéma Effect de l'index (`registry-tools schema`).
 - Le contenu des fichiers (code, tours) n'est pas dans l'index : l'app le charge à l'ouverture depuis la ref épinglée.
 - L'index ne contient que les métadonnées nécessaires au hub et à la recherche. Cible : < 500 Ko compressé.
 - `schema` est versionné ; l'app refuse un index de version majeure inconnue et affiche un message.

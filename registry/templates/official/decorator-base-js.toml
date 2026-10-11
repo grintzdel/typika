@@ -1,0 +1,4 @@
+ref = "github:typika/templates/decorator-base/js@c8d6ad6d1b3a"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11

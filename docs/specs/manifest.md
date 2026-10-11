@@ -409,6 +409,13 @@ Les erreurs bloquent ; les avertissements (`W_`) n'empêchent pas l'ouverture da
 | `E_LICENSE_NOT_OSI` | registre | `License "{license}" is not OSI-approved.` |
 | `E_EXERCISE_START_STATE` | registre | `Exercise "{name}": starting state is wrong ({reason}).` |
 | `E_EXERCISE_SOLUTION_FAILS` | registre | `Exercise "{name}": reference solution does not pass all tests.` |
+| `E_REF_NOT_PINNED` | registre | `Ref "{ref}" must be pinned to a commit SHA.` |
+| `E_ENTRY_NAME_MISMATCH` | registre | `Entry file "{file}" must be named after its template "{name}".` |
+| `E_CATEGORY_MISMATCH` | registre | `An official template must live under github:typika/.` |
+| `E_LICENSE_NOT_MIT0` | registre | `An official template must use the MIT-0 license.` |
+| `E_REFACTOR_EXERCISE_MISSING` | registre | `A {category} template needs at least one refactor exercise.` |
+| `E_TOUR_REQUIRED_STEP` | registre | `An official tour must start with "overview" and end with "trade-offs".` |
+| `E_SIZE` | registre | `Template exceeds {limit}: {actual}.` |
 | `W_SIZE` | workspace | `Template exceeds {limit}: {actual}.` |
 | `W_UNKNOWN_TOPIC` | workspace | `Topic "{topic}" is not in the registry vocabulary yet.` |
 | `W_EXERCISE_UNDECLARED` | workspace | `Folder "exercises/{name}" is not declared in [[exercises]].` |
