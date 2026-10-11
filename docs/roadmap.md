@@ -142,8 +142,9 @@ bundler et le runner de la sandbox, pour que la commande et la sandbox jugent un
 exercices Go et Kotlin ne sont pas encore exécutés : leurs runtimes ne tournent que dans le navigateur ou derrière le
 service de compilation.
 
-Lot 6, vague (a) en cours : `observer-ts`, `decorator-ts`, `factory-method-ts` et `adapter-ts` sont écrits, avec
-leur base, leur tour et leurs exercices (deux par concept, un seul pour Factory Method comme le prévoit le catalogue).
+Lot 6, vague (a) en cours : les cinq concepts sont écrits (`observer-ts`, `decorator-ts`, `factory-method-ts`,
+`adapter-ts`, `composition-over-inheritance-ts`), avec leur base, leur tour et leurs exercices. Reste la liste des
+templates sur `/`.
 
 ## M3 — Hub
 
