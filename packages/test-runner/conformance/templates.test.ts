@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest'
 import { runTests, type TestEvent } from '../src/runner.ts'
 
 const TEMPLATES_DIR = join(import.meta.dirname, '..', '..', '..', 'templates')
-const TYPESCRIPT_TEMPLATES = ['strategy/ts', 'strategy-base/ts']
+const TYPESCRIPT_TEMPLATES = ['observer/ts', 'observer-base/ts', 'strategy/ts', 'strategy-base/ts']
 
 const testFilesOf = async (root: string) =>
   (await readdir(join(root, 'tests'), { recursive: true }))
