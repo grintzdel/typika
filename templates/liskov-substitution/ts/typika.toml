@@ -1,0 +1,51 @@
+schema = 1
+name = "liskov-substitution-ts"
+title = "Liskov substitution: shipping products"
+summary = "A subtype must keep every promise of the type it stands in for, or not claim to be one."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["principle/liskov-substitution"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-broken-promise.md",
+  "tour/03-contract.md",
+  "tour/04-contract-tests.md",
+  "tour/05-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/liskov-substitution-base/ts"
+focus = ["src/catalog/**", "src/checkout/**"]
+
+[[exercises]]
+name = "add-gift-card"
+kind = "refactor"
+title = "Add a gift card"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/gift-card.test.ts"]
+
+[[exercises]]
+name = "contract-violation"
+kind = "fix"
+title = "Fix a contract violation"
+failing = ["tests/product-bundle.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]
