@@ -1,0 +1,44 @@
+schema = 1
+name = "single-responsibility-ts"
+title = "Single responsibility: placing an order"
+summary = "Split a class along its reasons to change, so each change touches one small piece."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["principle/single-responsibility"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-reasons-to-change.md",
+  "tour/03-split.md",
+  "tour/04-orchestrator.md",
+  "tour/05-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/single-responsibility-base/ts"
+focus = ["src/orders/**", "src/pricing/**", "src/invoices/**"]
+
+[[exercises]]
+name = "add-pdf-invoice"
+kind = "refactor"
+title = "Add a PDF invoice"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/pdf-invoice.test.ts"]

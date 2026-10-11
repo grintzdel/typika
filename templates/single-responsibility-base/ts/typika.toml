@@ -1,0 +1,24 @@
+schema = 1
+name = "single-responsibility-base-ts"
+title = "Single responsibility base: placing an order"
+summary = "One OrderService validates, prices, saves, writes the invoice and emails it, before the split."
+license = "MIT-0"
+authors = ["github:maoudin"]
+role = "base"
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["principle/single-responsibility"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
