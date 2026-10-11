@@ -1,0 +1,45 @@
+schema = 1
+name = "factory-method-ts"
+title = "Factory Method: shipping parcels"
+summary = "Let subclasses decide which object to create, inside an algorithm the base class keeps."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["design-pattern/creational/factory-method"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-switch-on-type.md",
+  "tour/03-creator.md",
+  "tour/04-factory-method.md",
+  "tour/05-concrete-creators.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/factory-method-base/ts"
+focus = ["src/shipping/**"]
+
+[[exercises]]
+name = "add-locker-carrier"
+kind = "refactor"
+title = "Add a parcel locker carrier"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/locker-shipping.test.ts"]
