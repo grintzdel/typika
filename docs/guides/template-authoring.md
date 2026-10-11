@@ -149,6 +149,10 @@ Chaque template a **au moins un exercice `refactor`** ; un `fix` est recommandé
 - `solution/` contient la version restructurée + l'exigence, cohérente avec le template. Déclarer
   `solutionFrom = "self"` : `solution/` ne contient alors que l'écart entre le template et la solution, au lieu de
   recopier le template.
+- Si l'exigence apporte un nouveau service, ajoute son faux aux fixtures de test dès `start/`
+  (`tests/services-fixture.ts` dans `observer-ts`) : sinon, une fois le service requis, les tests existants ne passent
+  plus le typecheck. Recopie cette fixture dans `solution/`, car seuls les fichiers `failing` de `start/` passent dans
+  l'état solution.
 
 ### 5.2 `fix`
 
