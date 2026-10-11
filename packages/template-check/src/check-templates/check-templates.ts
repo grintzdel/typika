@@ -25,8 +25,15 @@ const OFFICIAL_PREFIX = 'github:typika/templates/'
 
 export const officialRefOf = (dir: string): string => `${OFFICIAL_PREFIX}${dir}`
 
-const dirOfRef = (ref: string): string | undefined =>
-  ref.startsWith(OFFICIAL_PREFIX) ? ref.slice(OFFICIAL_PREFIX.length).replace(/@.*$/, '') : undefined
+export type TemplateLayout = {
+  readonly refOf: (dir: string) => string
+  readonly dirOf: (ref: string) => string | undefined
+}
+
+const officialLayout: TemplateLayout = {
+  refOf: officialRefOf,
+  dirOf: (ref) => (ref.startsWith(OFFICIAL_PREFIX) ? ref.slice(OFFICIAL_PREFIX.length).replace(/@.*$/, '') : undefined),
+}
 
 type Validated =
   | { readonly _tag: 'Valid'; readonly manifest: Manifest; readonly warnings: ReadonlyArray<ManifestIssue> }
@@ -53,14 +60,15 @@ const duplicateNames = (validated: ReadonlyMap<string, Validated>, dir: string, 
 
 export const checkTemplates = (
   templates: TemplateSet,
-  runTests: RunTests
+  runTests: RunTests,
+  { refOf, dirOf }: TemplateLayout = officialLayout
 ): Effect.Effect<ReadonlyArray<TemplateCheck>> =>
   Effect.gen(function* () {
     const validated = new Map<string, Validated>()
     for (const [dir, files] of templates) validated.set(dir, yield* validate(files))
 
     const manifestAt = (ref: string) => {
-      const dir = dirOfRef(ref)
+      const dir = dirOf(ref)
       const result = dir === undefined ? undefined : validated.get(dir)
       return result?._tag === 'Valid' ? result.manifest : undefined
     }
@@ -72,7 +80,7 @@ export const checkTemplates = (
           if (result._tag === 'Invalid') return { dir, name: undefined, issues: result.issues, exercisesRun: false }
           const { manifest } = result
           const runsExercises = manifest.runtime.kind === RuntimeKind.BROWSER_JS && manifest.exercises.length > 0
-          const baseDir = manifest.base === undefined ? undefined : dirOfRef(manifest.base.template)
+          const baseDir = manifest.base === undefined ? undefined : dirOf(manifest.base.template)
           const exerciseIssues = runsExercises
             ? yield* checkExercises({
                 manifest,
@@ -87,7 +95,7 @@ export const checkTemplates = (
             issues: [
               ...result.warnings,
               ...duplicateNames(validated, dir, manifest.name),
-              ...checkRefs(manifest, officialRefOf(dir), manifestAt),
+              ...checkRefs(manifest, refOf(dir), manifestAt),
               ...exerciseIssues,
             ],
             exercisesRun: runsExercises,

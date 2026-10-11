@@ -1,0 +1,4 @@
+ref = "github:typika/templates/naive-crud/ts@d6d10bb7446d"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11

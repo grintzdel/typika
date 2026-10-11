@@ -1,0 +1,4 @@
+ref = "github:typika/templates/factory-method-base/ts@b4f6b47416b6"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11

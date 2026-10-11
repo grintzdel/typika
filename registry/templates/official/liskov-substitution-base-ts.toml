@@ -1,0 +1,4 @@
+ref = "github:typika/templates/liskov-substitution-base/ts@897a8685050f"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11

@@ -1,0 +1,4 @@
+ref = "github:typika/templates/dependency-inversion/ts@830c562a8893"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11

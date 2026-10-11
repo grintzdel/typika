@@ -1,0 +1,4 @@
+ref = "github:typika/templates/observer-base/ts@2e654a0a7e0f"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11

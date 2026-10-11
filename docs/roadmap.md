@@ -209,6 +209,13 @@ recherche de marques (R6).
 | 6 | `health` | Le run de santé de [registry §4.2 et §4.3](specs/registry.md) devient une commande de `registry-tools`. Il démarre chaque template dans Chromium piloté par Playwright, lance ses tests, rejoue ses exercices et écrit `health/<name>.json`, que l'index intègre. Le hub affiche les badges `degraded`, et les bandeaux `broken` et `deprecated` ([ui §2](specs/ui.md)). | Un template volontairement cassé passe `broken` et son bandeau s'affiche. Un template rétabli redevient `healthy`. |
 | 7 | `registry-repos` | Il faut d'abord la recherche de marques (R6) et l'accord sur l'organisation GitHub. Ensuite : création de `typika/templates`, où `templates/` part avec son historique, et de `typika/registry`, avec les workflows `validate-pr`, `build-index` et `health`, `CODEOWNERS` et `maintainers.toml`. Renovate est activé sur les deux dépôts. La publication de l'index déclenche la reconstruction de l'app ([hosting](guides/hosting.md)). | Le critère de fin du M3 : une PR au registre ajoute un template sans toucher à l'app, et sa santé apparaît sur le hub après le déploiement. |
 
+État (2026-10-12) : lot 1 livré. `packages/registry-tools` vérifie le registre local `registry/`, qui a une entrée
+par template (38) et le vocabulaire des 16 topics. Il lit chaque template à son commit épinglé, applique V1 à V7, V9 et
+V10, puis écrit `index.json` (`pnpm registry:build`, 7 Ko compressé) et son schéma JSON. Les codes d'erreur du
+registre sont ajoutés à `@typika/manifest`. Une modification d'un template n'entre dans l'index qu'une fois son
+entrée réépinglée, comme le prévoit [registry §2.4](specs/registry.md). Au lot 7, extraire `templates/` change les
+SHA : toutes les entrées seront réépinglées.
+
 ## M4 — Go & comparaison
 
 **Objectif** : la deuxième langue et la comparaison, cœur de la leçon « le langage fait partie du pattern ».

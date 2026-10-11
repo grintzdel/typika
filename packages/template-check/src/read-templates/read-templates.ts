@@ -37,7 +37,7 @@ export const listFilesWithGit: ListFiles = async (root) => {
 
 export const listFilesOnDisk: ListFiles = walk
 
-const contentOf = (bytes: Uint8Array): string | Uint8Array => {
+export const contentOf = (bytes: Uint8Array): string | Uint8Array => {
   if (bytes.includes(0)) return bytes
   try {
     return new TextDecoder('utf-8', { fatal: true }).decode(bytes)

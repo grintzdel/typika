@@ -1,0 +1,4 @@
+ref = "github:typika/templates/cqrs/ts@6d3e80e10308"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11

@@ -1,0 +1,4 @@
+ref = "github:typika/templates/open-closed-base/ts@197c51051e9c"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11

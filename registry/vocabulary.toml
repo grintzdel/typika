@@ -1,0 +1,63 @@
+[[topics]]
+id = "architecture/hexagonal"
+label = "Hexagonal architecture"
+
+[[topics]]
+id = "architecture/cqrs"
+label = "CQRS"
+
+[[topics]]
+id = "architecture/event-sourcing"
+label = "Event sourcing"
+
+[[topics]]
+id = "architecture/outbox"
+label = "Outbox"
+
+[[topics]]
+id = "architecture/state-machine"
+label = "State machine"
+
+[[topics]]
+id = "principle/single-responsibility"
+label = "Single responsibility"
+
+[[topics]]
+id = "principle/open-closed"
+label = "Open/closed"
+
+[[topics]]
+id = "principle/liskov-substitution"
+label = "Liskov substitution"
+
+[[topics]]
+id = "principle/interface-segregation"
+label = "Interface segregation"
+
+[[topics]]
+id = "principle/dependency-inversion"
+label = "Dependency inversion"
+
+[[topics]]
+id = "design-pattern/behavioral/strategy"
+label = "Strategy"
+
+[[topics]]
+id = "design-pattern/behavioral/observer"
+label = "Observer"
+
+[[topics]]
+id = "design-pattern/structural/decorator"
+label = "Decorator"
+
+[[topics]]
+id = "design-pattern/creational/factory-method"
+label = "Factory Method"
+
+[[topics]]
+id = "design-pattern/structural/adapter"
+label = "Adapter"
+
+[[topics]]
+id = "fundamental/composition-over-inheritance"
+label = "Composition over inheritance"

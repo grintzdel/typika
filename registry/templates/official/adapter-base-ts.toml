@@ -1,0 +1,4 @@
+ref = "github:typika/templates/adapter-base/ts@9ea2847b5bea"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11

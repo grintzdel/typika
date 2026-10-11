@@ -1,0 +1,4 @@
+ref = "github:typika/templates/strategy-base/ts@a17e93a7af3e"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-08

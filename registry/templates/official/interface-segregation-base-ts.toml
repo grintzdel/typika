@@ -1,0 +1,4 @@
+ref = "github:typika/templates/interface-segregation-base/ts@620c0785048d"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11

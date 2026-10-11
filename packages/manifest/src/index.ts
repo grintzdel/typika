@@ -19,10 +19,12 @@ export { ManifestInvalidError } from './domain/errors/manifest-invalid.error.ts'
 export { ManifestNotFoundError } from './domain/errors/manifest-not-found.error.ts'
 export { isWarning, makeIssue, ManifestIssueSchema, type ManifestIssue } from './domain/manifest-issue.domain-model.ts'
 export {
+  AUTHOR,
   ExerciseKind,
   isRelativePath,
   ManifestSchema,
   SUPPORTED_SCHEMA_VERSIONS,
+  TopicSchema,
   type Exercise,
   type Manifest,
 } from './domain/manifest.domain-model.ts'
@@ -35,3 +37,4 @@ export { parseManifest } from './parse-manifest/parse-manifest.ts'
 export { formatTemplateRef, parseTemplateRef } from './parse-template-ref/parse-template-ref.ts'
 export { parseTourStep } from './parse-tour-step/parse-tour-step.ts'
 export { MANIFEST_FILE, validateTemplate, type ValidTemplate } from './validate-template/validate-template.ts'
+export { fieldIssuesOf, type FieldIssue } from './shared/schema-issues.ts'

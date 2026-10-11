@@ -1,0 +1,4 @@
+ref = "github:typika/templates/composition-over-inheritance-base/ts@6c7e66de520a"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-11
