@@ -79,6 +79,8 @@ template.
   templates. Ses tests passent par le gestionnaire HTTP simulé et par les faux d'infrastructure que renvoie `openShop`
   (`cards`, `broker`, `mailer`, `clock`), que chaque template garde à l'identique : les templates ne changent que ce qui
   se trouve derrière. Un id n'est attribué qu'à une commande valide, pour que toutes les entrées numérotent pareil.
+  Quand le concept vit dans un fichier d'infrastructure (la table d'outbox, la colonne d'état d'une machine à états),
+  le template le modifie et l'ajoute à `base.focus`, pour que le diff le montre.
 - **Le problème doit se sentir dans un exercice.** La base est le point de départ des exercices `refactor` : l'exigence
   doit y être pénible (duplication, `switch` de plus, test impossible).
 - `role = "base"`, pas de tour, pas de variantes, pas d'exercices.

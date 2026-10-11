@@ -34,6 +34,7 @@ const TYPESCRIPT_TEMPLATES = [
   'outbox/ts',
   'single-responsibility/ts',
   'single-responsibility-base/ts',
+  'state-machine/ts',
   'strategy/ts',
   'strategy-base/ts',
 ]
