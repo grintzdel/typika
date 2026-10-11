@@ -257,7 +257,27 @@ Le `tsconfig.json` le vérifie :
 
 Scripts attendus dans `package.json` : `start` (`node src/main.ts`), `test` (`vitest run --dir tests`, pour ignorer les tests de `exercises/`), `typecheck` (`tsc`).
 
-### 8.2 Go
+### 8.2 JavaScript
+
+Une variante JS n'est pas la variante TS sans ses types : elle n'existe que si la plateforme apporte quelque chose
+([catalogue.md §8.3](../specs/catalogue.md)), et c'est ce que montrent son code et son tour (`EventTarget` et
+`AbortSignal` dans `observer-js`). Elle s'exécute avec `node src/main.js`, Node ≥ 22. Cela impose :
+
+- des imports relatifs avec l'extension `.js` ; ni `tsconfig.json`, ni `typescript` dans `package.json`, ni script
+  `typecheck` ;
+- aucun fichier qui n'existe que pour un type : les interfaces de services disparaissent, le duck typing les remplace.
+  Champs privés en `#`, pas de convention `_` ;
+- les mêmes tests métier que la variante TS, mêmes fichiers et mêmes noms, en `.test.js`.
+
+Dans l'éditeur, le language service lit les `.js` sans les typer (`allowJs`, pas de `checkJs`) : complétion et survol,
+aucune erreur de type.
+
+Une erreur levée par un listener d'`EventTarget` ne remonte pas à `dispatchEvent` : elle part au gestionnaire global.
+Le navigateur la logge, Node arrête le process, et les autres listeners sont quand même appelés. Un exercice `fix` qui
+retire une isolation ne fait donc échouer que le test qui vérifie le rapport de l'erreur. L'onglet Tests et
+`template-check` ignorent ces erreurs non interceptées, comme le worker de test du navigateur.
+
+### 8.3 Go
 
 Un template Go s'exécute hors de Typika avec `go run ./cmd/shop` et `go test ./...`. Go compile et lance les tests par
 package, ce qui impose :
@@ -276,7 +296,7 @@ Le runtime `go` est la toolchain Go officielle ([0018](../decisions/0018-go-runt
 disponible, goroutines, génériques et `context` compris. Restent interdits : les modules tiers, les packages de la stdlib
 hors du jeu précompilé (la CI du registre les signale), `cgo`, `go:embed`, `os/exec` et les serveurs `net/http`.
 
-### 8.3 Kotlin
+### 8.4 Kotlin
 
 Un template Kotlin s'exécute hors de Typika avec `gradle run` et `gradle test`, sur la JVM. Dans Typika, le même code
 est compilé en JavaScript ([0019](../decisions/0019-kotlin-runtime.md)) : il doit donc compiler et passer ses tests

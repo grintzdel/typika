@@ -48,7 +48,7 @@ const compilerOptionsOf = (tsconfig: string | undefined): ts.CompilerOptions => 
     typeof json === 'object' && json !== null && 'compilerOptions' in json ? json.compilerOptions : undefined
   const options =
     compilerOptions === undefined ? DEFAULT_OPTIONS : ts.convertCompilerOptionsFromJson(compilerOptions, '/').options
-  return { ...options, lib: [ROOT_LIB], types: [], noEmit: true }
+  return { ...options, allowJs: true, lib: [ROOT_LIB], types: [], noEmit: true }
 }
 
 const toDiagnostic = (diagnostic: ts.Diagnostic): EditorDiagnostic | undefined =>

@@ -5,9 +5,13 @@ test.describe('home', () => {
     await page.goto('/')
 
     const list = page.getByRole('list', { name: 'Templates' })
-    await expect(list.getByRole('link', { name: /Observer: reacting to an order/ })).toHaveAttribute(
+    await expect(list.getByRole('link', { name: /Observer: reacting to an order.*TypeScript/ })).toHaveAttribute(
       'href',
       '/play/observer-ts'
+    )
+    await expect(list.getByRole('link', { name: /Observer: reacting to an order.*JavaScript/ })).toHaveAttribute(
+      'href',
+      '/play/observer-js'
     )
     await expect(list.getByRole('link', { name: /Strategy: shipping options.*Kotlin/ })).toHaveAttribute(
       'href',

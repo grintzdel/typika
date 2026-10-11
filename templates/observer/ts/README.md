@@ -22,3 +22,7 @@ npm test
 - `src/orders/place-order.ts`: publishes `OrderPlaced` without knowing who listens.
 - `src/orders/subscribers/`: one subscriber per reaction.
 - `src/open-shop.ts`: where the subscribers are wired to the subject.
+
+## Variants
+
+- JavaScript: `observer-js`, where `EventTarget` is the subject.
