@@ -72,6 +72,11 @@ l'éditeur.
 recharger la page le rouvre, et Reset rend les fichiers du template après confirmation : le critère de fin du M1 est
 rempli. Restent l'image Docker avec le test E2E des en-têtes, et le language service TypeScript de l'éditeur.
 
+État (2026-10-11) : l'image Docker sert l'app et la runtime frame depuis un serveur Node qui pose les en-têtes par hôte
+et par chemin, derrière Caddy pour TLS et HSTS. La suite E2E de production vérifie les en-têtes de chaque route et
+exécute un template sous la CSP réelle, contre le build local comme contre l'image. Reste le language service
+TypeScript de l'éditeur.
+
 ## M2 — Pédagogie
 
 **Objectif** : ce qui distingue Typika d'une sandbox existe.

@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url'
 import * as Effect from 'effect/Effect'
 import { createServer, type Plugin, type ViteDevServer } from 'vite'
 
+import { appHeaders as headersOfAppPath } from '../server/security-headers.ts'
 import { publicConfigFromEnv } from '../src/modules/shared/core/public-config/public-config-from-env.ts'
-import { APP_HEADERS, isIsolatedPath, ISOLATION_HEADERS } from './isolation-headers.ts'
 
 const DEV_ENV = {
   TYPIKA_PUBLIC_URL: 'http://localhost:3000',
@@ -22,9 +22,7 @@ export const appHeaders = (): Plugin => ({
   configureServer: (server) => {
     server.middlewares.use((request, response, next) => {
       const pathname = new URL(request.url ?? '/', 'http://localhost').pathname
-      for (const [name, value] of Object.entries(APP_HEADERS)) response.setHeader(name, value)
-      if (isIsolatedPath(pathname))
-        for (const [name, value] of Object.entries(ISOLATION_HEADERS)) response.setHeader(name, value)
+      for (const [name, value] of Object.entries(headersOfAppPath(pathname))) response.setHeader(name, value)
       next()
     })
   },

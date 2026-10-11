@@ -79,12 +79,14 @@ Vérification : `turbo boundaries` si la fonctionnalité convient à ces règles
 ### 3.1 Arborescence
 
 ```
-apps/web/src/
-├── modules/             # logique et UI par domaine (§3.2)
-├── features/            # pages : orchestrent presenter hooks + composants, aucun composant propre
-├── routes/              # coquilles TanStack (§5)
-├── ui/                  # design system (Base UI + cva), sans logique métier
-└── i18n/                # ressources react-i18next (en, fr)
+apps/web/
+├── server/                # serveur de production : routage par hôte, fichiers statiques, en-têtes (hosting §4.1)
+└── src/
+    ├── modules/           # logique et UI par domaine (§3.2)
+    ├── features/          # pages : orchestrent presenter hooks + composants, aucun composant propre
+    ├── routes/            # coquilles TanStack (§5)
+    ├── ui/                # design system (Base UI + cva), sans logique métier
+    └── i18n/              # ressources react-i18next (en, fr)
 ```
 
 ### 3.2 Modules
@@ -266,8 +268,9 @@ TDD : E2E Playwright rouges, puis tests unitaires rouges couche par couche, puis
 Tests transverses obligatoires :
 
 - **En-têtes** : un E2E vérifie les en-têtes de chaque route du §5 et que `self.crossOriginIsolated === true` dans la
-  runtime frame. Il tourne contre le serveur de dev, l'image Docker (`docker compose up` en CI) et chaque déploiement
-  de preview.
+  runtime frame, et lance les tests d'un template sous la CSP réelle (`src/e2e/production/`, `pnpm test:e2e:production`).
+  Il tourne contre le serveur de production construit localement, l'image Docker et chaque déploiement de preview. Le
+  serveur de dev pose les mêmes en-têtes d'isolation, sans la CSP, que Vite et son HMR ne respectent pas.
 - **Isolation** : un E2E exécute un template de fixture qui tente de lire IndexedDB et `localStorage` de l'origine app
   et de faire un `fetch` externe ; tout doit échouer.
 - **Templates de fixture** : `apps/web/e2e/fixtures/templates/` contient un template minimal par runtime ; pas de

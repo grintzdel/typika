@@ -2,8 +2,8 @@ import { fileURLToPath } from 'node:url'
 
 import { defineConfig } from 'vite'
 
+import { RUNTIME_HEADERS } from './server/security-headers.ts'
 import { runtimeConfigEndpoint, withDevEnv } from './vite/dev-servers.ts'
-import { RUNTIME_HEADERS } from './vite/isolation-headers.ts'
 
 withDevEnv()
 

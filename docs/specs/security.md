@@ -140,7 +140,8 @@ COEP vaut `require-corp`, pas `credentialless` : WebKit ignore `credentialless` 
 ([0016](../decisions/0016-isolation-and-embed.md)). Sans CORP `cross-origin` sur l'origine runtime, la runtime frame
 est bloquée par la COEP de l'app ; sans `allow="cross-origin-isolated"` sur l'iframe, Chromium ne l'isole pas.
 
-CSP de l'origine app (base, à affiner au M1) :
+CSP de l'origine app (cible ; au M1, `connect-src` vaut `'self'` et `script-src` ajoute les hashes des scripts inline
+du shell SPA, calculés au démarrage du serveur — les autres sources arrivent avec les fonctions qui les utilisent) :
 
 ```
 default-src 'self';

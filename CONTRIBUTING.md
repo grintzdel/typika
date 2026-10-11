@@ -25,6 +25,9 @@ Ouvrez une issue avant tout changement important. Pour remettre en cause une dé
 - App : `pnpm --filter @typika/web dev` sert l'app sur `http://localhost:3000` et la runtime frame sur
   `http://127.0.0.1:3001`. Les tests E2E (`pnpm --filter @typika/web test:e2e`) démarrent ce serveur s'il ne tourne
   pas déjà.
+- Production : `pnpm --filter @typika/web test:e2e:production` construit l'app, lance le serveur de production sur le
+  port 3100 et vérifie les en-têtes de chaque route. Contre une autre instance (l'image Docker, par exemple), passez
+  `TYPIKA_E2E_APP_URL` et `TYPIKA_E2E_RUNTIME_URL` ([hosting](docs/guides/hosting.md) §4.4).
 - Messages de commit en anglais, à l'impératif.
 
 ## Licence

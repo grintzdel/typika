@@ -1,0 +1,10 @@
+.git
+**/node_modules
+**/dist
+**/.turbo
+**/.vitest
+**/test-results
+**/playwright-report
+**/.DS_Store
+.env*
+!.env.example
