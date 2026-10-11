@@ -1,0 +1,45 @@
+schema = 1
+name = "dependency-inversion-ts"
+title = "Dependency inversion: confirming an order"
+summary = "Make the business code own the interfaces it needs, and let the infrastructure plug into them."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["principle/dependency-inversion"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-concrete-dependencies.md",
+  "tour/03-own-the-abstraction.md",
+  "tour/04-inject.md",
+  "tour/05-composition-root.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/dependency-inversion-base/ts"
+focus = ["src/checkout/**", "src/infrastructure/**", "src/open-shop.ts"]
+
+[[exercises]]
+name = "test-without-smtp"
+kind = "refactor"
+title = "Test the confirmation without SMTP"
+from = "base"
+failing = ["tests/order-confirmation.test.ts"]
+hints = ["hint-1.md"]
