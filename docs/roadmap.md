@@ -147,7 +147,8 @@ Lot 6, vague (a) livrée : `observer-ts`, `decorator-ts`, `factory-method-ts`, `
 (titre, résumé, langage, niveau ; les bases sont masquées) en attendant le hub du M3. `template-check` exécute
 désormais chaque fichier de test à chaque run : un fichier au code inchangé disparaissait des runs suivants.
 
-Vague (b) en cours : `single-responsibility-ts` est écrit, avec sa base, son tour et l'exercice `add-pdf-invoice`.
+Vague (b) en cours : `single-responsibility-ts` (exercice `add-pdf-invoice`) et `open-closed-ts` (exercice
+`add-black-friday-rule`) sont écrits, avec leur base et leur tour.
 
 ## M3 — Hub
 
