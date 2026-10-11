@@ -23,3 +23,7 @@ npm test
 - `src/notifications/retrying-notifier.ts`, `logging-notifier.ts`, `throttled-notifier.ts`: one decorator per
   behaviour.
 - `src/notifications/notifiers.ts`: where the decorators are stacked, and in which order.
+
+## Variants
+
+- JavaScript: `decorator-js`, where each decorator is a function that wraps `notify`.

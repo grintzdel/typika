@@ -259,15 +259,17 @@ Scripts attendus dans `package.json` : `start` (`node src/main.ts`), `test` (`vi
 
 ### 8.2 JavaScript
 
-Une variante JS n'est pas la variante TS sans ses types : elle n'existe que si la plateforme apporte quelque chose
-([catalogue.md §8.3](../specs/catalogue.md)), et c'est ce que montrent son code et son tour (`EventTarget` et
-`AbortSignal` dans `observer-js`). Elle s'exécute avec `node src/main.js`, Node ≥ 22. Cela impose :
+Une variante JS n'est pas la variante TS sans ses types : elle n'existe que si la plateforme ou le langage apporte
+quelque chose ([catalogue.md §8.3](../specs/catalogue.md)), et c'est ce que montrent son code et son tour
+(`EventTarget` et `AbortSignal` dans `observer-js`, des fonctions d'ordre supérieur à la place des classes dans
+`decorator-js`). Elle s'exécute avec `node src/main.js`, Node ≥ 22. Cela impose :
 
 - des imports relatifs avec l'extension `.js` ; ni `tsconfig.json`, ni `typescript` dans `package.json`, ni script
   `typecheck` ;
 - aucun fichier qui n'existe que pour un type : les interfaces de services disparaissent, le duck typing les remplace.
   Champs privés en `#`, pas de convention `_` ;
-- les mêmes tests métier que la variante TS, mêmes fichiers et mêmes noms, en `.test.js`.
+- les mêmes tests métier que la variante TS, mêmes fichiers et mêmes noms, en `.test.js`. Seul l'appel change quand
+  la forme idiomatique change : `notify(...)` au lieu de `notifier.notify(...)` dans `decorator-js`.
 
 Dans l'éditeur, le language service lit les `.js` sans les typer (`allowJs`, pas de `checkJs`) : complétion et survol,
 aucune erreur de type.

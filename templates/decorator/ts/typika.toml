@@ -36,6 +36,9 @@ steps = [
 template = "github:typika/templates/decorator-base/ts"
 focus = ["src/notifications/**"]
 
+[variants]
+javascript = "github:typika/templates/decorator/js"
+
 [[exercises]]
 name = "add-sms-with-retry"
 kind = "refactor"

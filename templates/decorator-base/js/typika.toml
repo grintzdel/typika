@@ -1,0 +1,24 @@
+schema = 1
+name = "decorator-base-js"
+title = "Decorator base: sending notifications"
+summary = "One email notifier with an option for each extra behaviour, before the Decorator pattern."
+license = "MIT-0"
+authors = ["github:maoudin"]
+role = "base"
+
+[facets]
+language = "javascript"
+paradigm = ["oop"]
+topic = ["design-pattern/structural/decorator"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.js"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.js"]
