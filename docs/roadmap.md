@@ -80,6 +80,16 @@ TypeScript de l'éditeur.
 État (2026-10-11) : l'éditeur a son language service TypeScript dans un worker : complétion avec auto-import,
 diagnostics multi-fichiers, survol et aide aux signatures, activés dès que le worker est prêt. Le M1 est livré.
 
+Revue (2026-10-11) : on passe au M2 comme prévu. Le M3 n'a de sens qu'avec un catalogue à publier, et le M4 comme
+le M5 viennent après le M3. Ce qui reste ouvert après le M1 :
+
+- Si l'on tape avant que le worker TypeScript soit prêt, la complétion ne s'ouvre qu'à la frappe suivante, et aucun
+  indicateur ne montre que le worker démarre. Ces deux points sont corrigés au premier lot du M2, puisque tours et
+  exercices font taper dès l'ouverture.
+- La recherche de marques sur « Typika » (R6) n'est pas faite. Elle doit l'être avant toute mise en ligne publique.
+- L'isolation n'a été vérifiée que dans Chromium (R2, R7, R8). Firefox et Safari sont à vérifier au plus tard au M4.
+- La configuration Vercel, `SECURITY.md` et la CI GitHub restent en attente : le contrôle avant merge est local.
+
 ## M2 — Pédagogie
 
 **Objectif** : ce qui distingue Typika d'une sandbox existe.
@@ -94,6 +104,25 @@ Livrables :
 
 Terminé quand : chaque template TS du catalogue a une base, un tour complet et au moins un exercice `refactor`, et
 ses tests sont verts.
+
+### Découpage
+
+Un lot = une branche `m2/<lot>` et une PR. Les lots 2 à 4 construisent l'interface sur `strategy-ts`, qui a déjà
+son tour et ses deux exercices. Le lot 5 outille la vérification des templates. Le lot 6 écrit le reste du catalogue
+en s'appuyant sur cet outil.
+
+| # | Lot | Contenu | Terminé quand |
+|---|---|---|---|
+| 1 | `language-service-startup` | Une complétion demandée avant que le worker soit prêt s'ouvre quand il l'est. Un indicateur discret montre que TypeScript démarre. | Un test E2E tape dès l'ouverture et obtient la complétion sans seconde frappe. |
+| 2 | `tour` | Panneau Tour ([ui §7](specs/ui.md)) : rendu Markdown sans HTML brut, navigation Préc. / Suiv. et par la liste, ouverture du fichier ancré, surlignage `lines` ou `region` sans les marqueurs, onglets `also`, `#step=<id>` dans l'URL, `Alt+←` / `Alt+→`, annonce `aria-live`. Si le code a changé, l'étape le signale et ouvre l'original en lecture seule. `tour/` et `typika.toml` sont regroupés et en lecture seule dans l'arbre. Un lien `typika:<name>` ouvre `/play/<name>` quand le template est embarqué. | Le tour de `strategy-ts` se parcourt en entier au clavier, et une étape rechargée par son URL rouvre le bon fichier sur la bonne plage. |
+| 3 | `diff` | Onglet Diff ([ui §6.4 et §8](specs/ui.md)) : « Depuis la base », restreint à `base.focus`, et « Mes modifications ». Vues côte à côte et unifiée, signes `+` / `-`, marqueurs vers les étapes du tour, bouton « Ouvrir la base ». La source de templates résout les refs `[base]` vers les templates embarqués. | Le diff `strategy-base-ts` → `strategy-ts` montre les fichiers de `src/checkout/` et renvoie vers les étapes ancrées. |
+| 4 | `exercises` | `/play/<name>?exercise=<id>` ([ui §10](specs/ui.md), [manifest §6](specs/manifest.md)) : état de départ (`from`, surcouche `start/`, `.typika-remove`), un projet local par exercice, panneau Exercice (énoncé, tests cibles, progression), validation à chaque run de tests, réussite mémorisée localement, indices un par un, solution (selon `solutionFrom`) montrée en diff puis appliquée sur demande, Recommencer. Le calcul des états de départ et de solution vit dans un package, pour être réutilisé par le lot 5. | Les deux exercices de `strategy-ts` se résolvent de bout en bout en E2E. |
+| 5 | `template-check` | Une commande vérifie chaque template de `templates/` : manifeste valide, refs `[base]` et `[variants]` résolues, ancres de tour présentes, puis les règles de [manifest §6.4](specs/manifest.md) (départ rouge sur les seuls fichiers `failing`, solution entièrement verte). Elle fait partie du contrôle local et préfigure `packages/registry-tools` du M3. | `strategy-ts` passe, et un exercice volontairement cassé fait échouer la commande. |
+| 6 | `catalogue-*` | Les 15 concepts restants en TS, leurs bases et les 3 variantes JS, en vagues : (a) Observer, Decorator, Factory Method, Adapter, composition vs héritage ; (b) les cinq principes SOLID ; (c) `naive-crud-ts` puis les cinq architectures ; (d) `observer-js`, `decorator-js`, `composition-over-inheritance-js`. La première vague remplace la redirection de `/` par une liste simple des templates embarqués, en attendant le hub du M3. Chaque vague met à jour le [guide d'écriture](guides/template-authoring.md) avec ce qu'elle a appris. | Le critère de fin du M2 ci-dessus, vérifié par la commande du lot 5. |
+
+À trancher pendant les lots, avec un ADR si une dépendance entre : le rendu Markdown du tour (lot 2) et le moteur de
+diff (lot 3, `@codemirror/merge` en premier candidat puisque l'éditeur est CodeMirror 6). Au lot 6, il faut aussi
+vérifier que le language service et la runtime `browser-js` traitent un template JS aussi bien qu'un template TS.
 
 ## M3 — Hub
 
