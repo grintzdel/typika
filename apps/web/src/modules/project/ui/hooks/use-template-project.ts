@@ -17,6 +17,9 @@ export type OpenTemplateFailure =
   | { readonly _tag: 'Invalid'; readonly name: string }
   | { readonly _tag: 'Unknown'; readonly name: string }
 
+const currentFiles = (files: ReadonlyMap<string, FileContent>): ReadonlyMap<string, string> =>
+  new Map([...files].map(([path, content]) => [path, textOf(content)]))
+
 export const useTemplateProject = (templateName: string) => {
   const result = useAtomValue(templateProjectAtom(templateName))
   const [saveResult, save] = useAtom(saveProjectFilesAtom(templateName))
@@ -47,6 +50,8 @@ export const useTemplateProject = (templateName: string) => {
             const content = files.get(path)
             return content === undefined ? '' : textOf(content)
           },
+          files: currentFiles(opened.files),
+          templateFiles: opened.templateFiles as ReadonlyMap<string, string>,
           originalOf: (path: string) => (opened.templateFiles as ReadonlyMap<string, string>).get(path),
         }
 

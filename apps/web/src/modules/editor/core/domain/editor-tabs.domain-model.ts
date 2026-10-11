@@ -1,7 +1,16 @@
+export const EditorTabKind = {
+  FILE: 'file',
+  ORIGINAL: 'original',
+  BASE_DIFF: 'base-diff',
+  MINE_DIFF: 'mine-diff',
+} as const
+
+export type EditorTabKind = (typeof EditorTabKind)[keyof typeof EditorTabKind]
+
 export type EditorTab = {
   readonly key: string
   readonly path: string
-  readonly isOriginal: boolean
+  readonly kind: EditorTabKind
 }
 
 export type EditorTabs = {
@@ -11,9 +20,14 @@ export type EditorTabs = {
 
 export const EMPTY_TABS: EditorTabs = { tabs: [], activeKey: undefined }
 
-export const fileTab = (path: string): EditorTab => ({ key: path, path, isOriginal: false })
+const tabOf =
+  (kind: EditorTabKind) =>
+  (path: string): EditorTab => ({ key: kind === EditorTabKind.FILE ? path : `${kind}:${path}`, path, kind })
 
-export const originalTab = (path: string): EditorTab => ({ key: `original:${path}`, path, isOriginal: true })
+export const fileTab = tabOf(EditorTabKind.FILE)
+export const originalTab = tabOf(EditorTabKind.ORIGINAL)
+export const baseDiffTab = tabOf(EditorTabKind.BASE_DIFF)
+export const mineDiffTab = tabOf(EditorTabKind.MINE_DIFF)
 
 export const activeTabOf = (state: EditorTabs): EditorTab | undefined =>
   state.tabs.find((tab) => tab.key === state.activeKey)

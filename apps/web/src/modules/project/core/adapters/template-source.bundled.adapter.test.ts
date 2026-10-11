@@ -6,6 +6,7 @@ import { templateToml } from '../../__tests__/template.factory.ts'
 import { makeTemplateSourceBundled } from './template-source.bundled.adapter.ts'
 
 const source = makeTemplateSourceBundled({
+  '../templates/strategy-base/ts/typika.toml': templateToml('strategy-base-ts'),
   '../templates/strategy/ts/typika.toml': templateToml('strategy-ts'),
   '../templates/strategy/ts/src/main.ts': 'ts',
   '../templates/strategy/go/typika.toml': templateToml('strategy-go'),
@@ -28,6 +29,26 @@ describe('bundled template source', () => {
   })
 
   it('lists the names of the templates', async () => {
-    expect(await Effect.runPromise(source.names)).toEqual(['strategy-go', 'strategy-ts'])
+    expect(await Effect.runPromise(source.names)).toEqual(['strategy-base-ts', 'strategy-go', 'strategy-ts'])
+  })
+
+  it('resolves an official template ref to the embedded template', async () => {
+    expect(await Effect.runPromise(source.resolveRef('github:typika/templates/strategy-base/ts'))).toBe(
+      'strategy-base-ts'
+    )
+  })
+
+  it('fails for a ref that is not embedded', async () => {
+    const results = await Promise.all(
+      ['github:typika/templates/observer/ts', 'github:someone/templates/strategy/ts', 'not a ref'].map((ref) =>
+        Effect.runPromiseExit(source.resolveRef(ref))
+      )
+    )
+
+    expect(results.map((exit) => Exit.isFailure(exit) && exit.cause.reasons[0])).toMatchObject([
+      { error: { _tag: 'ProjectTemplateNotFoundError', name: 'github:typika/templates/observer/ts' } },
+      { error: { _tag: 'ProjectTemplateNotFoundError', name: 'github:someone/templates/strategy/ts' } },
+      { error: { _tag: 'ProjectTemplateNotFoundError', name: 'not a ref' } },
+    ])
   })
 })

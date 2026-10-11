@@ -1,13 +1,21 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { fileTab, originalTab, type EditorTab } from '../../core/domain/editor-tabs.domain-model.ts'
+import {
+  baseDiffTab,
+  fileTab,
+  mineDiffTab,
+  originalTab,
+  type EditorTab,
+} from '../../core/domain/editor-tabs.domain-model.ts'
 import { EditorTabs } from './EditorTabs.tsx'
 
 const TABS: ReadonlyArray<EditorTab> = [
   fileTab('src/main.ts'),
   fileTab('src/checkout/quote.ts'),
   originalTab('src/checkout/quote.ts'),
+  baseDiffTab('src/checkout/quote.ts'),
+  mineDiffTab('src/checkout/quote.ts'),
 ]
 
 const renderTabs = (activeKey = 'src/main.ts') => {
@@ -31,6 +39,8 @@ describe('EditorTabs', () => {
     expect(tab('main.ts').getAttribute('aria-selected')).toBe('false')
     expect(tab('quote.ts').getAttribute('aria-selected')).toBe('true')
     expect(tab('quote.ts (origine)').getAttribute('aria-selected')).toBe('false')
+    expect(tab('quote.ts (depuis la base)')).toBeTruthy()
+    expect(tab('quote.ts (mes modifications)')).toBeTruthy()
   })
 
   it('labels the panel with the active tab', () => {
@@ -53,7 +63,7 @@ describe('EditorTabs', () => {
     fireEvent.keyDown(tab('main.ts'), { key: 'ArrowRight' })
     fireEvent.keyDown(tab('main.ts'), { key: 'ArrowLeft' })
 
-    expect(onSelect.mock.calls).toEqual([['src/checkout/quote.ts'], ['original:src/checkout/quote.ts']])
+    expect(onSelect.mock.calls).toEqual([['src/checkout/quote.ts'], ['mine-diff:src/checkout/quote.ts']])
   })
 
   it('closes a tab with Delete', () => {

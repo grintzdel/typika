@@ -4,6 +4,7 @@ import * as Atom from 'effect/reactivity/Atom'
 import { appRuntime } from '../../../app/core/app.runtime.ts'
 import type { ProjectFileEdit, TemplateProject } from '../domain/project.domain-model.ts'
 import { listTemplatesProgram } from '../programs/list-templates/list-templates.program.ts'
+import { openBaseProgram } from '../programs/open-base/open-base.program.ts'
 import { openTemplateProgram } from '../programs/open-template/open-template.program.ts'
 import { resetProjectProgram } from '../programs/reset-project/reset-project.program.ts'
 import { saveProjectFilesProgram } from '../programs/save-project-files/save-project-files.program.ts'
@@ -19,6 +20,14 @@ export const templateProjectAtom = Atom.family((name: string) =>
     const generation = get(generationAtom(name))
     return Effect.map(openTemplateProgram(name), (project): OpenedProject => ({ ...project, generation }))
   })
+)
+
+export const baseTemplateAtom = Atom.family((name: string) =>
+  appRuntime.atom((get) =>
+    Effect.flatMap(get.result(templateProjectAtom(name)), (project) =>
+      project.manifest.base === undefined ? Effect.succeed(undefined) : openBaseProgram(project.manifest.base)
+    )
+  )
 )
 
 export const saveProjectFilesAtom = Atom.family((name: string) =>

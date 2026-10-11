@@ -28,7 +28,7 @@ const renderPanel = (overrides: Partial<TourPanelProps> = {}) => {
   return { onSelect, onOpenOriginal }
 }
 
-const tour = () => screen.getByRole('complementary', { name: 'Visite guidée' })
+const tour = () => screen.getByRole('region', { name: 'Visite guidée' })
 
 describe('TourPanel', () => {
   it('shows the progress, the title and the body of the step', () => {

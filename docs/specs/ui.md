@@ -178,6 +178,8 @@ Objectif : amener l'apprenant vers un concept en deux clics.
 - Liste des fichiers ajoutés / modifiés / supprimés entre `base` et le template, puis diff côte à côte.
 - Annotations : si une étape de tour ancre une plage présente dans le diff, un marqueur renvoie vers l'étape.
 - Lecture seule. Un bouton « Ouvrir la base » ouvre la base dans une sandbox séparée.
+- Dans la sandbox, l'onglet Diff liste les fichiers ; chacun s'ouvre dans un onglet de l'éditeur, pour avoir la
+  largeur d'une vue côte à côte ([0021](../decisions/0021-diff-engine.md)).
 
 ## 9. Comparaison — `/compare/<name>?a=<lang>&b=<lang>`
 

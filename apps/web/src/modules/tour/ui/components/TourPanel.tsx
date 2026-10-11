@@ -31,7 +31,7 @@ export const TourPanel = ({
   if (step === undefined) return null
 
   return (
-    <aside aria-label={t('label')} className="flex h-full min-h-0 flex-col text-sm">
+    <section aria-label={t('label')} className="flex h-full min-h-0 flex-col text-sm">
       <p className="sr-only" aria-live="polite">
         {announcement}
       </p>
@@ -77,6 +77,6 @@ export const TourPanel = ({
           </li>
         ))}
       </ol>
-    </aside>
+    </section>
   )
 }

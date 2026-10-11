@@ -1,4 +1,4 @@
-import { MANIFEST_FILE, parseManifest } from '@typika/manifest'
+import { MANIFEST_FILE, parseManifest, parseTemplateRef } from '@typika/manifest'
 import * as Arr from 'effect/Array'
 import type * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
@@ -9,6 +9,8 @@ import { ProjectTemplateNotFoundError } from '../domain/errors/project-template-
 import { TemplateSourcePort } from '../ports/template-source.port.ts'
 
 const MANIFEST_SUFFIX = `/${MANIFEST_FILE}`
+const OFFICIAL_OWNER = 'typika'
+const OFFICIAL_REPO = 'templates'
 
 const nameOf = (toml: string) =>
   parseManifest(toml).pipe(
@@ -30,6 +32,13 @@ export const makeTemplateSourceBundled = (
         .map(([path, content]) => [path.slice(root.length), content])
     )
 
+  const officialRoot = (ref: string) =>
+    Option.flatMap(parseTemplateRef(ref), ({ owner, repo, path }) =>
+      owner === OFFICIAL_OWNER && repo === OFFICIAL_REPO && path !== undefined
+        ? Option.fromNullishOr(roots.find((root) => root.endsWith(`/${OFFICIAL_REPO}/${path}/`)))
+        : Option.none()
+    )
+
   return {
     load: (name) =>
       Effect.gen(function* () {
@@ -42,6 +51,13 @@ export const makeTemplateSourceBundled = (
     names: Effect.forEach(roots, (root) => nameOf(sources[`${root}${MANIFEST_FILE}`] ?? '')).pipe(
       Effect.map((names) => Arr.getSomes(names).toSorted())
     ),
+    resolveRef: (ref) =>
+      Effect.gen(function* () {
+        const root = officialRoot(ref)
+        const name = Option.isSome(root) ? yield* nameOf(sources[`${root.value}${MANIFEST_FILE}`] ?? '') : Option.none()
+        if (Option.isNone(name)) return yield* new ProjectTemplateNotFoundError({ name: ref })
+        return name.value
+      }),
   }
 }
 

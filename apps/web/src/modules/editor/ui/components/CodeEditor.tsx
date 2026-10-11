@@ -1,8 +1,6 @@
 import { startCompletion } from '@codemirror/autocomplete'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
-import { javascript } from '@codemirror/lang-javascript'
-import { markdown } from '@codemirror/lang-markdown'
-import { bracketMatching, indentOnInput, type LanguageSupport } from '@codemirror/language'
+import { bracketMatching, indentOnInput } from '@codemirror/language'
 import { Compartment, EditorState, type Extension } from '@codemirror/state'
 import {
   drawSelection,
@@ -16,9 +14,9 @@ import * as Effect from 'effect/Effect'
 import { useEffect, useRef } from 'react'
 
 import { isAnalyzedPath } from '../../core/domain/language-service.domain-model.ts'
-import { languageOf, type EditorLanguage } from '../../core/domain/language.domain-model.ts'
 import type { LanguageServiceSession } from '../../core/ports/language-service.port.ts'
 import { editorTheme } from './editor-theme.ts'
+import { languageSupportOf } from './language-support.ts'
 import { isCompletionPending, pendingCompletion } from './pending-completion.ts'
 import { scrollToTourHighlight, setTourHighlight, tourHighlight, type LineRange } from './tour-highlight.ts'
 import { typescriptExtensions } from './typescript-extensions.ts'
@@ -32,14 +30,6 @@ export type CodeEditorProps = {
   readonly label: string
   readonly languageService: LanguageServiceSession | undefined
   readonly onChange: (path: string, content: string) => void
-}
-
-const LANGUAGES: Readonly<Record<EditorLanguage, () => LanguageSupport | undefined>> = {
-  typescript: () => javascript({ typescript: true }),
-  javascript: () => javascript(),
-  json: () => javascript(),
-  markdown: () => markdown(),
-  text: () => undefined,
 }
 
 const languageServiceExtensions = (
@@ -56,7 +46,7 @@ const makeState = (
   languageService: Extension,
   onDocChange: (content: string) => void
 ): EditorState => {
-  const language = LANGUAGES[languageOf(path)]()
+  const language = languageSupportOf(path)
   const extensions: Array<Extension> = [
     lineNumbers(),
     highlightActiveLineGutter(),

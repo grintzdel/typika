@@ -1,7 +1,7 @@
 import { useId, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { EditorTab } from '../../core/domain/editor-tabs.domain-model.ts'
+import { EditorTabKind, type EditorTab } from '../../core/domain/editor-tabs.domain-model.ts'
 
 export type EditorTabsProps = {
   readonly tabs: ReadonlyArray<EditorTab>
@@ -18,8 +18,16 @@ export const EditorTabs = ({ tabs, activeKey, onSelect, onClose, children }: Edi
   const id = useId()
   const buttons = useRef(new Map<string, HTMLButtonElement>())
 
-  const labelOf = (tab: EditorTab) =>
-    tab.isOriginal ? t('tabs.original', { name: nameOf(tab.path) }) : nameOf(tab.path)
+  const labelOf = (tab: EditorTab) => {
+    const name = nameOf(tab.path)
+    const labels: Readonly<Record<EditorTabKind, string>> = {
+      [EditorTabKind.FILE]: name,
+      [EditorTabKind.ORIGINAL]: t('tabs.original', { name }),
+      [EditorTabKind.BASE_DIFF]: t('tabs.baseDiff', { name }),
+      [EditorTabKind.MINE_DIFF]: t('tabs.mineDiff', { name }),
+    }
+    return labels[tab.kind]
+  }
   const tabId = (index: number) => `${id}-tab-${index}`
   const activeIndex = tabs.findIndex((tab) => tab.key === activeKey)
 
@@ -81,7 +89,7 @@ export const EditorTabs = ({ tabs, activeKey, onSelect, onClose, children }: Edi
                 aria-selected={isActive}
                 aria-keyshortcuts="Delete"
                 tabIndex={isActive ? 0 : -1}
-                className={`py-1.5 pl-3 whitespace-nowrap focus-visible:outline-2 focus-visible:outline-sky-600 ${tab.isOriginal ? 'italic' : ''}`}
+                className={`py-1.5 pl-3 whitespace-nowrap focus-visible:outline-2 focus-visible:outline-sky-600 ${tab.kind === EditorTabKind.FILE ? '' : 'italic'}`}
                 onClick={() => onSelect(tab.key)}
                 onKeyDown={(event) => handleKeyDown(event, index, tab.key)}
               >

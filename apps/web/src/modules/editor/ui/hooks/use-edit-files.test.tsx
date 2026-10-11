@@ -79,6 +79,20 @@ describe('useEditFiles', () => {
     expect(result.current.editedContentOf('src/b.ts')).toBeUndefined()
   })
 
+  it('exposes the edited files once they are flushed', () => {
+    const { result } = renderEdits()
+
+    act(() => {
+      result.current.handleChange('src/a.ts', 'a1')
+    })
+    expect(result.current.editedFiles.size).toBe(0)
+    act(() => {
+      vi.advanceTimersByTime(300)
+    })
+
+    expect([...result.current.editedFiles]).toEqual([['src/a.ts', 'a1']])
+  })
+
   it('forgets the edited contents with the pending edits', () => {
     const { result } = renderEdits()
 
@@ -89,6 +103,7 @@ describe('useEditFiles', () => {
     })
 
     expect(result.current.editedContentOf('src/a.ts')).toBeUndefined()
+    expect(result.current.editedFiles.size).toBe(0)
   })
 
   it('flushes the pending edits when the page gets hidden', () => {
