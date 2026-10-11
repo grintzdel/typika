@@ -8,6 +8,7 @@ const payloadOf = ({ type, order }: OrderEvent) => {
     case 'OrderPaid':
       return { orderId: order.id, totalCents: order.total.cents }
     case 'OrderShipped':
+    case 'OrderDelivered':
     case 'OrderCancelled':
       return { orderId: order.id }
   }

@@ -1,0 +1,53 @@
+schema = 1
+name = "cqrs-ts"
+title = "CQRS: the customer order history"
+summary = "Change orders through commands, and answer reads from read models that projections keep up to date."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["architecture/cqrs"]
+level = "advanced"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-write-model.md",
+  "tour/03-read-model.md",
+  "tour/04-projection.md",
+  "tour/05-consistency.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/ts"
+focus = ["src/orders/**", "src/open-shop.ts"]
+
+[[exercises]]
+name = "add-revenue-dashboard"
+kind = "refactor"
+title = "Add a daily revenue dashboard"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/daily-revenue.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "project-cancellation"
+kind = "fix"
+title = "Project cancellations into the customer history"
+failing = ["tests/customer-history.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]

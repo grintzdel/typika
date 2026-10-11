@@ -76,6 +76,7 @@ export class OrderService implements OrderUseCases {
   deliverOrder(id: OrderId): Order {
     const delivered = deliver(this.findOrder(id), this.clock.now())
     this.orders.update(delivered)
+    this.events.publish({ type: 'OrderDelivered', order: delivered })
     return delivered
   }
 

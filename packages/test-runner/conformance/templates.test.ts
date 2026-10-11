@@ -13,6 +13,7 @@ const TYPESCRIPT_TEMPLATES = [
   'adapter-base/ts',
   'composition-over-inheritance/ts',
   'composition-over-inheritance-base/ts',
+  'cqrs/ts',
   'decorator/ts',
   'decorator-base/ts',
   'dependency-inversion/ts',

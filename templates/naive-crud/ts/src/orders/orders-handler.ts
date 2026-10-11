@@ -140,6 +140,7 @@ export class OrdersHandler {
 
     order.isDelivered = true
     order.deliveredAt = this.clock.now()
+    this.broker.publish('OrderDelivered', { orderId: order.id })
     return this.statusReply(order)
   }
 
