@@ -1,3 +1,5 @@
+import process from 'node:process'
+
 import type { Diagnostic, ProjectSnapshot, TestEvent } from '@typika/runtime-core'
 import * as vitestApi from '@typika/test-runner'
 import { runTests } from '@typika/test-runner/runner'
@@ -25,6 +27,22 @@ let runCount = 0
 const toDataUrl = (code: string, run: number) =>
   `data:text/javascript;charset=utf-8,${encodeURIComponent(code)}#run-${run}`
 
+const ignore = () => undefined
+
+const withUncaughtExceptionsIgnored = async (run: () => Promise<void>) => {
+  const listeners = process.listeners('uncaughtException')
+  process.removeAllListeners('uncaughtException')
+  process.on('uncaughtException', ignore)
+  try {
+    await run()
+  } finally {
+    // Node rethrows an EventTarget listener's error on nextTick, only once the microtasks have drained.
+    await new Promise((resolve) => setImmediate(resolve))
+    process.off('uncaughtException', ignore)
+    for (const listener of listeners) process.on('uncaughtException', listener)
+  }
+}
+
 const testOf = (event: TestEvent): ReadonlyArray<InProcessTest> =>
   event._tag === 'TestPassed' || event._tag === 'TestFailed' || event._tag === 'TestSkipped'
     ? [{ file: event.file, name: event.name, status: STATUSES[event._tag] }]
@@ -42,10 +60,12 @@ export const testInProcess = async (
   runCount += 1
   const run = runCount
   const events: Array<TestEvent> = []
-  await runTests({
-    runId: 'in-process',
-    files: result.modules.map((module) => ({ path: module.path, load: () => import(toDataUrl(module.code, run)) })),
-    emit: (event) => events.push(event),
-  })
+  await withUncaughtExceptionsIgnored(() =>
+    runTests({
+      runId: 'in-process',
+      files: result.modules.map((module) => ({ path: module.path, load: () => import(toDataUrl(module.code, run)) })),
+      emit: (event) => events.push(event),
+    })
+  )
   return { _tag: 'Tested', tests: events.flatMap(testOf) }
 }

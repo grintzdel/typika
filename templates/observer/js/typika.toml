@@ -1,0 +1,55 @@
+schema = 1
+name = "observer-js"
+title = "Observer: reacting to an order"
+summary = "Announce that something happened with the platform's EventTarget, and let any number of subscribers react."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "javascript"
+paradigm = ["oop"]
+topic = ["design-pattern/behavioral/observer"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.js"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.js"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-direct-calls.md",
+  "tour/03-subject.md",
+  "tour/04-subscribers.md",
+  "tour/05-failure-isolation.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/observer-base/js"
+focus = ["src/orders/**", "src/open-shop.js"]
+
+[variants]
+typescript = "github:typika/templates/observer/ts"
+
+[[exercises]]
+name = "add-loyalty-points"
+kind = "refactor"
+title = "Add loyalty points"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/loyalty-points.test.js"]
+
+[[exercises]]
+name = "isolate-failing-subscriber"
+kind = "fix"
+title = "Isolate a failing subscriber"
+failing = ["tests/order-events.test.js"]
+hints = ["hint-1.md", "hint-2.md"]

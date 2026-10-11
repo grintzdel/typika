@@ -180,4 +180,17 @@ describe('makeTypeScriptProject', () => {
       expect.stringContaining("Cannot find module './money.ts'"),
     ])
   })
+
+  it('analyses a JavaScript project without a tsconfig', () => {
+    const project = makeProject({
+      'package.json': JSON.stringify({ type: 'module' }),
+      'src/money.js': 'export const money = (cents) => ({ cents })\n',
+      'src/main.js': "import { money } from './money.js'\n\nconsole.log(money(100).cents)\n",
+    })
+    const { content, end } = append("import { money } from './money.js'\n", 'money(1).ce')
+    project.updateFile('src/main.js', content)
+
+    expect(project.diagnostics('src/money.js')).toEqual([])
+    expect(project.completions('src/main.js', end)?.items.map((item) => item.label)).toContain('cents')
+  })
 })

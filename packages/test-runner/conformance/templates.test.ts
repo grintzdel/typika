@@ -39,14 +39,16 @@ const TYPESCRIPT_TEMPLATES = [
   'strategy-base/ts',
 ]
 
+const JAVASCRIPT_TEMPLATES = ['observer/js', 'observer-base/js']
+
 const testFilesOf = async (root: string) =>
   (await readdir(join(root, 'tests'), { recursive: true }))
-    .filter((name) => name.endsWith('.test.ts'))
+    .filter((name) => name.endsWith('.test.ts') || name.endsWith('.test.js'))
     .toSorted()
     .map((name) => join(root, 'tests', name))
 
-describe('TypeScript templates', () => {
-  it.each(TYPESCRIPT_TEMPLATES)('runs the tests of %s green', async (template) => {
+describe('TypeScript and JavaScript templates', () => {
+  it.each([...TYPESCRIPT_TEMPLATES, ...JAVASCRIPT_TEMPLATES])('runs the tests of %s green', async (template) => {
     const root = join(TEMPLATES_DIR, template)
     const files = (await testFilesOf(root)).map((file) => ({
       path: relative(root, file),

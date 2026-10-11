@@ -62,4 +62,24 @@ describe('testInProcess', () => {
       { file: 'tests/same.test.ts', name: 'runs', status: 'passed' },
     ])
   })
+
+  it('keeps running the tests after a listener throws outside of them', async () => {
+    const result = await testInProcess(
+      esbuild,
+      projectFixture({
+        'tests/listener.test.ts': [
+          "import { expect, it } from 'vitest'",
+          "it('throws in a listener', () => {",
+          '  const target = new EventTarget()',
+          "  target.addEventListener('ping', () => { throw new Error('listener failed') })",
+          "  target.dispatchEvent(new Event('ping'))",
+          '})',
+          "it('runs afterwards', async () => expect(await Promise.resolve(1)).toBe(1))",
+          '',
+        ].join('\n'),
+      })
+    )
+
+    expect(result._tag === 'Tested' && result.tests.map((test) => test.status)).toEqual(['passed', 'passed'])
+  })
 })

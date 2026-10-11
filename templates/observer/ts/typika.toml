@@ -36,6 +36,9 @@ steps = [
 template = "github:typika/templates/observer-base/ts"
 focus = ["src/orders/**", "src/open-shop.ts"]
 
+[variants]
+javascript = "github:typika/templates/observer/js"
+
 [[exercises]]
 name = "add-loyalty-points"
 kind = "refactor"
