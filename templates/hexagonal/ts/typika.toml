@@ -1,0 +1,53 @@
+schema = 1
+name = "hexagonal-ts"
+title = "Hexagonal architecture: the orders module"
+summary = "Keep the business rules in a core that declares ports, and plug HTTP, storage and providers in as adapters."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["architecture/hexagonal", "principle/dependency-inversion"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-domain.md",
+  "tour/03-ports.md",
+  "tour/04-adapters.md",
+  "tour/05-wiring.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/ts"
+focus = ["src/orders/**", "src/open-shop.ts"]
+
+[[exercises]]
+name = "add-csv-import"
+kind = "refactor"
+title = "Import orders from a CSV file"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/csv-import.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "add-email-adapter"
+kind = "fix"
+title = "Write the email adapter"
+failing = ["tests/notifications.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]
