@@ -18,6 +18,7 @@ const TYPESCRIPT_TEMPLATES = [
   'decorator-base/ts',
   'dependency-inversion/ts',
   'dependency-inversion-base/ts',
+  'event-sourcing/ts',
   'factory-method/ts',
   'factory-method-base/ts',
   'hexagonal/ts',

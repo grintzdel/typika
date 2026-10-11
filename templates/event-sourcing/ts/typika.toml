@@ -1,0 +1,53 @@
+schema = 1
+name = "event-sourcing-ts"
+title = "Event sourcing: the life of an order"
+summary = "Store what happened to an order as events, and rebuild its current state by replaying them."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["functional"]
+topic = ["architecture/event-sourcing"]
+level = "advanced"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-events.md",
+  "tour/03-decide-evolve.md",
+  "tour/04-event-store.md",
+  "tour/05-rehydration.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/ts"
+focus = ["src/orders/**", "src/open-shop.ts"]
+
+[[exercises]]
+name = "order-timeline"
+kind = "refactor"
+title = "Show the timeline of an order"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/order-timeline.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "optimistic-concurrency"
+kind = "fix"
+title = "Refuse concurrent writes"
+failing = ["tests/event-store.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]

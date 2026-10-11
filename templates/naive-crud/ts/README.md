@@ -9,6 +9,7 @@ The code works and its tests pass. Each architecture template starts from it and
 
 - `hexagonal-ts`: the business rules cannot be reached without going through HTTP.
 - `cqrs-ts`: the customer history is recomputed from the rows the handler writes, on every read.
+- `event-sourcing-ts`: each step overwrites the order's status, so when and why it changed is lost.
 
 ## Run it
 
