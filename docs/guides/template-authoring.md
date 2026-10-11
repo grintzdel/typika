@@ -71,6 +71,10 @@ template.
   nouvelle fonctionnalité. Exception : les tests qui ciblent la nouvelle structure (ex. test de contrat du LSP).
 - **Même noms, même disposition** partout où c'est possible. Chaque différence non liée au concept pollue le diff.
   Renseigne `base.focus` pour cacher les fichiers non concernés.
+- **Une seule suite de tests.** Les tests partagés passent par une entrée que la base et le template exposent à
+  l'identique (`openShop()`, un constructeur de même signature, une fonction de même chemin) et sont copiés octet pour
+  octet, fixtures comprises. Si le concept change la construction d'un objet (le DIP injecte ses dépendances), les tests
+  partagés passent par la racine de composition, et les tests qui construisent l'objet vont dans le template seul.
 - **Le problème doit se sentir dans un exercice.** La base est le point de départ des exercices `refactor` : l'exigence
   doit y être pénible (duplication, `switch` de plus, test impossible).
 - `role = "base"`, pas de tour, pas de variantes, pas d'exercices.
@@ -153,6 +157,16 @@ Chaque template a **au moins un exercice `refactor`** ; un `fix` est recommandé
   (`tests/services-fixture.ts` dans `observer-ts`) : sinon, une fois le service requis, les tests existants ne passent
   plus le typecheck. Recopie cette fixture dans `solution/`, car seuls les fichiers `failing` de `start/` passent dans
   l'état solution.
+- `solution/` ne peut pas être vide. Si le template est déjà la solution (le DIP, où l'exercice demande exactement la
+  restructuration), garder `solutionFrom = "start"` et recopier dans `solution/` les fichiers que le template change.
+- Si l'exigence élargit un type que les tests propres au template utilisent (une clé de plus dans un
+  `Record<PaymentMethod, …>`), ces tests ne passent plus le typecheck dans l'état solution : en mettre la version à jour
+  dans `solution/`.
+- Un `start/` peut fournir l'amorce naïve qu'un collègue aurait écrite (`GiftCard extends PhysicalProduct` dans
+  `liskov-substitution-ts`) : l'apprenant voit le défaut au lieu de le deviner, et le test peut importer la classe par
+  son nom.
+- Un fichier `failing` peut garder un test de non-régression vert dès le départ (« keeps emailing the text invoice ») :
+  seuls les tests de l'exigence doivent être rouges.
 
 ### 5.2 `fix`
 
@@ -291,6 +305,8 @@ Manifeste et structure :
 - [ ] `name` respecte la convention du catalogue (`<concept>-<lang>`, `<concept>-base-<lang>`).
 - [ ] Topic principal en premier dans `facets.topic` ; `level` cohérent avec le catalogue.
 - [ ] `LICENSE` présent et conforme à `license`.
+- [ ] Dans ce dépôt : le dossier est ajouté à l'index git (`git add`) avant `pnpm test`, car le test du validateur ne
+  lit que les fichiers suivis.
 
 Code :
 

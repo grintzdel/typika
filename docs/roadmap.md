@@ -147,9 +147,9 @@ Lot 6, vague (a) livrée : `observer-ts`, `decorator-ts`, `factory-method-ts`, `
 (titre, résumé, langage, niveau ; les bases sont masquées) en attendant le hub du M3. `template-check` exécute
 désormais chaque fichier de test à chaque run : un fichier au code inchangé disparaissait des runs suivants.
 
-Vague (b) en cours : `single-responsibility-ts` (exercice `add-pdf-invoice`), `open-closed-ts` (exercice
-`add-black-friday-rule`), `liskov-substitution-ts` (exercices `add-gift-card` et `contract-violation`) et
-`interface-segregation-ts` (exercice `add-gift-card-payment`) sont écrits, avec leur base et leur tour.
+Vague (b) livrée : les cinq principes SOLID (`single-responsibility-ts`, `open-closed-ts`, `liskov-substitution-ts`,
+`interface-segregation-ts`, `dependency-inversion-ts`), chacun avec sa base, son tour et ses exercices. Chaque base
+partage sa suite de tests avec son template ; le template n'ajoute que des tests qui ciblent sa structure.
 
 ## M3 — Hub
 

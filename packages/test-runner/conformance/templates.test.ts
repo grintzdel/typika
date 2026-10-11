@@ -15,6 +15,8 @@ const TYPESCRIPT_TEMPLATES = [
   'composition-over-inheritance-base/ts',
   'decorator/ts',
   'decorator-base/ts',
+  'dependency-inversion/ts',
+  'dependency-inversion-base/ts',
   'factory-method/ts',
   'factory-method-base/ts',
   'interface-segregation/ts',
