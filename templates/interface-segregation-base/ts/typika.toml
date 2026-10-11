@@ -1,0 +1,24 @@
+schema = 1
+name = "interface-segregation-base-ts"
+title = "Interface segregation base: payment methods"
+summary = "One PaymentGateway interface with four methods, forced on every payment method, before the split."
+license = "MIT-0"
+authors = ["github:maoudin"]
+role = "base"
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["principle/interface-segregation"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
