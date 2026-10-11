@@ -1,0 +1,52 @@
+schema = 1
+name = "adapter-ts"
+title = "Adapter: taking payments"
+summary = "Wrap a foreign interface in one class that speaks the interface your code expects."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["design-pattern/structural/adapter"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-foreign-interface.md",
+  "tour/03-target-interface.md",
+  "tour/04-translation.md",
+  "tour/05-error-mapping.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/adapter-base/ts"
+focus = ["src/checkout/**", "src/payments/**"]
+
+[[exercises]]
+name = "switch-provider"
+kind = "refactor"
+title = "Switch to another payment provider"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/swift-pay.test.ts"]
+
+[[exercises]]
+name = "map-declined-code"
+kind = "fix"
+title = "Decline the codes the adapter does not know"
+failing = ["tests/checkout.test.ts", "tests/legacy-pay-adapter.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]

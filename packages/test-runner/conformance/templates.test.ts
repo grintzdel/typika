@@ -9,6 +9,8 @@ import { runTests, type TestEvent } from '../src/runner.ts'
 
 const TEMPLATES_DIR = join(import.meta.dirname, '..', '..', '..', 'templates')
 const TYPESCRIPT_TEMPLATES = [
+  'adapter/ts',
+  'adapter-base/ts',
   'decorator/ts',
   'decorator-base/ts',
   'factory-method/ts',
