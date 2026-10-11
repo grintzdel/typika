@@ -89,6 +89,9 @@ importers:
       react-i18next:
         specifier: 17.0.16
         version: 17.0.16(i18next@26.4.3(typescript@7.0.2))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@7.0.2)
+      srvx:
+        specifier: 0.11.22
+        version: 0.11.22
     devDependencies:
       '@babel/core':
         specifier: 8.0.7

@@ -1,0 +1,29 @@
+services:
+  caddy:
+    image: caddy:2@sha256:f2a1290d0463aad60660d4ec134943f183ee2a5f6c3eb7bf32dd984f2f020772
+    restart: unless-stopped
+    ports: ['80:80', '443:443']
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      TYPIKA_APP_DOMAIN: ${TYPIKA_APP_DOMAIN:?set TYPIKA_APP_DOMAIN in .env}
+      TYPIKA_RUNTIME_DOMAIN: ${TYPIKA_RUNTIME_DOMAIN:?set TYPIKA_RUNTIME_DOMAIN in .env}
+    depends_on:
+      web:
+        condition: service_healthy
+
+  web:
+    build: .
+    image: typika-web
+    restart: unless-stopped
+    env_file: .env
+    expose: ['3000']
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+
+volumes:
+  caddy_data: {}
+  caddy_config: {}

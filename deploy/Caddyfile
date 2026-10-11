@@ -1,0 +1,16 @@
+(common) {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	reverse_proxy web:3000
+}
+
+{$TYPIKA_APP_DOMAIN} {
+	import common
+}
+
+{$TYPIKA_RUNTIME_DOMAIN} {
+	import common
+}

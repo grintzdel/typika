@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./default-package-url-template": "./src/domain/constants/default-package-url-template.constant.ts"
   },
   "scripts": {
     "typecheck": "tsc",

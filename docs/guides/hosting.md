@@ -1,7 +1,7 @@
 # Héberger Typika
 
-Statut : guide · les fichiers de configuration ci-dessous sont des **exemples de référence**. Ils seront créés au M1
-(`Dockerfile`, `docker-compose.yml`, `deploy/Caddyfile`, `vercel.ts`) et ce guide sera alors aligné sur eux.
+Statut : guide · aligné sur les fichiers du dépôt (`Dockerfile`, `docker-compose.yml`, `deploy/Caddyfile`,
+`.env.example`) depuis le M1. Vercel (§5) et le service Kotlin restent à faire.
 
 Contexte : [architecture.md](../specs/architecture.md) pour les composants, [security.md](../specs/security.md) pour les
 en-têtes et l'isolation.
@@ -57,8 +57,12 @@ dessous, le ramasse-miettes s'effondre.
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm turbo run build --filter=web
+pnpm --filter @typika/web build
 ```
+
+Le build produit `apps/web/dist/` : `client/` (assets et shell SPA), `runtime/` (runtime frame), `server/` (handler
+TanStack Start des routes serveur) et `node/main.js`, le serveur de production. Les deux bundles serveur embarquent
+leurs dépendances : `dist/` suffit pour lancer l'app avec `node dist/node/main.js`, sans `node_modules`.
 
 Le prérendu du hub lit l'index du registre **au build**. Pour que les pages du hub suivent le registre :
 
@@ -68,154 +72,67 @@ Le prérendu du hub lit l'index du registre **au build**. Pour que les pages du 
 
 ## 4. Docker (cible principale)
 
-### 4.1 Dockerfile — description
+### 4.1 Le serveur `web` pose les en-têtes
 
-Multi-stage, image de base Node 24 épinglée par digest :
+Le serveur de production (`apps/web/server/`) sert les deux origines depuis un seul port et choisit selon l'en-tête
+`Host` :
 
-1. **`deps`** : active pnpm via Corepack, `pnpm fetch` sur le lockfile (couche mise en cache tant que le lockfile ne
-   change pas).
-2. **`build`** : copie les sources, `pnpm install --offline --frozen-lockfile`, `pnpm turbo run build --filter=web`.
-3. **`runtime`** : image Node minimale, copie uniquement la sortie du preset serveur de TanStack Start (le dossier exact
-   dépend du preset, fixé au M1), utilisateur non-root, `EXPOSE 3000`, `HEALTHCHECK` sur `GET /`.
+- **hôte runtime** (celui de `TYPIKA_RUNTIME_ORIGIN`) : uniquement `/runtime/*` (runtime frame, assets,
+  `/runtime/config.json`). Toute autre URL répond `404` : aucune page de l'app n'est servie sur l'origine runtime.
+- **tout autre hôte** : l'app. `/config.json` et `/api/*` vont au handler TanStack Start, les fichiers de
+  `dist/client/` sont servis tels quels, les autres chemins reçoivent le shell SPA. `/runtime/*` répond `404`.
 
-Le service `kotlin-compiler` a sa propre image (`services/kotlin-compiler/Dockerfile`) : un JRE, le service de
-compilation et ses bibliothèques Kotlin ([runtimes.md](../specs/runtimes.md) §6.4). Environ 630 Mo.
+Il pose lui-même COOP, COEP, CORP, CSP, `Referrer-Policy` et `X-Content-Type-Options` selon l'hôte et le chemin
+([security.md](../specs/security.md) §4). Les scripts inline du shell sont autorisés par leur hash, calculé au
+démarrage. L'image est donc correcte derrière n'importe quel reverse proxy ; celui-ci n'ajoute que TLS, HSTS et la
+compression. Les assets hashés (`/assets/*`, `/runtime/assets/*`) sont servis avec
+`Cache-Control: public, max-age=31536000, immutable`, le reste avec `no-cache`.
 
-### 4.2 docker-compose.yml — exemple
+### 4.2 Dockerfile
 
-```yaml
-services:
-  caddy:
-    image: caddy:2
-    restart: unless-stopped
-    ports: ['80:80', '443:443']
-    volumes:
-      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    environment:
-      TYPIKA_APP_DOMAIN: typika.example.org
-      TYPIKA_RUNTIME_DOMAIN: typika-run.example.net
-    networks: [public, compiler]
-    depends_on: [web]
+Multi-stage, image de base `node:24-slim` épinglée par digest :
 
-  web:
-    image: ghcr.io/<owner>/typika-web:<version>
-    restart: unless-stopped
-    env_file: .env
-    expose: ['3000']
-    read_only: true
-    user: '1000:1000'
-    networks: [public]
+1. **`build`** : active pnpm via Corepack, `pnpm fetch` sur le lockfile (couche mise en cache tant que le lockfile ne
+   change pas), copie les sources, `pnpm install --offline --frozen-lockfile`, `pnpm --filter @typika/web build`.
+2. **`runtime`** : copie uniquement `apps/web/dist/`, utilisateur `node` (uid 1000), `EXPOSE 3000`, `HEALTHCHECK` sur
+   `GET /`. Environ 370 Mo, dont l'essentiel est l'image Node.
 
-  kotlin-compiler:
-    image: ghcr.io/<owner>/typika-kotlin-compiler:<version>
-    profiles: [kotlin]
-    restart: unless-stopped
-    expose: ['8080']
-    read_only: true
-    tmpfs: ['/tmp:size=256m']
-    cap_drop: [ALL]
-    security_opt: ['no-new-privileges:true']
-    mem_limit: 1g
-    cpus: 2
-    environment:
-      KOTLIN_COMPILER_CONCURRENCY: '2'
-    networks: [compiler]
+Le conteneur ne lit ni n'écrit rien d'autre que `dist/` : il tourne avec `read_only: true` et sans capabilities.
 
-networks:
-  public: {}
-  compiler:
-    internal: true
+### 4.3 docker-compose.yml et Caddyfile
 
-volumes:
-  caddy_data: {}
-  caddy_config: {}
-```
+`docker-compose.yml` lance `web` (construit depuis le `Dockerfile`) derrière Caddy, qui attend que `web` soit
+`healthy`. `deploy/Caddyfile` déclare les deux domaines (`TYPIKA_APP_DOMAIN`, `TYPIKA_RUNTIME_DOMAIN`), obtient les
+certificats, ajoute HSTS, compresse, retire l'en-tête `Server` et transmet tout à `web:3000` en conservant `Host`.
 
-- Le service Kotlin est dans un **profil** : `docker compose --profile kotlin up -d` l'active, `docker compose up -d`
-  sans profil l'omet. Dans ce cas, ne pas définir `KOTLIN_COMPILER_URL`.
-- Le réseau `compiler` est `internal` : le conteneur n'a pas d'accès sortant ; seul Caddy le joint.
-- `mem_limit` et `cpus` : 1 Gio et 2 vCPU suffisent pour 2 compilations simultanées, environ 1 s chacune à chaud ;
-  4 vCPU et 2 Gio doublent le débit ([0019](../decisions/0019-kotlin-runtime.md)).
-
-### 4.3 Caddyfile — exemple
-
-```caddyfile
-{$TYPIKA_APP_DOMAIN} {
-	encode zstd gzip
-
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-		Cross-Origin-Resource-Policy "same-origin"
-		-Server
-	}
-
-	@isolated path /play* /p/* /compare* /s /s/*
-	header @isolated {
-		Cross-Origin-Opener-Policy "same-origin"
-		Cross-Origin-Embedder-Policy "require-corp"
-	}
-
-	@embed path /embed/*
-	header @embed Content-Security-Policy "<CSP app> ; frame-ancestors *"
-
-	@notEmbed not path /embed/*
-	header @notEmbed Content-Security-Policy "<CSP app> ; frame-ancestors 'none'"
-
-	handle_path /api/kotlin/* {
-		request_body {
-			max_size 256KB
-		}
-		reverse_proxy kotlin-compiler:8080
-	}
-
-	reverse_proxy web:3000
-}
-
-{$TYPIKA_RUNTIME_DOMAIN} {
-	encode zstd gzip
-
-	header {
-		Strict-Transport-Security "max-age=31536000"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "no-referrer"
-		Cross-Origin-Opener-Policy "same-origin"
-		Cross-Origin-Embedder-Policy "require-corp"
-		Cross-Origin-Resource-Policy "cross-origin"
-		Content-Security-Policy "<CSP runtime>"
-		-Server
-	}
-
-	rewrite * /runtime{uri}
-	reverse_proxy web:3000
-}
-```
-
-- `<CSP app>` et `<CSP runtime>` : valeurs de [security.md](../specs/security.md) §4, avec les URL de l'instance.
-- Si `/api/kotlin/*` est servi par le même domaine que l'app, `KOTLIN_COMPILER_URL=/api/kotlin` et le CORS est inutile.
-- **Rate limiting** : Caddy n'en fournit pas en standard. Options à valider au M6 : module tiers (build Caddy
-  personnalisé avec `xcaddy`), ou limitation dans l'adaptateur du service Kotlin et dans le handler
-  `/api/github/token`. Le service ne doit pas être exposé sans l'une des deux.
-- Le `rewrite` du domaine runtime suppose que le service `web` sert la runtime frame sous `/runtime/`. Le service `web`
-  doit refuser les routes de l'app sur l'hôte runtime (et inversement), pour qu'aucune page de l'app ne soit servie
-  sur l'origine runtime.
+Le service Kotlin s'ajoutera au M6 dans un profil `kotlin`, sur un réseau interne sans accès sortant, avec
+`/api/kotlin/*` routé par Caddy et un rate limiting à choisir à ce moment-là (module Caddy tiers ou limitation dans le
+service).
 
 ### 4.4 Démarrage
 
 ```sh
-cp .env.example .env            # renseigner les variables du §2
-docker compose up -d            # sans Kotlin
-docker compose --profile kotlin up -d   # avec Kotlin
+cp .env.example .env            # renseigner les variables du §2 et les deux domaines
+docker compose up -d --build
 ```
+
+Essai local sans Caddy, deux sites sur le même port :
+
+```sh
+docker build -t typika-web .
+docker run --rm -p 3200:3000 --read-only --cap-drop ALL \
+  -e TYPIKA_PUBLIC_URL=http://localhost:3200 -e TYPIKA_RUNTIME_ORIGIN=http://127.0.0.1:3200 typika-web
+```
+
+`localhost` et `127.0.0.1` sont des sites différents et des contextes sécurisés : la runtime frame y est isolée comme
+en production.
 
 ## 5. Vercel
 
 - Projet Vercel sur `apps/web`, deux domaines rattachés : celui de l'app et celui du runtime.
-- Les en-têtes sont déclarés dans `vercel.ts` avec des règles par hôte (`has: [{ type: 'host', value: … }]`) et par
-  chemin, avec les mêmes valeurs que le Caddyfile. Syntaxe exacte à vérifier contre `@vercel/config` au M1.
+- Les en-têtes doivent être déclarés dans `vercel.ts` avec des règles par hôte (`has: [{ type: 'host', value: … }]`)
+  et par chemin, avec les mêmes valeurs que le serveur `web` (§4.1, `apps/web/server/security-headers.ts`). Non fait
+  au M1 ; la syntaxe exacte est à vérifier contre `@vercel/config`.
 - `POST /api/github/token` tourne en fonction Vercel (runtime Node par défaut).
 - **Le service Kotlin ne tourne pas sur Vercel** : c'est un conteneur JVM avec une file et des limites réseau. Le
   déployer sur un VPS ou un service de conteneurs managé, puis renseigner `KOTLIN_COMPILER_URL` (URL absolue) et
@@ -259,7 +176,7 @@ manifeste d'assets qui liste chaque fichier et son hash SRI.
 
 - [ ] Les deux domaines répondent en HTTPS, certificats valides.
 - [ ] Instance publique : le domaine runtime est un **site différent** de l'app (pas un sous-domaine).
-- [ ] `curl -I <app>/play/new` montre `Cross-Origin-Opener-Policy: same-origin` et
+- [ ] `curl -I <app>/play/strategy-ts` montre `Cross-Origin-Opener-Policy: same-origin` et
       `Cross-Origin-Embedder-Policy: require-corp`.
 - [ ] `curl -I <app>/` montre `frame-ancestors 'none'` ; `curl -I <app>/embed/<template>` montre `frame-ancestors *`,
       sans COOP ni COEP.
@@ -272,4 +189,5 @@ manifeste d'assets qui liste chaque fichier et son hash SRI.
       depuis le conteneur `kotlin-compiler` échoue.
 - [ ] Sans Kotlin : aucun template Kotlin n'apparaît dans le hub.
 - [ ] Avec GitHub : connexion, création de gist, puis déconnexion qui vide `sessionStorage`.
-- [ ] La suite E2E d'en-têtes passe contre l'URL déployée : `pnpm --filter web test:e2e:headers --base-url <app>`.
+- [ ] La suite E2E de production passe contre l'instance :
+      `TYPIKA_E2E_APP_URL=<app> TYPIKA_E2E_RUNTIME_URL=<runtime> pnpm --filter @typika/web test:e2e:production`.

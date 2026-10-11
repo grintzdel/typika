@@ -21,6 +21,7 @@ import * as Schema from 'effect/Schema'
 import type * as Scope from 'effect/Scope'
 import * as Stream from 'effect/Stream'
 
+import { DEFAULT_PACKAGE_URL_TEMPLATE } from '../domain/constants/default-package-url-template.constant.ts'
 import {
   ExecutionWorkerOutputSchema,
   type BundleRequest,
@@ -42,7 +43,6 @@ export type BrowserJsRuntimeOptions = {
   }
 }
 
-const DEFAULT_PACKAGE_URL_TEMPLATE = 'https://cdn.jsdelivr.net/npm/{name}@{version}{path}/+esm'
 const KIND = 'browser-js'
 
 const fetchWasm = async (
