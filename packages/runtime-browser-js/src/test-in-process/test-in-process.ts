@@ -20,7 +20,10 @@ export type InProcessTestResult =
 
 const STATUSES = { TestPassed: 'passed', TestFailed: 'failed', TestSkipped: 'skipped' } as const
 
-const toDataUrl = (code: string) => `data:text/javascript;charset=utf-8,${encodeURIComponent(code)}`
+let runCount = 0
+
+const toDataUrl = (code: string, run: number) =>
+  `data:text/javascript;charset=utf-8,${encodeURIComponent(code)}#run-${run}`
 
 const testOf = (event: TestEvent): ReadonlyArray<InProcessTest> =>
   event._tag === 'TestPassed' || event._tag === 'TestFailed' || event._tag === 'TestSkipped'
@@ -36,10 +39,12 @@ export const testInProcess = async (
   const result = await bundle(build, snapshot.files, { _tag: 'Test', files }, packageUrlTemplate)
   if (result._tag === 'Failed') return { _tag: 'BuildFailed', diagnostics: result.diagnostics }
   Object.assign(globalThis, { [Symbol.for(VITEST_GLOBAL)]: vitestApi })
+  runCount += 1
+  const run = runCount
   const events: Array<TestEvent> = []
   await runTests({
     runId: 'in-process',
-    files: result.modules.map((module) => ({ path: module.path, load: () => import(toDataUrl(module.code)) })),
+    files: result.modules.map((module) => ({ path: module.path, load: () => import(toDataUrl(module.code, run)) })),
     emit: (event) => events.push(event),
   })
   return { _tag: 'Tested', tests: events.flatMap(testOf) }
