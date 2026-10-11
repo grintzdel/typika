@@ -30,6 +30,21 @@ const renderProject = (name = 'sample-ts', storage: ProjectStorage = makeProject
 const MAIN = projectPath('src/main.ts')
 
 describe('useTemplateProject', () => {
+  it('exposes the original content of a file and the tour steps', async () => {
+    const { result } = renderProject()
+
+    await waitFor(() => expect(result.current.template).toBeDefined())
+    expect(result.current.template?.originalOf('src/main.ts')).toBe("console.log('hello')\n")
+    expect(result.current.template?.originalOf('src/missing.ts')).toBeUndefined()
+    expect(result.current.template?.tourSteps).toEqual([])
+  })
+
+  it('lists the embedded templates', async () => {
+    const { result } = renderProject()
+
+    await waitFor(() => expect(result.current.embeddedTemplates).toEqual(['sample-ts']))
+  })
+
   it('exposes the template title, entry and file tree', async () => {
     const { result } = renderProject()
 
@@ -41,7 +56,7 @@ describe('useTemplateProject', () => {
       'tests',
       'LICENSE',
       'README.md',
-      'typika.toml',
+      'Typika',
     ])
     expect(result.current.template?.contentOf('src/main.ts')).toBe("console.log('hello')\n")
     expect(result.current.modifiedPaths).toEqual([])

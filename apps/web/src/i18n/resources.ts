@@ -1,7 +1,7 @@
 export const resources = {
   en: {
     project: {
-      tree: { label: 'Files', modifiedItem: '{{name}}, modified' },
+      tree: { label: 'Files', modifiedItem: '{{name}}, modified', readOnlyItem: '{{name}}, read-only' },
       status: { label: 'Project status', modified: 'Modified', unsaved: 'Changes not saved' },
       reset: {
         trigger: 'Reset',
@@ -19,7 +19,20 @@ export const resources = {
     editor: {
       label: 'Editor',
       noFile: 'Select a file',
+      tabs: { label: 'Open files', original: '{{name}} (original)', close: 'Close {{name}}' },
       languageService: { label: 'TypeScript', starting: 'Starting TypeScript…', unavailable: 'TypeScript unavailable' },
+    },
+    tour: {
+      label: 'Guided tour',
+      progress: 'Step {{current}} / {{total}}',
+      announcement: 'Step {{current}} of {{total}}: {{title}}',
+      steps: 'Steps',
+      previous: 'Previous',
+      previousLabel: 'Previous step',
+      next: 'Next',
+      nextLabel: 'Next step',
+      changed: 'The code has changed since this tour.',
+      openOriginal: 'Show the original version',
     },
     runtime: {
       run: 'Run',
@@ -59,7 +72,7 @@ export const resources = {
   },
   fr: {
     project: {
-      tree: { label: 'Fichiers', modifiedItem: '{{name}}, modifié' },
+      tree: { label: 'Fichiers', modifiedItem: '{{name}}, modifié', readOnlyItem: '{{name}}, lecture seule' },
       status: { label: 'État du projet', modified: 'Modifié', unsaved: 'Modifications non enregistrées' },
       reset: {
         trigger: 'Réinitialiser',
@@ -77,7 +90,20 @@ export const resources = {
     editor: {
       label: 'Éditeur',
       noFile: 'Sélectionnez un fichier',
+      tabs: { label: 'Fichiers ouverts', original: '{{name}} (origine)', close: 'Fermer {{name}}' },
       languageService: { label: 'TypeScript', starting: 'TypeScript démarre…', unavailable: 'TypeScript indisponible' },
+    },
+    tour: {
+      label: 'Visite guidée',
+      progress: 'Étape {{current}} / {{total}}',
+      announcement: 'Étape {{current}} sur {{total}} : {{title}}',
+      steps: 'Étapes',
+      previous: 'Précédente',
+      previousLabel: 'Étape précédente',
+      next: 'Suivante',
+      nextLabel: 'Étape suivante',
+      changed: 'Le code a changé depuis cette visite.',
+      openOriginal: 'Voir la version d’origine',
     },
     runtime: {
       run: 'Exécuter',

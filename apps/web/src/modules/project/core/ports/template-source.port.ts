@@ -8,5 +8,6 @@ export class TemplateSourcePort extends Context.Service<
   TemplateSourcePort,
   {
     readonly load: (name: string) => Effect.Effect<TemplateFiles, ProjectTemplateNotFoundError>
+    readonly names: Effect.Effect<ReadonlyArray<string>>
   }
 >()('@typika/web/TemplateSourcePort') {}

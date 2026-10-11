@@ -17,7 +17,7 @@ export const openTemplateProgram = (name: string) =>
     const source = yield* TemplateSourcePort
     const storage = yield* ProjectStoragePort
     const files = yield* source.load(name)
-    const { manifest } = yield* validateTemplate(files).pipe(
+    const { manifest, tourSteps } = yield* validateTemplate(files).pipe(
       Effect.mapError(
         (error) =>
           new ProjectTemplateInvalidError({ name, issues: error._tag === 'ManifestInvalidError' ? error.issues : [] })
@@ -33,6 +33,7 @@ export const openTemplateProgram = (name: string) =>
     return {
       templateName: name,
       manifest,
+      tourSteps,
       files: projectFiles,
       templateFiles,
       modifiedPaths: modifiedPathsOf(templateFiles, projectFiles),

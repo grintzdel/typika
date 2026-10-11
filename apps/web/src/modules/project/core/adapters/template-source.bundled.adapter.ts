@@ -1,4 +1,5 @@
 import { MANIFEST_FILE, parseManifest } from '@typika/manifest'
+import * as Arr from 'effect/Array'
 import type * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
@@ -38,6 +39,9 @@ export const makeTemplateSourceBundled = (
         }
         return yield* new ProjectTemplateNotFoundError({ name })
       }),
+    names: Effect.forEach(roots, (root) => nameOf(sources[`${root}${MANIFEST_FILE}`] ?? '')).pipe(
+      Effect.map((names) => Arr.getSomes(names).toSorted())
+    ),
   }
 }
 

@@ -15,6 +15,7 @@ const decodePath = Schema.decodeUnknownOption(ProjectPathSchema)
 
 export const useEditFiles = (sinks: EditSinks) => {
   const pending = useRef(new Map<ProjectPath, string>())
+  const edited = useRef(new Map<string, string>())
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const latestSinks = useRef(sinks)
 
@@ -22,14 +23,19 @@ export const useEditFiles = (sinks: EditSinks) => {
     latestSinks.current = sinks
   })
 
-  const discardPending = () => {
+  const clearPending = () => {
     clearTimeout(timer.current)
     pending.current.clear()
   }
 
+  const discardPending = () => {
+    clearPending()
+    edited.current.clear()
+  }
+
   const commitPending = (): ReadonlyArray<FileEdit> => {
     const edits = [...pending.current]
-    discardPending()
+    clearPending()
     if (edits.length > 0) latestSinks.current.onPersist(edits)
     return edits
   }
@@ -54,9 +60,12 @@ export const useEditFiles = (sinks: EditSinks) => {
     const projectPath = decodePath(path)
     if (Option.isNone(projectPath)) return
     pending.current.set(projectPath.value, content)
+    edited.current.set(path, content)
     clearTimeout(timer.current)
     timer.current = setTimeout(flush, FLUSH_DELAY_MS)
   }
 
-  return { handleChange, commitPending, discardPending }
+  const editedContentOf = (path: string): string | undefined => edited.current.get(path)
+
+  return { handleChange, commitPending, discardPending, editedContentOf }
 }

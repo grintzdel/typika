@@ -26,4 +26,8 @@ describe('bundled template source', () => {
       error: { _tag: 'ProjectTemplateNotFoundError', name: 'observer-ts' },
     })
   })
+
+  it('lists the names of the templates', async () => {
+    expect(await Effect.runPromise(source.names)).toEqual(['strategy-go', 'strategy-ts'])
+  })
 })

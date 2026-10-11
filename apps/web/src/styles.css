@@ -31,6 +31,8 @@ body {
   --code-info: #0969da;
   --code-surface: #ffffff;
   --code-border: #d0d7de;
+  --code-tour-line: #fff5d1;
+  --code-tour-border: #9a6700;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -51,5 +53,7 @@ body {
     --code-info: #58a6ff;
     --code-surface: #1c2128;
     --code-border: #30363d;
+    --code-tour-line: #33290a;
+    --code-tour-border: #d29922;
   }
 }

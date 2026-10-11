@@ -25,6 +25,10 @@ export const editorTheme = [
     '.cm-cursor': { borderLeftColor: color('text') },
     '.cm-gutters': { backgroundColor: 'transparent', border: 'none', color: color('gutter') },
     '.cm-activeLine, .cm-activeLineGutter': { backgroundColor: color('active-line') },
+    '.cm-line.cm-typika-tour-line': {
+      backgroundColor: color('tour-line'),
+      boxShadow: `inset 3px 0 0 ${color('tour-border')}`,
+    },
     '&.cm-focused .cm-selectionBackground, .cm-selectionBackground': { backgroundColor: color('selection') },
     '.cm-matchingBracket': { backgroundColor: color('selection'), outline: 'none' },
     '.cm-tooltip': {
