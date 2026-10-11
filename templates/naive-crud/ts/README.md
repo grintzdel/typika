@@ -8,6 +8,7 @@ customer, all in one class. The order status is a set of booleans (`isPaid`, `is
 The code works and its tests pass. Each architecture template starts from it and fixes one of its problems:
 
 - `hexagonal-ts`: the business rules cannot be reached without going through HTTP.
+- `cqrs-ts`: the customer history is recomputed from the rows the handler writes, on every read.
 
 ## Run it
 

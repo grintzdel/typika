@@ -16,7 +16,7 @@ export type OrderNotification =
   | { readonly kind: 'order-cancelled'; readonly order: Order; readonly reason: string }
 
 export type OrderEvent = {
-  readonly type: 'OrderPlaced' | 'OrderPaid' | 'OrderShipped' | 'OrderCancelled'
+  readonly type: 'OrderPlaced' | 'OrderPaid' | 'OrderShipped' | 'OrderDelivered' | 'OrderCancelled'
   readonly order: Order
 }
 

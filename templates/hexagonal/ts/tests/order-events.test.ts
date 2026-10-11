@@ -15,9 +15,10 @@ describe('order events', () => {
 
   it('publishes an event for each step of the order', () => {
     const shop = openShop()
-    const shipped = placeOrder(shop, orderOf(ada, 3250))
-    post(shop, `/orders/${shipped}/pay`, { cardToken: 'tok_visa' })
-    post(shop, `/orders/${shipped}/ship`)
+    const delivered = placeOrder(shop, orderOf(ada, 3250))
+    post(shop, `/orders/${delivered}/pay`, { cardToken: 'tok_visa' })
+    post(shop, `/orders/${delivered}/ship`)
+    post(shop, `/orders/${delivered}/deliver`)
     const cancelled = placeOrder(shop, orderOf(ada, 1000))
     post(shop, `/orders/${cancelled}/cancel`, { reason: 'ordered twice' })
 
@@ -25,6 +26,7 @@ describe('order events', () => {
       'OrderPlaced',
       'OrderPaid',
       'OrderShipped',
+      'OrderDelivered',
       'OrderPlaced',
       'OrderCancelled',
     ])
