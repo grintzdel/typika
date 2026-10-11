@@ -262,7 +262,7 @@ Scripts attendus dans `package.json` : `start` (`node src/main.ts`), `test` (`vi
 Une variante JS n'est pas la variante TS sans ses types : elle n'existe que si la plateforme ou le langage apporte
 quelque chose ([catalogue.md §8.3](../specs/catalogue.md)), et c'est ce que montrent son code et son tour
 (`EventTarget` et `AbortSignal` dans `observer-js`, des fonctions d'ordre supérieur à la place des classes dans
-`decorator-js`). Elle s'exécute avec `node src/main.js`, Node ≥ 22. Cela impose :
+`decorator-js`, la chaîne de prototypes sous `class` et une fonction fabrique dans `composition-over-inheritance-js`). Elle s'exécute avec `node src/main.js`, Node ≥ 22. Cela impose :
 
 - des imports relatifs avec l'extension `.js` ; ni `tsconfig.json`, ni `typescript` dans `package.json`, ni script
   `typecheck` ;

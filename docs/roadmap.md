@@ -156,10 +156,12 @@ Vague (c) livrée : `naive-crud-ts`, la base commune, et les cinq architectures 
 `openShop` un gestionnaire HTTP simulé et les faux d'infrastructure (`cards`, `broker`, `mailer`, `clock`) ; ses tests
 passent par eux, si bien que chaque architecture les reprend tels quels.
 
-Vague (d) en cours : `observer-js` et sa base, où `EventTarget` tient le rôle du sujet et un `AbortSignal` celui du
-désabonnement. Le language service analyse désormais les `.js` d'un projet sans `tsconfig.json`, et `template-check`
-ignore les erreurs non interceptées d'un test, comme le worker de test. Puis `decorator-js` et sa base, où un notifier
-est une fonction et chaque décorateur une fonction d'ordre supérieur. Reste `composition-over-inheritance-js`.
+Vague (d) livrée, et avec elle le lot 6 : `observer-js` et sa base, où `EventTarget` tient le rôle du sujet et un
+`AbortSignal` celui du désabonnement ; `decorator-js`, où un notifier est une fonction et chaque décorateur une
+fonction d'ordre supérieur ; `composition-over-inheritance-js`, dont la base montre `class` comme sucre sur la chaîne
+de prototypes et le template une fonction fabrique qui garde ses parties dans sa portée. Le language service analyse
+désormais les `.js` d'un projet sans `tsconfig.json`, et `template-check` ignore les erreurs non interceptées d'un
+test, comme le worker de test.
 
 ## M3 — Hub
 

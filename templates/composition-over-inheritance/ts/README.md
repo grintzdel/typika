@@ -22,3 +22,7 @@ npm test
 - `src/catalog/pricing.ts`, `shipping.ts`, `packaging.ts`: the parts, each with a few ready-made choices.
 - `src/catalog/product.ts`: a product, which holds its parts and asks them.
 - `src/catalog/catalog.ts`: where each product picks its parts.
+
+## Variants
+
+- JavaScript: `composition-over-inheritance-js`, where a factory function builds each product as a plain object.
