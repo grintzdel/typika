@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { ErrorState } from '../../../../ui/ErrorState.tsx'
-import type { OpenTemplateFailure } from '../hooks/use-open-template.ts'
+import type { OpenTemplateFailure } from '../hooks/use-template-project.ts'
 
 export type TemplateLoadErrorProps = {
   readonly failure: OpenTemplateFailure

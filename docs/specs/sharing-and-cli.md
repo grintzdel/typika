@@ -20,6 +20,10 @@ Base `typika`, versionnée.
 | `exerciseProgress` | `[templateName, exerciseName]` | `{ status: 'started' \| 'passed', hintsRevealed, passedAt? }` |
 | `meta` | clé | Version du schéma applicatif, préférences (langue, thème, layout) |
 
+Au M1, seuls `projects` et `files` existent (version 1 de la base) ; les autres stores arriveront avec leur jalon, par
+migration. Les templates sont alors intégrés à l'app et n'ont pas de ref : `origin` vaut `{ kind: 'template', name }`, et
+le reset relit le template intégré. La ref épinglée et `templateCache` arrivent avec le registre (M3).
+
 `origin` d'un projet :
 
 ```ts

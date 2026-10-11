@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '../../../../ui/Button.tsx'
 
 export type RunToolbarProps = {
-  readonly title: string
   readonly status: 'loading' | 'ready' | 'failed'
   readonly bootError: string | undefined
   readonly isRunning: boolean
@@ -13,22 +12,12 @@ export type RunToolbarProps = {
   readonly onRetry: () => void
 }
 
-export const RunToolbar = ({
-  title,
-  status,
-  bootError,
-  isRunning,
-  isTesting,
-  onRun,
-  onTest,
-  onRetry,
-}: RunToolbarProps) => {
+export const RunToolbar = ({ status, bootError, isRunning, isTesting, onRun, onTest, onRetry }: RunToolbarProps) => {
   const { t } = useTranslation('runtime')
   const ready = status === 'ready'
   const reason = ready ? undefined : t('loading')
   return (
-    <div className="flex items-center gap-3 px-3 py-2">
-      <h1 className="truncate text-sm font-semibold">{title}</h1>
+    <div className="flex min-w-0 flex-1 items-center gap-3">
       <div role="status" className="min-w-0 flex-1 truncate text-xs text-neutral-600 dark:text-neutral-400">
         {status === 'loading' ? t('loading') : null}
         {status === 'failed' ? (

@@ -144,7 +144,8 @@ Objectif : amener l'apprenant vers un concept en deux clics.
 - Les fichiers propres à Typika (`typika.toml`, `tour/`) sont visibles mais regroupés et en lecture seule par
   défaut.
 - Autosauvegarde locale à chaque modification (débouncée), pas de bouton Enregistrer. Ouvrir `/play/<name>` crée un
-  projet local au premier changement ; avant, rien n'est persisté.
+  projet local au premier changement ; avant, rien n'est persisté. Revenir sur `/play/<name>` rouvre le projet le plus
+  récent de ce template ; Reset le ramène aux fichiers d'origine.
 
 ### 6.3 Exécution et tests
 
