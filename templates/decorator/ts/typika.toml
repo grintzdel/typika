@@ -1,0 +1,52 @@
+schema = 1
+name = "decorator-ts"
+title = "Decorator: sending notifications"
+summary = "Add behaviour to an object by wrapping it in another object with the same interface."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["design-pattern/structural/decorator", "principle/open-closed"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-flag-soup.md",
+  "tour/03-same-interface.md",
+  "tour/04-wrapping.md",
+  "tour/05-stacking-order.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/decorator-base/ts"
+focus = ["src/notifications/**"]
+
+[[exercises]]
+name = "add-sms-with-retry"
+kind = "refactor"
+title = "Send text messages with retry"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/sms-notifier.test.ts"]
+
+[[exercises]]
+name = "stacking-order"
+kind = "fix"
+title = "Log each notification once"
+failing = ["tests/email-notifier.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]
