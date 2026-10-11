@@ -11,6 +11,7 @@ The code works and its tests pass. Each architecture template starts from it and
 - `cqrs-ts`: the customer history is recomputed from the rows the handler writes, on every read.
 - `event-sourcing-ts`: each step overwrites the order's status, so when and why it changed is lost.
 - `outbox-ts`: the order is saved, then published; a broker failure between the two loses the event.
+- `state-machine-ts`: the status is four booleans, and the rules about them are spread across every route.
 
 ## Run it
 

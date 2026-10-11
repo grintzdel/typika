@@ -151,10 +151,10 @@ Vague (b) livrée : les cinq principes SOLID (`single-responsibility-ts`, `open-
 `interface-segregation-ts`, `dependency-inversion-ts`), chacun avec sa base, son tour et ses exercices. Chaque base
 partage sa suite de tests avec son template ; le template n'ajoute que des tests qui ciblent sa structure.
 
-Vague (c) en cours : `naive-crud-ts`, la base commune des architectures, `hexagonal-ts`, `cqrs-ts`,
-`event-sourcing-ts` et `outbox-ts`. La base expose dans
+Vague (c) livrée : `naive-crud-ts`, la base commune, et les cinq architectures (`hexagonal-ts`, `cqrs-ts`,
+`event-sourcing-ts`, `outbox-ts`, `state-machine-ts`), chacune avec son tour et ses deux exercices. La base expose dans
 `openShop` un gestionnaire HTTP simulé et les faux d'infrastructure (`cards`, `broker`, `mailer`, `clock`) ; ses tests
-passent par eux, si bien que chaque architecture les reprend tels quels.
+passent par eux, si bien que chaque architecture les reprend tels quels. Reste la vague (d) : les trois variantes JS.
 
 ## M3 — Hub
 

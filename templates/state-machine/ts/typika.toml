@@ -1,0 +1,53 @@
+schema = 1
+name = "state-machine-ts"
+title = "State machine: the order lifecycle"
+summary = "Replace status booleans with explicit states and one table of allowed transitions."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["functional"]
+topic = ["architecture/state-machine"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-impossible-states.md",
+  "tour/03-states.md",
+  "tour/04-transitions.md",
+  "tour/05-guards.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/ts"
+focus = ["src/orders/**", "src/infrastructure/in-memory-database.ts"]
+
+[[exercises]]
+name = "add-returns"
+kind = "refactor"
+title = "Accept returns"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/returns.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "forbid-cancel-after-shipping"
+kind = "fix"
+title = "Forbid cancelling a shipped order"
+failing = ["tests/order-lifecycle.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]
