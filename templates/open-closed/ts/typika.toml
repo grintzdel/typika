@@ -1,0 +1,44 @@
+schema = 1
+name = "open-closed-ts"
+title = "Open/closed: discount rules"
+summary = "Add a new discount by adding a rule, without editing the code that computes prices."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["principle/open-closed"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-closed-switch.md",
+  "tour/03-extension-point.md",
+  "tour/04-rules.md",
+  "tour/05-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/open-closed-base/ts"
+focus = ["src/pricing/**", "src/receipts/**"]
+
+[[exercises]]
+name = "add-black-friday-rule"
+kind = "refactor"
+title = "Add a Black Friday discount"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/black-friday.test.ts"]

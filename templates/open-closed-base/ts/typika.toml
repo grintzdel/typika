@@ -1,0 +1,24 @@
+schema = 1
+name = "open-closed-base-ts"
+title = "Open/closed base: discounts"
+summary = "Discounts as a switch on the customer tier, repeated wherever a price is shown, before the rules."
+license = "MIT-0"
+authors = ["github:maoudin"]
+role = "base"
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["principle/open-closed"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]

@@ -19,6 +19,8 @@ const TYPESCRIPT_TEMPLATES = [
   'factory-method-base/ts',
   'observer/ts',
   'observer-base/ts',
+  'open-closed/ts',
+  'open-closed-base/ts',
   'single-responsibility/ts',
   'single-responsibility-base/ts',
   'strategy/ts',
