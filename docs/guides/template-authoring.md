@@ -210,6 +210,10 @@ la volée. Cela impose :
 - uniquement de la syntaxe effaçable : pas d'`enum`, de `namespace` ni de propriétés déclarées dans les paramètres du
   constructeur ;
 - `import type` pour les imports de types seuls ;
+- des tests `failing` qui se bundlent contre l'état de départ : l'exécution ignore les types, mais un import nommé
+  d'un export que le départ n'a pas encore fait échouer le bundle, donc tous les tests. Importer le module en espace de
+  noms (`import * as notifiers from …`, puis `notifiers.createSmsNotifier(…)`) : la fonction absente vaut `undefined`
+  et seuls les tests qui l'appellent échouent ;
 - aucune API du DOM hors preview : le runtime `browser-js` s'exécute dans un worker, et l'éditeur ne charge que
   `lib.es2022` ([0015](../decisions/0015-editor.md)).
 

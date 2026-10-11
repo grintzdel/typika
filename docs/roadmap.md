@@ -142,8 +142,8 @@ bundler et le runner de la sandbox, pour que la commande et la sandbox jugent un
 exercices Go et Kotlin ne sont pas encore exécutés : leurs runtimes ne tournent que dans le navigateur ou derrière le
 service de compilation.
 
-Lot 6, vague (a) en cours : `observer-ts` et sa base `observer-base-ts` sont écrits, avec leur tour et leurs deux
-exercices (`add-loyalty-points`, `isolate-failing-subscriber`).
+Lot 6, vague (a) en cours : `observer-ts` et `decorator-ts` sont écrits, avec leur base, leur tour et leurs deux
+exercices.
 
 ## M3 — Hub
 
