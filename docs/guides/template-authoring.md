@@ -75,6 +75,10 @@ template.
   l'identique (`openShop()`, un constructeur de même signature, une fonction de même chemin) et sont copiés octet pour
   octet, fixtures comprises. Si le concept change la construction d'un objet (le DIP injecte ses dépendances), les tests
   partagés passent par la racine de composition, et les tests qui construisent l'objet vont dans le template seul.
+- **Une base partagée** (`naive-crud-<lang>`, la base des architectures) contient les problèmes de tous ses
+  templates. Ses tests passent par le gestionnaire HTTP simulé et par les faux d'infrastructure que renvoie `openShop`
+  (`cards`, `broker`, `mailer`, `clock`), que chaque template garde à l'identique : les templates ne changent que ce qui
+  se trouve derrière. Un id n'est attribué qu'à une commande valide, pour que toutes les entrées numérotent pareil.
 - **Le problème doit se sentir dans un exercice.** La base est le point de départ des exercices `refactor` : l'exigence
   doit y être pénible (duplication, `switch` de plus, test impossible).
 - `role = "base"`, pas de tour, pas de variantes, pas d'exercices.

@@ -1,0 +1,30 @@
+schema = 1
+name = "naive-crud-ts"
+title = "Naive CRUD: the orders module"
+summary = "An orders module where one HTTP handler validates, saves, charges, publishes and emails, before any architecture."
+license = "MIT-0"
+authors = ["github:maoudin"]
+role = "base"
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = [
+  "architecture/hexagonal",
+  "architecture/cqrs",
+  "architecture/event-sourcing",
+  "architecture/outbox",
+  "architecture/state-machine",
+]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
