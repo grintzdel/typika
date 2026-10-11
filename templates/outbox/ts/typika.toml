@@ -1,0 +1,52 @@
+schema = 1
+name = "outbox-ts"
+title = "Transactional outbox: publishing order events"
+summary = "Save each event in the same transaction as the order, and let a relay publish it to the broker."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "typescript"
+paradigm = ["oop"]
+topic = ["architecture/outbox"]
+level = "advanced"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.ts"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.ts"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-dual-write.md",
+  "tour/03-same-transaction.md",
+  "tour/04-relay.md",
+  "tour/05-idempotent-consumer.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/ts"
+focus = ["src/orders/**", "src/loyalty/**", "src/infrastructure/in-memory-database.ts", "src/open-shop.ts"]
+
+[[exercises]]
+name = "survive-broker-outage"
+kind = "refactor"
+title = "Survive a broker outage"
+from = "base"
+failing = ["tests/broker-outage.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "deduplicate-deliveries"
+kind = "fix"
+title = "Deduplicate deliveries"
+failing = ["tests/loyalty-points.test.ts"]
+hints = ["hint-1.md", "hint-2.md"]
