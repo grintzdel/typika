@@ -1,0 +1,48 @@
+schema = 1
+name = "composition-over-inheritance-js"
+title = "Composition vs inheritance: a product catalogue"
+summary = "Build objects from small, swappable parts with a factory function instead of a tree of subclasses."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "javascript"
+paradigm = ["oop"]
+topic = ["fundamental/composition-over-inheritance"]
+level = "beginner"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.js"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.js"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-hierarchy.md",
+  "tour/03-explosion.md",
+  "tour/04-compose.md",
+  "tour/05-delegate.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/composition-over-inheritance-base/js"
+focus = ["src/catalog/**"]
+
+[variants]
+typescript = "github:typika/templates/composition-over-inheritance/ts"
+
+[[exercises]]
+name = "add-gift-wrap"
+kind = "refactor"
+title = "Add gift wrap"
+from = "base"
+solutionFrom = "self"
+failing = ["tests/gift-wrap.test.js"]

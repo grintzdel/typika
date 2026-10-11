@@ -1,0 +1,24 @@
+schema = 1
+name = "composition-over-inheritance-base-js"
+title = "Composition vs inheritance base: a product catalogue"
+summary = "Products told apart by a chain of subclasses, before composition."
+license = "MIT-0"
+authors = ["github:maoudin"]
+role = "base"
+
+[facets]
+language = "javascript"
+paradigm = ["oop"]
+topic = ["fundamental/composition-over-inheritance"]
+level = "beginner"
+useCase = ["backend"]
+
+[runtime]
+kind = "browser-js"
+entry = "src/main.js"
+
+[commands]
+test = "vitest"
+
+[tests]
+include = ["tests/**/*.test.js"]

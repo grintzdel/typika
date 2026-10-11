@@ -36,6 +36,9 @@ steps = [
 template = "github:typika/templates/composition-over-inheritance-base/ts"
 focus = ["src/catalog/**"]
 
+[variants]
+javascript = "github:typika/templates/composition-over-inheritance/js"
+
 [[exercises]]
 name = "add-gift-wrap"
 kind = "refactor"

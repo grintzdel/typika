@@ -39,7 +39,14 @@ const TYPESCRIPT_TEMPLATES = [
   'strategy-base/ts',
 ]
 
-const JAVASCRIPT_TEMPLATES = ['decorator/js', 'decorator-base/js', 'observer/js', 'observer-base/js']
+const JAVASCRIPT_TEMPLATES = [
+  'composition-over-inheritance/js',
+  'composition-over-inheritance-base/js',
+  'decorator/js',
+  'decorator-base/js',
+  'observer/js',
+  'observer-base/js',
+]
 
 const testFilesOf = async (root: string) =>
   (await readdir(join(root, 'tests'), { recursive: true }))
