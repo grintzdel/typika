@@ -124,7 +124,7 @@ en s'appuyant sur cet outil.
 diff (lot 3, `@codemirror/merge` en premier candidat puisque l'éditeur est CodeMirror 6). Au lot 6, il faut aussi
 vérifier que le language service et la runtime `browser-js` traitent un template JS aussi bien qu'un template TS.
 
-État (2026-10-11) : lots 1 à 4 livrés. La barre d'outils indique que TypeScript démarre, ou qu'il est
+État (2026-10-11) : lots 1 à 5 livrés. La barre d'outils indique que TypeScript démarre, ou qu'il est
 indisponible, et un mot tapé avant que le worker soit prêt ouvre sa complétion dès qu'il l'est. Le panneau Tour
 parcourt les étapes de `strategy-ts`, ouvre les fichiers ancrés dans des onglets d'éditeur et surligne leur plage ; le
 rendu Markdown est tranché par [0020](decisions/0020-tour-markdown.md). `Alt+←` / `Alt+→` changent d'étape hors de
@@ -136,6 +136,11 @@ ouvre en diff côte à côte ou unifié dans l'éditeur ([0021](decisions/0021-d
 chaque run, mémorise la réussite dans le `localStorage` du navigateur, dévoile les indices un par un, montre la
 solution dans l'onglet Diff puis l'applique sur demande. « Recommencer » est le bouton Réinitialiser de la barre
 d'outils, qui ramène à l'état de départ de l'exercice.
+`pnpm template-check` (package `@typika/template-check`) valide chaque template de `templates/`, résout les refs
+`[base]` et `[variants]` officielles vers les dossiers locaux et exécute les exercices `browser-js` dans Node avec le
+bundler et le runner de la sandbox, pour que la commande et la sandbox jugent un template de la même façon. Les
+exercices Go et Kotlin ne sont pas encore exécutés : leurs runtimes ne tournent que dans le navigateur ou derrière le
+service de compilation.
 
 ## M3 — Hub
 

@@ -17,7 +17,7 @@ export {
 export { ExerciseBaseMissingError } from './domain/errors/exercise-base-missing.error.ts'
 export { ManifestInvalidError } from './domain/errors/manifest-invalid.error.ts'
 export { ManifestNotFoundError } from './domain/errors/manifest-not-found.error.ts'
-export { isWarning, ManifestIssueSchema, type ManifestIssue } from './domain/manifest-issue.domain-model.ts'
+export { isWarning, makeIssue, ManifestIssueSchema, type ManifestIssue } from './domain/manifest-issue.domain-model.ts'
 export {
   ExerciseKind,
   isRelativePath,

@@ -20,7 +20,9 @@ Ouvrez une issue avant tout changement important. Pour remettre en cause une dé
 
 - Architecture et conventions : [architecture](docs/specs/architecture.md).
 - TDD : tests E2E puis tests unitaires rouges avant l'implémentation.
-- `pnpm lint`, `pnpm format:check` et `pnpm test` doivent passer. Les tests de `runtime-browser-js` tournent dans
+- `pnpm lint`, `pnpm format:check`, `pnpm test` et `pnpm template-check` doivent passer. `template-check` valide chaque
+  template de `templates/` (manifeste, refs `[base]` et `[variants]`, ancres du tour) et exécute les états de départ et
+  de solution des exercices `browser-js` dans Node, avec le bundler et le runner de la sandbox. Les tests de `runtime-browser-js` tournent dans
   Chromium : installez-le une fois avec `pnpm --filter @typika/runtime-browser-js exec playwright install chromium`.
 - App : `pnpm --filter @typika/web dev` sert l'app sur `http://localhost:3000` et la runtime frame sur
   `http://127.0.0.1:3001`. Les tests E2E (`pnpm --filter @typika/web test:e2e`) démarrent ce serveur s'il ne tourne
