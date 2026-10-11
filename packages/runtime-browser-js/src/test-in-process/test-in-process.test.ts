@@ -49,4 +49,17 @@ describe('testInProcess', () => {
     expect(first._tag === 'Tested' && first.tests[0]?.status).toBe('passed')
     expect(second._tag === 'Tested' && second.tests[0]?.status).toBe('failed')
   })
+
+  it('runs a test file again when an earlier run had the same code', async () => {
+    const project = projectFixture({
+      'tests/same.test.ts': "import { expect, it } from 'vitest'\nit('runs', () => expect(1).toBe(1))\n",
+    })
+
+    await testInProcess(esbuild, project)
+    const second = await testInProcess(esbuild, project)
+
+    expect(second._tag === 'Tested' && second.tests).toEqual([
+      { file: 'tests/same.test.ts', name: 'runs', status: 'passed' },
+    ])
+  })
 })
