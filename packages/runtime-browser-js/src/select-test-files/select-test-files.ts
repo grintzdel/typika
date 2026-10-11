@@ -1,7 +1,5 @@
-import { DEFAULT_TEST_INCLUDE } from '@typika/manifest'
+import { DEFAULT_TEST_INCLUDE, matchGlob } from '@typika/manifest'
 import type { ProjectSnapshot, TestOptions } from '@typika/runtime-core'
-
-import { matchGlob } from '../match-glob/match-glob.ts'
 
 const ALWAYS_EXCLUDED = ['exercises/**']
 

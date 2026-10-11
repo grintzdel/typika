@@ -17,7 +17,7 @@ const TITLES = [
 const titleOf = (index: number): string => TITLES[index] ?? ''
 
 const editor = (page: Page) => page.getByRole('textbox', { name: 'Éditeur' })
-const tour = (page: Page) => page.getByRole('complementary', { name: 'Visite guidée' })
+const tour = (page: Page) => page.getByRole('region', { name: 'Visite guidée' })
 const openTabs = (page: Page) => page.getByRole('tablist', { name: 'Fichiers ouverts' })
 const highlightedLines = (page: Page) => editor(page).locator('.cm-typika-tour-line')
 

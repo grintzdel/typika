@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { fileTab, originalTab } from '../../core/domain/editor-tabs.domain-model.ts'
+import { baseDiffTab, fileTab, originalTab } from '../../core/domain/editor-tabs.domain-model.ts'
 import { useEditorTabs } from './use-editor-tabs.ts'
 
 const RANGE = { from: 2, to: 4 }
@@ -51,5 +51,26 @@ describe('useEditorTabs', () => {
 
     expect(result.current.tabs).toEqual([fileTab('src/main.ts')])
     expect(result.current.activeTab).toEqual(fileTab('src/main.ts'))
+  })
+
+  it('keeps the last code tab for the editor while a diff is active', () => {
+    const { result } = renderHook(() => useEditorTabs('src/main.ts'))
+
+    act(() => result.current.handleOpenTabs([fileTab('src/quote.ts')], RANGE))
+    act(() => result.current.handleOpenTabs([baseDiffTab('src/quote.ts')], undefined))
+
+    expect(result.current.activeTab).toEqual(baseDiffTab('src/quote.ts'))
+    expect(result.current.editorTab).toEqual(fileTab('src/quote.ts'))
+  })
+
+  it('keeps the editor on a closed tab until another code tab opens', () => {
+    const { result } = renderHook(() => useEditorTabs('src/main.ts'))
+
+    act(() => result.current.handleClose('src/main.ts'))
+    expect(result.current.activeTab).toBeUndefined()
+    expect(result.current.editorTab).toEqual(fileTab('src/main.ts'))
+
+    act(() => result.current.handleOpenFile('src/quote.ts'))
+    expect(result.current.editorTab).toEqual(fileTab('src/quote.ts'))
   })
 })

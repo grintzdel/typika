@@ -28,3 +28,4 @@ Statuts : `Proposée` (en attente d'un spike), `Acceptée`, `Remplacée par NNNN
 | [0018](0018-go-runtime.md) | Runtime Go : la toolchain Go compilée en WASM | Acceptée — Firefox à vérifier |
 | [0019](0019-kotlin-runtime.md) | Runtime Kotlin : un service de compilation maison, cible JS | Acceptée — Firefox à vérifier |
 | [0020](0020-tour-markdown.md) | Rendu Markdown du tour : react-markdown | Acceptée |
+| [0021](0021-diff-engine.md) | Moteur de diff : @codemirror/merge | Acceptée |

@@ -28,6 +28,7 @@ export {
 export type { TemplateFiles } from './domain/template-files.domain-model.ts'
 export type { TemplateRef } from './domain/template-ref.domain-model.ts'
 export { parseLineRange, type LineRange, type TourStep } from './domain/tour-step.domain-model.ts'
+export { matchGlob } from './match-glob/match-glob.ts'
 export { parseManifest } from './parse-manifest/parse-manifest.ts'
 export { formatTemplateRef, parseTemplateRef } from './parse-template-ref/parse-template-ref.ts'
 export { parseTourStep } from './parse-tour-step/parse-tour-step.ts'

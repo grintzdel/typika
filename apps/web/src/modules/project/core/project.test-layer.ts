@@ -64,6 +64,10 @@ export const makeProjectTestLayer = (
         return files === undefined ? Effect.fail(new ProjectTemplateNotFoundError({ name })) : Effect.succeed(files)
       },
       names: Effect.succeed(Object.keys(templates).toSorted()),
+      resolveRef: (ref) => {
+        const name = ref.split('/').slice(2).join('-')
+        return name in templates ? Effect.succeed(name) : Effect.fail(new ProjectTemplateNotFoundError({ name: ref }))
+      },
     }),
     Layer.succeed(ProjectStoragePort, storage)
   )

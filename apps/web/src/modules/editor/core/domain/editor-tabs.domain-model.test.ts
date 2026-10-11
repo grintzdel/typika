@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import {
   activeTabOf,
+  baseDiffTab,
   closeTab,
   EMPTY_TABS,
   fileTab,
+  mineDiffTab,
   openFile,
   openFiles,
   originalTab,
@@ -40,7 +42,17 @@ describe('editor tabs', () => {
     const tabs = openFiles(withFiles('src/quote.ts'), [originalTab('src/quote.ts')])
 
     expect(tabs.tabs.map((tab) => tab.key)).toEqual(['src/quote.ts', 'original:src/quote.ts'])
-    expect(activeTabOf(tabs)).toEqual({ key: 'original:src/quote.ts', path: 'src/quote.ts', isOriginal: true })
+    expect(activeTabOf(tabs)).toEqual({ key: 'original:src/quote.ts', path: 'src/quote.ts', kind: 'original' })
+  })
+
+  it('keeps the diffs of a file apart from the file', () => {
+    const tabs = openFiles(withFiles('src/quote.ts'), [baseDiffTab('src/quote.ts'), mineDiffTab('src/quote.ts')])
+
+    expect(tabs.tabs.map((tab) => tab.key)).toEqual([
+      'src/quote.ts',
+      'base-diff:src/quote.ts',
+      'mine-diff:src/quote.ts',
+    ])
   })
 
   it('activates the next tab when the active one closes', () => {

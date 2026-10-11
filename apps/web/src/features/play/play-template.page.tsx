@@ -1,7 +1,18 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { fileTab, originalTab } from '../../modules/editor/core/domain/editor-tabs.domain-model.ts'
+import { DiffSource } from '../../modules/diff/core/domain/file-changes.domain-model.ts'
+import { DiffEditor } from '../../modules/diff/ui/components/DiffEditor.tsx'
+import { DiffFileHeader } from '../../modules/diff/ui/components/DiffFileHeader.tsx'
+import { DiffPanel } from '../../modules/diff/ui/components/DiffPanel.tsx'
+import { useDiff } from '../../modules/diff/ui/hooks/use-diff.ts'
+import {
+  baseDiffTab,
+  EditorTabKind,
+  fileTab,
+  mineDiffTab,
+  originalTab,
+} from '../../modules/editor/core/domain/editor-tabs.domain-model.ts'
 import { CodeEditor } from '../../modules/editor/ui/components/CodeEditor.tsx'
 import { EditorTabs } from '../../modules/editor/ui/components/EditorTabs.tsx'
 import { LanguageServiceStatus } from '../../modules/editor/ui/components/LanguageServiceStatus.tsx'
@@ -13,6 +24,7 @@ import { FileTree } from '../../modules/project/ui/components/FileTree.tsx'
 import { ProjectStatus } from '../../modules/project/ui/components/ProjectStatus.tsx'
 import { ResetProjectDialog } from '../../modules/project/ui/components/ResetProjectDialog.tsx'
 import { TemplateLoadError } from '../../modules/project/ui/components/TemplateLoadError.tsx'
+import { useBaseTemplate } from '../../modules/project/ui/hooks/use-base-template.ts'
 import { useTemplateProject } from '../../modules/project/ui/hooks/use-template-project.ts'
 import { OutputPanels, type OutputPanel } from '../../modules/runtime/ui/components/OutputPanels.tsx'
 import { RunToolbar } from '../../modules/runtime/ui/components/RunToolbar.tsx'
@@ -21,17 +33,29 @@ import { useWriteProjectFiles } from '../../modules/runtime/ui/hooks/use-write-p
 import { anchorOf, filesOfStep } from '../../modules/tour/core/domain/tour.domain-model.ts'
 import { TourPanel } from '../../modules/tour/ui/components/TourPanel.tsx'
 import { useTour } from '../../modules/tour/ui/hooks/use-tour.ts'
+import { SidePanel } from '../../ui/SidePanel.tsx'
 import { Toolbar } from '../../ui/Toolbar.tsx'
 import { WorkbenchLayout } from '../../ui/WorkbenchLayout.tsx'
 
+type SideTab = 'tour' | 'diff'
+
+const NO_FILES: ReadonlyMap<string, string> = new Map()
+
 export const PlayTemplatePage = ({ templateName }: { readonly templateName: string }) => {
-  const { t } = useTranslation('editor')
+  const { t } = useTranslation(['editor', 'tour', 'diff'])
   const project = useTemplateProject(templateName)
   const edits = useEditFiles({ onPersist: project.handleSave, onSync: useWriteProjectFiles(templateName) })
   const runtime = useSandboxRuntime(templateName, edits.commitPending)
   const languageService = useLanguageService(templateName)
   const [panel, setPanel] = useState<OutputPanel>('console')
+  const [sideTab, setSideTab] = useState<SideTab | undefined>(undefined)
   const { template, failure } = project
+  const base = useBaseTemplate(templateName)
+  const diff = useDiff({
+    templateFiles: template?.templateFiles ?? NO_FILES,
+    currentFiles: new Map([...(template?.files ?? NO_FILES), ...edits.editedFiles]),
+    base: base.base,
+  })
   const tabs = useEditorTabs(template?.entry)
   const tour = useTour({
     steps: template?.tourSteps ?? [],
@@ -49,6 +73,14 @@ export const PlayTemplatePage = ({ templateName }: { readonly templateName: stri
   if (template === undefined) return null
 
   const active = tabs.activeTab
+  const { editorTab } = tabs
+  const isCode = active?.kind === EditorTabKind.FILE || active?.kind === EditorTabKind.ORIGINAL
+  const diffSource =
+    active?.kind === EditorTabKind.BASE_DIFF
+      ? DiffSource.BASE
+      : active?.kind === EditorTabKind.MINE_DIFF
+        ? DiffSource.MINE
+        : undefined
   const { anchor } = tour
 
   return (
@@ -95,41 +127,116 @@ export const PlayTemplatePage = ({ templateName }: { readonly templateName: stri
       }
       main={
         <EditorTabs tabs={tabs.tabs} activeKey={active?.key} onSelect={tabs.handleSelect} onClose={tabs.handleClose}>
-          {active === undefined ? (
-            <p className="p-4 text-sm text-neutral-600 dark:text-neutral-400">{t('noFile')}</p>
-          ) : (
-            <CodeEditor
-              key={template.generation}
-              documentKey={active.key}
-              path={active.path}
-              content={active.isOriginal ? (template.originalOf(active.path) ?? '') : template.contentOf(active.path)}
-              readOnly={active.isOriginal || isTypikaFile(active.path)}
-              highlight={tabs.highlight}
-              label={t('label')}
-              languageService={languageService.session}
-              onChange={edits.handleChange}
-            />
+          {editorTab === undefined ? null : (
+            <div className={isCode ? 'h-full' : 'hidden'}>
+              <CodeEditor
+                key={template.generation}
+                documentKey={editorTab.key}
+                path={editorTab.path}
+                content={
+                  editorTab.kind === EditorTabKind.ORIGINAL
+                    ? (template.originalOf(editorTab.path) ?? '')
+                    : template.contentOf(editorTab.path)
+                }
+                readOnly={editorTab.kind === EditorTabKind.ORIGINAL || isTypikaFile(editorTab.path)}
+                highlight={tabs.highlight}
+                label={t('label')}
+                languageService={languageService.session}
+                onChange={edits.handleChange}
+              />
+            </div>
           )}
-        </EditorTabs>
-      }
-      {...(tour.step === undefined
-        ? {}
-        : {
-            aside: (
-              <TourPanel
-                steps={template.tourSteps}
-                index={tour.index}
-                body={tour.step.body}
-                isChanged={anchor?._tag === 'Changed'}
-                announcement={tour.announcement}
-                embeddedTemplates={project.embeddedTemplates}
-                onSelect={tour.handleSelect}
-                onOpenOriginal={() => {
-                  if (anchor?._tag === 'Changed') tabs.handleOpenTabs([originalTab(anchor.path)], anchor.originalRange)
+          {diffSource === undefined || active === undefined ? null : (
+            <div className="flex h-full flex-col">
+              <DiffFileHeader
+                layout={diff.layout}
+                steps={template.tourSteps.flatMap((step, index) =>
+                  step.file === active.path ? [{ index, title: step.title }] : []
+                )}
+                onLayoutChange={diff.handleLayoutChange}
+                onOpenStep={(index) => {
+                  setSideTab('tour')
+                  tour.handleSelect(index)
                 }}
               />
-            ),
-          })}
+              <div className="min-h-0 flex-1">
+                <DiffEditor
+                  path={active.path}
+                  {...diff.versionsOf(diffSource, active.path)}
+                  layout={diff.layout}
+                  labels={
+                    diffSource === DiffSource.BASE
+                      ? {
+                          before: t('diff:editors.base'),
+                          after: t('diff:editors.template'),
+                          unified: t('diff:editors.unified'),
+                        }
+                      : {
+                          before: t('diff:editors.original'),
+                          after: t('diff:editors.mine'),
+                          unified: t('diff:editors.unified'),
+                        }
+                  }
+                />
+              </div>
+            </div>
+          )}
+          {active === undefined ? (
+            <p className="p-4 text-sm text-neutral-600 dark:text-neutral-400">{t('noFile')}</p>
+          ) : null}
+        </EditorTabs>
+      }
+      aside={
+        <SidePanel
+          label={t('sidePanel')}
+          active={sideTab ?? (tour.step === undefined ? 'diff' : 'tour')}
+          onActiveChange={setSideTab}
+          items={[
+            ...(tour.step === undefined
+              ? []
+              : [
+                  {
+                    value: 'tour' as const,
+                    label: t('tour:tab'),
+                    content: (
+                      <TourPanel
+                        steps={template.tourSteps}
+                        index={tour.index}
+                        body={tour.step.body}
+                        isChanged={anchor?._tag === 'Changed'}
+                        announcement={tour.announcement}
+                        embeddedTemplates={project.embeddedTemplates}
+                        onSelect={tour.handleSelect}
+                        onOpenOriginal={() => {
+                          if (anchor?._tag === 'Changed')
+                            tabs.handleOpenTabs([originalTab(anchor.path)], anchor.originalRange)
+                        }}
+                      />
+                    ),
+                  },
+                ]),
+            {
+              value: 'diff' as const,
+              label: t('diff:label'),
+              content: (
+                <DiffPanel
+                  source={diff.source}
+                  baseName={diff.baseName}
+                  changes={diff.changes}
+                  isLoading={base.isLoading}
+                  onSourceChange={diff.handleSourceChange}
+                  onOpen={(path) =>
+                    tabs.handleOpenTabs(
+                      [diff.source === DiffSource.BASE ? baseDiffTab(path) : mineDiffTab(path)],
+                      undefined
+                    )
+                  }
+                />
+              ),
+            },
+          ]}
+        />
+      }
       bottom={
         <OutputPanels active={panel} onActiveChange={setPanel} console={runtime.console} testRun={runtime.testRun} />
       }

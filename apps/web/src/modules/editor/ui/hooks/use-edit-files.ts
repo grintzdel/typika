@@ -1,7 +1,7 @@
 import { ProjectPathSchema, type ProjectPath } from '@typika/runtime-core'
 import * as Option from 'effect/Option'
 import * as Schema from 'effect/Schema'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export type FileEdit = readonly [ProjectPath, string]
 
@@ -16,6 +16,7 @@ const decodePath = Schema.decodeUnknownOption(ProjectPathSchema)
 export const useEditFiles = (sinks: EditSinks) => {
   const pending = useRef(new Map<ProjectPath, string>())
   const edited = useRef(new Map<string, string>())
+  const [editedFiles, setEditedFiles] = useState<ReadonlyMap<string, string>>(new Map())
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const latestSinks = useRef(sinks)
 
@@ -31,11 +32,13 @@ export const useEditFiles = (sinks: EditSinks) => {
   const discardPending = () => {
     clearPending()
     edited.current.clear()
+    setEditedFiles(new Map())
   }
 
   const commitPending = (): ReadonlyArray<FileEdit> => {
     const edits = [...pending.current]
     clearPending()
+    if (edits.length > 0) setEditedFiles(new Map(edited.current))
     if (edits.length > 0) latestSinks.current.onPersist(edits)
     return edits
   }
@@ -67,5 +70,5 @@ export const useEditFiles = (sinks: EditSinks) => {
 
   const editedContentOf = (path: string): string | undefined => edited.current.get(path)
 
-  return { handleChange, commitPending, discardPending, editedContentOf }
+  return { handleChange, commitPending, discardPending, editedContentOf, editedFiles }
 }
