@@ -163,6 +163,20 @@ de prototypes et le template une fonction fabrique qui garde ses parties dans sa
 désormais les `.js` d'un projet sans `tsconfig.json`, et `template-check` ignore les erreurs non interceptées d'un
 test, comme le worker de test.
 
+Revue (2026-10-12) : le M2 est livré. Les 16 concepts du catalogue ont leur template TS, chacun avec sa base, un tour
+de 5 ou 6 étapes et un exercice `refactor`, plus un exercice `fix` pour 10 d'entre eux. `pnpm template-check` passe sur
+les 38 templates, exercices compris. La commande ne vérifie pas qu'un exercice `refactor` existe : ce point a été
+relevé à la main, et passe dans V9 au M3. Les trois variantes JS sont livrées. Le guide d'écriture a été repris à
+chaque vague. On passe au M3 comme prévu, parce que le M4 et le M5 supposent un registre. Ce qui reste ouvert :
+
+- La recherche de marques sur « Typika » (R6) n'est pas faite. Le M3 crée les premiers dépôts publics : elle doit
+  être faite avant.
+- L'isolation n'a été vérifiée que dans Chromium (R2, R7, R8). Firefox et Safari restent à vérifier au plus tard au M4.
+- La configuration Vercel, `SECURITY.md` et la CI GitHub sont toujours en attente. La CI devient nécessaire au M3,
+  puisque le registre valide les PR et calcule la santé dans GitHub Actions.
+- `ui.md` nomme la page template `/templates/<name>`, et `architecture.md` la nomme `/t/$templateId`. Le lot 3 du M3
+  tranche.
+
 ## M3 — Hub
 
 **Objectif** : les templates vivent dans un registre, pas dans le code de l'app.
@@ -177,6 +191,23 @@ Livrables :
 
 Terminé quand : ajouter un template se fait par une PR au registre, sans toucher à l'app, et son état de santé
 apparaît sur le hub.
+
+### Découpage
+
+Un lot = une branche `m3/<lot>` et une PR. Les lots 1 à 6 restent dans ce dépôt : `templates/` y joue le rôle de
+`typika/templates`, et un dossier de registre local celui de `typika/registry`. Seul le lot 7 crée des dépôts sur
+GitHub. Il demande des décisions qui ne sont pas techniques : l'organisation `typika`, la visibilité publique, et la
+recherche de marques (R6).
+
+| # | Lot | Contenu | Terminé quand |
+|---|---|---|---|
+| 1 | `registry-tools` | `packages/registry-tools` ([registry §1 à §3](specs/registry.md)) : schéma des fichiers d'entrée, validations V1 à V10 (en reprenant `@typika/template-check`, plus la règle « au moins un exercice `refactor` » des principes et des design patterns), génération de `index.json` et de son schéma JSON. Les variantes sont résolues en noms. Les refs `@<sha>` sont résolues vers un dossier local, en attendant le lot 7. | Un registre local qui référence les 38 templates produit un `index.json` valide, sous 500 Ko compressé. Une entrée cassée (nom en double, ref non épinglée, exercice `refactor` manquant) fait échouer la commande. |
+| 2 | `index-source` | L'app lit l'index à l'URL `TYPIKA_REGISTRY_INDEX_URL` ([hosting](guides/hosting.md)) et charge les fichiers d'un template depuis sa ref épinglée, avec un cache. Un adaptateur GitHub remplace l'adaptateur `bundled` en production. L'adaptateur `bundled` reste pour les tests et le développement. États transverses de chargement et d'erreur ([ui §2](specs/ui.md)). Un projet local garde la ref d'origine ([registry §6](specs/registry.md)). | `/play/<name>` ouvre un template servi par un registre de test (index et fichiers sur un serveur local), sans que le template soit embarqué dans le bundle. |
+| 3 | `hub-pages` | Pages du hub prérendues depuis l'index ([ui §3 à §5](specs/ui.md), [architecture §4](specs/architecture.md)) : l'accueil avec une carte par concept et « Reprendre », la liste à facettes dont les filtres vivent dans la query string, et la page template avec son sélecteur de langage, son tour, sa base, ses exercices et ses variantes. Le lot tranche la route de la page template, puis aligne `ui.md` et `architecture.md`. | Les trois pages sont lisibles sans JavaScript dans le build de production. Une URL de liste filtrée, rechargée, restaure ses filtres. |
+| 4 | `search` | Recherche plein texte côté client sur `search.text` de l'index, combinée aux facettes, avec compteurs par valeur, tri et état vide ([ui §4](specs/ui.md)). Raccourci `/`. Une ADR si une dépendance entre. | Un test E2E cherche « switch », filtre sur `typescript` et trouve `strategy-ts`. Un filtre sans résultat affiche l'état vide et retire ses filtres un par un. |
+| 5 | `i18n` | Les ressources `en` et `fr` existent déjà, et la langue est détectée depuis le navigateur. Le lot ajoute le menu de langue, la mémorisation locale, le formatage des dates et des nombres selon la langue, et le libellé « contenu en anglais » sur la page template ([ui §17](specs/ui.md)). Aucune chaîne en dur dans les nouvelles pages du hub. | Changer de langue dans le menu traduit le hub et la sandbox, et le choix survit au rechargement. Un test vérifie que chaque clé `en` existe en `fr`. |
+| 6 | `health` | Le run de santé de [registry §4.2 et §4.3](specs/registry.md) devient une commande de `registry-tools`. Il démarre chaque template dans Chromium piloté par Playwright, lance ses tests, rejoue ses exercices et écrit `health/<name>.json`, que l'index intègre. Le hub affiche les badges `degraded`, et les bandeaux `broken` et `deprecated` ([ui §2](specs/ui.md)). | Un template volontairement cassé passe `broken` et son bandeau s'affiche. Un template rétabli redevient `healthy`. |
+| 7 | `registry-repos` | Il faut d'abord la recherche de marques (R6) et l'accord sur l'organisation GitHub. Ensuite : création de `typika/templates`, où `templates/` part avec son historique, et de `typika/registry`, avec les workflows `validate-pr`, `build-index` et `health`, `CODEOWNERS` et `maintainers.toml`. Renovate est activé sur les deux dépôts. La publication de l'index déclenche la reconstruction de l'app ([hosting](guides/hosting.md)). | Le critère de fin du M3 : une PR au registre ajoute un template sans toucher à l'app, et sa santé apparaît sur le hub après le déploiement. |
 
 ## M4 — Go & comparaison
 
