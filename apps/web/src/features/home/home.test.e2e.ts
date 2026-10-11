@@ -23,7 +23,7 @@ test.describe('home', () => {
   test('opens a template from the list', async ({ page }) => {
     await page.goto('/')
 
-    await page.getByRole('link', { name: /Decorator: sending notifications/ }).click()
+    await page.getByRole('link', { name: /Decorator: sending notifications.*TypeScript/ }).click()
 
     await expect(page).toHaveURL('/play/decorator-ts')
     await expect(page.getByRole('tree', { name: 'Fichiers' })).toBeVisible()

@@ -158,8 +158,8 @@ passent par eux, si bien que chaque architecture les reprend tels quels.
 
 Vague (d) en cours : `observer-js` et sa base, où `EventTarget` tient le rôle du sujet et un `AbortSignal` celui du
 désabonnement. Le language service analyse désormais les `.js` d'un projet sans `tsconfig.json`, et `template-check`
-ignore les erreurs non interceptées d'un test, comme le worker de test. Restent `decorator-js` et
-`composition-over-inheritance-js`.
+ignore les erreurs non interceptées d'un test, comme le worker de test. Puis `decorator-js` et sa base, où un notifier
+est une fonction et chaque décorateur une fonction d'ordre supérieur. Reste `composition-over-inheritance-js`.
 
 ## M3 — Hub
 
