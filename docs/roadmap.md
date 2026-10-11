@@ -147,6 +147,8 @@ Lot 6, vague (a) livrée : `observer-ts`, `decorator-ts`, `factory-method-ts`, `
 (titre, résumé, langage, niveau ; les bases sont masquées) en attendant le hub du M3. `template-check` exécute
 désormais chaque fichier de test à chaque run : un fichier au code inchangé disparaissait des runs suivants.
 
+Vague (b) en cours : `single-responsibility-ts` est écrit, avec sa base, son tour et l'exercice `add-pdf-invoice`.
+
 ## M3 — Hub
 
 **Objectif** : les templates vivent dans un registre, pas dans le code de l'app.
