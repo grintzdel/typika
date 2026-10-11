@@ -11,6 +11,8 @@ const TEMPLATES_DIR = join(import.meta.dirname, '..', '..', '..', 'templates')
 const TYPESCRIPT_TEMPLATES = [
   'decorator/ts',
   'decorator-base/ts',
+  'factory-method/ts',
+  'factory-method-base/ts',
   'observer/ts',
   'observer-base/ts',
   'strategy/ts',
