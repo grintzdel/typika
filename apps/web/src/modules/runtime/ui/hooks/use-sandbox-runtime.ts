@@ -2,6 +2,7 @@ import { useAtom, useAtomRefresh, useAtomValue } from '@effect/atom-react'
 import * as Option from 'effect/Option'
 import * as AsyncResult from 'effect/reactivity/AsyncResult'
 
+import { templateProjectAtom } from '../../../project/core/atoms/project.atoms.ts'
 import { runProjectAtom, runtimeSessionAtom, testProjectAtom } from '../../core/atoms/runtime.atoms.ts'
 import { EMPTY_CONSOLE, type ConsoleState } from '../../core/domain/console.domain-model.ts'
 import type { FileWrite } from '../../core/domain/file-write.domain-model.ts'
@@ -21,7 +22,7 @@ const latest = <A, E>(result: AsyncResult.AsyncResult<A, E>, onFailure: (reason:
 
 export const useSandboxRuntime = (templateName: string, takePending: () => ReadonlyArray<FileWrite>) => {
   const session = useAtomValue(runtimeSessionAtom(templateName))
-  const retry = useAtomRefresh(runtimeSessionAtom(templateName))
+  const retry = useAtomRefresh(templateProjectAtom(templateName))
   const [runResult, run] = useAtom(runProjectAtom(templateName))
   const [testResult, test] = useAtom(testProjectAtom(templateName))
 

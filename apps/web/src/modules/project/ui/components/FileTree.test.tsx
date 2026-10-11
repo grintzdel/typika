@@ -6,9 +6,9 @@ import { FileTree } from './FileTree.tsx'
 
 const nodes = buildFileTree(['src/main.ts', 'src/shop/money.ts', 'README.md'])
 
-const renderTree = (selectedPath = 'src/main.ts') => {
+const renderTree = (selectedPath = 'src/main.ts', modifiedPaths: ReadonlyArray<string> = []) => {
   const onSelect = vi.fn()
-  render(<FileTree nodes={nodes} selectedPath={selectedPath} onSelect={onSelect} />)
+  render(<FileTree nodes={nodes} selectedPath={selectedPath} modifiedPaths={modifiedPaths} onSelect={onSelect} />)
   return { onSelect }
 }
 
@@ -25,6 +25,13 @@ describe('FileTree', () => {
 
     expect(screen.getByRole('treeitem', { name: 'main.ts' }).getAttribute('aria-selected')).toBe('true')
     expect(screen.getByRole('treeitem', { name: 'README.md' }).getAttribute('aria-selected')).toBe('false')
+  })
+
+  it('marks the modified files', () => {
+    renderTree('src/main.ts', ['src/shop/money.ts'])
+
+    expect(screen.getByRole('treeitem', { name: 'money.ts, modifié' })).toBeTruthy()
+    expect(screen.getByRole('treeitem', { name: 'main.ts' })).toBeTruthy()
   })
 
   it('selects a file on click', () => {

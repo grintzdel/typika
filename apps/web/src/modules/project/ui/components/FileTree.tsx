@@ -6,6 +6,7 @@ import type { FileTreeNode } from '../../core/domain/file-tree.domain-model.ts'
 export type FileTreeProps = {
   readonly nodes: ReadonlyArray<FileTreeNode>
   readonly selectedPath: string | undefined
+  readonly modifiedPaths: ReadonlyArray<string>
   readonly onSelect: (path: string) => void
 }
 
@@ -23,7 +24,7 @@ const visibleItems = (
 
 const ROW = 'flex cursor-pointer items-center gap-1 rounded py-0.5 pr-2 text-sm whitespace-nowrap'
 
-export const FileTree = ({ nodes, selectedPath, onSelect }: FileTreeProps) => {
+export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect }: FileTreeProps) => {
   const { t } = useTranslation('project')
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set())
   const [focusedPath, setFocusedPath] = useState<string | undefined>(undefined)
@@ -93,7 +94,7 @@ export const FileTree = ({ nodes, selectedPath, onSelect }: FileTreeProps) => {
     const isFolder = node._tag === 'Folder'
     const isExpanded = isFolder && !collapsed.has(node.path)
     const isSelected = node.path === selectedPath
-    const labelId = `file-tree-${node.path}`
+    const isModified = !isFolder && modifiedPaths.includes(node.path)
     return (
       <li
         key={node.path}
@@ -104,7 +105,7 @@ export const FileTree = ({ nodes, selectedPath, onSelect }: FileTreeProps) => {
         role="treeitem"
         data-path={node.path}
         tabIndex={node.path === tabStop ? 0 : -1}
-        aria-labelledby={labelId}
+        aria-label={isModified ? t('tree.modifiedItem', { name: node.name }) : node.name}
         {...(isFolder ? { 'aria-expanded': isExpanded } : { 'aria-selected': isSelected })}
         className="outline-none [&:focus-visible>div]:outline-2 [&:focus-visible>div]:outline-sky-600"
         onClick={(event) => {
@@ -120,7 +121,12 @@ export const FileTree = ({ nodes, selectedPath, onSelect }: FileTreeProps) => {
           <span aria-hidden="true" className="w-3 text-neutral-500">
             {isFolder ? (isExpanded ? '▾' : '▸') : ''}
           </span>
-          <span id={labelId}>{node.name}</span>
+          <span>{node.name}</span>
+          {isModified ? (
+            <span aria-hidden="true" className="ml-auto pl-2 text-xs text-amber-600 dark:text-amber-400">
+              ●
+            </span>
+          ) : null}
         </div>
         {isFolder && isExpanded ? (
           <ul role="group">{node.children.map((child) => renderNode(child, depth + 1))}</ul>

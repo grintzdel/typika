@@ -68,6 +68,10 @@ Run et Tests exécutés dans la runtime frame, sur une origine séparée et isol
 en IndexedDB et le reset, l'image Docker avec le test E2E des en-têtes, et le language service TypeScript de
 l'éditeur.
 
+État (2026-10-11) : les projets sont persistés en IndexedDB. Une modification d'un template crée son projet local,
+recharger la page le rouvre, et Reset rend les fichiers du template après confirmation : le critère de fin du M1 est
+rempli. Restent l'image Docker avec le test E2E des en-têtes, et le language service TypeScript de l'éditeur.
+
 ## M2 — Pédagogie
 
 **Objectif** : ce qui distingue Typika d'une sandbox existe.

@@ -6,48 +6,84 @@ import { useEditFiles } from './use-edit-files.ts'
 beforeEach(() => vi.useFakeTimers())
 afterEach(() => vi.useRealTimers())
 
+const renderEdits = () => {
+  const onPersist = vi.fn()
+  const onSync = vi.fn()
+  const rendered = renderHook(() => useEditFiles({ onPersist, onSync }))
+  return { ...rendered, onPersist, onSync }
+}
+
+const setVisibility = (state: DocumentVisibilityState) => {
+  Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => state })
+  document.dispatchEvent(new Event('visibilitychange'))
+}
+
 describe('useEditFiles', () => {
-  it('flushes the last content of each file after a pause', () => {
-    const onFlush = vi.fn()
-    const { result } = renderHook(() => useEditFiles(onFlush))
+  it('persists and syncs the last content of each file after a pause', () => {
+    const { result, onPersist, onSync } = renderEdits()
 
     act(() => {
       result.current.handleChange('src/a.ts', 'a1')
       result.current.handleChange('src/a.ts', 'a2')
       result.current.handleChange('src/b.ts', 'b1')
     })
-    expect(onFlush).not.toHaveBeenCalled()
+    expect(onPersist).not.toHaveBeenCalled()
     act(() => {
       vi.advanceTimersByTime(300)
     })
 
-    expect(onFlush).toHaveBeenCalledExactlyOnceWith([
+    const edits = [
       ['src/a.ts', 'a2'],
       ['src/b.ts', 'b1'],
-    ])
+    ]
+    expect(onPersist).toHaveBeenCalledExactlyOnceWith(edits)
+    expect(onSync).toHaveBeenCalledExactlyOnceWith(edits)
   })
 
-  it('hands over the pending edits on demand, without flushing them again', () => {
-    const onFlush = vi.fn()
-    const { result } = renderHook(() => useEditFiles(onFlush))
+  it('persists the pending edits and hands them over on demand, without syncing them', () => {
+    const { result, onPersist, onSync } = renderEdits()
 
     act(() => result.current.handleChange('src/a.ts', 'a1'))
-    const pending = result.current.takePending()
+    const pending = result.current.commitPending()
     act(() => {
       vi.advanceTimersByTime(300)
     })
 
     expect(pending).toEqual([['src/a.ts', 'a1']])
-    expect(onFlush).not.toHaveBeenCalled()
+    expect(onPersist).toHaveBeenCalledExactlyOnceWith([['src/a.ts', 'a1']])
+    expect(onSync).not.toHaveBeenCalled()
+  })
+
+  it('drops the pending edits on demand', () => {
+    const { result, onPersist, onSync } = renderEdits()
+
+    act(() => result.current.handleChange('src/a.ts', 'a1'))
+    result.current.discardPending()
+    act(() => {
+      vi.advanceTimersByTime(300)
+    })
+
+    expect(onPersist).not.toHaveBeenCalled()
+    expect(onSync).not.toHaveBeenCalled()
+  })
+
+  it('flushes the pending edits when the page gets hidden', () => {
+    const { result, onPersist } = renderEdits()
+
+    act(() => result.current.handleChange('src/a.ts', 'a1'))
+    setVisibility('hidden')
+    setVisibility('visible')
+
+    expect(onPersist).toHaveBeenCalledExactlyOnceWith([['src/a.ts', 'a1']])
   })
 
   it('flushes the pending edits on unmount', () => {
-    const onFlush = vi.fn()
-    const { result, unmount } = renderHook(() => useEditFiles(onFlush))
+    const { result, unmount, onPersist, onSync } = renderEdits()
 
     act(() => result.current.handleChange('src/a.ts', 'a1'))
     unmount()
 
-    expect(onFlush).toHaveBeenCalledExactlyOnceWith([['src/a.ts', 'a1']])
+    expect(onPersist).toHaveBeenCalledExactlyOnceWith([['src/a.ts', 'a1']])
+    expect(onSync).toHaveBeenCalledExactlyOnceWith([['src/a.ts', 'a1']])
   })
 })

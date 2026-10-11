@@ -1,7 +1,15 @@
 export const resources = {
   en: {
     project: {
-      tree: { label: 'Files' },
+      tree: { label: 'Files', modifiedItem: '{{name}}, modified' },
+      status: { label: 'Project status', modified: 'Modified', unsaved: 'Changes not saved' },
+      reset: {
+        trigger: 'Reset',
+        title: 'Reset the project?',
+        description: 'These files will go back to their original version:',
+        cancel: 'Cancel',
+        confirm: 'Reset',
+      },
       loadFailed: {
         title: 'Cannot open this template',
         notFound: 'No template is called “{{name}}”.',
@@ -50,7 +58,15 @@ export const resources = {
   },
   fr: {
     project: {
-      tree: { label: 'Fichiers' },
+      tree: { label: 'Fichiers', modifiedItem: '{{name}}, modifié' },
+      status: { label: 'État du projet', modified: 'Modifié', unsaved: 'Modifications non enregistrées' },
+      reset: {
+        trigger: 'Réinitialiser',
+        title: 'Réinitialiser le projet ?',
+        description: 'Ces fichiers reviendront à leur version d’origine :',
+        cancel: 'Annuler',
+        confirm: 'Réinitialiser',
+      },
       loadFailed: {
         title: "Impossible d'ouvrir ce template",
         notFound: 'Aucun template ne s’appelle « {{name}} ».',

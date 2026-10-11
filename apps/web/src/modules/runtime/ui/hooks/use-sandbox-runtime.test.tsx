@@ -1,21 +1,42 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
+import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 import { describe, expect, it } from 'vitest'
 
 import { makeRegistryWrapper } from '../../../app/__tests__/registry-wrapper.tsx'
 import { templateFiles } from '../../../project/__tests__/template.factory.ts'
-import { makeProjectTestLayer } from '../../../project/core/project.test-layer.ts'
+import { openTemplateProgram } from '../../../project/core/programs/open-template/open-template.program.ts'
+import { saveProjectFilesProgram } from '../../../project/core/programs/save-project-files/save-project-files.program.ts'
+import {
+  makeProjectStorageInMemory,
+  makeProjectTestLayer,
+  type InMemoryProjectStorage,
+} from '../../../project/core/project.test-layer.ts'
 import { makeFakeRuntime, projectPath } from '../../__tests__/runtime.factory.ts'
+import type { FileWrite } from '../../core/domain/file-write.domain-model.ts'
 import { makeRuntimeTestLayer } from '../../core/runtime.test-layer.ts'
 import { useSandboxRuntime } from './use-sandbox-runtime.ts'
 
-const renderSandbox = () => {
+const TEMPLATES = { 'sample-ts': templateFiles() }
+
+const renderSandbox = (
+  storage = makeProjectStorageInMemory(),
+  pending: ReadonlyArray<FileWrite> = [[projectPath('src/main.ts'), 'edited']]
+) => {
   const fake = makeFakeRuntime()
   const wrapper = makeRegistryWrapper(
-    Layer.mergeAll(makeProjectTestLayer({ 'sample-ts': templateFiles() }), makeRuntimeTestLayer(fake.port))
+    Layer.mergeAll(makeProjectTestLayer(TEMPLATES, storage), makeRuntimeTestLayer(fake.port))
   )
-  return renderHook(() => useSandboxRuntime('sample-ts', () => [[projectPath('src/main.ts'), 'edited']]), { wrapper })
+  return { ...renderHook(() => useSandboxRuntime('sample-ts', () => pending), { wrapper }), journal: fake.journal }
 }
+
+const saveMain = (storage: InMemoryProjectStorage, content: string) =>
+  Effect.runPromise(
+    openTemplateProgram('sample-ts').pipe(
+      Effect.flatMap((project) => saveProjectFilesProgram({ project, edits: [[projectPath('src/main.ts'), content]] })),
+      Effect.provide(makeProjectTestLayer(TEMPLATES, storage))
+    )
+  )
 
 describe('useSandboxRuntime', () => {
   it('is ready once the session booted', async () => {
@@ -42,5 +63,29 @@ describe('useSandboxRuntime', () => {
 
     await waitFor(() => expect(result.current.testRun?.outcome).toMatchObject({ _tag: 'Finished', status: 'passed' }))
     expect(result.current.isTesting).toBe(false)
+  })
+
+  it('boots the runtime from the saved project files', async () => {
+    const storage = makeProjectStorageInMemory()
+    await saveMain(storage, 'saved')
+    const { result } = renderSandbox(storage, [])
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+
+    act(() => result.current.handleRun())
+
+    await waitFor(() => expect(result.current.console?.entries).toEqual([{ stream: 'stdout', text: 'saved' }]))
+  })
+
+  it('reboots the runtime from the latest saved files on retry', async () => {
+    const storage = makeProjectStorageInMemory()
+    const { result, journal } = renderSandbox(storage, [])
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+    await saveMain(storage, 'saved later')
+
+    act(() => result.current.handleRetry())
+    await waitFor(() => expect(journal.filter((entry) => entry === 'booted')).toHaveLength(2))
+    act(() => result.current.handleRun())
+
+    await waitFor(() => expect(result.current.console?.entries).toEqual([{ stream: 'stdout', text: 'saved later' }]))
   })
 })
