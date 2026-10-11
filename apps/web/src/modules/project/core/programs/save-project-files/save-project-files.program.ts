@@ -19,7 +19,7 @@ export const saveProjectFilesProgram = ({
       project: {
         id,
         name: project.templateName,
-        origin: { kind: 'template', name: project.templateName },
+        origin: project.origin,
         createdAt: now,
         updatedAt: now,
       },

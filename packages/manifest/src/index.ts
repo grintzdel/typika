@@ -14,6 +14,7 @@ export {
   TEST_RUNNER_OF_RUNTIME,
   type TestRunner,
 } from './domain/constants/language.constant.ts'
+export { ExerciseBaseMissingError } from './domain/errors/exercise-base-missing.error.ts'
 export { ManifestInvalidError } from './domain/errors/manifest-invalid.error.ts'
 export { ManifestNotFoundError } from './domain/errors/manifest-not-found.error.ts'
 export { isWarning, ManifestIssueSchema, type ManifestIssue } from './domain/manifest-issue.domain-model.ts'
@@ -28,6 +29,7 @@ export {
 export type { TemplateFiles } from './domain/template-files.domain-model.ts'
 export type { TemplateRef } from './domain/template-ref.domain-model.ts'
 export { parseLineRange, type LineRange, type TourStep } from './domain/tour-step.domain-model.ts'
+export { exerciseStates, type ExerciseStates } from './exercise-states/exercise-states.ts'
 export { matchGlob } from './match-glob/match-glob.ts'
 export { parseManifest } from './parse-manifest/parse-manifest.ts'
 export { formatTemplateRef, parseTemplateRef } from './parse-template-ref/parse-template-ref.ts'

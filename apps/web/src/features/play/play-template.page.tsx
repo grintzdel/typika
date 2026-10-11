@@ -12,6 +12,8 @@ import {
   fileTab,
   mineDiffTab,
   originalTab,
+  solutionDiffTab,
+  type EditorTab,
 } from '../../modules/editor/core/domain/editor-tabs.domain-model.ts'
 import { CodeEditor } from '../../modules/editor/ui/components/CodeEditor.tsx'
 import { EditorTabs } from '../../modules/editor/ui/components/EditorTabs.tsx'
@@ -19,7 +21,11 @@ import { LanguageServiceStatus } from '../../modules/editor/ui/components/Langua
 import { useEditFiles } from '../../modules/editor/ui/hooks/use-edit-files.ts'
 import { useEditorTabs } from '../../modules/editor/ui/hooks/use-editor-tabs.ts'
 import { useLanguageService } from '../../modules/editor/ui/hooks/use-language-service.ts'
+import { ExerciseList } from '../../modules/exercise/ui/components/ExerciseList.tsx'
+import { ExercisePanel } from '../../modules/exercise/ui/components/ExercisePanel.tsx'
+import { useExercise } from '../../modules/exercise/ui/hooks/use-exercise.ts'
 import { isTypikaFile } from '../../modules/project/core/domain/file-tree.domain-model.ts'
+import { projectKeyOf } from '../../modules/project/core/domain/project.domain-model.ts'
 import { FileTree } from '../../modules/project/ui/components/FileTree.tsx'
 import { ProjectStatus } from '../../modules/project/ui/components/ProjectStatus.tsx'
 import { ResetProjectDialog } from '../../modules/project/ui/components/ResetProjectDialog.tsx'
@@ -37,24 +43,50 @@ import { SidePanel } from '../../ui/SidePanel.tsx'
 import { Toolbar } from '../../ui/Toolbar.tsx'
 import { WorkbenchLayout } from '../../ui/WorkbenchLayout.tsx'
 
-type SideTab = 'tour' | 'diff'
+type SideTab = 'tour' | 'diff' | 'exercise'
 
 const NO_FILES: ReadonlyMap<string, string> = new Map()
 
-export const PlayTemplatePage = ({ templateName }: { readonly templateName: string }) => {
-  const { t } = useTranslation(['editor', 'tour', 'diff'])
-  const project = useTemplateProject(templateName)
-  const edits = useEditFiles({ onPersist: project.handleSave, onSync: useWriteProjectFiles(templateName) })
-  const runtime = useSandboxRuntime(templateName, edits.commitPending)
-  const languageService = useLanguageService(templateName)
+const DIFF_TABS: Readonly<Record<DiffSource, (path: string) => EditorTab>> = {
+  [DiffSource.BASE]: baseDiffTab,
+  [DiffSource.MINE]: mineDiffTab,
+  [DiffSource.SOLUTION]: solutionDiffTab,
+}
+
+const DIFF_SOURCES: Readonly<Partial<Record<EditorTab['kind'], DiffSource>>> = {
+  [EditorTabKind.BASE_DIFF]: DiffSource.BASE,
+  [EditorTabKind.MINE_DIFF]: DiffSource.MINE,
+  [EditorTabKind.SOLUTION_DIFF]: DiffSource.SOLUTION,
+}
+
+export type PlayTemplatePageProps = {
+  readonly templateName: string
+  readonly exercise: string | undefined
+}
+
+export const PlayTemplatePage = ({ templateName, exercise }: PlayTemplatePageProps) => {
+  const { t } = useTranslation(['editor', 'tour', 'diff', 'exercise'])
+  const projectKey = projectKeyOf(templateName, exercise)
+  const project = useTemplateProject(projectKey)
+  const edits = useEditFiles({ onPersist: project.handleSave, onSync: useWriteProjectFiles(projectKey) })
+  const runtime = useSandboxRuntime(projectKey, edits.commitPending)
+  const languageService = useLanguageService(projectKey)
   const [panel, setPanel] = useState<OutputPanel>('console')
   const [sideTab, setSideTab] = useState<SideTab | undefined>(undefined)
+  const [isSolutionShown, setSolutionShown] = useState(false)
   const { template, failure } = project
-  const base = useBaseTemplate(templateName)
+  const base = useBaseTemplate(projectKey)
   const diff = useDiff({
     templateFiles: template?.templateFiles ?? NO_FILES,
     currentFiles: new Map([...(template?.files ?? NO_FILES), ...edits.editedFiles]),
     base: base.base,
+    solutionFiles: isSolutionShown ? template?.exercise?.solutionFiles : undefined,
+  })
+  const exerciseProgress = useExercise({
+    templateName,
+    exercise: template?.exercise,
+    exercises: template?.exercises ?? [],
+    testRun: runtime.testRun,
   })
   const tabs = useEditorTabs(template?.entry)
   const tour = useTour({
@@ -75,12 +107,7 @@ export const PlayTemplatePage = ({ templateName }: { readonly templateName: stri
   const active = tabs.activeTab
   const { editorTab } = tabs
   const isCode = active?.kind === EditorTabKind.FILE || active?.kind === EditorTabKind.ORIGINAL
-  const diffSource =
-    active?.kind === EditorTabKind.BASE_DIFF
-      ? DiffSource.BASE
-      : active?.kind === EditorTabKind.MINE_DIFF
-        ? DiffSource.MINE
-        : undefined
+  const diffSource = active === undefined ? undefined : DIFF_SOURCES[active.kind]
   const { anchor } = tour
 
   return (
@@ -165,18 +192,13 @@ export const PlayTemplatePage = ({ templateName }: { readonly templateName: stri
                   {...diff.versionsOf(diffSource, active.path)}
                   layout={diff.layout}
                   labels={
-                    diffSource === DiffSource.BASE
-                      ? {
-                          before: t('diff:editors.base'),
-                          after: t('diff:editors.template'),
-                          unified: t('diff:editors.unified'),
-                        }
-                      : {
-                          before: t('diff:editors.original'),
-                          after: t('diff:editors.mine'),
-                          unified: t('diff:editors.unified'),
-                        }
+                    {
+                      [DiffSource.BASE]: { before: t('diff:editors.base'), after: t('diff:editors.template') },
+                      [DiffSource.MINE]: { before: t('diff:editors.original'), after: t('diff:editors.mine') },
+                      [DiffSource.SOLUTION]: { before: t('diff:editors.mine'), after: t('diff:editors.solution') },
+                    }[diffSource]
                   }
+                  unifiedLabel={t('diff:editors.unified')}
                 />
               </div>
             </div>
@@ -189,7 +211,7 @@ export const PlayTemplatePage = ({ templateName }: { readonly templateName: stri
       aside={
         <SidePanel
           label={t('sidePanel')}
-          active={sideTab ?? (tour.step === undefined ? 'diff' : 'tour')}
+          active={sideTab ?? (template.exercise !== undefined ? 'exercise' : tour.step === undefined ? 'diff' : 'tour')}
           onActiveChange={setSideTab}
           items={[
             ...(tour.step === undefined
@@ -222,18 +244,56 @@ export const PlayTemplatePage = ({ templateName }: { readonly templateName: stri
                 <DiffPanel
                   source={diff.source}
                   baseName={diff.baseName}
+                  hasSolution={diff.hasSolution}
                   changes={diff.changes}
                   isLoading={base.isLoading}
                   onSourceChange={diff.handleSourceChange}
-                  onOpen={(path) =>
-                    tabs.handleOpenTabs(
-                      [diff.source === DiffSource.BASE ? baseDiffTab(path) : mineDiffTab(path)],
-                      undefined
-                    )
-                  }
+                  onOpen={(path) => tabs.handleOpenTabs([DIFF_TABS[diff.source](path)], undefined)}
                 />
               ),
             },
+            ...(template.exercise !== undefined
+              ? [
+                  {
+                    value: 'exercise' as const,
+                    label: t('exercise:tab'),
+                    content: (
+                      <ExercisePanel
+                        exercise={template.exercise}
+                        progress={exerciseProgress.progress}
+                        isSolved={exerciseProgress.isSolved}
+                        next={exerciseProgress.next}
+                        revealedHints={exerciseProgress.revealedHints}
+                        embeddedTemplates={project.embeddedTemplates}
+                        onRevealHint={exerciseProgress.handleRevealHint}
+                        onShowSolution={() => {
+                          setSolutionShown(true)
+                          diff.handleSourceChange(DiffSource.SOLUTION)
+                          setSideTab('diff')
+                        }}
+                        onApplySolution={() => {
+                          edits.discardPending()
+                          project.handleApplySolution()
+                        }}
+                      />
+                    ),
+                  },
+                ]
+              : template.exercises.length > 0
+                ? [
+                    {
+                      value: 'exercise' as const,
+                      label: t('exercise:listTab'),
+                      content: (
+                        <ExerciseList
+                          templateName={template.name}
+                          exercises={template.exercises}
+                          solved={exerciseProgress.solved}
+                        />
+                      ),
+                    },
+                  ]
+                : []),
           ]}
         />
       }

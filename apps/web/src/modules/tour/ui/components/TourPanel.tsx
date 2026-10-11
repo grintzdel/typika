@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '../../../../ui/Button.tsx'
-import { TourMarkdown } from './TourMarkdown.tsx'
+import { ContentMarkdown } from '../../../shared/ui/components/ContentMarkdown.tsx'
 
 export type TourPanelStep = { readonly id: string; readonly title: string }
 
@@ -50,7 +50,7 @@ export const TourPanel = ({
             </Button>
           </div>
         ) : null}
-        <TourMarkdown markdown={body} embeddedTemplates={embeddedTemplates} />
+        <ContentMarkdown markdown={body} embeddedTemplates={embeddedTemplates} />
       </div>
       <div className="flex justify-between gap-2 border-t border-neutral-200 px-4 py-2 dark:border-neutral-800">
         <Button aria-label={t('previousLabel')} disabled={index === 0} onClick={() => onSelect(index - 1)}>

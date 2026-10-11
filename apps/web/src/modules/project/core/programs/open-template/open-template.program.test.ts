@@ -86,6 +86,58 @@ describe('openTemplateProgram', () => {
     ])
   })
 
+  it('opens an exercise on its start state, with its statement, hints and solution', async () => {
+    const files = templateFiles('sample-ts', {
+      'typika.toml': templateToml().replace(
+        'failing = ["tests/a.test.ts"]',
+        'failing = ["tests/a.test.ts"]\nhints = ["hint-1.md"]'
+      ),
+      'exercises/fix-it/hint-1.md': 'Look at main.\n',
+    })
+
+    const exit = await open('sample-ts#fix-it', { 'sample-ts': files })
+
+    expect(Exit.isSuccess(exit) && exit.value.origin).toEqual({
+      kind: 'exercise',
+      name: 'sample-ts',
+      exercise: 'fix-it',
+    })
+    expect(Exit.isSuccess(exit) && new Map<string, unknown>(exit.value.files).get('src/main.ts')).toBe(
+      "console.log('start')\n"
+    )
+    expect(Exit.isSuccess(exit) && exit.value.exercise).toMatchObject({
+      name: 'fix-it',
+      kind: 'fix',
+      title: 'Fix it',
+      failing: ['tests/a.test.ts'],
+      readme: '# Fix it\n',
+      hints: ['Look at main.\n'],
+    })
+    expect(
+      Exit.isSuccess(exit) && new Map<string, unknown>(exit.value.exercise?.solutionFiles ?? []).get('src/main.ts')
+    ).toBe("console.log('solution')\n")
+  })
+
+  it('opens the template project apart from its exercise projects', async () => {
+    const storage = makeProjectStorageInMemory([
+      {
+        ...storedProject(),
+        record: projectRecord({ origin: { kind: 'exercise', name: 'sample-ts', exercise: 'fix-it' } }),
+      },
+    ])
+
+    const exit = await open('sample-ts', undefined, storage)
+
+    expect(Exit.isSuccess(exit) && exit.value.modifiedPaths).toEqual([])
+    expect(Exit.isSuccess(exit) && exit.value.exercise).toBeUndefined()
+  })
+
+  it('fails for an exercise the template does not declare', async () => {
+    expect(failureOf(await open('sample-ts#missing'))).toMatchObject({
+      error: { _tag: 'ProjectExerciseNotFoundError', name: 'sample-ts', exercise: 'missing' },
+    })
+  })
+
   it('fails when no template has that name', async () => {
     expect(failureOf(await open('missing-ts'))).toMatchObject({
       error: { _tag: 'ProjectTemplateNotFoundError', name: 'missing-ts' },

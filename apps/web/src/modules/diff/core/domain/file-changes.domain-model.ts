@@ -18,6 +18,7 @@ export type FileChange = {
 export const DiffSource = {
   BASE: 'base',
   MINE: 'mine',
+  SOLUTION: 'solution',
 } as const
 
 export type DiffSource = (typeof DiffSource)[keyof typeof DiffSource]

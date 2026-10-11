@@ -1,8 +1,8 @@
 import Markdown, { type Components } from 'react-markdown'
 
-import { resolveTourLink } from '../../core/domain/tour.domain-model.ts'
+import { resolveContentLink } from '../../core/domain/content-link.domain-model.ts'
 
-export type TourMarkdownProps = {
+export type ContentMarkdownProps = {
   readonly markdown: string
   readonly embeddedTemplates: ReadonlyArray<string>
 }
@@ -29,7 +29,7 @@ const components = (embeddedTemplates: ReadonlyArray<string>): Components => ({
     />
   ),
   a: ({ href, children }) => {
-    const link = resolveTourLink(href, embeddedTemplates)
+    const link = resolveContentLink(href, embeddedTemplates)
     if (link._tag === 'Text') return <span>{children}</span>
     return (
       <a
@@ -44,7 +44,7 @@ const components = (embeddedTemplates: ReadonlyArray<string>): Components => ({
   },
 })
 
-export const TourMarkdown = ({ markdown, embeddedTemplates }: TourMarkdownProps) => (
+export const ContentMarkdown = ({ markdown, embeddedTemplates }: ContentMarkdownProps) => (
   <Markdown
     skipHtml
     disallowedElements={['img']}

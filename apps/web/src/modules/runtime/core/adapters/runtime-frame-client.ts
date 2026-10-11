@@ -62,9 +62,8 @@ export const makeRuntimeFrameClient = (port: MessagePort): Context.Service.Shape
 
   const send = (id: number, request: Request) => port.postMessage({ ...request, id })
 
-  const call = (request: Request) =>
+  const callAs = (id: number, request: Request) =>
     Effect.callback<void, RuntimeError>((resume) => {
-      const id = nextId++
       listeners.set(id, (response) => {
         if (response._tag === 'Succeeded') resume(Effect.void)
         else if (response._tag === 'Failed') resume(Effect.fail(fromRuntimeErrorData(response.error)))
@@ -74,6 +73,8 @@ export const makeRuntimeFrameClient = (port: MessagePort): Context.Service.Shape
       send(id, request)
       return Effect.sync(() => listeners.delete(id))
     })
+
+  const call = (request: Request) => Effect.suspend(() => callAs(nextId++, request))
 
   const stream = <A>(request: Request, schema: Schema.Codec<A, unknown>) => {
     const decodeItem = Schema.decodeUnknownOption(schema)
@@ -122,9 +123,10 @@ export const makeRuntimeFrameClient = (port: MessagePort): Context.Service.Shape
   })
 
   return {
-    boot: (snapshot) =>
-      Effect.acquireRelease(
-        call({ _tag: 'Boot', files: filesOf(snapshot) }).pipe(
+    boot: (snapshot) => {
+      const bootId = nextId++
+      return Effect.acquireRelease(
+        callAs(bootId, { _tag: 'Boot', files: filesOf(snapshot) }).pipe(
           Effect.mapError((error): RuntimeFrameBootError => {
             switch (error._tag) {
               case 'RuntimeBootError':
@@ -137,7 +139,8 @@ export const makeRuntimeFrameClient = (port: MessagePort): Context.Service.Shape
           }),
           Effect.as(makeSession())
         ),
-        () => call({ _tag: 'Shutdown' }).pipe(Effect.ignore)
-      ),
+        () => call({ _tag: 'Shutdown', boot: bootId }).pipe(Effect.ignore)
+      )
+    },
   }
 }

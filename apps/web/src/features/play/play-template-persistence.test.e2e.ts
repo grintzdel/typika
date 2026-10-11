@@ -68,7 +68,9 @@ test.describe('project persistence', () => {
     await expect(dialog).toBeHidden()
     await expect(status(page)).toBeEmpty()
     await expect(editor(page)).toContainText('money(490)')
-    await expect((await runTests(page)).getByText('0 échec')).toBeVisible({ timeout: 30_000 })
+    const results = await runTests(page)
+    await expect(results.getByText(/^[1-9]\d* réussis$/)).toBeVisible({ timeout: 30_000 })
+    await expect(results.getByText('0 échec')).toBeVisible()
 
     await page.reload()
     await page.getByRole('treeitem', { name: 'standard.ts' }).click()

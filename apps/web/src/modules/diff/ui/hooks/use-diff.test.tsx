@@ -19,7 +19,9 @@ const BASE = {
 }
 
 const renderDiff = (overrides: Partial<UseDiffOptions> = {}) =>
-  renderHook(() => useDiff({ templateFiles: TEMPLATE, currentFiles: TEMPLATE, base: BASE, ...overrides }))
+  renderHook(() =>
+    useDiff({ templateFiles: TEMPLATE, currentFiles: TEMPLATE, base: BASE, solutionFiles: undefined, ...overrides })
+  )
 
 describe('useDiff', () => {
   it('starts on the diff from the base, in the focus and without the tour markers', () => {
@@ -53,6 +55,19 @@ describe('useDiff', () => {
 
     expect(result.current.versionsOf('base', 'src/quote.ts')).toEqual({ before: 'old\n', after: 'new\n' })
     expect(result.current.versionsOf('mine', 'src/main.ts')).toEqual({ before: 'main', after: 'edited' })
+  })
+
+  it('lists the files that differ from the solution, without the Typika files', () => {
+    const solutionFiles = new Map([...TEMPLATE, ['src/main.ts', 'solved'], ['tour/01.md', 'tour']])
+    const { result } = renderDiff({ solutionFiles })
+
+    act(() => result.current.handleSourceChange('solution'))
+
+    expect(result.current.hasSolution).toBe(true)
+    expect(result.current.changes).toEqual([
+      { path: 'src/main.ts', status: 'modified', before: 'main', after: 'solved' },
+    ])
+    expect(result.current.versionsOf('solution', 'src/main.ts')).toEqual({ before: 'main', after: 'solved' })
   })
 
   it('switches the layout', () => {

@@ -28,7 +28,7 @@ import {
 } from '../domain/runtime-frame-protocol.domain-model.ts'
 
 type Files = ReadonlyArray<readonly [ProjectPath, FileContent]>
-type Current = { readonly session: RuntimeSession; readonly scope: Scope.Closeable }
+type Current = { readonly bootId: number; readonly session: RuntimeSession; readonly scope: Scope.Closeable }
 
 const decodeRequest = Schema.decodeUnknownOption(FrameRequestSchema)
 
@@ -68,7 +68,9 @@ export const serveRuntimeFrame = (
       use: (session: RuntimeSession) => Effect.Effect<A, RuntimeError>
     ) => (current === undefined ? Effect.fail(onMissing()) : use(current.session))
 
-    const boot = (files: Files) =>
+    const shutdownBoot = (bootId: number) => (current?.bootId === bootId ? shutdown : Effect.void)
+
+    const boot = (bootId: number, files: Files) =>
       Effect.gen(function* () {
         yield* shutdown
         const snapshot = yield* snapshotOf(files)
@@ -77,7 +79,7 @@ export const serveRuntimeFrame = (
         const session = yield* Scope.provide(scope)(runtime.boot(snapshot)).pipe(
           Effect.onError(() => Scope.close(scope, Exit.void))
         )
-        current = { session, scope }
+        current = { bootId, session, scope }
       })
 
     const forward = <A>(id: number, stream: (session: RuntimeSession) => Stream.Stream<A, RuntimeError>) =>
@@ -120,7 +122,7 @@ export const serveRuntimeFrame = (
     const handle = (request: FrameRequest): Effect.Effect<void> => {
       switch (request._tag) {
         case 'Boot':
-          return acknowledge(request.id, boot(request.files))
+          return acknowledge(request.id, boot(request.id, request.files))
         case 'WriteFile':
           return acknowledge(
             request.id,
@@ -158,7 +160,7 @@ export const serveRuntimeFrame = (
           return fiber === undefined ? Effect.void : Fiber.interrupt(fiber)
         }
         default:
-          return acknowledge(request.id, shutdown)
+          return acknowledge(request.id, shutdownBoot(request.boot))
       }
     }
 

@@ -4,6 +4,7 @@ import * as Layer from 'effect/Layer'
 import { describe, expect, it } from 'vitest'
 
 import { makeRegistryWrapper } from '../../../app/__tests__/registry-wrapper.tsx'
+import { makeExerciseProgressInMemory } from '../../../exercise/core/exercise.test-layer.ts'
 import { templateFiles } from '../../../project/__tests__/template.factory.ts'
 import { makeProjectTestLayer } from '../../../project/core/project.test-layer.ts'
 import { makeFakeRuntime } from '../../../runtime/__tests__/runtime.factory.ts'
@@ -18,7 +19,12 @@ const TEMPLATES = { 'sample-ts': templateFiles('sample-ts', { 'src/main.ts': 'co
 const renderLanguageService = (languageService: Layer.Layer<LanguageServicePort>) =>
   renderHook(() => useLanguageService('sample-ts'), {
     wrapper: makeRegistryWrapper(
-      Layer.mergeAll(makeProjectTestLayer(TEMPLATES), makeRuntimeTestLayer(makeFakeRuntime().port), languageService)
+      Layer.mergeAll(
+        makeProjectTestLayer(TEMPLATES),
+        makeRuntimeTestLayer(makeFakeRuntime().port),
+        languageService,
+        makeExerciseProgressInMemory().layer
+      )
     ),
   })
 

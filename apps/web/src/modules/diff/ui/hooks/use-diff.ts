@@ -1,5 +1,6 @@
 import { useState } from 'react'
 
+import { isTypikaFile } from '../../../project/core/domain/file-tree.domain-model.ts'
 import {
   baseFocus,
   DiffSource,
@@ -19,36 +20,42 @@ export type UseDiffOptions = {
         readonly focus: ReadonlyArray<string> | undefined
       }
     | undefined
+  readonly solutionFiles: ReadonlyMap<string, string> | undefined
 }
 
 const stripped = (files: ReadonlyMap<string, string>): ReadonlyMap<string, string> =>
   new Map([...files].map(([path, content]) => [path, withoutTourMarkers(content)]))
 
-export const useDiff = ({ templateFiles, currentFiles, base }: UseDiffOptions) => {
+export const useDiff = ({ templateFiles, currentFiles, base, solutionFiles }: UseDiffOptions) => {
   const [chosenSource, setChosenSource] = useState<DiffSource | undefined>(undefined)
   const [layout, setLayout] = useState<DiffLayout>(DiffLayout.SPLIT)
 
   const source = chosenSource ?? (base === undefined ? DiffSource.MINE : DiffSource.BASE)
 
-  const changesFor = (from: DiffSource): ReadonlyArray<FileChange> =>
-    from === DiffSource.BASE
-      ? base === undefined
-        ? []
-        : fileChanges(stripped(base.files), stripped(templateFiles), baseFocus(base.focus))
-      : fileChanges(templateFiles, currentFiles, () => true)
+  const changesFor = (from: DiffSource): ReadonlyArray<FileChange> => {
+    if (from === DiffSource.BASE)
+      return base === undefined ? [] : fileChanges(stripped(base.files), stripped(templateFiles), baseFocus(base.focus))
+    if (from === DiffSource.SOLUTION)
+      return solutionFiles === undefined ? [] : fileChanges(currentFiles, solutionFiles, (path) => !isTypikaFile(path))
+    return fileChanges(templateFiles, currentFiles, () => true)
+  }
 
-  const versionsOf = (from: DiffSource, path: string) =>
-    from === DiffSource.BASE
-      ? {
-          before: withoutTourMarkers(base?.files.get(path) ?? ''),
-          after: withoutTourMarkers(templateFiles.get(path) ?? ''),
-        }
-      : { before: templateFiles.get(path) ?? '', after: currentFiles.get(path) ?? '' }
+  const versionsOf = (from: DiffSource, path: string) => {
+    if (from === DiffSource.BASE)
+      return {
+        before: withoutTourMarkers(base?.files.get(path) ?? ''),
+        after: withoutTourMarkers(templateFiles.get(path) ?? ''),
+      }
+    if (from === DiffSource.SOLUTION)
+      return { before: currentFiles.get(path) ?? '', after: solutionFiles?.get(path) ?? '' }
+    return { before: templateFiles.get(path) ?? '', after: currentFiles.get(path) ?? '' }
+  }
 
   return {
     source,
     layout,
     baseName: base?.name,
+    hasSolution: solutionFiles !== undefined,
     changes: changesFor(source),
     versionsOf,
     handleSourceChange: setChosenSource,
