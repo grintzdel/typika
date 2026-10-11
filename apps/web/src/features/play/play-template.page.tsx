@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { CodeEditor } from '../../modules/editor/ui/components/CodeEditor.tsx'
+import { LanguageServiceStatus } from '../../modules/editor/ui/components/LanguageServiceStatus.tsx'
 import { useEditFiles } from '../../modules/editor/ui/hooks/use-edit-files.ts'
 import { useLanguageService } from '../../modules/editor/ui/hooks/use-language-service.ts'
 import { FileTree } from '../../modules/project/ui/components/FileTree.tsx'
@@ -40,6 +41,7 @@ export const PlayTemplatePage = ({ templateName }: { readonly templateName: stri
             isModified={project.modifiedPaths.length > 0}
             saveFailed={project.saveFailed}
           />
+          <LanguageServiceStatus status={languageService.status} />
           <RunToolbar
             status={runtime.status}
             bootError={runtime.bootError}
@@ -78,7 +80,7 @@ export const PlayTemplatePage = ({ templateName }: { readonly templateName: stri
           path={path}
           content={template.contentOf(path)}
           label={t('label')}
-          languageService={languageService}
+          languageService={languageService.session}
           onChange={edits.handleChange}
         />
       }

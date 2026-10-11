@@ -124,6 +124,9 @@ en s'appuyant sur cet outil.
 diff (lot 3, `@codemirror/merge` en premier candidat puisque l'éditeur est CodeMirror 6). Au lot 6, il faut aussi
 vérifier que le language service et la runtime `browser-js` traitent un template JS aussi bien qu'un template TS.
 
+État (2026-10-11) : lot 1 livré. La barre d'outils indique que TypeScript démarre, ou qu'il est indisponible, et un mot
+tapé avant que le worker soit prêt ouvre sa complétion dès qu'il l'est.
+
 ## M3 — Hub
 
 **Objectif** : les templates vivent dans un registre, pas dans le code de l'app.

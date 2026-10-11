@@ -4,5 +4,14 @@ import * as AsyncResult from 'effect/reactivity/AsyncResult'
 
 import { languageServiceAtom } from '../../core/atoms/editor.atoms.ts'
 
-export const useLanguageService = (templateName: string) =>
-  Option.getOrUndefined(AsyncResult.value(useAtomValue(languageServiceAtom(templateName))))
+export type LanguageServiceStatus = 'starting' | 'ready' | 'unavailable'
+
+export const useLanguageService = (templateName: string) => {
+  const result = useAtomValue(languageServiceAtom(templateName))
+  const status: LanguageServiceStatus = AsyncResult.isSuccess(result)
+    ? 'ready'
+    : AsyncResult.isFailure(result)
+      ? 'unavailable'
+      : 'starting'
+  return { session: Option.getOrUndefined(AsyncResult.value(result)), status }
+}

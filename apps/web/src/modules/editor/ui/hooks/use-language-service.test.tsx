@@ -27,23 +27,28 @@ describe('useLanguageService', () => {
     const languageService = makeLanguageServiceInMemory()
     const { result } = renderLanguageService(languageService.layer)
 
-    await waitFor(() => expect(result.current).toBeDefined())
+    await waitFor(() => expect(result.current.status).toBe('ready'))
     const info = await Effect.runPromise(
-      result.current?.quickInfo('src/main.ts', 'const '.length) ?? Effect.succeed(undefined)
+      result.current.session?.quickInfo('src/main.ts', 'const '.length) ?? Effect.succeed(undefined)
     )
 
     expect(info).toMatchObject({ signature: 'const total: number' })
     expect(Object.keys(languageService.started[0] ?? {})).toContain('src/main.ts')
   })
 
-  it('stays without a language service when it cannot start', async () => {
+  it('is starting while the language service is not ready', () => {
+    const { result } = renderLanguageService(Layer.succeed(LanguageServicePort, { start: () => Effect.never }))
+
+    expect(result.current).toEqual({ session: undefined, status: 'starting' })
+  })
+
+  it('is unavailable without a session when the language service cannot start', async () => {
     const { result } = renderLanguageService(
       Layer.succeed(LanguageServicePort, {
         start: () => Effect.fail(new EditorLanguageServiceError({ cause: 'blocked' })),
       })
     )
 
-    await new Promise((resolve) => setTimeout(resolve, 50))
-    expect(result.current).toBeUndefined()
+    await waitFor(() => expect(result.current).toEqual({ session: undefined, status: 'unavailable' }))
   })
 })
