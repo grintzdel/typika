@@ -1,4 +1,4 @@
-import type { ExerciseKind, TemplateFiles, TourStep } from '@typika/manifest'
+import type { ExerciseKind, Language, Level, TemplateFiles, TourStep } from '@typika/manifest'
 import { ProjectPathSchema, type FileContent, type ProjectPath, type ProjectSnapshot } from '@typika/runtime-core'
 import * as Schema from 'effect/Schema'
 
@@ -65,6 +65,14 @@ export type TemplateProject = ProjectSnapshot & {
   readonly tourSteps: ReadonlyArray<TourStep>
   readonly templateFiles: ProjectFiles
   readonly modifiedPaths: ReadonlyArray<ProjectPath>
+}
+
+export type TemplateSummary = {
+  readonly name: string
+  readonly title: string
+  readonly summary: string
+  readonly language: Language
+  readonly level: Level
 }
 
 export const textOf = (content: FileContent): string =>

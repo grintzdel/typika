@@ -142,9 +142,10 @@ bundler et le runner de la sandbox, pour que la commande et la sandbox jugent un
 exercices Go et Kotlin ne sont pas encore exécutés : leurs runtimes ne tournent que dans le navigateur ou derrière le
 service de compilation.
 
-Lot 6, vague (a) en cours : les cinq concepts sont écrits (`observer-ts`, `decorator-ts`, `factory-method-ts`,
-`adapter-ts`, `composition-over-inheritance-ts`), avec leur base, leur tour et leurs exercices. Reste la liste des
-templates sur `/`.
+Lot 6, vague (a) livrée : `observer-ts`, `decorator-ts`, `factory-method-ts`, `adapter-ts` et
+`composition-over-inheritance-ts`, avec leur base, leur tour et leurs exercices. `/` liste les templates embarqués
+(titre, résumé, langage, niveau ; les bases sont masquées) en attendant le hub du M3. `template-check` exécute
+désormais chaque fichier de test à chaque run : un fichier au code inchangé disparaissait des runs suivants.
 
 ## M3 — Hub
 

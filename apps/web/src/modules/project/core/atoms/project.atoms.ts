@@ -4,6 +4,7 @@ import * as Atom from 'effect/reactivity/Atom'
 import { appRuntime } from '../../../app/core/app.runtime.ts'
 import type { ProjectFileEdit, TemplateProject } from '../domain/project.domain-model.ts'
 import { applySolutionProgram } from '../programs/apply-solution/apply-solution.program.ts'
+import { listTemplateSummariesProgram } from '../programs/list-template-summaries/list-template-summaries.program.ts'
 import { listTemplatesProgram } from '../programs/list-templates/list-templates.program.ts'
 import { openBaseProgram } from '../programs/open-base/open-base.program.ts'
 import { openTemplateProgram } from '../programs/open-template/open-template.program.ts'
@@ -13,6 +14,8 @@ import { saveProjectFilesProgram } from '../programs/save-project-files/save-pro
 export type OpenedProject = TemplateProject & { readonly generation: number }
 
 export const embeddedTemplatesAtom = appRuntime.atom(listTemplatesProgram)
+
+export const templateSummariesAtom = appRuntime.atom(listTemplateSummariesProgram)
 
 const generationAtom = Atom.family((_name: string) => Atom.make(0))
 
