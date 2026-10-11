@@ -301,7 +301,8 @@ Tour :
 Exercices :
 
 - [ ] Au moins un `refactor` qui part de la base ; l'exigence est pénible dans la base (vérifié en l'y écrivant).
-- [ ] État de départ : seuls les tests `failing` sont rouges. Avec `solution/` : tout est vert.
+- [ ] État de départ : seuls les tests `failing` sont rouges. Avec `solution/` : tout est vert. `pnpm template-check` le vérifie pour
+  les templates `browser-js`.
 - [ ] Énoncés sans solution ; indices progressifs.
 
 Variantes :

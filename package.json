@@ -8,6 +8,7 @@
     "format": "oxfmt -c packages/config/oxfmt.json --ignore-path .gitignore --ignore-path .oxfmtignore",
     "format:check": "oxfmt -c packages/config/oxfmt.json --ignore-path .gitignore --ignore-path .oxfmtignore --check",
     "typecheck": "turbo run typecheck",
+    "template-check": "node packages/template-check/src/cli.ts templates",
     "test": "turbo run test"
   },
   "devDependencies": {
