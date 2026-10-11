@@ -1,3 +1,4 @@
+import { startCompletion } from '@codemirror/autocomplete'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
 import { javascript } from '@codemirror/lang-javascript'
 import { markdown } from '@codemirror/lang-markdown'
@@ -18,6 +19,7 @@ import { isAnalyzedPath } from '../../core/domain/language-service.domain-model.
 import { languageOf, type EditorLanguage } from '../../core/domain/language.domain-model.ts'
 import type { LanguageServiceSession } from '../../core/ports/language-service.port.ts'
 import { editorTheme } from './editor-theme.ts'
+import { isCompletionPending, pendingCompletion } from './pending-completion.ts'
 import { typescriptExtensions } from './typescript-extensions.ts'
 
 export type CodeEditorProps = {
@@ -61,6 +63,7 @@ const makeState = (
       if (update.docChanged) onDocChange(update.state.doc.toString())
     }),
     editorTheme,
+    pendingCompletion,
     languageService,
   ]
   if (language !== undefined) extensions.push(language)
@@ -121,6 +124,8 @@ export const CodeEditor = ({ path, content, label, languageService, onChange }: 
     editor.dispatch({
       effects: languageServiceSlot.current.reconfigure(languageServiceExtensions(currentPath.current, languageService)),
     })
+    if (isAnalyzedPath(currentPath.current) && editor.hasFocus && isCompletionPending(editor.state))
+      startCompletion(editor)
   }, [languageService])
 
   return <div ref={container} className="h-full overflow-hidden" />

@@ -19,6 +19,7 @@ export const resources = {
     editor: {
       label: 'Editor',
       noFile: 'Select a file',
+      languageService: { label: 'TypeScript', starting: 'Starting TypeScript…', unavailable: 'TypeScript unavailable' },
     },
     runtime: {
       run: 'Run',
@@ -76,6 +77,7 @@ export const resources = {
     editor: {
       label: 'Éditeur',
       noFile: 'Sélectionnez un fichier',
+      languageService: { label: 'TypeScript', starting: 'TypeScript démarre…', unavailable: 'TypeScript indisponible' },
     },
     runtime: {
       run: 'Exécuter',

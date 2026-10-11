@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 
 const STRATEGY_DIR = join(import.meta.dirname, '..', '..', '..', '..', '..', 'templates', 'strategy', 'ts')
 const LANGUAGE_SERVICE_TIMEOUT = 15_000
@@ -20,6 +20,20 @@ const openStrategy = async (page: Page) => {
   await page.mouse.move(0, 0)
   await expect(page.getByRole('tooltip')).toBeHidden()
 }
+
+const holdLanguageServiceWorker = async (context: BrowserContext) => {
+  const { promise: released, resolve: release } = Promise.withResolvers<void>()
+  await context.route(
+    (url) => url.pathname.endsWith('/language-service.worker.ts'),
+    async (route) => {
+      await released
+      await route.continue()
+    }
+  )
+  return release
+}
+
+const languageServiceStatus = (page: Page) => page.getByRole('status', { name: 'TypeScript' })
 
 const typeAtEnd = async (page: Page, text: string) => {
   await editor(page).click()
@@ -62,6 +76,27 @@ test.describe('TypeScript in the editor', () => {
     await page.getByRole('option', { name: /addMoney/ }).click()
 
     await expect(editor(page)).toContainText("import { addMoney, formatMoney, money } from './shop/money.ts'")
+  })
+
+  test('tells that TypeScript is starting until it is ready', async ({ page, context }) => {
+    const release = await holdLanguageServiceWorker(context)
+    await page.goto('/play/strategy-ts')
+
+    await expect(languageServiceStatus(page)).toHaveText('TypeScript démarre…')
+    release()
+
+    await expect(languageServiceStatus(page)).toHaveText('', { timeout: LANGUAGE_SERVICE_TIMEOUT })
+  })
+
+  test('opens the completion typed before TypeScript was ready', async ({ page, context }) => {
+    const release = await holdLanguageServiceWorker(context)
+    await page.goto('/play/strategy-ts')
+
+    await typeAtEnd(page, '\naddMon')
+    await expect(languageServiceStatus(page)).toHaveText('TypeScript démarre…')
+    release()
+
+    await expect(page.getByRole('option', { name: /addMoney/ })).toBeVisible({ timeout: LANGUAGE_SERVICE_TIMEOUT })
   })
 
   test('shows the type of a symbol on hover', async ({ page }) => {
