@@ -5,14 +5,17 @@ import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 import { appHeaders, runtimeFrameDevServer } from './vite/dev-servers.ts'
+import { typescriptLibraries } from './vite/typescript-libraries.ts'
 
 export default defineConfig(({ command }) => ({
   server: { port: 3000, strictPort: true },
   preview: { host: '127.0.0.1' },
   ssr: command === 'build' ? { noExternal: true } : {},
+  worker: { format: 'es', plugins: () => [typescriptLibraries()] },
   plugins: [
     appHeaders(),
     runtimeFrameDevServer(),
+    typescriptLibraries(),
     tailwindcss(),
     tanstackStart({ spa: { enabled: true } }),
     react(),

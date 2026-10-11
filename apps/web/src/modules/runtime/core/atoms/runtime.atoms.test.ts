@@ -6,6 +6,7 @@ import * as AtomRegistry from 'effect/reactivity/AtomRegistry'
 import { describe, expect, it } from 'vitest'
 
 import { appRuntime } from '../../../app/core/app.runtime.ts'
+import { makeLanguageServiceInMemory } from '../../../editor/core/editor.test-layer.ts'
 import { templateFiles } from '../../../project/__tests__/template.factory.ts'
 import { makeProjectTestLayer } from '../../../project/core/project.test-layer.ts'
 import { makeFakeRuntime, projectPath } from '../../__tests__/runtime.factory.ts'
@@ -14,7 +15,11 @@ import { runProjectAtom, runtimeSessionAtom, testProjectAtom } from './runtime.a
 
 const makeRegistry = () => {
   const fake = makeFakeRuntime()
-  const layer = Layer.mergeAll(makeProjectTestLayer({ 'sample-ts': templateFiles() }), makeRuntimeTestLayer(fake.port))
+  const layer = Layer.mergeAll(
+    makeProjectTestLayer({ 'sample-ts': templateFiles() }),
+    makeRuntimeTestLayer(fake.port),
+    makeLanguageServiceInMemory().layer
+  )
   const registry = AtomRegistry.make({ initialValues: [Atom.initialValue(appRuntime.layer, layer)] })
   return { registry, journal: fake.journal }
 }

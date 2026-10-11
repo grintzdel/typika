@@ -84,7 +84,8 @@ Le serveur de production (`apps/web/server/`) sert les deux origines depuis un s
 
 Il pose lui-même COOP, COEP, CORP, CSP, `Referrer-Policy` et `X-Content-Type-Options` selon l'hôte et le chemin
 ([security.md](../specs/security.md) §4). Les scripts inline du shell sont autorisés par leur hash, calculé au
-démarrage. L'image est donc correcte derrière n'importe quel reverse proxy ; celui-ci n'ajoute que TLS, HSTS et la
+démarrage. Tous les scripts de l'app portent `Cross-Origin-Embedder-Policy: require-corp`, sans quoi une page isolée
+refuse d'y démarrer un worker (celui du language service de l'éditeur). L'image est donc correcte derrière n'importe quel reverse proxy ; celui-ci n'ajoute que TLS, HSTS et la
 compression. Les assets hashés (`/assets/*`, `/runtime/assets/*`) sont servis avec
 `Cache-Control: public, max-age=31536000, immutable`, le reste avec `no-cache`.
 
@@ -178,6 +179,7 @@ manifeste d'assets qui liste chaque fichier et son hash SRI.
 - [ ] Instance publique : le domaine runtime est un **site différent** de l'app (pas un sous-domaine).
 - [ ] `curl -I <app>/play/strategy-ts` montre `Cross-Origin-Opener-Policy: same-origin` et
       `Cross-Origin-Embedder-Policy: require-corp`.
+- [ ] Dans la sandbox, une erreur de type tapée dans l'éditeur est soulignée : le worker du language service démarre.
 - [ ] `curl -I <app>/` montre `frame-ancestors 'none'` ; `curl -I <app>/embed/<template>` montre `frame-ancestors *`,
       sans COOP ni COEP.
 - [ ] Dans la sandbox, la console de la runtime frame renvoie `self.crossOriginIsolated === true`.

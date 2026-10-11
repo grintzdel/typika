@@ -27,6 +27,14 @@ describe('appHeaders', () => {
     })
     expect(appHeaders('/')).not.toHaveProperty('Cross-Origin-Opener-Policy')
   })
+
+  it('lets an isolated page start a worker from any script of the app', () => {
+    for (const script of ['/assets/language-service.worker-Bx1.js', '/src/editor/language-service.worker.ts']) {
+      expect(appHeaders(script)).toHaveProperty('Cross-Origin-Embedder-Policy', 'require-corp')
+      expect(appHeaders(script)).not.toHaveProperty('Cross-Origin-Opener-Policy')
+    }
+    expect(appHeaders('/templates')).not.toHaveProperty('Cross-Origin-Embedder-Policy')
+  })
 })
 
 describe('appContentSecurityPolicy', () => {

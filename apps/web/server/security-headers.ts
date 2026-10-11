@@ -7,9 +7,13 @@ const ISOLATED_PATHS = ['/play', '/p', '/compare', '/s']
 export const isIsolatedPath = (pathname: string) =>
   ISOLATED_PATHS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 
+const SCRIPT = /\.(?:m?js|tsx?)$/
+
+const EMBEDDER_POLICY: Headers = { 'Cross-Origin-Embedder-Policy': 'require-corp' }
+
 const ISOLATION_HEADERS: Headers = {
   'Cross-Origin-Opener-Policy': 'same-origin',
-  'Cross-Origin-Embedder-Policy': 'require-corp',
+  ...EMBEDDER_POLICY,
 }
 
 export const appHeaders = (pathname: string): Headers => ({
@@ -17,6 +21,7 @@ export const appHeaders = (pathname: string): Headers => ({
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Cross-Origin-Resource-Policy': 'same-origin',
   ...(isIsolatedPath(pathname) ? ISOLATION_HEADERS : {}),
+  ...(SCRIPT.test(pathname) ? EMBEDDER_POLICY : {}),
 })
 
 export const RUNTIME_HEADERS: Headers = {
