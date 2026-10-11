@@ -1,3 +1,4 @@
+import type { TourStep } from '@typika/manifest'
 import { ProjectPathSchema, type FileContent, type ProjectPath, type ProjectSnapshot } from '@typika/runtime-core'
 import * as Schema from 'effect/Schema'
 
@@ -33,6 +34,7 @@ export type StoredProject = {
 
 export type TemplateProject = ProjectSnapshot & {
   readonly templateName: string
+  readonly tourSteps: ReadonlyArray<TourStep>
   readonly templateFiles: ProjectFiles
   readonly modifiedPaths: ReadonlyArray<ProjectPath>
 }

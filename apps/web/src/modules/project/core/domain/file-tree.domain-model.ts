@@ -23,7 +23,14 @@ const toNodes = (folder: MutableFolder, prefix: string): ReadonlyArray<FileTreeN
     .map((name): FileTreeNode => ({ _tag: 'File', name, path: `${prefix}${name}` })),
 ]
 
-export const buildFileTree = (paths: Iterable<string>): ReadonlyArray<FileTreeNode> => {
+export const TYPIKA_GROUP_PATH = ':typika'
+
+const MANIFEST_PATH = 'typika.toml'
+const TOUR_FOLDER = 'tour/'
+
+export const isTypikaFile = (path: string): boolean => path === MANIFEST_PATH || path.startsWith(TOUR_FOLDER)
+
+const nodesOf = (paths: ReadonlyArray<string>): ReadonlyArray<FileTreeNode> => {
   const root: MutableFolder = { folders: new Map(), files: [] }
   for (const path of paths) {
     const segments = path.split('/')
@@ -40,4 +47,12 @@ export const buildFileTree = (paths: Iterable<string>): ReadonlyArray<FileTreeNo
     folder.files.push(name)
   }
   return toNodes(root, '')
+}
+
+export const buildFileTree = (paths: Iterable<string>): ReadonlyArray<FileTreeNode> => {
+  const all = [...paths]
+  const typika = all.filter(isTypikaFile)
+  const project = nodesOf(all.filter((path) => !isTypikaFile(path)))
+  if (typika.length === 0) return project
+  return [...project, { _tag: 'Folder', name: 'Typika', path: TYPIKA_GROUP_PATH, children: nodesOf(typika) }]
 }

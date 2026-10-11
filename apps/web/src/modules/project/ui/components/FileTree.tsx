@@ -1,7 +1,7 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { FileTreeNode } from '../../core/domain/file-tree.domain-model.ts'
+import { isTypikaFile, type FileTreeNode } from '../../core/domain/file-tree.domain-model.ts'
 
 export type FileTreeProps = {
   readonly nodes: ReadonlyArray<FileTreeNode>
@@ -95,6 +95,11 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect }: FileT
     const isExpanded = isFolder && !collapsed.has(node.path)
     const isSelected = node.path === selectedPath
     const isModified = !isFolder && modifiedPaths.includes(node.path)
+    const label = (() => {
+      if (isModified) return t('tree.modifiedItem', { name: node.name })
+      if (!isFolder && isTypikaFile(node.path)) return t('tree.readOnlyItem', { name: node.name })
+      return node.name
+    })()
     return (
       <li
         key={node.path}
@@ -105,7 +110,7 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect }: FileT
         role="treeitem"
         data-path={node.path}
         tabIndex={node.path === tabStop ? 0 : -1}
-        aria-label={isModified ? t('tree.modifiedItem', { name: node.name }) : node.name}
+        aria-label={label}
         {...(isFolder ? { 'aria-expanded': isExpanded } : { 'aria-selected': isSelected })}
         className="outline-none [&:focus-visible>div]:outline-2 [&:focus-visible>div]:outline-sky-600"
         onClick={(event) => {

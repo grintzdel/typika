@@ -67,6 +67,30 @@ describe('useEditFiles', () => {
     expect(onSync).not.toHaveBeenCalled()
   })
 
+  it('remembers the last content edited in each file, after the flush too', () => {
+    const { result } = renderEdits()
+
+    act(() => {
+      result.current.handleChange('src/a.ts', 'a1')
+      vi.advanceTimersByTime(300)
+    })
+
+    expect(result.current.editedContentOf('src/a.ts')).toBe('a1')
+    expect(result.current.editedContentOf('src/b.ts')).toBeUndefined()
+  })
+
+  it('forgets the edited contents with the pending edits', () => {
+    const { result } = renderEdits()
+
+    act(() => {
+      result.current.handleChange('src/a.ts', 'a1')
+      vi.advanceTimersByTime(300)
+      result.current.discardPending()
+    })
+
+    expect(result.current.editedContentOf('src/a.ts')).toBeUndefined()
+  })
+
   it('flushes the pending edits when the page gets hidden', () => {
     const { result, onPersist } = renderEdits()
 

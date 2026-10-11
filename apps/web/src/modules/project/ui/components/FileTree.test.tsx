@@ -68,4 +68,18 @@ describe('FileTree', () => {
     const tabbable = screen.getAllByRole('treeitem').filter((item) => item.tabIndex === 0)
     expect(tabbable.map((item) => item.textContent)).toEqual(['main.ts'])
   })
+
+  it('marks the Typika files as read-only', () => {
+    render(
+      <FileTree
+        nodes={buildFileTree(['src/main.ts', 'typika.toml'])}
+        selectedPath="src/main.ts"
+        modifiedPaths={[]}
+        onSelect={vi.fn()}
+      />
+    )
+
+    expect(screen.getByRole('treeitem', { name: 'typika.toml, lecture seule' })).toBeTruthy()
+    expect(screen.getByRole('treeitem', { name: 'main.ts' })).toBeTruthy()
+  })
 })

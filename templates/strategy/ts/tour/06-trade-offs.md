@@ -16,5 +16,5 @@ interface disappears.
 
 Related concepts:
 
-- `typika:open-closed-ts`: Strategy is one way to keep code open for extension and closed for modification.
-- `typika:factory-method-ts`: varies creation through inheritance, where Strategy varies behaviour through composition.
+- [`open-closed-ts`](typika:open-closed-ts): Strategy is one way to keep code open for extension and closed for modification.
+- [`factory-method-ts`](typika:factory-method-ts): varies creation through inheritance, where Strategy varies behaviour through composition.

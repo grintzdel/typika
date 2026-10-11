@@ -3,7 +3,12 @@ import type { FileContent } from '@typika/runtime-core'
 import * as Option from 'effect/Option'
 import * as AsyncResult from 'effect/reactivity/AsyncResult'
 
-import { resetProjectAtom, saveProjectFilesAtom, templateProjectAtom } from '../../core/atoms/project.atoms.ts'
+import {
+  embeddedTemplatesAtom,
+  resetProjectAtom,
+  saveProjectFilesAtom,
+  templateProjectAtom,
+} from '../../core/atoms/project.atoms.ts'
 import { buildFileTree } from '../../core/domain/file-tree.domain-model.ts'
 import { textOf, type ProjectFileEdit } from '../../core/domain/project.domain-model.ts'
 
@@ -16,6 +21,7 @@ export const useTemplateProject = (templateName: string) => {
   const result = useAtomValue(templateProjectAtom(templateName))
   const [saveResult, save] = useAtom(saveProjectFilesAtom(templateName))
   const reset = useAtomSet(resetProjectAtom(templateName))
+  const embeddedTemplates = Option.getOrElse(AsyncResult.value(useAtomValue(embeddedTemplatesAtom)), () => [])
 
   const failure = ((): OpenTemplateFailure | undefined => {
     if (!AsyncResult.isFailure(result)) return undefined
@@ -35,16 +41,19 @@ export const useTemplateProject = (templateName: string) => {
           title: opened.manifest.title,
           entry: opened.manifest.runtime.entry,
           generation: opened.generation,
+          tourSteps: opened.tourSteps,
           tree: buildFileTree(opened.files.keys()),
           contentOf: (path: string) => {
             const content = files.get(path)
             return content === undefined ? '' : textOf(content)
           },
+          originalOf: (path: string) => (opened.templateFiles as ReadonlyMap<string, string>).get(path),
         }
 
   return {
     template,
     failure,
+    embeddedTemplates,
     isLoading: template === undefined && failure === undefined,
     modifiedPaths: Option.getOrElse(AsyncResult.value(saveResult), () => opened?.modifiedPaths ?? []),
     saveFailed: AsyncResult.isFailure(saveResult),

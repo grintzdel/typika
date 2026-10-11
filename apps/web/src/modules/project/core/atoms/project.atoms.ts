@@ -3,11 +3,14 @@ import * as Atom from 'effect/reactivity/Atom'
 
 import { appRuntime } from '../../../app/core/app.runtime.ts'
 import type { ProjectFileEdit, TemplateProject } from '../domain/project.domain-model.ts'
+import { listTemplatesProgram } from '../programs/list-templates/list-templates.program.ts'
 import { openTemplateProgram } from '../programs/open-template/open-template.program.ts'
 import { resetProjectProgram } from '../programs/reset-project/reset-project.program.ts'
 import { saveProjectFilesProgram } from '../programs/save-project-files/save-project-files.program.ts'
 
 export type OpenedProject = TemplateProject & { readonly generation: number }
+
+export const embeddedTemplatesAtom = appRuntime.atom(listTemplatesProgram)
 
 const generationAtom = Atom.family((_name: string) => Atom.make(0))
 

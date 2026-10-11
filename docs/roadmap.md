@@ -124,8 +124,11 @@ en s'appuyant sur cet outil.
 diff (lot 3, `@codemirror/merge` en premier candidat puisque l'éditeur est CodeMirror 6). Au lot 6, il faut aussi
 vérifier que le language service et la runtime `browser-js` traitent un template JS aussi bien qu'un template TS.
 
-État (2026-10-11) : lot 1 livré. La barre d'outils indique que TypeScript démarre, ou qu'il est indisponible, et un mot
-tapé avant que le worker soit prêt ouvre sa complétion dès qu'il l'est.
+État (2026-10-11) : lots 1 et 2 livrés. La barre d'outils indique que TypeScript démarre, ou qu'il est indisponible,
+et un mot tapé avant que le worker soit prêt ouvre sa complétion dès qu'il l'est. Le panneau Tour parcourt les étapes
+de `strategy-ts`, ouvre les fichiers ancrés dans des onglets d'éditeur et surligne leur plage ; le rendu Markdown est
+tranché par [0020](decisions/0020-tour-markdown.md). `Alt+←` / `Alt+→` changent d'étape hors de l'éditeur
+seulement, parce que CodeMirror les utilise déjà sur macOS (mot précédent / suivant).
 
 ## M3 — Hub
 

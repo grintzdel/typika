@@ -274,7 +274,9 @@ Aucun message ne permet au parent de lire ou d'écrire le code.
 | `Esc` | Fermer palette / dialogue ; sortir de l'éditeur (voir §15) | Partout |
 
 Les raccourcis ne doivent pas écraser ceux de l'éditeur ni du navigateur ; conflits à vérifier au moment de
-l'implémentation.
+l'implémentation. `Alt+→` / `Alt+←` ne changent pas d'étape quand le focus est dans l'éditeur ou un champ de
+saisie (CodeMirror s'en sert pour avancer d'un mot sur macOS) ; ailleurs, ils remplacent « page précédente » du
+navigateur sous Windows et Linux.
 
 ## 15. Accessibilité
 

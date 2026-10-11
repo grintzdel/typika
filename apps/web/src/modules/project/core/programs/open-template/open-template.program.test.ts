@@ -3,7 +3,7 @@ import * as Exit from 'effect/Exit'
 import { describe, expect, it } from 'vitest'
 
 import { projectFiles, projectRecord } from '../../../__tests__/project.factory.ts'
-import { templateFiles } from '../../../__tests__/template.factory.ts'
+import { templateFiles, templateToml } from '../../../__tests__/template.factory.ts'
 import {
   failingProjectStorage,
   makeProjectStorageInMemory,
@@ -64,6 +64,26 @@ describe('openTemplateProgram', () => {
     expect(Exit.isSuccess(exit) && new Map<string, unknown>(exit.value.files).get('src/main.ts')).toBe(
       "console.log('hello')\n"
     )
+  })
+
+  it('opens the tour steps of the template', async () => {
+    const files = templateFiles('sample-ts', {
+      'typika.toml': `${templateToml()}\n[tour]\nsteps = ["tour/01-overview.md"]\n`,
+      'tour/01-overview.md': '+++\nid = "overview"\ntitle = "Overview"\nfile = "src/main.ts"\n+++\n\nHello.\n',
+    })
+
+    const exit = await open('sample-ts', { 'sample-ts': files })
+
+    expect(Exit.isSuccess(exit) && exit.value.tourSteps).toEqual([
+      {
+        path: 'tour/01-overview.md',
+        id: 'overview',
+        title: 'Overview',
+        file: 'src/main.ts',
+        also: [],
+        body: 'Hello.\n',
+      },
+    ])
   })
 
   it('fails when no template has that name', async () => {

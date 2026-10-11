@@ -20,11 +20,15 @@ import { languageOf, type EditorLanguage } from '../../core/domain/language.doma
 import type { LanguageServiceSession } from '../../core/ports/language-service.port.ts'
 import { editorTheme } from './editor-theme.ts'
 import { isCompletionPending, pendingCompletion } from './pending-completion.ts'
+import { scrollToTourHighlight, setTourHighlight, tourHighlight, type LineRange } from './tour-highlight.ts'
 import { typescriptExtensions } from './typescript-extensions.ts'
 
 export type CodeEditorProps = {
+  readonly documentKey: string
   readonly path: string
   readonly content: string
+  readonly readOnly: boolean
+  readonly highlight: LineRange | undefined
   readonly label: string
   readonly languageService: LanguageServiceSession | undefined
   readonly onChange: (path: string, content: string) => void
@@ -38,13 +42,17 @@ const LANGUAGES: Readonly<Record<EditorLanguage, () => LanguageSupport | undefin
   text: () => undefined,
 }
 
-const languageServiceExtensions = (path: string, session: LanguageServiceSession | undefined): Extension =>
-  session === undefined || !isAnalyzedPath(path) ? [] : typescriptExtensions(session, path)
+const languageServiceExtensions = (
+  path: string,
+  readOnly: boolean,
+  session: LanguageServiceSession | undefined
+): Extension => (session === undefined || readOnly || !isAnalyzedPath(path) ? [] : typescriptExtensions(session, path))
 
 const makeState = (
   path: string,
   doc: string,
   label: string,
+  readOnly: boolean,
   languageService: Extension,
   onDocChange: (content: string) => void
 ): EditorState => {
@@ -58,11 +66,13 @@ const makeState = (
     bracketMatching(),
     highlightActiveLine(),
     keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+    EditorState.readOnly.of(readOnly),
     EditorView.contentAttributes.of({ 'aria-label': label }),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) onDocChange(update.state.doc.toString())
     }),
     editorTheme,
+    tourHighlight,
     pendingCompletion,
     languageService,
   ]
@@ -70,11 +80,24 @@ const makeState = (
   return EditorState.create({ doc, extensions })
 }
 
-export const CodeEditor = ({ path, content, label, languageService, onChange }: CodeEditorProps) => {
+type OpenDocument = { readonly key: string; readonly path: string; readonly readOnly: boolean }
+
+export const CodeEditor = ({
+  documentKey,
+  path,
+  content,
+  readOnly,
+  highlight,
+  label,
+  languageService,
+  onChange,
+}: CodeEditorProps) => {
   const container = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
   const states = useRef(new Map<string, EditorState>())
-  const currentPath = useRef<string | null>(null)
+  const documents = useRef(new Map<string, OpenDocument>())
+  const highlights = useRef(new Map<string, LineRange>())
+  const current = useRef<OpenDocument | null>(null)
   const latestOnChange = useRef(onChange)
   const latestLanguageService = useRef(languageService)
   const languageServiceSlot = useRef(new Compartment())
@@ -91,40 +114,61 @@ export const CodeEditor = ({ path, content, label, languageService, onChange }: 
     return () => {
       editor.destroy()
       view.current = null
-      currentPath.current = null
+      current.current = null
+      highlights.current.clear()
     }
   }, [])
 
   useEffect(() => {
     const editor = view.current
-    if (editor === null || currentPath.current === path) return
-    if (currentPath.current !== null) states.current.set(currentPath.current, editor.state)
-    currentPath.current = path
+    if (editor === null || current.current?.key === documentKey) return
+    if (current.current !== null) states.current.set(current.current.key, editor.state)
+    const opened = { key: documentKey, path, readOnly }
+    current.current = opened
+    documents.current.set(documentKey, opened)
     const slot = languageServiceSlot.current
-    const extensions = languageServiceExtensions(path, latestLanguageService.current)
-    const cached = states.current.get(path)
+    const extensions = languageServiceExtensions(path, readOnly, latestLanguageService.current)
+    const cached = states.current.get(documentKey)
     if (cached === undefined) {
       editor.setState(
-        makeState(path, content, label, slot.of(extensions), (next) => latestOnChange.current(path, next))
+        makeState(path, content, label, readOnly, slot.of(extensions), (next) => latestOnChange.current(path, next))
       )
     } else {
       editor.setState(cached)
       editor.dispatch({ effects: slot.reconfigure(extensions) })
     }
-  }, [path, content, label])
+  }, [documentKey, path, content, readOnly, label])
+
+  useEffect(() => {
+    const editor = view.current
+    if (editor === null) return
+    const applied = highlights.current.get(documentKey)
+    if (applied === highlight) {
+      if (highlight !== undefined) scrollToTourHighlight(editor)
+      return
+    }
+    if (highlight === undefined) highlights.current.delete(documentKey)
+    else highlights.current.set(documentKey, highlight)
+    editor.dispatch({ effects: setTourHighlight.of(highlight ?? null) })
+    scrollToTourHighlight(editor)
+  }, [documentKey, highlight])
 
   useEffect(() => {
     latestLanguageService.current = languageService
     const editor = view.current
-    if (editor === null || currentPath.current === null || languageService === undefined) return
-    for (const [cachedPath, state] of states.current) {
-      if (cachedPath !== currentPath.current)
-        void Effect.runPromise(Effect.ignore(languageService.updateFile(cachedPath, state.doc.toString())))
+    const opened = current.current
+    if (editor === null || opened === null || languageService === undefined) return
+    for (const [key, state] of states.current) {
+      const document = documents.current.get(key)
+      if (key !== opened.key && document !== undefined && !document.readOnly)
+        void Effect.runPromise(Effect.ignore(languageService.updateFile(document.path, state.doc.toString())))
     }
     editor.dispatch({
-      effects: languageServiceSlot.current.reconfigure(languageServiceExtensions(currentPath.current, languageService)),
+      effects: languageServiceSlot.current.reconfigure(
+        languageServiceExtensions(opened.path, opened.readOnly, languageService)
+      ),
     })
-    if (isAnalyzedPath(currentPath.current) && editor.hasFocus && isCompletionPending(editor.state))
+    if (!opened.readOnly && isAnalyzedPath(opened.path) && editor.hasFocus && isCompletionPending(editor.state))
       startCompletion(editor)
   }, [languageService])
 
