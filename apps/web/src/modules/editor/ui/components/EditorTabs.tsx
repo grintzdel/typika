@@ -25,6 +25,7 @@ export const EditorTabs = ({ tabs, activeKey, onSelect, onClose, children }: Edi
       [EditorTabKind.ORIGINAL]: t('tabs.original', { name }),
       [EditorTabKind.BASE_DIFF]: t('tabs.baseDiff', { name }),
       [EditorTabKind.MINE_DIFF]: t('tabs.mineDiff', { name }),
+      [EditorTabKind.SOLUTION_DIFF]: t('tabs.solutionDiff', { name }),
     }
     return labels[tab.kind]
   }

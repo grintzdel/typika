@@ -4,6 +4,7 @@ import * as Option from 'effect/Option'
 import * as AsyncResult from 'effect/reactivity/AsyncResult'
 
 import {
+  applySolutionAtom,
   embeddedTemplatesAtom,
   resetProjectAtom,
   saveProjectFilesAtom,
@@ -15,6 +16,7 @@ import { textOf, type ProjectFileEdit } from '../../core/domain/project.domain-m
 export type OpenTemplateFailure =
   | { readonly _tag: 'NotFound'; readonly name: string }
   | { readonly _tag: 'Invalid'; readonly name: string }
+  | { readonly _tag: 'ExerciseNotFound'; readonly name: string; readonly exercise: string }
   | { readonly _tag: 'Unknown'; readonly name: string }
 
 const currentFiles = (files: ReadonlyMap<string, FileContent>): ReadonlyMap<string, string> =>
@@ -24,13 +26,16 @@ export const useTemplateProject = (templateName: string) => {
   const result = useAtomValue(templateProjectAtom(templateName))
   const [saveResult, save] = useAtom(saveProjectFilesAtom(templateName))
   const reset = useAtomSet(resetProjectAtom(templateName))
+  const applySolution = useAtomSet(applySolutionAtom(templateName))
   const embeddedTemplates = Option.getOrElse(AsyncResult.value(useAtomValue(embeddedTemplatesAtom)), () => [])
 
   const failure = ((): OpenTemplateFailure | undefined => {
     if (!AsyncResult.isFailure(result)) return undefined
     const error = Option.getOrUndefined(AsyncResult.error(result))
     if (error?._tag === 'ProjectTemplateNotFoundError') return { _tag: 'NotFound', name: templateName }
-    if (error?._tag === 'ProjectTemplateInvalidError') return { _tag: 'Invalid', name: templateName }
+    if (error?._tag === 'ProjectTemplateInvalidError') return { _tag: 'Invalid', name: error.name }
+    if (error?._tag === 'ProjectExerciseNotFoundError')
+      return { _tag: 'ExerciseNotFound', name: error.name, exercise: error.exercise }
     return { _tag: 'Unknown', name: templateName }
   })()
 
@@ -41,7 +46,10 @@ export const useTemplateProject = (templateName: string) => {
     opened === undefined
       ? undefined
       : {
+          name: opened.templateName,
           title: opened.manifest.title,
+          exercise: opened.exercise,
+          exercises: opened.manifest.exercises.map(({ name, title, kind }) => ({ name, title, kind })),
           entry: opened.manifest.runtime.entry,
           generation: opened.generation,
           tourSteps: opened.tourSteps,
@@ -64,5 +72,6 @@ export const useTemplateProject = (templateName: string) => {
     saveFailed: AsyncResult.isFailure(saveResult),
     handleSave: (edits: ReadonlyArray<ProjectFileEdit>) => save(edits),
     handleReset: () => reset(),
+    handleApplySolution: () => applySolution(),
   }
 }

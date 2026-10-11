@@ -1,12 +1,12 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
-import { TourMarkdown } from './TourMarkdown.tsx'
+import { ContentMarkdown } from './ContentMarkdown.tsx'
 
 const renderMarkdown = (markdown: string, embeddedTemplates: ReadonlyArray<string> = ['observer-ts']) =>
-  render(<TourMarkdown markdown={markdown} embeddedTemplates={embeddedTemplates} />)
+  render(<ContentMarkdown markdown={markdown} embeddedTemplates={embeddedTemplates} />)
 
-describe('TourMarkdown', () => {
+describe('ContentMarkdown', () => {
   it('renders paragraphs, emphasis, code and lists', () => {
     const { container } = renderMarkdown('Some **bold** and `code`.\n\n- one\n- two\n\n```ts\nconst a = 1\n```\n')
 

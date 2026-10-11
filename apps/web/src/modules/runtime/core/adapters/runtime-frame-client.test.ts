@@ -3,6 +3,7 @@ import * as Cause from 'effect/Cause'
 import * as Effect from 'effect/Effect'
 import * as Exit from 'effect/Exit'
 import * as Fiber from 'effect/Fiber'
+import * as Scope from 'effect/Scope'
 import * as Stream from 'effect/Stream'
 import { afterEach, describe, expect, it } from 'vitest'
 
@@ -130,6 +131,23 @@ describe('runtime frame channel', () => {
     await Effect.runPromise(Effect.sleep(20))
 
     expect(journal).toEqual(['booted', 'closed'])
+  })
+
+  it('keeps a newer session running when an older one closes after it booted', async () => {
+    const { client } = connect()
+
+    const outputs = await Effect.runPromise(
+      Effect.gen(function* () {
+        const older = yield* Scope.make()
+        yield* Scope.provide(older)(client.boot(projectFixture()))
+        const newer = yield* Scope.make()
+        const session = yield* Scope.provide(newer)(client.boot(projectFixture()))
+        yield* Scope.close(older, Exit.void)
+        return yield* Stream.runCollect(session.run({ command: 'src/main.ts', args: [] }))
+      })
+    )
+
+    expect(stdoutOf(outputs)).toBe('hello')
   })
 
   it('ignores malformed messages', async () => {

@@ -17,6 +17,7 @@ const renderPanel = (overrides: Partial<DiffPanelProps> = {}) => {
     <DiffPanel
       source="base"
       baseName="sample-base-ts"
+      hasSolution={false}
       changes={CHANGES}
       isLoading={false}
       onSourceChange={onSourceChange}
@@ -74,5 +75,19 @@ describe('DiffPanel', () => {
     renderPanel({ changes: [] })
 
     expect(screen.getByText('Aucune modification.')).toBeTruthy()
+  })
+
+  it('offers the solution once it is shown', () => {
+    const { onSourceChange } = renderPanel({ hasSolution: true })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Solution' }))
+
+    expect(onSourceChange).toHaveBeenCalledWith('solution')
+  })
+
+  it('keeps the solution hidden until it is shown', () => {
+    renderPanel()
+
+    expect(screen.queryByRole('button', { name: 'Solution' })).toBeNull()
   })
 })

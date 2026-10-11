@@ -6,7 +6,7 @@ import * as Option from 'effect/Option'
 
 import { ProjectStorageError } from './domain/errors/project-storage.error.ts'
 import { ProjectTemplateNotFoundError } from './domain/errors/project-template-not-found.error.ts'
-import type { StoredProject } from './domain/project.domain-model.ts'
+import { sameOrigin, type ProjectOrigin, type StoredProject } from './domain/project.domain-model.ts'
 import { ProjectStoragePort } from './ports/project-storage.port.ts'
 import { TemplateSourcePort } from './ports/template-source.port.ts'
 
@@ -17,16 +17,16 @@ export type InMemoryProjectStorage = ProjectStorage & { readonly projects: Reado
 export const makeProjectStorageInMemory = (initial: ReadonlyArray<StoredProject> = []): InMemoryProjectStorage => {
   const projects = new Map(initial.map((project) => [project.record.id, project]))
 
-  const latest = (name: string) =>
+  const latest = (origin: ProjectOrigin) =>
     [...projects.values()]
-      .filter((project) => project.record.origin.name === name)
+      .filter((project) => sameOrigin(project.record.origin, origin))
       .toSorted((a, b) => b.record.updatedAt - a.record.updatedAt)[0]
 
   const storage: ProjectStorage = {
-    findByTemplate: (name) => Effect.sync(() => Option.fromNullishOr(latest(name))),
+    findByOrigin: (origin) => Effect.sync(() => Option.fromNullishOr(latest(origin))),
     saveTemplateEdits: ({ project, templateFiles, edits }) =>
       Effect.sync(() => {
-        const existing = latest(project.origin.name)
+        const existing = latest(project.origin)
         const saved = {
           record: existing === undefined ? project : { ...existing.record, updatedAt: project.updatedAt },
           files: new Map([...(existing?.files ?? templateFiles), ...edits]),
@@ -48,7 +48,7 @@ export const makeProjectStorageInMemory = (initial: ReadonlyArray<StoredProject>
 const quotaExceeded = () => Effect.fail(new ProjectStorageError({ cause: new Error('QuotaExceededError') }))
 
 export const failingProjectStorage: ProjectStorage = {
-  findByTemplate: quotaExceeded,
+  findByOrigin: quotaExceeded,
   saveTemplateEdits: quotaExceeded,
   replaceFiles: quotaExceeded,
 }

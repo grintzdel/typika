@@ -8,7 +8,9 @@ import { ProjectStorageError } from '../domain/errors/project-storage.error.ts'
 import {
   ProjectRecordSchema,
   StoredFileSchema,
+  sameOrigin,
   type ProjectFiles,
+  type ProjectOrigin,
   type ProjectRecord,
   type StoredFile,
 } from '../domain/project.domain-model.ts'
@@ -77,11 +79,13 @@ const inTransaction = async <A>(
   }
 }
 
-const latestProjectOf = async (projects: IDBObjectStore, templateName: string) =>
-  decodeRecords(await settled(projects.index(BY_TEMPLATE).getAll(templateName))).reduce<ProjectRecord | undefined>(
-    (latest, record) => (latest === undefined || record.updatedAt > latest.updatedAt ? record : latest),
-    undefined
-  )
+const latestProjectOf = async (projects: IDBObjectStore, origin: ProjectOrigin) =>
+  decodeRecords(await settled(projects.index(BY_TEMPLATE).getAll(origin.name)))
+    .filter((record) => sameOrigin(record.origin, origin))
+    .reduce<ProjectRecord | undefined>(
+      (latest, record) => (latest === undefined || record.updatedAt > latest.updatedAt ? record : latest),
+      undefined
+    )
 
 const filesOf = async (files: IDBObjectStore, projectId: string): Promise<ProjectFiles> =>
   new Map(
@@ -116,15 +120,15 @@ export const makeProjectStorageIndexedDb = (factory: IDBFactory): Context.Servic
     })
 
   return {
-    findByTemplate: (name) =>
+    findByOrigin: (origin) =>
       transact('readonly', async ({ projects, files }) => {
-        const record = await latestProjectOf(projects, name)
+        const record = await latestProjectOf(projects, origin)
         return record === undefined ? Option.none() : Option.some({ record, files: await filesOf(files, record.id) })
       }),
 
     saveTemplateEdits: ({ project, templateFiles, edits }) =>
       transact('readwrite', async ({ projects, files }) => {
-        const existing = await latestProjectOf(projects, project.origin.name)
+        const existing = await latestProjectOf(projects, project.origin)
         const record = existing === undefined ? project : { ...existing, updatedAt: project.updatedAt }
         if (existing === undefined) {
           putFiles(files, record.id, templateFiles, record.createdAt)

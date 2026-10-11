@@ -8,6 +8,7 @@ import { projectFiles, projectRecord } from '../../__tests__/project.factory.ts'
 import { makeProjectStorageIndexedDb } from './project-storage.indexeddb.adapter.ts'
 
 const TEMPLATE = projectFiles({ 'src/a.ts': 'a', 'src/b.ts': 'b' })
+const SAMPLE = { kind: 'template', name: 'sample-ts' } as const
 
 const run = <A, E>(effect: Effect.Effect<A, E>) => Effect.runPromise(effect)
 
@@ -18,7 +19,7 @@ describe('makeProjectStorageIndexedDb', () => {
   it('finds no project for a template never edited', async () => {
     const storage = makeProjectStorageIndexedDb(new IDBFactory())
 
-    expect(Option.isNone(await run(storage.findByTemplate('sample-ts')))).toBe(true)
+    expect(Option.isNone(await run(storage.findByOrigin(SAMPLE)))).toBe(true)
   })
 
   it('creates the project from the template files on the first save', async () => {
@@ -31,7 +32,7 @@ describe('makeProjectStorageIndexedDb', () => {
 
     expect(saved.record).toEqual(record)
     expect(Object.fromEntries(saved.files)).toEqual({ 'src/a.ts': 'A', 'src/b.ts': 'b' })
-    expect(filesOf(await run(storage.findByTemplate('sample-ts')))).toEqual({ 'src/a.ts': 'A', 'src/b.ts': 'b' })
+    expect(filesOf(await run(storage.findByOrigin(SAMPLE)))).toEqual({ 'src/a.ts': 'A', 'src/b.ts': 'b' })
   })
 
   it('applies later edits to the existing project', async () => {
@@ -73,7 +74,7 @@ describe('makeProjectStorageIndexedDb', () => {
       ),
     ])
 
-    expect(filesOf(await run(storage.findByTemplate('sample-ts')))).toEqual({ 'src/a.ts': 'A', 'src/b.ts': 'B' })
+    expect(filesOf(await run(storage.findByOrigin(SAMPLE)))).toEqual({ 'src/a.ts': 'A', 'src/b.ts': 'B' })
   })
 
   it('keeps the projects of each template apart', async () => {
@@ -86,7 +87,22 @@ describe('makeProjectStorageIndexedDb', () => {
       })
     )
 
-    expect(Option.isNone(await run(storage.findByTemplate('sample-ts')))).toBe(true)
+    expect(Option.isNone(await run(storage.findByOrigin(SAMPLE)))).toBe(true)
+  })
+
+  it('keeps the exercise projects apart from the template project', async () => {
+    const storage = makeProjectStorageIndexedDb(new IDBFactory())
+    const exercise = { kind: 'exercise', name: 'sample-ts', exercise: 'fix-it' } as const
+    await run(
+      storage.saveTemplateEdits({
+        project: projectRecord({ origin: exercise }),
+        templateFiles: TEMPLATE,
+        edits: projectFiles({ 'src/a.ts': 'exercise' }),
+      })
+    )
+
+    expect(Option.isNone(await run(storage.findByOrigin(SAMPLE)))).toBe(true)
+    expect(filesOf(await run(storage.findByOrigin(exercise)))).toEqual({ 'src/a.ts': 'exercise', 'src/b.ts': 'b' })
   })
 
   it('replaces every file of a project', async () => {
@@ -102,7 +118,7 @@ describe('makeProjectStorageIndexedDb', () => {
 
     await run(storage.replaceFiles(record.id, TEMPLATE, 3_000))
 
-    const stored = Option.getOrThrow(await run(storage.findByTemplate('sample-ts')))
+    const stored = Option.getOrThrow(await run(storage.findByOrigin(SAMPLE)))
     expect(Object.fromEntries(stored.files)).toEqual({ 'src/a.ts': 'a', 'src/b.ts': 'b' })
     expect(stored.record.updatedAt).toBe(3_000)
   })
@@ -117,7 +133,7 @@ describe('makeProjectStorageIndexedDb', () => {
       })
     )
 
-    const reopened = await run(makeProjectStorageIndexedDb(factory).findByTemplate('sample-ts'))
+    const reopened = await run(makeProjectStorageIndexedDb(factory).findByOrigin(SAMPLE))
 
     expect(filesOf(reopened)).toEqual({ 'src/a.ts': 'A', 'src/b.ts': 'b' })
   })
@@ -139,7 +155,7 @@ describe('makeProjectStorageIndexedDb', () => {
       })
     })
 
-    const exit = await Effect.runPromiseExit(storage.findByTemplate('sample-ts'))
+    const exit = await Effect.runPromiseExit(storage.findByOrigin(SAMPLE))
 
     expect(Exit.isFailure(exit) && exit.cause.reasons[0]).toMatchObject({ error: { _tag: 'ProjectStorageError' } })
   })

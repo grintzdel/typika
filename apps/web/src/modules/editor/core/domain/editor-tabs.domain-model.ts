@@ -3,6 +3,7 @@ export const EditorTabKind = {
   ORIGINAL: 'original',
   BASE_DIFF: 'base-diff',
   MINE_DIFF: 'mine-diff',
+  SOLUTION_DIFF: 'solution-diff',
 } as const
 
 export type EditorTabKind = (typeof EditorTabKind)[keyof typeof EditorTabKind]
@@ -28,6 +29,7 @@ export const fileTab = tabOf(EditorTabKind.FILE)
 export const originalTab = tabOf(EditorTabKind.ORIGINAL)
 export const baseDiffTab = tabOf(EditorTabKind.BASE_DIFF)
 export const mineDiffTab = tabOf(EditorTabKind.MINE_DIFF)
+export const solutionDiffTab = tabOf(EditorTabKind.SOLUTION_DIFF)
 
 export const activeTabOf = (state: EditorTabs): EditorTab | undefined =>
   state.tabs.find((tab) => tab.key === state.activeKey)

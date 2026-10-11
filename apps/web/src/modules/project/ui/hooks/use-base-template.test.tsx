@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { makeRegistryWrapper } from '../../../app/__tests__/registry-wrapper.tsx'
 import { makeLanguageServiceInMemory } from '../../../editor/core/editor.test-layer.ts'
+import { makeExerciseProgressInMemory } from '../../../exercise/core/exercise.test-layer.ts'
 import { makeFakeRuntime } from '../../../runtime/__tests__/runtime.factory.ts'
 import { makeRuntimeTestLayer } from '../../../runtime/core/runtime.test-layer.ts'
 import { templateFiles, templateToml } from '../../__tests__/template.factory.ts'
@@ -18,7 +19,8 @@ const renderBase = (templates: Parameters<typeof makeProjectTestLayer>[0]) =>
       Layer.mergeAll(
         makeProjectTestLayer(templates),
         makeRuntimeTestLayer(makeFakeRuntime().port),
-        makeLanguageServiceInMemory().layer
+        makeLanguageServiceInMemory().layer,
+        makeExerciseProgressInMemory().layer
       )
     ),
   })

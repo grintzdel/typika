@@ -1,14 +1,7 @@
 import type { TourStep } from '@typika/manifest'
 import { describe, expect, it } from 'vitest'
 
-import {
-  anchorOf,
-  filesOfStep,
-  hashOfStep,
-  regionRange,
-  resolveTourLink,
-  stepIndexFromHash,
-} from './tour.domain-model.ts'
+import { anchorOf, filesOfStep, hashOfStep, regionRange, stepIndexFromHash } from './tour.domain-model.ts'
 
 const step = (overrides: Partial<TourStep> = {}): TourStep => ({
   path: 'tour/01-step.md',
@@ -131,30 +124,5 @@ describe('step hash', () => {
   it('falls back to the first step', () => {
     expect(stepIndexFromHash('', steps)).toBe(0)
     expect(stepIndexFromHash('step=unknown', steps)).toBe(0)
-  })
-})
-
-describe('resolveTourLink', () => {
-  const embedded = ['strategy-ts', 'observer-ts']
-
-  it('opens an embedded template in its sandbox', () => {
-    expect(resolveTourLink('typika:observer-ts', embedded)).toEqual({ _tag: 'Template', href: '/play/observer-ts' })
-  })
-
-  it('keeps a template that is not embedded as text', () => {
-    expect(resolveTourLink('typika:open-closed-ts', embedded)).toEqual({ _tag: 'Text' })
-  })
-
-  it('opens web links', () => {
-    expect(resolveTourLink('https://refactoring.guru/', embedded)).toEqual({
-      _tag: 'External',
-      href: 'https://refactoring.guru/',
-    })
-  })
-
-  it('keeps any other link as text', () => {
-    expect(resolveTourLink('javascript:alert(1)', embedded)).toEqual({ _tag: 'Text' })
-    expect(resolveTourLink('src/main.ts', embedded)).toEqual({ _tag: 'Text' })
-    expect(resolveTourLink(undefined, embedded)).toEqual({ _tag: 'Text' })
   })
 })

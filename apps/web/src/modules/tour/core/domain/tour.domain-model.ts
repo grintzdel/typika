@@ -8,13 +8,7 @@ export type TourAnchor =
   | { readonly _tag: 'Highlighted'; readonly path: string; readonly range: LineSpan }
   | { readonly _tag: 'Changed'; readonly path: string; readonly originalRange: LineSpan | undefined }
 
-export type TourLink =
-  | { readonly _tag: 'Template'; readonly href: string }
-  | { readonly _tag: 'External'; readonly href: string }
-  | { readonly _tag: 'Text' }
-
 const STEP_HASH_PREFIX = 'step='
-const TEMPLATE_LINK_PREFIX = 'typika:'
 const REGION_START = '// #region '
 const REGION_END = '// #endregion'
 
@@ -77,13 +71,4 @@ export const stepIndexFromHash = (hash: string, steps: ReadonlyArray<TourStep>):
     0,
     steps.findIndex((step) => step.id === id)
   )
-}
-
-export const resolveTourLink = (href: string | undefined, embedded: ReadonlyArray<string>): TourLink => {
-  if (href === undefined) return { _tag: 'Text' }
-  if (href.startsWith(TEMPLATE_LINK_PREFIX)) {
-    const name = href.slice(TEMPLATE_LINK_PREFIX.length)
-    return embedded.includes(name) ? { _tag: 'Template', href: `/play/${name}` } : { _tag: 'Text' }
-  }
-  return /^https?:\/\//.test(href) ? { _tag: 'External', href } : { _tag: 'Text' }
 }

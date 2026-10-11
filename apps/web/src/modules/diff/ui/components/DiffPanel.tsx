@@ -11,6 +11,7 @@ import {
 export type DiffPanelProps = {
   readonly source: DiffSource
   readonly baseName: string | undefined
+  readonly hasSolution: boolean
   readonly changes: ReadonlyArray<FileChange>
   readonly isLoading: boolean
   readonly onSourceChange: (source: DiffSource) => void
@@ -29,7 +30,15 @@ const SIGN_COLORS: Readonly<Record<Status, string>> = {
   [FileChangeStatus.DELETED]: 'text-red-700 dark:text-red-400',
 }
 
-export const DiffPanel = ({ source, baseName, changes, isLoading, onSourceChange, onOpen }: DiffPanelProps) => {
+export const DiffPanel = ({
+  source,
+  baseName,
+  hasSolution,
+  changes,
+  isLoading,
+  onSourceChange,
+  onOpen,
+}: DiffPanelProps) => {
   const { t } = useTranslation('diff')
 
   return (
@@ -50,6 +59,15 @@ export const DiffPanel = ({ source, baseName, changes, isLoading, onSourceChange
         >
           {t('mine')}
         </Button>
+        {hasSolution ? (
+          <Button
+            aria-pressed={source === DiffSource.SOLUTION}
+            className="aria-pressed:bg-sky-100 aria-pressed:text-sky-950 dark:aria-pressed:bg-sky-950 dark:aria-pressed:text-sky-100"
+            onClick={() => onSourceChange(DiffSource.SOLUTION)}
+          >
+            {t('solution')}
+          </Button>
+        ) : null}
         {source === DiffSource.BASE && baseName !== undefined ? (
           <a
             href={`/play/${baseName}`}

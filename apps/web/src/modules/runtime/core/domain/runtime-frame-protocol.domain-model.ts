@@ -20,7 +20,7 @@ export const FrameRequestSchema = Schema.Union([
     namePattern: Schema.optionalKey(Schema.String),
   }),
   Schema.TaggedStruct('Interrupt', { id: Id, target: Id }),
-  Schema.TaggedStruct('Shutdown', { id: Id }),
+  Schema.TaggedStruct('Shutdown', { id: Id, boot: Id }),
 ])
 
 export type FrameRequest = typeof FrameRequestSchema.Type

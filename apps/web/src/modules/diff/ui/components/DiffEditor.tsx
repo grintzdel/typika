@@ -20,7 +20,8 @@ export type DiffEditorProps = {
   readonly before: string
   readonly after: string
   readonly layout: DiffLayout
-  readonly labels: { readonly before: string; readonly after: string; readonly unified: string }
+  readonly labels: { readonly before: string; readonly after: string }
+  readonly unifiedLabel: string
 }
 
 const COLLAPSE_UNCHANGED = { margin: 3, minSize: 4 }
@@ -38,7 +39,7 @@ const extensionsFor = (path: string, label: string): Array<Extension> => {
   ]
 }
 
-export const DiffEditor = ({ path, before, after, layout, labels }: DiffEditorProps) => {
+export const DiffEditor = ({ path, before, after, layout, labels, unifiedLabel }: DiffEditorProps) => {
   const container = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -57,13 +58,13 @@ export const DiffEditor = ({ path, before, after, layout, labels }: DiffEditorPr
             state: EditorState.create({
               doc: after,
               extensions: [
-                ...extensionsFor(path, labels.unified),
+                ...extensionsFor(path, unifiedLabel),
                 unifiedMergeView({ original: before, mergeControls: false, collapseUnchanged: COLLAPSE_UNCHANGED }),
               ],
             }),
           })
     return () => view.destroy()
-  }, [path, before, after, layout, labels.before, labels.after, labels.unified])
+  }, [path, before, after, layout, labels.before, labels.after, unifiedLabel])
 
   return <div ref={container} className="h-full overflow-auto [&_.cm-mergeView]:h-full" />
 }
