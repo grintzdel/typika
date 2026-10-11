@@ -31,6 +31,7 @@ const TYPESCRIPT_TEMPLATES = [
   'observer-base/ts',
   'open-closed/ts',
   'open-closed-base/ts',
+  'outbox/ts',
   'single-responsibility/ts',
   'single-responsibility-base/ts',
   'strategy/ts',
