@@ -17,6 +17,8 @@ const TYPESCRIPT_TEMPLATES = [
   'decorator-base/ts',
   'factory-method/ts',
   'factory-method-base/ts',
+  'interface-segregation/ts',
+  'interface-segregation-base/ts',
   'liskov-substitution/ts',
   'liskov-substitution-base/ts',
   'observer/ts',

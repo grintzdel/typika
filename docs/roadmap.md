@@ -148,8 +148,8 @@ Lot 6, vague (a) livrée : `observer-ts`, `decorator-ts`, `factory-method-ts`, `
 désormais chaque fichier de test à chaque run : un fichier au code inchangé disparaissait des runs suivants.
 
 Vague (b) en cours : `single-responsibility-ts` (exercice `add-pdf-invoice`), `open-closed-ts` (exercice
-`add-black-friday-rule`) et `liskov-substitution-ts` (exercices `add-gift-card` et `contract-violation`) sont écrits,
-avec leur base et leur tour.
+`add-black-friday-rule`), `liskov-substitution-ts` (exercices `add-gift-card` et `contract-violation`) et
+`interface-segregation-ts` (exercice `add-gift-card-payment`) sont écrits, avec leur base et leur tour.
 
 ## M3 — Hub
 
