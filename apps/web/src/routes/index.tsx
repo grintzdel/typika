@@ -1,5 +1,8 @@
-import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
+
+import { HomePage } from '../features/home/home.page.tsx'
 
 export const Route = createFileRoute('/')({
-  component: () => <Navigate to="/play/$templateName" params={{ templateName: 'strategy-ts' }} />,
+  ssr: false,
+  component: HomePage,
 })

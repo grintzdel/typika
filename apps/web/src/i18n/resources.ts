@@ -1,5 +1,12 @@
 export const resources = {
   en: {
+    home: {
+      title: 'Templates',
+      intro: 'Open a template to read its code, follow its tour and try its exercises.',
+      list: 'Templates',
+      loading: 'Loading the templates…',
+      levels: { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' },
+    },
     project: {
       tree: { label: 'Files', modifiedItem: '{{name}}, modified', readOnlyItem: '{{name}}, read-only' },
       status: { label: 'Project status', modified: 'Modified', unsaved: 'Changes not saved' },
@@ -126,6 +133,13 @@ export const resources = {
     },
   },
   fr: {
+    home: {
+      title: 'Templates',
+      intro: 'Ouvrez un template pour lire son code, suivre sa visite et faire ses exercices.',
+      list: 'Templates',
+      loading: 'Chargement des templates…',
+      levels: { beginner: 'Débutant', intermediate: 'Intermédiaire', advanced: 'Avancé' },
+    },
     project: {
       tree: { label: 'Fichiers', modifiedItem: '{{name}}, modifié', readOnlyItem: '{{name}}, lecture seule' },
       status: { label: 'État du projet', modified: 'Modifié', unsaved: 'Modifications non enregistrées' },
