@@ -105,7 +105,7 @@ apps/web/
 | `share` | Partage par fragment d'URL ou gist, export zip, import d'un lien | `ShareCodecPort`, `ArchivePort` |
 | `github` | OAuth, gists, création de repo, push | `GitHubPort`, `GitHubTokenPort` |
 
-Dépendances entre modules : `exercise` → `runtime`, `project` ; `compare` → `project`, `tour` ; `share` → `project`,
+Dépendances entre modules : `editor` → `project` ; `exercise` → `runtime`, `project` ; `compare` → `project`, `tour` ; `share` → `project`,
 `github` ; `runtime` → `project`. Tout module peut utiliser `shared`. Pas de cycle.
 
 ### 3.3 Topologie d'un module
@@ -168,6 +168,14 @@ composant pur ──event──▶ presenter hook ──useAtomSet──▶ atom
 **État chaud** : le contenu du fichier en cours d'édition vit dans l'état CodeMirror, pas dans un atom. Le module
 `editor` émet les modifications ; `project` les persiste (écriture IndexedDB regroupée, ~300 ms) et `runtime` les relaie
 au `RuntimeFs`. Un atom ne reçoit jamais une frappe clavier.
+
+**Language service** : `languageServiceAtom` démarre, par template, un worker sur l'origine app qui tient un projet
+TypeScript 6 en mémoire (`@typescript/vfs`), avec les fichiers du projet ouvert, `lib.es2022`, les globales du runtime
+et les déclarations de `vitest` émises depuis `@typika/test-runner` (module virtuel du plugin
+`vite/typescript-libraries.ts`). L'éditeur reçoit la session en prop et active ses extensions (complétion avec
+auto-import, diagnostics, survol, signatures) par un `Compartment` dès qu'elle est prête : il est utilisable avant.
+Chaque modification est poussée au worker par l'extension, pas par un atom. Les fichiers d'`exercises/` restent hors
+du projet analysé. Le worker est arrêté avec la portée de l'atom, donc au reset.
 
 **Runtime frame** : `RuntimeFramePort` encapsule l'iframe de l'origine runtime et un `MessageChannel`. Côté app, une
 `RuntimeSession` est un proxy qui sérialise les appels ; côté frame, les vrais runtimes s'exécutent. Messages validés

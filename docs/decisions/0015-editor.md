@@ -32,7 +32,7 @@ aux signatures, suppression de fichiers, relance des diagnostics à l'ouverture 
 - **Chargement en deux temps** : l'éditeur s'affiche d'abord, le worker démarre ensuite et les extensions TS sont
   activées par un `Compartment`. L'éditeur est utilisable 270 ms (desktop) à 1,4 s (mobile) avant le language service.
 - **Libs** : le worker charge `lib.es2022` sans DOM (33 Kio au lieu de 287), plus la déclaration de `console` et de
-  `vitest` fournie par le `.d.ts` de `@typika/test-runner`. Le runtime `browser-js` n'a pas de DOM : un template qui
+  `vitest`. Celle de `vitest` est émise au build depuis les sources de `@typika/test-runner` (mise en œuvre au M1). Le runtime `browser-js` n'a pas de DOM : un template qui
   en a besoin passe par la preview.
 - **Version de TypeScript** : le worker est épinglé sur `typescript@6.0.x`. TS 7, natif, n'a pas d'API JS utilisable
   dans un navigateur ; les templates, eux, vérifient leurs types avec TS 7 hors de la sandbox.

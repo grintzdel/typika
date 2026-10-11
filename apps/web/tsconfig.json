@@ -5,7 +5,10 @@
     "module": "preserve",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "types": ["node", "vite/client"]
+    "types": ["node", "vite/client"],
+    "paths": {
+      "typescript": ["./node_modules/typescript-6"]
+    }
   },
   "include": ["src", "server", "vite", "*.config.ts"]
 }

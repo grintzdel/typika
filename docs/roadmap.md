@@ -77,6 +77,9 @@ et par chemin, derrière Caddy pour TLS et HSTS. La suite E2E de production vér
 exécute un template sous la CSP réelle, contre le build local comme contre l'image. Reste le language service
 TypeScript de l'éditeur.
 
+État (2026-10-11) : l'éditeur a son language service TypeScript dans un worker : complétion avec auto-import,
+diagnostics multi-fichiers, survol et aide aux signatures, activés dès que le worker est prêt. Le M1 est livré.
+
 ## M2 — Pédagogie
 
 **Objectif** : ce qui distingue Typika d'une sandbox existe.

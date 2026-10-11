@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { CodeEditor } from '../../modules/editor/ui/components/CodeEditor.tsx'
 import { useEditFiles } from '../../modules/editor/ui/hooks/use-edit-files.ts'
+import { useLanguageService } from '../../modules/editor/ui/hooks/use-language-service.ts'
 import { FileTree } from '../../modules/project/ui/components/FileTree.tsx'
 import { ProjectStatus } from '../../modules/project/ui/components/ProjectStatus.tsx'
 import { ResetProjectDialog } from '../../modules/project/ui/components/ResetProjectDialog.tsx'
@@ -20,6 +21,7 @@ export const PlayTemplatePage = ({ templateName }: { readonly templateName: stri
   const project = useTemplateProject(templateName)
   const edits = useEditFiles({ onPersist: project.handleSave, onSync: useWriteProjectFiles(templateName) })
   const runtime = useSandboxRuntime(templateName, edits.commitPending)
+  const languageService = useLanguageService(templateName)
   const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined)
   const [panel, setPanel] = useState<OutputPanel>('console')
 
@@ -76,6 +78,7 @@ export const PlayTemplatePage = ({ templateName }: { readonly templateName: stri
           path={path}
           content={template.contentOf(path)}
           label={t('label')}
+          languageService={languageService}
           onChange={edits.handleChange}
         />
       }

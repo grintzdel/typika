@@ -4,6 +4,7 @@ import * as Layer from 'effect/Layer'
 import { describe, expect, it } from 'vitest'
 
 import { makeRegistryWrapper } from '../../../app/__tests__/registry-wrapper.tsx'
+import { makeLanguageServiceInMemory } from '../../../editor/core/editor.test-layer.ts'
 import { templateFiles } from '../../../project/__tests__/template.factory.ts'
 import { openTemplateProgram } from '../../../project/core/programs/open-template/open-template.program.ts'
 import { saveProjectFilesProgram } from '../../../project/core/programs/save-project-files/save-project-files.program.ts'
@@ -25,7 +26,11 @@ const renderSandbox = (
 ) => {
   const fake = makeFakeRuntime()
   const wrapper = makeRegistryWrapper(
-    Layer.mergeAll(makeProjectTestLayer(TEMPLATES, storage), makeRuntimeTestLayer(fake.port))
+    Layer.mergeAll(
+      makeProjectTestLayer(TEMPLATES, storage),
+      makeRuntimeTestLayer(fake.port),
+      makeLanguageServiceInMemory().layer
+    )
   )
   return { ...renderHook(() => useSandboxRuntime('sample-ts', () => pending), { wrapper }), journal: fake.journal }
 }

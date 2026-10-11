@@ -130,7 +130,7 @@ L'embed exécute `browser-js` et `go` ([0018](../decisions/0018-go-runtime.md)),
 |---|---|---|---|
 | `Content-Security-Policy` | stricte (ci-dessous) | stricte + `frame-ancestors *` | permissive pour les scripts, `connect-src` fermé (ci-dessous) |
 | `Cross-Origin-Opener-Policy` | `same-origin` sur les routes isolées ([architecture.md](./architecture.md) §5) | — (sans effet dans une iframe) | `same-origin` |
-| `Cross-Origin-Embedder-Policy` | `require-corp` sur les routes isolées | — (aucune isolation possible dans une page tierce) | `require-corp`, y compris scripts de worker et `.wasm` |
+| `Cross-Origin-Embedder-Policy` | `require-corp` sur les routes isolées et sur tous les scripts (`.js`) | — (aucune isolation possible dans une page tierce) | `require-corp`, y compris scripts de worker et `.wasm` |
 | `Cross-Origin-Resource-Policy` | `same-origin` | `same-origin` | `cross-origin` (chargée en iframe par l'app) |
 | `X-Content-Type-Options` | `nosniff` | `nosniff` | `nosniff` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | `strict-origin-when-cross-origin` | `no-referrer` |
@@ -138,7 +138,10 @@ L'embed exécute `browser-js` et `go` ([0018](../decisions/0018-go-runtime.md)),
 
 COEP vaut `require-corp`, pas `credentialless` : WebKit ignore `credentialless` et n'isole alors jamais la page
 ([0016](../decisions/0016-isolation-and-embed.md)). Sans CORP `cross-origin` sur l'origine runtime, la runtime frame
-est bloquée par la COEP de l'app ; sans `allow="cross-origin-isolated"` sur l'iframe, Chromium ne l'isole pas.
+est bloquée par la COEP de l'app ; sans `allow="cross-origin-isolated"` sur l'iframe, Chromium ne l'isole pas. Une
+page isolée ne démarre un worker que si le script du worker répond lui-même avec COEP : l'app pose donc `require-corp`
+sur tous ses scripts, ce qui ne change rien pour un script chargé par une page. C'est le cas du worker du language
+service TypeScript de l'éditeur.
 
 CSP de l'origine app (cible ; au M1, `connect-src` vaut `'self'` et `script-src` ajoute les hashes des scripts inline
 du shell SPA, calculés au démarrage du serveur — les autres sources arrivent avec les fonctions qui les utilisent) :
