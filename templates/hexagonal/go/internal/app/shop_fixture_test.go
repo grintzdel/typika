@@ -3,6 +3,7 @@ package app_test
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"example.com/shop/internal/app"
 	"example.com/shop/internal/web"
@@ -51,4 +52,12 @@ func field(response web.Response, name string) any {
 
 func placeOrder(shop app.Shop, body any) string {
 	return fmt.Sprint(field(post(shop, "/orders", body), "orderId"))
+}
+
+func sameJSON(got, want string) bool {
+	var gotValue, wantValue any
+	if json.Unmarshal([]byte(got), &gotValue) != nil || json.Unmarshal([]byte(want), &wantValue) != nil {
+		return false
+	}
+	return reflect.DeepEqual(gotValue, wantValue)
 }
