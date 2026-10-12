@@ -23,3 +23,7 @@ npm test
 - `src/payments/clients/`: each client asks for the one capability it uses.
 - `src/payments/gateways/`: the card implements four capabilities, the bank transfer two.
 - `src/open-shop.ts`: where each client receives its capability.
+
+## Variants
+
+- Go: `interface-segregation-go`, where each client declares its interface and gateways satisfy it implicitly.

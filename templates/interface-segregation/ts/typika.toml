@@ -35,6 +35,9 @@ steps = [
 template = "github:typika/templates/interface-segregation-base/ts"
 focus = ["src/payments/**", "src/open-shop.ts"]
 
+[variants]
+go = "github:typika/templates/interface-segregation/go"
+
 [[exercises]]
 name = "add-gift-card-payment"
 kind = "refactor"
