@@ -52,14 +52,14 @@ describe('conceptSectionsOf', () => {
 })
 
 describe('listedTemplatesOf', () => {
-  it('lists the templates without their bases, with the values of each facet', () => {
+  it('lists the templates without their bases in the order of the catalogue, with the values of each facet', () => {
     const listed = listedTemplatesOf(hubIndex())
 
     expect(listed.map((template) => template.name)).toEqual([
       'hexagonal-ts',
-      'observer-ts',
-      'strategy-go',
       'strategy-ts',
+      'strategy-go',
+      'observer-ts',
     ])
     expect(listed[2]).toEqual({
       name: 'strategy-go',
@@ -67,6 +67,8 @@ describe('listedTemplatesOf', () => {
       summary: 'Replace a growing switch.',
       language: 'go',
       level: 'intermediate',
+      updatedAt: '2026-10-08',
+      searchText: 'strategy-go strategy in go a function per rule switch',
       values: {
         topic: ['design-pattern/behavioral/strategy', 'principle/open-closed'],
         language: ['go'],

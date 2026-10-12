@@ -18,7 +18,7 @@ export type FacetOptions = {
   readonly values: ReadonlyArray<{ readonly facet: Facet; readonly values: ReadonlyArray<string> }>
 }
 
-const byFacet = <A>(valueOf: (facet: Facet) => A): Readonly<Record<Facet, A>> => ({
+export const byFacet = <A>(valueOf: (facet: Facet) => A): Readonly<Record<Facet, A>> => ({
   topic: valueOf(Facet.TOPIC),
   language: valueOf(Facet.LANGUAGE),
   paradigm: valueOf(Facet.PARADIGM),
@@ -56,15 +56,16 @@ export const searchOfFilters = (filters: TemplateFilters): Readonly<Partial<Reco
 
 const isWithinTopic = (topic: string, selected: string) => topic === selected || topic.startsWith(`${selected}/`)
 
+export const matchesFacet = (template: ListedTemplate, facet: Facet, selected: ReadonlyArray<string>): boolean => {
+  if (selected.length === 0) return true
+  const values = template.values[facet]
+  return facet === Facet.TOPIC
+    ? selected.some((topic) => values.some((value) => isWithinTopic(value, topic)))
+    : selected.some((value) => values.includes(value))
+}
+
 export const matchesFilters = (template: ListedTemplate, filters: TemplateFilters): boolean =>
-  FACETS.every((facet) => {
-    const selected = filters[facet]
-    if (selected.length === 0) return true
-    const values = template.values[facet]
-    return facet === Facet.TOPIC
-      ? selected.some((topic) => values.some((value) => isWithinTopic(value, topic)))
-      : selected.some((value) => values.includes(value))
-  })
+  FACETS.every((facet) => matchesFacet(template, facet, filters[facet]))
 
 export const toggleFilter = (filters: TemplateFilters, facet: Facet, value: string): TemplateFilters => ({
   ...filters,

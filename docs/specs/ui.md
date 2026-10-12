@@ -83,11 +83,18 @@ Objectif : amener l'apprenant vers un concept en deux clics.
   l'URL est partageable et le bouton retour restaure l'état. Plusieurs valeurs d'une facette sont séparées par des
   virgules et se combinent en OU ; les facettes se combinent en ET. Un topic filtre sa branche de l'arbre. Le HTML
   prérendu n'a pas de filtre : la query string s'applique après l'hydratation.
-- Livré au lot 3 du M3 : les facettes et l'état vide. La recherche, les compteurs et le tri arrivent au lot 4, la
-  facette de santé au lot 6.
-- Recherche plein texte combinée aux facettes ; compteurs par valeur de facette.
-- Tri : pertinence (si recherche), ordre du catalogue (par défaut), récemment mis à jour.
-- **État vide** : « Aucun template ne correspond », liste des filtres actifs avec retrait individuel, bouton
+- Livré aux lots 3 et 4 du M3 : les facettes, la recherche, les compteurs, le tri et l'état vide. La facette de santé
+  arrive au lot 6.
+- Recherche plein texte (`?q=`) dans le champ de l'en-tête, présent sur toutes les pages du hub, combinée aux
+  facettes. Elle porte sur `search.text` de l'index ([registry §3](registry.md)). Chaque mot tapé doit commencer un mot
+  du texte. Sur la liste, la query string suit la frappe sans créer d'entrée d'historique. Ailleurs, et sans
+  JavaScript, le champ envoie un formulaire vers `/templates?q=…`.
+- Compteurs par valeur de facette : le nombre de résultats si l'on ajoutait cette valeur, compte tenu de la recherche
+  et des autres facettes. Une valeur à 0 non cochée est désactivée.
+- Tri (`?sort=`) : pertinence (par défaut pendant une recherche ; un mot entier compte plus qu'un début de mot), ordre
+  du catalogue (par défaut sinon : l'ordre des topics du vocabulaire, puis des langages), récemment mis à jour. Le tri
+  par défaut n'apparaît pas dans l'URL.
+- **État vide** : « Aucun template ne correspond », la recherche et les filtres actifs avec retrait individuel, bouton
   Réinitialiser.
 
 ## 5. Page template — `/templates/<name>`

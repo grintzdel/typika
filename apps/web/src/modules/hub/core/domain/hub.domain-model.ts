@@ -27,6 +27,8 @@ export type ListedTemplate = {
   readonly summary: string
   readonly language: Language
   readonly level: Level
+  readonly updatedAt: string
+  readonly searchText: string
   readonly values: Readonly<Record<Facet, ReadonlyArray<string>>>
 }
 
@@ -111,24 +113,39 @@ export const conceptSectionsOf = (index: RegistryIndex): ReadonlyArray<ConceptSe
   return [...sections].map(([category, section]) => ({ category, ...section }))
 }
 
-export const listedTemplatesOf = (index: RegistryIndex): ReadonlyArray<ListedTemplate> =>
-  index.templates.filter(isListed).map(({ name, category, manifest }) => ({
-    name,
-    title: manifest.title,
-    summary: manifest.summary,
-    language: manifest.facets.language,
-    level: manifest.facets.level,
-    values: {
-      topic: manifest.facets.topic,
-      language: [manifest.facets.language],
-      paradigm: manifest.facets.paradigm,
-      level: [manifest.facets.level],
-      framework: manifest.facets.framework,
-      library: manifest.facets.library,
-      useCase: manifest.facets.useCase,
-      category: [category],
-    },
-  }))
+export const listedTemplatesOf = (index: RegistryIndex): ReadonlyArray<ListedTemplate> => {
+  const rank = (template: IndexTemplate) => {
+    const position = index.vocabulary.topics.findIndex(({ id }) => id === template.manifest.facets.topic[0])
+    return position === -1 ? Number.MAX_SAFE_INTEGER : position
+  }
+  return index.templates
+    .filter(isListed)
+    .toSorted(
+      (a, b) =>
+        rank(a) - rank(b) ||
+        LANGUAGE_ORDER.indexOf(a.manifest.facets.language) - LANGUAGE_ORDER.indexOf(b.manifest.facets.language) ||
+        a.name.localeCompare(b.name)
+    )
+    .map(({ name, category, manifest, updatedAt, search }) => ({
+      name,
+      title: manifest.title,
+      summary: manifest.summary,
+      language: manifest.facets.language,
+      level: manifest.facets.level,
+      updatedAt,
+      searchText: search.text,
+      values: {
+        topic: manifest.facets.topic,
+        language: [manifest.facets.language],
+        paradigm: manifest.facets.paradigm,
+        level: [manifest.facets.level],
+        framework: manifest.facets.framework,
+        library: manifest.facets.library,
+        useCase: manifest.facets.useCase,
+        category: [category],
+      },
+    }))
+}
 
 const trailOf = (topic: IndexTopic): ReadonlyArray<TopicCrumb> => [
   { topic: topic.category, category: topic.category },

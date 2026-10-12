@@ -3,6 +3,7 @@ export const resources = {
     hub: {
       brand: 'Typika',
       nav: { label: 'Main', templates: 'Templates' },
+      search: { label: 'Search templates', placeholder: 'Search' },
       hero: { title: 'Learn architecture by running code.', browse: 'Browse the templates' },
       seeAll: 'See all',
       categories: {
@@ -41,7 +42,12 @@ export const resources = {
         empty: 'No template matches',
         activeFilters: 'Active filters',
         remove: 'Remove {{facet}}: {{value}}',
+        removeSearch: 'Remove the search: {{text}}',
         reset: 'Reset',
+        count_one: '{{count}} template',
+        count_other: '{{count}} templates',
+        sortBy: 'Sort by',
+        sorts: { relevance: 'Relevance', catalogue: 'Catalogue order', updated: 'Recently updated' },
       },
       template: {
         trail: 'Breadcrumb',
@@ -213,6 +219,7 @@ export const resources = {
     hub: {
       brand: 'Typika',
       nav: { label: 'Principale', templates: 'Templates' },
+      search: { label: 'Rechercher des templates', placeholder: 'Rechercher' },
       hero: { title: "Apprenez l'architecture en exécutant du code.", browse: 'Parcourir les templates' },
       seeAll: 'Tout voir',
       categories: {
@@ -251,7 +258,12 @@ export const resources = {
         empty: 'Aucun template ne correspond',
         activeFilters: 'Filtres actifs',
         remove: 'Retirer {{facet}} : {{value}}',
+        removeSearch: 'Retirer la recherche : {{text}}',
         reset: 'Réinitialiser',
+        count_one: '{{count}} template',
+        count_other: '{{count}} templates',
+        sortBy: 'Trier par',
+        sorts: { relevance: 'Pertinence', catalogue: 'Ordre du catalogue', updated: 'Mis à jour récemment' },
       },
       template: {
         trail: "Fil d'Ariane",

@@ -238,6 +238,15 @@ chaque page prérendue avec une CSP qui autorise ses propres scripts inline. Le 
 navigateur s'applique après l'hydratation. L'E2E de production lit les trois pages sans JavaScript, recharge une liste
 filtrée et vérifie que l'hydratation ne lève aucune erreur.
 
+Lot 4 livré, en deux PR. La première ajoute au manifeste un champ optionnel `keywords`, repris dans `search.text`,
+sans changer de version de schéma tant que rien n'est publié ([0024](decisions/0024-manifest-keywords.md)) : les trois
+templates Strategy y reçoivent `switch`. La seconde réépingle leurs entrées et ajoute la recherche au hub. Le champ de
+l'en-tête cherche depuis toutes les pages, `/` y place le focus, et sans JavaScript il envoie un formulaire vers la
+liste. Chaque mot tapé doit commencer un mot de `search.text`. La liste montre, pour chaque valeur de facette, le
+nombre de résultats qu'elle donnerait, désactive celles à 0, et trie par pertinence, ordre du catalogue ou date de mise
+à jour (`?q=` et `?sort=`). L'état vide retire aussi la recherche. Aucune dépendance n'est entrée : 21 templates se
+cherchent en parcourant l'index.
+
 ## M4 — Go & comparaison
 
 **Objectif** : la deuxième langue et la comparaison, cœur de la leçon « le langage fait partie du pattern ».
