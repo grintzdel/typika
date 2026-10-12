@@ -95,7 +95,7 @@ apps/web/
 |---|---|---|
 | `shared` | Helpers Effect, erreurs de base, client HTTP, configuration runtime (`/config.json`) | `AppConfig` |
 | `app` | Composition : `AppLayer`, runtime d'atoms, providers React | — |
-| `hub` | Chargement de l'index, recherche et facettes, pages template | `RegistryIndexPort`, `SearchIndexPort` |
+| `hub` | Chargement de l'index, concepts, facettes, pages template ; recherche au lot 4 du M3 | `RegistryIndexPort`, `SearchIndexPort` |
 | `project` | Projets locaux : création depuis un template, fichiers, état modifié, reset, persistance | `ProjectStoragePort`, `TemplateIndexPort`, `TemplateFilesPort` |
 | `editor` | CodeMirror 6, onglets, langages, adaptateur du language service TS en worker ([0015](../decisions/0015-editor.md)), décorations (tour, diagnostics) | `LanguageServicePort` |
 | `runtime` | Pont entre un projet et une `RuntimeSession` : boot, synchro FS, run, tests, console, preview | `RuntimeRegistry`, `RuntimeFramePort` |
@@ -165,6 +165,12 @@ composant pur ──event──▶ presenter hook ──useAtomSet──▶ atom
 - **Composants** : props et callbacks uniquement. Aucun import d'atom, de port ou d'adapter.
 - **Features** : seul endroit où hooks et composants se rencontrent.
 
+**Pages du hub** : elles sont prérendues, donc leurs données passent par les loaders de route et non par des atoms.
+Le loader, exporté par `features/hub/hub.loaders.ts`, lance un program du module `hub` avec `runHubProgram`, un
+`ManagedRuntime` construit sur `HubLayer`. Côté serveur, `RegistryIndexPort` lit l'index du build (module virtuel
+`virtual:typika/registry-index`). Côté client, il le télécharge. Le loader ne renvoie que le modèle de sa page
+([0023](../decisions/0023-hub-prerendering.md)).
+
 **État chaud** : le contenu du fichier en cours d'édition vit dans l'état CodeMirror, pas dans un atom. Le module
 `editor` émet les modifications ; `project` les persiste (écriture IndexedDB regroupée, ~300 ms) et `runtime` les relaie
 au `RuntimeFs`. Un atom ne reçoit jamais une frappe clavier.
@@ -204,21 +210,25 @@ Le service Kotlin est hors de `apps/web` (`services/kotlin-compiler`).
 
 | Zone | Mode | Raison |
 |---|---|---|
-| Hub (`/`, `/templates`, `/t/$templateId`) | Prérendu statique | Indexation par les moteurs de recherche, coût serveur nul |
+| Hub (`/`, `/templates`, `/templates/$name`) | Prérendu statique | Indexation par les moteurs de recherche, coût serveur nul |
 | Sandbox, comparaison, projets, embed | SPA (`ssr: false`) | IndexedDB, workers et iframe runtime : rien à rendre côté serveur |
 | Runtime frame | Page statique minimale, hors React | Charge vite, ne partage rien avec l'app |
 
 Le prérendu du hub dépend de l'index au moment du build : une mise à jour de l'index déclenche un rebuild (voir
-[hosting.md](../guides/hosting.md)). Côté client, le hub recharge l'index pour afficher la santé à jour.
+[hosting.md](../guides/hosting.md)). Le build rend `/` et `/templates`, puis suit leurs liens vers les pages template.
+Le shell SPA est rendu sur `/play/_shell` et écrit dans `_shell.html`. Une page template absente du build est servie
+par le shell, et son loader télécharge l'index. Le HTML prérendu est en anglais, et la langue du navigateur s'applique
+après l'hydratation ([0023](../decisions/0023-hub-prerendering.md)). Le lot `health` du M3 rechargera l'index côté client
+pour afficher la santé à jour.
 
 ## 5. Routes
 
 | Route | Feature | Rendu | En-têtes d'isolation |
 |---|---|---|---|
 | `/` | `hub/home.page.tsx` | prérendu | non |
-| `/templates` (facettes en search params) | `hub/templates.page.tsx` | prérendu + client | non |
-| `/t/$templateId` | `hub/template.page.tsx` | prérendu | non |
-| `/play/$templateName` | `play/play-template.page.tsx` | SPA | oui |
+| `/templates` (facettes en search params) | `hub/templates/templates.page.tsx` | prérendu + client | non |
+| `/templates/$name` | `hub/templates/$name/template.page.tsx` | prérendu | non |
+| `/play/$templateName` (`?exercise=…`, `?panel=diff`) | `play/play-template.page.tsx` | SPA | oui |
 | `/p/$projectId` | `projects/project.page.tsx` | SPA | oui |
 | `/compare?left=…&right=…` | `compare/compare.page.tsx` | SPA | oui |
 | `/projects` | `projects/projects.page.tsx` | SPA | non |

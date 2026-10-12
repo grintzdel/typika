@@ -120,6 +120,13 @@ export const makeProjectStorageIndexedDb = (factory: IDBFactory): Context.Servic
     })
 
   return {
+    listRecent: (limit) =>
+      transact('readonly', async ({ projects }) =>
+        decodeRecords(await settled(projects.getAll()))
+          .toSorted((a, b) => b.updatedAt - a.updatedAt)
+          .slice(0, limit)
+      ),
+
     findByOrigin: (origin) =>
       transact('readonly', async ({ projects, files }) => {
         const record = await latestProjectOf(projects, origin)

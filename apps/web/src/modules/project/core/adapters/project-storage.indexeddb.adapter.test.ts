@@ -138,6 +138,24 @@ describe('makeProjectStorageIndexedDb', () => {
     expect(filesOf(reopened)).toEqual({ 'src/a.ts': 'A', 'src/b.ts': 'b' })
   })
 
+  it('lists the most recently edited projects first', async () => {
+    const storage = makeProjectStorageIndexedDb(new IDBFactory())
+    const projects = [
+      projectRecord({ name: 'a-ts', origin: { kind: 'template', name: 'a-ts' }, updatedAt: 3_000 }),
+      projectRecord({ name: 'b-ts', origin: { kind: 'template', name: 'b-ts' }, updatedAt: 1_000 }),
+      projectRecord({ name: 'c-ts', origin: { kind: 'template', name: 'c-ts' }, updatedAt: 2_000 }),
+    ]
+    await Promise.all(
+      projects.map((project) =>
+        run(storage.saveTemplateEdits({ project, templateFiles: TEMPLATE, edits: projectFiles({}) }))
+      )
+    )
+
+    const recent = await run(storage.listRecent(2))
+
+    expect(recent.map((record) => record.name)).toEqual(['a-ts', 'c-ts'])
+  })
+
   it('fails with a storage error on a record it cannot read', async () => {
     const factory = new IDBFactory()
     const storage = makeProjectStorageIndexedDb(factory)

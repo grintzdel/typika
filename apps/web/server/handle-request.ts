@@ -23,6 +23,7 @@ export type RequestHandlerOptions = {
 
 const RUNTIME_PREFIX = '/runtime/'
 const SHELL_FILE = '_shell.html'
+const PAGE_FILE = 'index.html'
 const IMMUTABLE = 'public, max-age=31536000, immutable'
 
 const MEDIA_TYPES: Readonly<Record<string, string>> = {
@@ -57,9 +58,14 @@ const withHeaders = (response: Response, headers: Readonly<Record<string, string
 
 const notFound = () => new Response('Not found', { status: 404, headers: { 'Content-Type': 'text/plain' } })
 
+const pathWithin = (root: string, pathname: string, ...segments: ReadonlyArray<string>) => {
+  const path = resolve(root, `.${decodeURIComponent(pathname)}`, ...segments)
+  return path.startsWith(`${root}${sep}`) ? path : undefined
+}
+
 const serveFile = async (root: string, pathname: string): Promise<Response | undefined> => {
-  const path = resolve(root, `.${decodeURIComponent(pathname)}`)
-  if (!path.startsWith(`${root}${sep}`)) return undefined
+  const path = pathWithin(root, pathname)
+  if (path === undefined) return undefined
   const info = await stat(path).catch(() => undefined)
   if (info?.isFile() !== true) return undefined
   return new Response(await readFile(path), {
@@ -70,20 +76,38 @@ const serveFile = async (root: string, pathname: string): Promise<Response | und
   })
 }
 
+const pageResponse = (html: string, policy: string) =>
+  new Response(html, {
+    headers: {
+      'Content-Type': MEDIA_TYPES['.html'] ?? '',
+      'Cache-Control': 'no-cache',
+      'Content-Security-Policy': policy,
+    },
+  })
+
 export const makeRequestHandler = async ({ config, clientDir, runtimeDir, appServer }: RequestHandlerOptions) => {
   const clientRoot = resolve(clientDir)
   const runtimeRoot = resolve(runtimeDir)
   const shell = await readFile(join(clientRoot, SHELL_FILE), 'utf8')
   const runtimeHost = new URL(config.runtimeOrigin).host
-  const appPolicy = appContentSecurityPolicy({
-    runtimeOrigin: config.runtimeOrigin,
-    scriptHashes: inlineScriptHashes(shell),
-    connectOrigins: [
-      config.registryIndexUrl,
-      config.templateFileUrlTemplate,
-      config.templateListingUrlTemplate,
-    ].flatMap(originOf),
-  })
+  const connectOrigins = [
+    config.registryIndexUrl,
+    config.templateFileUrlTemplate,
+    config.templateListingUrlTemplate,
+  ].flatMap(originOf)
+  const policyOf = (html: string) =>
+    appContentSecurityPolicy({
+      runtimeOrigin: config.runtimeOrigin,
+      scriptHashes: inlineScriptHashes(html),
+      connectOrigins,
+    })
+  const appPolicy = policyOf(shell)
+
+  const servePrerendered = async (pathname: string) => {
+    const path = extname(pathname) === '' ? pathWithin(clientRoot, pathname, PAGE_FILE) : undefined
+    const html = path === undefined ? undefined : await readFile(path, 'utf8').catch(() => undefined)
+    return html === undefined ? undefined : pageResponse(html, policyOf(html))
+  }
   const runtimeHeaders = {
     ...RUNTIME_HEADERS,
     'Content-Security-Policy': runtimeContentSecurityPolicy({
@@ -102,20 +126,22 @@ export const makeRequestHandler = async ({ config, clientDir, runtimeDir, appSer
     if (pathname.startsWith(RUNTIME_PREFIX)) return notFound()
     if (isServerRoute(pathname)) return appServer.fetch(request)
     if (request.method !== 'GET' && request.method !== 'HEAD') return notFound()
-    if (pathname !== `/${SHELL_FILE}`) {
-      const file = await serveFile(clientRoot, pathname)
-      if (file !== undefined) return file
-      if (pathname.startsWith('/assets/')) return notFound()
-    }
-    return new Response(shell, { headers: { 'Content-Type': MEDIA_TYPES['.html'] ?? '', 'Cache-Control': 'no-cache' } })
+    const file =
+      extname(pathname) === '.html'
+        ? undefined
+        : ((await serveFile(clientRoot, pathname)) ?? (await servePrerendered(pathname)))
+    if (file !== undefined) return file
+    if (pathname.startsWith('/assets/')) return notFound()
+    return pageResponse(shell, appPolicy)
   }
 
   return async (request: Request): Promise<Response> => {
     const { host, pathname } = new URL(request.url)
     if (host === runtimeHost) return withHeaders(await serveRuntime(pathname), runtimeHeaders)
-    return withHeaders(await serveApp(request, pathname), {
+    const response = await serveApp(request, pathname)
+    return withHeaders(response, {
       ...appHeaders(pathname),
-      'Content-Security-Policy': appPolicy,
+      'Content-Security-Policy': response.headers.get('Content-Security-Policy') ?? appPolicy,
     })
   }
 }

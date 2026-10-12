@@ -62,12 +62,13 @@ pnpm install --frozen-lockfile
 pnpm --filter @typika/web build
 ```
 
-Le build produit `apps/web/dist/` : `client/` (assets et shell SPA), `runtime/` (runtime frame), `server/` (handler
+Le build produit `apps/web/dist/` : `client/` (assets, shell SPA `_shell.html` et pages du hub prérendues), `runtime/` (runtime frame), `server/` (handler
 TanStack Start des routes serveur) et `node/main.js`, le serveur de production. Les deux bundles serveur embarquent
 leurs dépendances : `dist/` suffit pour lancer l'app avec `node dist/node/main.js`, sans `node_modules`.
 
-Le build écrit aussi l'index du registre et le miroir des templates à leur ref épinglée dans `dist/client/registry/`
-(`pnpm --filter @typika/web build:registry`, qui lit l'historique Git : le build demande un clone complet et `git`). Les
+Le build écrit aussi l'index du registre (plugin Vite `registry-index`) et le miroir des templates à leur ref épinglée
+(`pnpm --filter @typika/web build:registry`) dans `dist/client/registry/`. Tous deux lisent l'historique Git : le build
+demande un clone complet et `git`. Les
 fichiers sous `/registry/gh/` et `/registry/listing/` sont servis comme immuables, l'index en `no-cache`. Si les trois
 URL du registre pointent sur une autre origine, elle doit répondre avec CORS ou `Cross-Origin-Resource-Policy:
 cross-origin`, et la CSP de l'app l'ajoute à `connect-src`.
@@ -75,8 +76,11 @@ cross-origin`, et la CSP de l'app l'ajoute à `connect-src`.
 Le prérendu du hub lit l'index du registre **au build**. Pour que les pages du hub suivent le registre :
 
 - reconstruire l'image à chaque publication de l'index (webhook du registre ou build planifié) ;
-- en attendant, le hub recharge l'index côté client : santé et nouveaux templates apparaissent, seules les pages
-  prérendues sont en retard.
+- en attendant, l'accueil et la liste montrent l'index du build. La page d'un template absent du build est servie par
+  le shell, et le client la rend à partir de `TYPIKA_REGISTRY_INDEX_URL` ([0023](../decisions/0023-hub-prerendering.md)).
+
+Le serveur sert `<chemin>/index.html` quand le build l'a prérendu, avec une CSP qui autorise les scripts inline de
+cette page, et le shell sinon.
 
 ## 4. Docker (cible principale)
 

@@ -14,6 +14,7 @@ export type SaveTemplateEdits = {
 export class ProjectStoragePort extends Context.Service<
   ProjectStoragePort,
   {
+    readonly listRecent: (limit: number) => Effect.Effect<ReadonlyArray<ProjectRecord>, ProjectStorageError>
     readonly findByOrigin: (origin: ProjectOrigin) => Effect.Effect<Option.Option<StoredProject>, ProjectStorageError>
     // Creates `project` from `templateFiles` when its origin has none yet, atomically with the edits.
     readonly saveTemplateEdits: (input: SaveTemplateEdits) => Effect.Effect<StoredProject, ProjectStorageError>

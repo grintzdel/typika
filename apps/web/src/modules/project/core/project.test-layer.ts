@@ -26,6 +26,13 @@ export const makeProjectStorageInMemory = (initial: ReadonlyArray<StoredProject>
       .toSorted((a, b) => b.record.updatedAt - a.record.updatedAt)[0]
 
   const storage: ProjectStorage = {
+    listRecent: (limit) =>
+      Effect.sync(() =>
+        [...projects.values()]
+          .map((project) => project.record)
+          .toSorted((a, b) => b.updatedAt - a.updatedAt)
+          .slice(0, limit)
+      ),
     findByOrigin: (origin) => Effect.sync(() => Option.fromNullishOr(latest(origin))),
     saveTemplateEdits: ({ project, templateFiles, edits }) =>
       Effect.sync(() => {
@@ -51,6 +58,7 @@ export const makeProjectStorageInMemory = (initial: ReadonlyArray<StoredProject>
 const quotaExceeded = () => Effect.fail(new ProjectStorageError({ cause: new Error('QuotaExceededError') }))
 
 export const failingProjectStorage: ProjectStorage = {
+  listRecent: quotaExceeded,
   findByOrigin: quotaExceeded,
   saveTemplateEdits: quotaExceeded,
   replaceFiles: quotaExceeded,

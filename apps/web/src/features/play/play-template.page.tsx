@@ -63,9 +63,10 @@ const DIFF_SOURCES: Readonly<Partial<Record<EditorTab['kind'], DiffSource>>> = {
 export type PlayTemplatePageProps = {
   readonly templateName: string
   readonly exercise: string | undefined
+  readonly initialPanel: 'diff' | undefined
 }
 
-export const PlayTemplatePage = ({ templateName, exercise }: PlayTemplatePageProps) => {
+export const PlayTemplatePage = ({ templateName, exercise, initialPanel }: PlayTemplatePageProps) => {
   const { t } = useTranslation(['editor', 'tour', 'diff', 'exercise'])
   const projectKey = projectKeyOf(templateName, exercise)
   const project = useTemplateProject(projectKey)
@@ -73,7 +74,7 @@ export const PlayTemplatePage = ({ templateName, exercise }: PlayTemplatePagePro
   const runtime = useSandboxRuntime(projectKey, edits.commitPending)
   const languageService = useLanguageService(projectKey)
   const [panel, setPanel] = useState<OutputPanel>('console')
-  const [sideTab, setSideTab] = useState<SideTab | undefined>(undefined)
+  const [sideTab, setSideTab] = useState<SideTab | undefined>(initialPanel)
   const [isSolutionShown, setSolutionShown] = useState(false)
   const { template, failure } = project
   const base = useBaseTemplate(projectKey)
