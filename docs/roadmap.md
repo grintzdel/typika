@@ -266,6 +266,13 @@ ses bandeaux, puis redevient `healthy` une fois le pin rétabli. Un tel commit p
 verts : c'est ce que le run de santé ajoute à l'indexation. L'E2E de production lance la sonde sur `strategy-ts`, puis
 sur un exercice et un template introuvables.
 
+Lot 7 prêt, publication en attente. `registry-tools` lit un dépôt de templates depuis un clone local (`--checkout`).
+L'extraction de `templates/` et `registry/` en dépôts, leurs workflows et la branche qui les branche en sous-modules
+sont préparés en local, gate vert, sans rien publier. La publication attend la recherche de marques (R6), l'organisation
+`typika` sur GitHub et la réservation de `typika.dev`. Le critère de fin du M3 passe par ce registre public : le M3
+reste ouvert jusque-là. Rien ne bloque le M4, qui garde les templates dans ce dépôt. Un template modifié d'ici là se
+reporte en relançant l'extraction et en rebasant la branche.
+
 ## M4 — Go & comparaison
 
 **Objectif** : la deuxième langue et la comparaison, cœur de la leçon « le langage fait partie du pattern ».
@@ -278,6 +285,23 @@ Livrables :
 
 Terminé quand : on compare Strategy en TS et en Go étape par étape, et la variante Go montre pourquoi le pattern s'y
 réduit à une fonction.
+
+### Découpage
+
+Un lot = une branche `m4/<lot>` et une PR. Les lots 1 et 2 amènent le runtime `go` : d'abord le pilote de build, testé
+contre `go test` natif, puis son intégration dans l'app. Le lot 3 n'a pas besoin du runtime : la comparaison montre
+du code en lecture seule et un tour, et `strategy-go` existe déjà. Le lot 4 écrit les variantes Go du catalogue en
+s'appuyant sur les trois premiers.
+
+| # | Lot | Contenu | Terminé quand |
+|---|---|---|---|
+| 1 | `runtime-go-driver` | `packages/runtime-go` ([0018](decisions/0018-go-runtime.md)) : un script reconstruit les assets depuis la version de Go épinglée (`compile.wasm`, `link.wasm`, stdlib précompilée, licence BSD). Le pilote fait le travail de `go build` et `go test` : graphe des packages, `importcfg`, `_testmain.go`, cache des archives par hash, conversion `test2json` vers les `TestEvent` ([runtimes](specs/runtimes.md)). Une suite de conformité compare ses résultats à ceux de `go test` natif. Un import hors du jeu précompilé a son code d'erreur, et `template-check` lance les tests des templates Go. | Sur `strategy-go` et les quatre états de ses exercices, la suite de conformité donne les mêmes verts, rouges, messages et `fichier:ligne` que `go test`. Les assets pèsent au plus 12 Mo en brotli. |
+| 2 | `runtime-go-app` | Le runtime `go` dans l'app : worker, barre de progression du premier chargement, cache des assets par Service Worker (R3, une ADR), arrêt d'une boucle infinie et relance, erreurs de compilation situées dans l'éditeur, coloration Go. Le run de santé couvre les templates Go. | `/play/strategy-go` lance Run, les tests et les deux exercices dans Chromium et WebKit. Un rechargement ne retélécharge pas les assets. `strategy-go` et `strategy-base-go` sont `healthy`. |
+| 3 | `compare` | Module `compare` et page `/compare/<name>?a=<lang>&b=<lang>` ([ui §9](specs/ui.md), [manifest §5.3](specs/manifest.md)) : deux colonnes en lecture seule, un tour commun synchronisé par id d'étape, colonne grisée avec le texte de la variante quand une étape manque d'un côté, `Alt+←` / `Alt+→`, une colonne à la fois avec bascule sur mobile, « Ouvrir dans la sandbox » par colonne. Le bouton « Comparer » de la page template s'active. Le lot tranche entre `/compare/<name>` et le `/compare?left=…&right=…` d'`architecture.md`. | Un E2E compare `strategy` en TS et en Go étape par étape : chaque étape ouvre dans les deux colonnes la plage qu'elle ancre. Une étape absente d'un côté affiche son état. |
+| 4 | `catalogue-go` | Les variantes Go prévues au [catalogue](specs/catalogue.md), avec leurs bases, une PR par concept et par vague. (a) Fondamentaux et principes : `composition-over-inheritance-go`, `interface-segregation-go`, `dependency-inversion-go`. (b) Design patterns : `decorator-go`, `adapter-go`. (c) Architectures : `naive-crud-go`, puis `hexagonal-go`, `cqrs-go` et `outbox-go`. Chaque tour reprend les ids de la variante TS. Le guide d'écriture reçoit une section Go. | Les 9 variantes Go sont au registre, `healthy`, et se comparent à leur variante TS sans `W_TOUR_ORDER_DIVERGES`. |
+
+Le critère de fin du M4 est joué à la fin du lot 3. Firefox et Safari (R2, R7) se vérifient à la main pendant la revue
+du M4.
 
 ## M5 — Partage
 
