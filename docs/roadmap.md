@@ -351,6 +351,14 @@ l'embedding transmet, et le risque d'une méthode transmise sans le comportement
 `internal/legacypay`, pas sous `vendor/`. Les tests qui espionnaient le SDK en TS vérifient ce qu'il détient. Les deux
 exercices `refactor` appliquent la règle Go du guide : `start/` déclare l'API nouvelle avec un corps sans effet.
 
+État (2026-10-12) : lot 4, vague (c) livrée, lot 4 terminé. `naive-crud-go`, `hexagonal-go`, `cqrs-go` et `outbox-go`
+sont au registre, `healthy`, et se comparent à leur variante TS sans `W_TOUR_ORDER_DIVERGES` (#55, #56, #57) : les 9
+variantes Go du catalogue y sont. `net/http` n'étant pas dans le jeu précompilé, la base simule le HTTP avec des corps
+JSON. Dans `hexagonal-go`, le cœur déclare ses ports pilotés et `*Service` est le port pilote : chaque adapter pilote
+déclare l'interface qu'il appelle. Dans `cqrs-go`, une commande est une struct traitée par une méthode, sans bus, et
+les read models sont des maps. Dans `outbox-go`, le relais publie après chaque écriture et `Run` le relance dans une
+goroutine arrêtée par un `context`. Reste la revue du M4, avec Firefox et Safari vérifiés à la main.
+
 ## M5 — Partage
 
 **Objectif** : sortir les templates de Typika.

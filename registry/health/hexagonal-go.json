@@ -1,0 +1,12 @@
+{
+  "status": "healthy",
+  "checkedAt": "2026-10-12T19:12:39.263Z",
+  "brokenSince": null,
+  "checks": {
+    "boot": "pass",
+    "tests": "pass",
+    "exercises": "pass",
+    "deps": "skip"
+  },
+  "runUrl": null
+}

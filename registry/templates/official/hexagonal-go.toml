@@ -1,0 +1,4 @@
+ref = "github:typika/templates/hexagonal/go@8203d3dae8a4"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-12

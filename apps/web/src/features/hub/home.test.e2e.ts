@@ -28,7 +28,7 @@ test.describe('home', () => {
     await page.getByRole('region', { name: 'Architecture' }).getByRole('link', { name: 'Tout voir' }).click()
 
     await expect(page).toHaveURL('/templates?topic=architecture')
-    await expect(page.getByRole('list', { name: 'Templates' }).getByRole('listitem')).toHaveCount(5)
+    await expect(page.getByRole('list', { name: 'Templates' }).getByRole('listitem')).toHaveCount(8)
   })
 
   test('opens the template page of a concept', async ({ page }) => {
