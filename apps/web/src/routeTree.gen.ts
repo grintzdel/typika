@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConfigDotjsonRouteImport } from './routes/config[.]json'
 import { Route as PlayTemplateNameRouteImport } from './routes/play/$templateName'
+import { Route as TemplatesIndexRouteImport } from './routes/templates/index'
+import { Route as TemplatesNameRouteImport } from './routes/templates/$name'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +30,69 @@ const PlayTemplateNameRoute = PlayTemplateNameRouteImport.update({
   path: '/play/$templateName',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TemplatesIndexRoute = TemplatesIndexRouteImport.update({
+  id: '/templates/',
+  path: '/templates/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesNameRoute = TemplatesNameRouteImport.update({
+  id: '/templates/$name',
+  path: '/templates/$name',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/config.json': typeof ConfigDotjsonRoute
   '/play/$templateName': typeof PlayTemplateNameRoute
+  '/templates/$name': typeof TemplatesNameRoute
+  '/templates/': typeof TemplatesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/config.json': typeof ConfigDotjsonRoute
   '/play/$templateName': typeof PlayTemplateNameRoute
+  '/templates/$name': typeof TemplatesNameRoute
+  '/templates': typeof TemplatesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/config.json': typeof ConfigDotjsonRoute
   '/play/$templateName': typeof PlayTemplateNameRoute
+  '/templates/$name': typeof TemplatesNameRoute
+  '/templates/': typeof TemplatesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/config.json' | '/play/$templateName'
+  fullPaths:
+    | '/'
+    | '/config.json'
+    | '/play/$templateName'
+    | '/templates/$name'
+    | '/templates/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/config.json' | '/play/$templateName'
-  id: '__root__' | '/' | '/config.json' | '/play/$templateName'
+  to:
+    | '/'
+    | '/config.json'
+    | '/play/$templateName'
+    | '/templates/$name'
+    | '/templates'
+  id:
+    | '__root__'
+    | '/'
+    | '/config.json'
+    | '/play/$templateName'
+    | '/templates/$name'
+    | '/templates/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfigDotjsonRoute: typeof ConfigDotjsonRoute
   PlayTemplateNameRoute: typeof PlayTemplateNameRoute
+  TemplatesNameRoute: typeof TemplatesNameRoute
+  TemplatesIndexRoute: typeof TemplatesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +118,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayTemplateNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/templates/': {
+      id: '/templates/'
+      path: '/templates'
+      fullPath: '/templates/'
+      preLoaderRoute: typeof TemplatesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates/$name': {
+      id: '/templates/$name'
+      path: '/templates/$name'
+      fullPath: '/templates/$name'
+      preLoaderRoute: typeof TemplatesNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +139,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfigDotjsonRoute: ConfigDotjsonRoute,
   PlayTemplateNameRoute: PlayTemplateNameRoute,
+  TemplatesNameRoute: TemplatesNameRoute,
+  TemplatesIndexRoute: TemplatesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

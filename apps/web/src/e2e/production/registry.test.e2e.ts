@@ -22,15 +22,16 @@ test('opens a template served by the registry, at its pinned commit', async ({ p
   ).toBe(true)
 })
 
-test('lists the templates of the registry on the home page', async ({ page }) => {
-  await page.goto(`${APP_URL}/`)
+test('reads the registry for a hub page that was not prerendered', async ({ page }) => {
+  const registryRequests: Array<string> = []
+  page.on('request', (request) => {
+    if (request.url().startsWith(TEST_REGISTRY_URL)) registryRequests.push(request.url())
+  })
 
-  await expect(
-    page
-      .getByRole('list', { name: 'Templates' })
-      .getByRole('link', { name: /Strategy/ })
-      .first()
-  ).toBeVisible()
+  await page.goto(`${APP_URL}/templates/does-not-exist`)
+
+  await expect(page.getByRole('link', { name: 'Voir tous les templates' })).toBeVisible()
+  expect(registryRequests).toEqual([`${TEST_REGISTRY_URL}/index.json`])
 })
 
 test('does not embed the templates in the app bundle', async () => {

@@ -14,6 +14,7 @@ Spécification fonctionnelle de chaque écran. Le design visuel n'est pas couver
 | `/templates/<name>` | Page template |
 | `/play/<name>` | Sandbox ouverte depuis un template (`<name>` = `name` du manifeste, ex. `strategy-ts`) |
 | `/play/<name>?exercise=<id>` | Sandbox en mode exercice |
+| `/play/<name>?panel=diff` | Sandbox ouverte sur le diff depuis la base |
 | `/compare/<name>?a=<lang>&b=<lang>` | Comparaison de deux variantes |
 | `/projects` | Mes projets locaux |
 | `/p/<projectId>` | Projet local |
@@ -67,8 +68,11 @@ Objectif : amener l'apprenant vers un concept en deux clics.
 ```
 
 - Une carte par **concept**, pas par template : elle liste les langages disponibles ; clic → page du template TS de
-  référence, avec sélecteur de langage.
-- « Reprendre » n'apparaît que s'il existe des projets locaux ; montre les 3 derniers.
+  référence, avec sélecteur de langage. Un concept regroupe un template et ses variantes ; la carte porte le libellé
+  de son premier topic. Les sections suivent l'ordre du vocabulaire du registre.
+- Chaque section mène à la liste filtrée sur sa catégorie (« Tout voir ») ou sur une de ses familles.
+- « Reprendre » n'apparaît que s'il existe des projets locaux ; montre les 3 derniers. Il est lu après l'hydratation,
+  la page prérendue ne le contient pas.
 
 ## 4. Liste — `/templates`
 
@@ -76,7 +80,11 @@ Objectif : amener l'apprenant vers un concept en deux clics.
   `library`, `useCase`, santé (`healthy`/`degraded` cochés par défaut, `broken` et `deprecated` décochés), catégorie
   `official`/`community`.
 - Chaque filtre se reflète dans la query string (`?topic=design-pattern/behavioral&language=go&level=intermediate`) ;
-  l'URL est partageable et le bouton retour restaure l'état.
+  l'URL est partageable et le bouton retour restaure l'état. Plusieurs valeurs d'une facette sont séparées par des
+  virgules et se combinent en OU ; les facettes se combinent en ET. Un topic filtre sa branche de l'arbre. Le HTML
+  prérendu n'a pas de filtre : la query string s'applique après l'hydratation.
+- Livré au lot 3 du M3 : les facettes et l'état vide. La recherche, les compteurs et le tri arrivent au lot 4, la
+  facette de santé au lot 6.
 - Recherche plein texte combinée aux facettes ; compteurs par valeur de facette.
 - Tri : pertinence (si recherche), ordre du catalogue (par défaut), récemment mis à jour.
 - **État vide** : « Aucun template ne correspond », liste des filtres actifs avec retrait individuel, bouton
@@ -111,6 +119,10 @@ Objectif : amener l'apprenant vers un concept en deux clics.
 - « Voir le diff » ouvre la sandbox sur la vue diff depuis la base (§8).
 - Copie de la commande CLI et du snippet d'embed en un clic, avec confirmation accessible.
 - Si `parent` existe : lien vers le parent et « diff avec le parent ».
+- Livré au lot 3 du M3 : le fil d'Ariane, le sélecteur de langage (liens, utilisables sans JavaScript), le tour, la
+  base avec « Voir le diff », les exercices, les topics, les variantes, les mainteneurs, la licence et la ref. Restent
+  à venir : la comparaison (M4), la commande CLI, l'embed, les templates liés, le badge de santé (lot 6) et le diff
+  avec le parent.
 
 ## 6. Sandbox — `/play/<name>`, `/p/<projectId>`, `/s#…`, `/g/<gistId>`
 

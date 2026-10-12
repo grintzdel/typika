@@ -1,4 +1,6 @@
 export { buildIndex, INDEX_MAX_GZIP_BYTES, type BuildIndexInput } from './build-index/build-index.ts'
+export { buildLocalIndex, type LocalIndexBuild } from './build-local-index/build-local-index.ts'
+export { formatReport } from '@typika/template-check'
 export { checkRegistry, type RegisteredTemplate, type RegistryReport } from './check-registry/check-registry.ts'
 export { RegistryCategory } from './domain/constants/registry-category.constant.ts'
 export { RefUnresolvableError } from './domain/errors/ref-unresolvable.error.ts'

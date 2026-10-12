@@ -3,6 +3,7 @@ import type { FileContent } from '@typika/runtime-core'
 import * as Option from 'effect/Option'
 import * as AsyncResult from 'effect/reactivity/AsyncResult'
 
+import type { RegistryIndexFailure } from '../../../shared/core/domain/constants/registry-index-failure.constant.ts'
 import {
   applySolutionAtom,
   embeddedTemplatesAtom,
@@ -10,7 +11,6 @@ import {
   saveProjectFilesAtom,
   templateProjectAtom,
 } from '../../core/atoms/project.atoms.ts'
-import type { ProjectLoadFailure } from '../../core/domain/constants/project-load-failure.constant.ts'
 import { buildFileTree } from '../../core/domain/file-tree.domain-model.ts'
 import { textOf, type ProjectFileEdit } from '../../core/domain/project.domain-model.ts'
 
@@ -18,7 +18,7 @@ export type OpenTemplateFailure =
   | { readonly _tag: 'NotFound'; readonly name: string }
   | { readonly _tag: 'Invalid'; readonly name: string }
   | { readonly _tag: 'ExerciseNotFound'; readonly name: string; readonly exercise: string }
-  | { readonly _tag: 'IndexUnavailable'; readonly failure: ProjectLoadFailure }
+  | { readonly _tag: 'IndexUnavailable'; readonly failure: RegistryIndexFailure }
   | { readonly _tag: 'FilesUnavailable'; readonly name: string }
   | { readonly _tag: 'Unknown'; readonly name: string }
 

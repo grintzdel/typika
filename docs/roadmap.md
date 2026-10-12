@@ -226,6 +226,18 @@ sandbox affichent des squelettes pendant le chargement, et une erreur qui nomme 
 est passagère. L'E2E de production sert le miroir depuis une autre origine, ouvre `/play/strategy-ts` et vérifie
 qu'aucun template n'est dans le bundle.
 
+Lot 3 livré. La page template est à `/templates/$name`, et `ui.md` et `architecture.md` sont alignés
+([0023](decisions/0023-hub-prerendering.md)). Le build prérend l'accueil, la liste et les 21 pages template depuis
+l'index du build. Un plugin Vite le construit avec `registry-tools` et le fournit au serveur comme module virtuel :
+aucun index n'entre dans le bundle client. L'accueil montre une carte par concept, groupée par catégorie, et
+« Reprendre » liste les trois derniers projets locaux. La liste filtre par topic (catégorie puis famille), langage,
+paradigme, niveau, framework, bibliothèque, cas d'usage et catégorie ; ses filtres vivent dans la query string et
+s'appliquent après l'hydratation. Elle a un état vide qui retire ses filtres un par un. La page template montre son
+tour, sa base avec un lien vers le diff (`/play/<name>?panel=diff`), ses exercices et ses variantes. Le serveur sert
+chaque page prérendue avec une CSP qui autorise ses propres scripts inline. Le HTML est en anglais, et la langue du
+navigateur s'applique après l'hydratation. L'E2E de production lit les trois pages sans JavaScript, recharge une liste
+filtrée et vérifie que l'hydratation ne lève aucune erreur.
+
 ## M4 — Go & comparaison
 
 **Objectif** : la deuxième langue et la comparaison, cœur de la leçon « le langage fait partie du pattern ».

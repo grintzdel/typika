@@ -9,6 +9,7 @@ import { makeRequestHandler } from './handle-request.ts'
 const APP = 'https://app.example.org'
 const RUNTIME = 'https://run.example.net'
 const SHELL = '<!doctype html><script>boot()</script><script type="module" src="/assets/index-abc.js"></script>'
+const LIST_PAGE = '<!doctype html><main>Templates</main><script>hydrate("list")</script>'
 
 const writeTree = (root: string, files: Readonly<Record<string, string>>) =>
   Promise.all(
@@ -26,6 +27,9 @@ beforeAll(async () => {
   await writeTree(dist, {
     'secret.txt': 'secret',
     'client/_shell.html': SHELL,
+    'client/index.html': '<!doctype html><main>Home</main>',
+    'client/templates/index.html': LIST_PAGE,
+    'client/templates/strategy-ts/index.html': '<!doctype html><main>Strategy</main>',
     'client/assets/index-abc.js': 'export {}',
     'client/robots.txt': 'User-agent: *',
     'client/registry/index.json': '{}',
@@ -52,7 +56,7 @@ const get = (url: string) => handle(new Request(url))
 
 describe('makeRequestHandler on the app origin', () => {
   it('serves the shell for the app routes, with a policy that allows its inline script', async () => {
-    const response = await get(`${APP}/templates`)
+    const response = await get(`${APP}/projects`)
 
     expect(response.status).toBe(200)
     expect(await response.text()).toBe(SHELL)
@@ -62,6 +66,31 @@ describe('makeRequestHandler on the app origin', () => {
       "script-src 'self' 'sha256-MeZS89WlF0u+o0hCvHTBt4q1WHU+U+sJKgbdRUc36mY=';"
     )
     expect(response.headers.get('cross-origin-opener-policy')).toBeNull()
+  })
+
+  it('serves a prerendered page, with a policy that allows its own inline scripts', async () => {
+    const response = await get(`${APP}/templates`)
+
+    expect(await response.text()).toBe(LIST_PAGE)
+    expect(response.headers.get('content-type')).toBe('text/html; charset=utf-8')
+    expect(response.headers.get('cache-control')).toBe('no-cache')
+    const policy = response.headers.get('content-security-policy')
+    expect(policy).toContain("script-src 'self' 'sha256-")
+    expect(policy).not.toContain('MeZS89WlF0u+o0hCvHTBt4q1WHU+U+sJKgbdRUc36mY=')
+  })
+
+  it('serves the prerendered home page and template pages', async () => {
+    expect(await (await get(`${APP}/`)).text()).toContain('Home')
+    expect(await (await get(`${APP}/templates/strategy-ts`)).text()).toContain('Strategy')
+    expect(await (await get(`${APP}/templates/strategy-ts/`)).text()).toContain('Strategy')
+  })
+
+  it('serves the shell for a template page that was not prerendered', async () => {
+    expect(await (await get(`${APP}/templates/observer-ts`)).text()).toBe(SHELL)
+  })
+
+  it('serves the prerendered pages only at their path', async () => {
+    expect(await (await get(`${APP}/templates/index.html`)).text()).toBe(SHELL)
   })
 
   it('isolates the sandbox routes', async () => {

@@ -1,23 +1,19 @@
-import { execFileSync } from 'node:child_process'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname, join, relative, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { argv, exit } from 'node:process'
 import { parseArgs } from 'node:util'
 import { gzipSync } from 'node:zlib'
 
-import { formatReport, hasErrors, runTestsInProcess } from '@typika/template-check'
+import { formatReport } from '@typika/template-check'
 import * as Effect from 'effect/Effect'
 import * as Schema from 'effect/Schema'
 
-import { buildIndex, INDEX_MAX_GZIP_BYTES } from './build-index/build-index.ts'
-import { checkRegistry } from './check-registry/check-registry.ts'
+import { INDEX_MAX_GZIP_BYTES } from './build-index/build-index.ts'
+import { buildLocalIndex, git, LOCAL_CHECKOUTS } from './build-local-index/build-local-index.ts'
 import { RegistryIndexSchema } from './domain/registry-index.domain-model.ts'
 import { indexJsonSchema } from './index-json-schema/index-json-schema.ts'
 import { mirrorTemplates } from './mirror-templates/mirror-templates.ts'
-import { readRegistry } from './read-registry/read-registry.ts'
 import { makeGitResolver } from './resolve-ref/resolve-ref.ts'
-
-const LOCAL_CHECKOUTS = { 'typika/templates': 'templates' }
 
 const { positionals, values } = parseArgs({
   args: argv.slice(2),
@@ -25,9 +21,6 @@ const { positionals, values } = parseArgs({
   options: { out: { type: 'string' } },
 })
 const [command, registryDir = 'registry'] = positionals
-
-const git = (cwd: string, args: ReadonlyArray<string>) =>
-  execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8' }).trim()
 
 const writeJson = async (path: string, value: unknown) => {
   await mkdir(dirname(path), { recursive: true })
@@ -62,21 +55,10 @@ if (command !== 'build') {
   exit(2)
 }
 
-const root = resolve(registryDir)
-const repoRoot = git(root, ['rev-parse', '--show-toplevel'])
-const report = await Effect.runPromise(
-  checkRegistry(await readRegistry(root), makeGitResolver(repoRoot, LOCAL_CHECKOUTS), runTestsInProcess)
-)
-console.log(formatReport(report.checks))
-if (hasErrors(report.checks)) exit(1)
+const { checks, index } = await buildLocalIndex(registryDir)
+console.log(formatReport(checks))
+if (index === undefined) exit(1)
 
-const index = buildIndex({
-  templates: report.templates,
-  vocabulary: report.vocabulary,
-  generatedAt: new Date().toISOString(),
-  registryCommit: git(root, ['rev-parse', '--short=12', 'HEAD']),
-  updatedAtOf: (file) => git(root, ['log', '-1', '--format=%cs', '--', relative(root, join(root, file))]) || undefined,
-})
 const json = JSON.stringify(index)
 const compressed = gzipSync(json).byteLength
 if (compressed > INDEX_MAX_GZIP_BYTES) {
