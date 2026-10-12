@@ -96,7 +96,7 @@ apps/web/
 | `shared` | Helpers Effect, erreurs de base, client HTTP, configuration runtime (`/config.json`) | `AppConfig` |
 | `app` | Composition : `AppLayer`, runtime d'atoms, providers React | — |
 | `hub` | Chargement de l'index, recherche et facettes, pages template | `RegistryIndexPort`, `SearchIndexPort` |
-| `project` | Projets locaux : création depuis un template, fichiers, état modifié, reset, persistance | `ProjectStoragePort`, `TemplateSourcePort` |
+| `project` | Projets locaux : création depuis un template, fichiers, état modifié, reset, persistance | `ProjectStoragePort`, `TemplateIndexPort`, `TemplateFilesPort` |
 | `editor` | CodeMirror 6, onglets, langages, adaptateur du language service TS en worker ([0015](../decisions/0015-editor.md)), décorations (tour, diagnostics) | `LanguageServicePort` |
 | `runtime` | Pont entre un projet et une `RuntimeSession` : boot, synchro FS, run, tests, console, preview | `RuntimeRegistry`, `RuntimeFramePort` |
 | `tour` | Étapes de tour, rendu Markdown sûr, ancrage sur fichiers et lignes | `MarkdownRendererPort` |

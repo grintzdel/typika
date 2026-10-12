@@ -8,6 +8,7 @@ import {
   failingProjectStorage,
   makeProjectStorageInMemory,
   makeProjectTestLayer,
+  testRefOf,
   type ProjectStorage,
 } from '../../project.test-layer.ts'
 import { openTemplateProgram } from '../open-template/open-template.program.ts'
@@ -32,6 +33,14 @@ const save = (
   )
 
 describe('saveProjectFilesProgram', () => {
+  it('records the pinned ref the project was created from', async () => {
+    const storage = makeProjectStorageInMemory()
+
+    await save([['src/main.ts', 'edited']], storage)
+
+    expect([...storage.projects.values()][0]?.record.ref).toBe(testRefOf('sample-ts'))
+  })
+
   it('creates a local project of the template on the first edit', async () => {
     const storage = makeProjectStorageInMemory()
 

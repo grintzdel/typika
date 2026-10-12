@@ -216,6 +216,16 @@ registre sont ajoutés à `@typika/manifest`. Une modification d'un template n'e
 entrée réépinglée, comme le prévoit [registry §2.4](specs/registry.md). Au lot 7, extraire `templates/` change les
 SHA : toutes les entrées seront réépinglées.
 
+Lot 2 livré. L'app lit l'index à `TYPIKA_REGISTRY_INDEX_URL`, puis la liste et les fichiers d'un template à sa ref
+épinglée, par deux gabarits d'URL au format de jsDelivr ([0022](decisions/0022-template-files-source.md)), avec un cache
+mémoire par ref. Jusqu'au lot 7, le build écrit l'index et un miroir des templates (`registry-tools mirror`) dans
+`dist/client/registry/`, et les valeurs par défaut pointent dessus : `.git` entre dans le contexte Docker. L'adaptateur
+`bundled` ne sert plus qu'en développement et dans les tests unitaires ; il est absent du bundle de production. Un
+projet local enregistre la ref d'où il vient, et son diff et son reset la gardent quand l'index avance. L'accueil et la
+sandbox affichent des squelettes pendant le chargement, et une erreur qui nomme sa cause, avec « Réessayer » quand elle
+est passagère. L'E2E de production sert le miroir depuis une autre origine, ouvre `/play/strategy-ts` et vérifie
+qu'aucun template n'est dans le bundle.
+
 ## M4 — Go & comparaison
 
 **Objectif** : la deuxième langue et la comparaison, cœur de la leçon « le langage fait partie du pattern ».

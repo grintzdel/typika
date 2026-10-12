@@ -5,7 +5,14 @@ import { APP_URL, RUNTIME_URL } from './production-urls.ts'
 const ISOLATED_PATHS = ['/play/strategy-ts', '/p/a-project', '/compare', '/s']
 const PLAIN_PATHS = ['/', '/templates', '/projects']
 
-const PUBLIC_CONFIG_KEYS = new Set(['publicUrl', 'runtimeOrigin', 'packageUrlTemplate'])
+const PUBLIC_CONFIG_KEYS = new Set([
+  'publicUrl',
+  'runtimeOrigin',
+  'packageUrlTemplate',
+  'registryIndexUrl',
+  'templateFileUrlTemplate',
+  'templateListingUrlTemplate',
+])
 
 const expectAppHeaders = (headers: Readonly<Record<string, string>>) => {
   expect(headers['x-content-type-options']).toBe('nosniff')

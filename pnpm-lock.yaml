@@ -74,6 +74,9 @@ importers:
       '@typika/manifest':
         specifier: workspace:*
         version: link:../../packages/manifest
+      '@typika/registry-tools':
+        specifier: workspace:*
+        version: link:../../packages/registry-tools
       '@typika/runtime-browser-js':
         specifier: workspace:*
         version: link:../../packages/runtime-browser-js

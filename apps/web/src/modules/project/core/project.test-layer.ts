@@ -1,14 +1,17 @@
-import type { TemplateFiles } from '@typika/manifest'
+import { MANIFEST_FILE, parseManifest, type TemplateFiles } from '@typika/manifest'
+import * as Arr from 'effect/Array'
 import type * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 import * as Option from 'effect/Option'
 
+import { ProjectFilesUnavailableError } from './domain/errors/project-files-unavailable.error.ts'
 import { ProjectStorageError } from './domain/errors/project-storage.error.ts'
-import { ProjectTemplateNotFoundError } from './domain/errors/project-template-not-found.error.ts'
-import { sameOrigin, type ProjectOrigin, type StoredProject } from './domain/project.domain-model.ts'
+import { sameOrigin, textOf, type ProjectOrigin, type StoredProject } from './domain/project.domain-model.ts'
+import { entryOfManifest } from './domain/template-entry.domain-model.ts'
 import { ProjectStoragePort } from './ports/project-storage.port.ts'
-import { TemplateSourcePort } from './ports/template-source.port.ts'
+import { TemplateFilesPort } from './ports/template-files.port.ts'
+import { TemplateIndexPort } from './ports/template-index.port.ts'
 
 export type ProjectStorage = Context.Service.Shape<typeof ProjectStoragePort>
 
@@ -53,21 +56,35 @@ export const failingProjectStorage: ProjectStorage = {
   replaceFiles: quotaExceeded,
 }
 
+export const testRefOf = (name: string, commit = '0123456789ab') => {
+  const cut = name.lastIndexOf('-')
+  return `github:typika/templates/${name.slice(0, cut)}/${name.slice(cut + 1)}@${commit}`
+}
+
+const pathOfRef = (ref: string) => ref.replace(/@.*$/, '')
+
 export const makeProjectTestLayer = (
   templates: Readonly<Record<string, TemplateFiles>>,
   storage: ProjectStorage = makeProjectStorageInMemory()
-) =>
-  Layer.mergeAll(
-    Layer.succeed(TemplateSourcePort, {
-      load: (name) => {
-        const files = templates[name]
-        return files === undefined ? Effect.fail(new ProjectTemplateNotFoundError({ name })) : Effect.succeed(files)
-      },
-      names: Effect.succeed(Object.keys(templates).toSorted()),
-      resolveRef: (ref) => {
-        const name = ref.split('/').slice(2).join('-')
-        return name in templates ? Effect.succeed(name) : Effect.fail(new ProjectTemplateNotFoundError({ name: ref }))
+) => {
+  const byPath = new Map(Object.entries(templates).map(([name, files]) => [pathOfRef(testRefOf(name)), files]))
+  return Layer.mergeAll(
+    Layer.succeed(TemplateIndexPort, {
+      entries: Effect.forEach(Object.entries(templates), ([name, files]) =>
+        parseManifest(textOf(files.get(MANIFEST_FILE) ?? '')).pipe(
+          Effect.map((manifest) => entryOfManifest(manifest, testRefOf(name))),
+          Effect.option
+        )
+      ).pipe(Effect.map(Arr.getSomes)),
+    }),
+    Layer.succeed(TemplateFilesPort, {
+      load: (ref) => {
+        const files = byPath.get(pathOfRef(ref))
+        return files === undefined
+          ? Effect.fail(new ProjectFilesUnavailableError({ ref, reason: 'missing' }))
+          : Effect.succeed(files)
       },
     }),
     Layer.succeed(ProjectStoragePort, storage)
   )
+}

@@ -30,6 +30,7 @@ import { FileTree } from '../../modules/project/ui/components/FileTree.tsx'
 import { ProjectStatus } from '../../modules/project/ui/components/ProjectStatus.tsx'
 import { ResetProjectDialog } from '../../modules/project/ui/components/ResetProjectDialog.tsx'
 import { TemplateLoadError } from '../../modules/project/ui/components/TemplateLoadError.tsx'
+import { WorkbenchSkeleton } from '../../modules/project/ui/components/WorkbenchSkeleton.tsx'
 import { useBaseTemplate } from '../../modules/project/ui/hooks/use-base-template.ts'
 import { useTemplateProject } from '../../modules/project/ui/hooks/use-template-project.ts'
 import { OutputPanels, type OutputPanel } from '../../modules/runtime/ui/components/OutputPanels.tsx'
@@ -101,8 +102,8 @@ export const PlayTemplatePage = ({ templateName, exercise }: PlayTemplatePagePro
       tabs.handleOpenTabs(filesOfStep(step).map(fileTab), anchor._tag === 'Highlighted' ? anchor.range : undefined),
   })
 
-  if (failure !== undefined) return <TemplateLoadError failure={failure} />
-  if (template === undefined) return null
+  if (failure !== undefined) return <TemplateLoadError failure={failure} onRetry={project.handleRetry} />
+  if (template === undefined) return <WorkbenchSkeleton />
 
   const active = tabs.activeTab
   const { editorTab } = tabs

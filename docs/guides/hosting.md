@@ -28,7 +28,9 @@ valeurs publiques au client via `/config.json`.
 |---|---|---|---|---|
 | `TYPIKA_PUBLIC_URL` | oui | oui | `https://typika.example.org` | Origine de l'app |
 | `TYPIKA_RUNTIME_ORIGIN` | oui | oui | `https://typika-run.example.net` | Origine de la runtime frame, site différent de l'app |
-| `TYPIKA_REGISTRY_INDEX_URL` | non | oui | `https://…/index.json` | Index du registre ; défaut : registre officiel |
+| `TYPIKA_REGISTRY_INDEX_URL` | non | oui | `https://…/index.json` | Index du registre ; défaut : `/registry/index.json`, servi par l'app jusqu'au lot 7 du M3 |
+| `TYPIKA_TEMPLATE_FILE_URL_TEMPLATE` | non | oui | `https://cdn.jsdelivr.net/gh/{owner}/{repo}@{ref}/{path}` | Fichier d'un template à sa ref épinglée ([0022](../decisions/0022-template-files-source.md)) ; défaut : le miroir de l'app |
+| `TYPIKA_TEMPLATE_LISTING_URL_TEMPLATE` | non | oui | `https://data.jsdelivr.com/v1/packages/gh/{owner}/{repo}@{ref}?structure=flat` | Liste des fichiers d'un dépôt à un commit, au format de jsDelivr ; défaut : le miroir de l'app |
 | `TYPIKA_ASSETS_BASE_URL` | non | oui | `https://cdn.jsdelivr.net/npm/@typika/runtime-assets@1.0.0/` | Base des assets de runtime ; défaut : CDN public |
 | `TYPIKA_PACKAGE_URL_TEMPLATE` | non | oui | `https://esm.sh/{name}@{version}{path}` | CDN ESM des dépendances npm des templates `browser-js` ; défaut : jsDelivr ([runtimes](../specs/runtimes.md) §6.1) |
 | `TYPIKA_EMBED_ENABLED` | non | oui | `true` | Active `/embed/*` |
@@ -64,6 +66,12 @@ Le build produit `apps/web/dist/` : `client/` (assets et shell SPA), `runtime/` 
 TanStack Start des routes serveur) et `node/main.js`, le serveur de production. Les deux bundles serveur embarquent
 leurs dépendances : `dist/` suffit pour lancer l'app avec `node dist/node/main.js`, sans `node_modules`.
 
+Le build écrit aussi l'index du registre et le miroir des templates à leur ref épinglée dans `dist/client/registry/`
+(`pnpm --filter @typika/web build:registry`, qui lit l'historique Git : le build demande un clone complet et `git`). Les
+fichiers sous `/registry/gh/` et `/registry/listing/` sont servis comme immuables, l'index en `no-cache`. Si les trois
+URL du registre pointent sur une autre origine, elle doit répondre avec CORS ou `Cross-Origin-Resource-Policy:
+cross-origin`, et la CSP de l'app l'ajoute à `connect-src`.
+
 Le prérendu du hub lit l'index du registre **au build**. Pour que les pages du hub suivent le registre :
 
 - reconstruire l'image à chaque publication de l'index (webhook du registre ou build planifié) ;
@@ -93,7 +101,7 @@ compression. Les assets hashés (`/assets/*`, `/runtime/assets/*`) sont servis a
 
 Multi-stage, image de base `node:24-slim` épinglée par digest :
 
-1. **`build`** : active pnpm via Corepack, `pnpm fetch` sur le lockfile (couche mise en cache tant que le lockfile ne
+1. **`build`** : installe `git` (le miroir des templates lit l'historique, d'où `.git` dans le contexte), active pnpm via Corepack, `pnpm fetch` sur le lockfile (couche mise en cache tant que le lockfile ne
    change pas), copie les sources, `pnpm install --offline --frozen-lockfile`, `pnpm --filter @typika/web build`.
 2. **`runtime`** : copie uniquement `apps/web/dist/`, utilisateur `node` (uid 1000), `EXPOSE 3000`, `HEALTHCHECK` sur
    `GET /`. Environ 370 Mo, dont l'essentiel est l'image Node.

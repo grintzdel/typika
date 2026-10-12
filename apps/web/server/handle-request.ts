@@ -40,6 +40,13 @@ const MEDIA_TYPES: Readonly<Record<string, string>> = {
   '.txt': 'text/plain; charset=utf-8',
 }
 
+const PINNED_REGISTRY_PATHS = ['/registry/gh/', '/registry/listing/']
+
+const isImmutable = (pathname: string) =>
+  pathname.includes('/assets/') || PINNED_REGISTRY_PATHS.some((prefix) => pathname.startsWith(prefix))
+
+const originOf = (location: string) => (URL.canParse(location) ? [new URL(location).origin] : [])
+
 const isServerRoute = (pathname: string) => pathname === '/config.json' || pathname.startsWith('/api/')
 
 const withHeaders = (response: Response, headers: Readonly<Record<string, string>>) => {
@@ -58,7 +65,7 @@ const serveFile = async (root: string, pathname: string): Promise<Response | und
   return new Response(await readFile(path), {
     headers: {
       'Content-Type': MEDIA_TYPES[extname(path)] ?? 'application/octet-stream',
-      'Cache-Control': pathname.includes('/assets/') ? IMMUTABLE : 'no-cache',
+      'Cache-Control': isImmutable(pathname) ? IMMUTABLE : 'no-cache',
     },
   })
 }
@@ -71,6 +78,11 @@ export const makeRequestHandler = async ({ config, clientDir, runtimeDir, appSer
   const appPolicy = appContentSecurityPolicy({
     runtimeOrigin: config.runtimeOrigin,
     scriptHashes: inlineScriptHashes(shell),
+    connectOrigins: [
+      config.registryIndexUrl,
+      config.templateFileUrlTemplate,
+      config.templateListingUrlTemplate,
+    ].flatMap(originOf),
   })
   const runtimeHeaders = {
     ...RUNTIME_HEADERS,

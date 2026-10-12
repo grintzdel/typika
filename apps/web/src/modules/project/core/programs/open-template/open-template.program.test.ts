@@ -1,13 +1,16 @@
 import * as Effect from 'effect/Effect'
 import * as Exit from 'effect/Exit'
+import * as Layer from 'effect/Layer'
 import { describe, expect, it } from 'vitest'
 
 import { projectFiles, projectRecord } from '../../../__tests__/project.factory.ts'
 import { templateFiles, templateToml } from '../../../__tests__/template.factory.ts'
+import { TemplateFilesPort } from '../../ports/template-files.port.ts'
 import {
   failingProjectStorage,
   makeProjectStorageInMemory,
   makeProjectTestLayer,
+  testRefOf,
   type ProjectStorage,
 } from '../../project.test-layer.ts'
 import { openTemplateProgram } from './open-template.program.ts'
@@ -56,6 +59,35 @@ describe('openTemplateProgram', () => {
       "console.log('hello')\n"
     )
     expect(Exit.isSuccess(exit) && exit.value.modifiedPaths).toEqual(['src/main.ts'])
+  })
+
+  it('opens the template at the ref the local project was created from, after the index has moved', async () => {
+    const before = testRefOf('sample-ts', '000000000001')
+    const files = new Map([
+      [before, templateFiles('sample-ts', { 'src/main.ts': 'before' })],
+      [testRefOf('sample-ts'), templateFiles('sample-ts', { 'src/main.ts': 'after' })],
+    ])
+    const storage = makeProjectStorageInMemory([{ ...storedProject(), record: projectRecord({ ref: before }) }])
+
+    const exit = await Effect.runPromiseExit(
+      openTemplateProgram('sample-ts').pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            makeProjectTestLayer({ 'sample-ts': templateFiles() }, storage),
+            Layer.succeed(TemplateFilesPort, { load: (ref) => Effect.succeed(files.get(ref) ?? new Map()) })
+          )
+        )
+      )
+    )
+
+    expect(Exit.isSuccess(exit) && exit.value.ref).toBe(before)
+    expect(Exit.isSuccess(exit) && new Map<string, unknown>(exit.value.templateFiles).get('src/main.ts')).toBe('before')
+  })
+
+  it('opens a new project at the ref the index pins', async () => {
+    const exit = await open('sample-ts')
+
+    expect(Exit.isSuccess(exit) && exit.value.ref).toBe(testRefOf('sample-ts'))
   })
 
   it('opens the template files when the storage cannot be read', async () => {
