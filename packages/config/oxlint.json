@@ -51,6 +51,12 @@
       "rules": {
         "unicorn/require-post-message-target-origin": "off"
       }
+    },
+    {
+      "files": ["**/runtime-go/**"],
+      "rules": {
+        "eslint/no-await-in-loop": "off"
+      }
     }
   ]
 }

@@ -1,6 +1,7 @@
 {
   "extends": "@typika/config/tsconfig.json",
   "compilerOptions": {
+    "lib": ["es2024", "dom"],
     "types": ["node"]
   },
   "include": ["src"]

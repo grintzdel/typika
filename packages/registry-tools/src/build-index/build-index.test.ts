@@ -1,6 +1,6 @@
 import { gzipSync } from 'node:zlib'
 
-import { runTestsInProcess } from '@typika/template-check'
+import { inProcessRunners } from '@typika/template-check'
 import * as Effect from 'effect/Effect'
 import * as Schema from 'effect/Schema'
 import { beforeAll, describe, expect, it } from 'vitest'
@@ -29,7 +29,7 @@ beforeAll(async () => {
     checkRegistry(
       await readRegistry(`${REPO_ROOT}/registry`),
       makeGitResolver({ 'typika/templates': { repo: REPO_ROOT, prefix: 'templates' } }),
-      runTestsInProcess
+      inProcessRunners
     )
   )
   index = buildIndex({

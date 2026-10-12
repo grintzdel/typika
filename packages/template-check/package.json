@@ -13,6 +13,7 @@
     "@typika/manifest": "workspace:*",
     "@typika/runtime-browser-js": "workspace:*",
     "@typika/runtime-core": "workspace:*",
+    "@typika/runtime-go": "workspace:*",
     "effect": "4.0.2",
     "esbuild-wasm": "0.28.2"
   },

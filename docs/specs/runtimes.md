@@ -409,10 +409,23 @@ auto-hébergeable (V2).
   `_testmain.go` généré. Celui-ci liste les `TestXxx` découverts et fournit sa propre implémentation de `testDeps`, pour
   ne pas tirer `testing/internal/testdeps`. Le binaire tourne avec `-test.v=test2json` ; le pilote convertit la sortie
   au format `test2json`, puis le mapping du §2.3 s'applique.
-- **Cache** : archives compilées en mémoire, par hash des sources et de l'`importcfg` ; seul ce qui a changé est
-  recompilé.
-- **Assets** : versionnés par version de Go, avec la licence BSD de Go. La stdlib est un jeu fermé (76 packages à
-  l'ADR 0018), étendu à la demande ; la CI du registre refuse un import hors du jeu.
+- **Commande `test`** : `go test` teste chaque package du module qui a des fichiers de test, comme `go test ./...` hors
+  de Typika. `TestOptions.files` restreint aux packages de ces fichiers. `TestOptions.namePattern` devient `-test.run`,
+  mais chaque niveau du motif est cherché comme sous-chaîne du nom : `regexp` n'est pas dans la stdlib embarquée. Les
+  exemples, benchmarks et cibles de fuzzing ne sont pas lancés, et `go vet` ne passe pas avant les tests.
+- **Cache** : archives compilées en mémoire, par hash des sources et des archives dont elles dépendent ; seul ce qui a
+  changé est recompilé. Un package que les tests d'un autre recompilent (fichiers `_test.go` internes) change de hash,
+  et ceux qui l'importent sont recompilés contre lui, comme le fait `go test`.
+- **Assets** : versionnés par version de Go, avec la licence BSD de Go. `pnpm --filter @typika/runtime-go build:assets`
+  les reconstruit avec le Go local, qui doit être la version épinglée : `compile.wasm`, `link.wasm`, `std.pack` (les
+  archives de la stdlib bout à bout, derrière un index JSON), `LICENSE` et `manifest.json` (taille, taille en brotli et
+  SHA-256 de chaque fichier). 11,9 Mo en brotli avec Go 1.24.5.
+- **Stdlib** : un jeu fermé, défini par ses racines dans `std-roots.constant.ts` et complété par leurs dépendances (76
+  packages avec Go 1.24.5). Un template n'importe que ces packages, hors `internal/` ; un autre import est une erreur de
+  compilation au run, et `E_GO_IMPORT_UNAVAILABLE` dans `template-check` et au registre.
+- **Hors navigateur** : `@typika/runtime-go/node` charge les assets depuis le disque et fait tourner le même pilote dans
+  Node. `template-check` s'en sert pour les exercices Go. La suite de `conformance/` compare ses résultats à ceux de
+  `go test` natif sur des fixtures et sur `strategy-go`.
 - **Isolation** : aucune exigence. Pas de `SharedArrayBuffer`, le runtime tourne aussi en embed.
 - Erreurs de compilation : `fichier:ligne:colonne: message`, chemins relatifs à la racine du projet après retrait du
   préfixe du FS.

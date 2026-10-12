@@ -112,13 +112,15 @@ Les templates communautaires restent libres de leur organisation (un dépôt, un
 | V8 | Run de santé complet (§4) en état `healthy`. Un template ne peut pas entrer en `degraded` ou `broken`. | — |
 | V9 | Exercices : pour `fix`, les tests listés échouent à l'état initial et tout le reste passe ; pour `refactor`, les tests de l'exigence échouent et passent sur la solution fournie. Un principe ou un design pattern a au moins un exercice `refactor` (§2.3). | `E_EXERCISE_START_STATE`, `E_EXERCISE_SOLUTION_FAILS`, `E_REFACTOR_EXERCISE_MISSING` |
 | V10 | Taille totale du template sous la limite de [security](security.md). Pas de binaire hors liste blanche. | `E_SIZE` |
+| V11 | Un template Go n'importe que la stdlib embarquée par le runtime `go` ([runtimes §6.3](runtimes.md)). | `E_GO_IMPORT_UNAVAILABLE` |
 
 `packages/registry-tools` porte ces vérifications : `registry-tools build <registre> --out <index.json>` les exécute,
 puis écrit l'index. Elle lit chaque template à son SHA épinglé. Tant que `typika/templates` n'existe pas (lot 7 du M3),
 le dossier `registry/` du monorepo tient lieu de registre, et `github:typika/templates/<chemin>@<sha>` se lit dans le
 dossier `templates/` du monorepo, à ce commit. `--checkout <owner>/<repo>=<dossier>` lit à la place un dépôt dans
-un clone local, depuis sa racine : c'est ainsi que la CI de `typika/registry` lira `typika/templates`. V8 dépend du run de santé (§4), que `registry-tools health` mène ; les exercices Go et Kotlin ne sont pas
-encore exécutés (V9). `registry-tools mirror <index.json> --out <dossier>` écrit les fichiers de chaque entrée à sa ref
+un clone local, depuis sa racine : c'est ainsi que la CI de `typika/registry` lira `typika/templates`. V8 dépend du run de santé (§4), que `registry-tools health` mène. `template-check` exécute les exercices Go et
+applique V11 ; `registry-tools` ne le fait pas encore, faute d'assets Go dans le build de l'app (M4, lot 2). Les
+exercices Kotlin ne sont pas encore exécutés (V9). `registry-tools mirror <index.json> --out <dossier>` écrit les fichiers de chaque entrée à sa ref
 épinglée, au format de jsDelivr ([0022](../decisions/0022-template-files-source.md)) : c'est la source des fichiers
 quand l'app sert son propre registre.
 

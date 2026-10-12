@@ -3,6 +3,8 @@ export {
   officialRefOf,
   type TemplateCheck,
   type TemplateLayout,
+  type TemplateRunner,
+  type TemplateRunners,
   type TemplateSet,
 } from './check-templates/check-templates.ts'
 export { checkExercises, type RunTests, type TestRun } from './check-exercises/check-exercises.ts'
@@ -15,4 +17,5 @@ export {
   readTemplates,
   type ListFiles,
 } from './read-templates/read-templates.ts'
-export { runTestsInProcess } from './run-tests-in-process/run-tests-in-process.ts'
+export { makeGoRunner } from './run-go-tests/run-go-tests.ts'
+export { inProcessRunners, runTestsInProcess } from './run-tests-in-process/run-tests-in-process.ts'

@@ -1,8 +1,8 @@
 import {
   makeIssue,
   ManifestIssueCode,
-  RuntimeKind,
   validateTemplate,
+  type RuntimeKind,
   type Manifest,
   type ManifestIssue,
   type TemplateFiles,
@@ -13,6 +13,13 @@ import { checkExercises, type RunTests } from '../check-exercises/check-exercise
 import { checkRefs } from '../check-refs/check-refs.ts'
 
 export type TemplateSet = ReadonlyMap<string, TemplateFiles>
+
+export type TemplateRunner = {
+  readonly runTests: RunTests
+  readonly checkFiles?: (files: TemplateFiles) => ReadonlyArray<ManifestIssue>
+}
+
+export type TemplateRunners = Partial<Readonly<Record<RuntimeKind, TemplateRunner>>>
 
 export type TemplateCheck = {
   readonly dir: string
@@ -60,7 +67,7 @@ const duplicateNames = (validated: ReadonlyMap<string, Validated>, dir: string, 
 
 export const checkTemplates = (
   templates: TemplateSet,
-  runTests: RunTests,
+  runners: TemplateRunners,
   { refOf, dirOf }: TemplateLayout = officialLayout
 ): Effect.Effect<ReadonlyArray<TemplateCheck>> =>
   Effect.gen(function* () {
@@ -79,14 +86,16 @@ export const checkTemplates = (
         Effect.gen(function* () {
           if (result._tag === 'Invalid') return { dir, name: undefined, issues: result.issues, exercisesRun: false }
           const { manifest } = result
-          const runsExercises = manifest.runtime.kind === RuntimeKind.BROWSER_JS && manifest.exercises.length > 0
+          const runner = runners[manifest.runtime.kind]
+          const files = templates.get(dir) ?? new Map<string, string | Uint8Array>()
+          const runsExercises = runner !== undefined && manifest.exercises.length > 0
           const baseDir = manifest.base === undefined ? undefined : dirOf(manifest.base.template)
           const exerciseIssues = runsExercises
             ? yield* checkExercises({
                 manifest,
-                files: templates.get(dir) ?? new Map(),
+                files,
                 base: baseDir === undefined ? undefined : templates.get(baseDir),
-                runTests,
+                runTests: runner.runTests,
               })
             : []
           return {
@@ -96,6 +105,7 @@ export const checkTemplates = (
               ...result.warnings,
               ...duplicateNames(validated, dir, manifest.name),
               ...checkRefs(manifest, refOf(dir), manifestAt),
+              ...(runner?.checkFiles?.(files) ?? []),
               ...exerciseIssues,
             ],
             exercisesRun: runsExercises,

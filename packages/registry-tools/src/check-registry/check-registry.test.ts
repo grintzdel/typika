@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { join } from 'node:path'
 
 import type { TemplateFiles } from '@typika/manifest'
-import { readTemplates, runTestsInProcess, type TemplateCheck, type TemplateSet } from '@typika/template-check'
+import { readTemplates, inProcessRunners, type TemplateCheck, type TemplateSet } from '@typika/template-check'
 import * as Effect from 'effect/Effect'
 import { beforeAll, describe, expect, it } from 'vitest'
 
@@ -48,7 +48,7 @@ const STRATEGY = [
 ] as const
 
 const check = async (entries: RegistrySource['entries'], set: TemplateSet = templates, vocabulary = VOCABULARY) => {
-  const report = await Effect.runPromise(checkRegistry({ entries, vocabulary }, resolveFrom(set), runTestsInProcess))
+  const report = await Effect.runPromise(checkRegistry({ entries, vocabulary }, resolveFrom(set), inProcessRunners))
   return report
 }
 

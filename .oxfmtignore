@@ -3,3 +3,5 @@ docs/
 *.md
 pnpm-lock.yaml
 apps/web/src/routeTree.gen.ts
+packages/runtime-go/src/wasm-exec/wasm-exec.js
+packages/runtime-go/conformance/fixtures/
