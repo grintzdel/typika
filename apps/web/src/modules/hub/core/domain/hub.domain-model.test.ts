@@ -93,6 +93,7 @@ describe('templatePageOf', () => {
       level: 'intermediate',
       license: 'MIT-0',
       ref: 'github:typika/templates/strategy-ts@0123456789ab',
+      updatedAt: '2026-10-08',
       category: 'official',
       maintainers: ['github:maoudin'],
       trail: [

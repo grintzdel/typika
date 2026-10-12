@@ -28,7 +28,9 @@ describe('TemplateDetails', () => {
 
     expect(within(screen.getByRole('region', { name: 'Variantes' })).getByRole('link', { name: 'Go' })).toBeDefined()
     expect(screen.getByRole('region', { name: 'Sujets' }).textContent).toContain('Strategy')
-    expect(screen.getByRole('region', { name: 'À propos' }).textContent).toContain('MIT-0')
+    const about = screen.getByRole('region', { name: 'À propos' })
+    expect(about.textContent).toContain('MIT-0')
+    expect(within(about).getByText('12 octobre 2026').getAttribute('datetime')).toBe('2026-10-12')
   })
 
   it('leaves out the base when the template has none', () => {

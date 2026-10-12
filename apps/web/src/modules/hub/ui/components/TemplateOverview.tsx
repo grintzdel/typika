@@ -10,7 +10,7 @@ export type TemplateOverviewProps = {
 const topicHref = (topic: string) => `/templates?${new URLSearchParams({ topic }).toString()}`
 
 export const TemplateOverview = ({ page }: TemplateOverviewProps) => {
-  const { t } = useTranslation('hub')
+  const { t, i18n } = useTranslation('hub')
   const labels = useHubLabels()
   return (
     <div className="space-y-4 border-b border-neutral-200 pb-6 dark:border-neutral-800">
@@ -31,8 +31,15 @@ export const TemplateOverview = ({ page }: TemplateOverviewProps) => {
         </ol>
       </nav>
       <div>
-        <h1 className="text-2xl font-semibold">{page.title}</h1>
-        <p className="mt-1 text-neutral-600 dark:text-neutral-400">{page.summary}</p>
+        <h1 lang="en" className="text-2xl font-semibold">
+          {page.title}
+        </h1>
+        <p lang="en" className="mt-1 text-neutral-600 dark:text-neutral-400">
+          {page.summary}
+        </p>
+        {i18n.resolvedLanguage === 'en' ? null : (
+          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">{t('template.contentInEnglish')}</p>
+        )}
       </div>
       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
         <nav aria-label={t('template.language')} className="flex items-center gap-2">

@@ -62,6 +62,7 @@ export const templatePage = (overrides: Partial<TemplatePage> = {}): TemplatePag
   level: 'intermediate',
   license: 'MIT-0',
   ref: 'github:typika/templates/strategy/ts@a17e93a7af3e',
+  updatedAt: '2026-10-12',
   category: 'official',
   maintainers: ['github:maoudin'],
   trail: [

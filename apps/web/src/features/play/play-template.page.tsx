@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { LanguageMenu } from '../../modules/app/ui/components/LanguageMenu.tsx'
+import { useLanguageMenu } from '../../modules/app/ui/hooks/use-language-menu.ts'
 import { DiffSource } from '../../modules/diff/core/domain/file-changes.domain-model.ts'
 import { DiffEditor } from '../../modules/diff/ui/components/DiffEditor.tsx'
 import { DiffFileHeader } from '../../modules/diff/ui/components/DiffFileHeader.tsx'
@@ -68,6 +70,7 @@ export type PlayTemplatePageProps = {
 
 export const PlayTemplatePage = ({ templateName, exercise, initialPanel }: PlayTemplatePageProps) => {
   const { t } = useTranslation(['editor', 'tour', 'diff', 'exercise'])
+  const languageMenu = useLanguageMenu()
   const projectKey = projectKeyOf(templateName, exercise)
   const project = useTemplateProject(projectKey)
   const edits = useEditFiles({ onPersist: project.handleSave, onSync: useWriteProjectFiles(projectKey) })
@@ -144,6 +147,7 @@ export const PlayTemplatePage = ({ templateName, exercise, initialPanel }: PlayT
               project.handleReset()
             }}
           />
+          <LanguageMenu {...languageMenu} />
         </Toolbar>
       }
       sidebar={

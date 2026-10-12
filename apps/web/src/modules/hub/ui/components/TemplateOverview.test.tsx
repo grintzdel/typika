@@ -1,6 +1,8 @@
 import { render, screen, within } from '@testing-library/react'
+import { I18nextProvider } from 'react-i18next'
 import { describe, expect, it } from 'vitest'
 
+import { i18n } from '../../../../i18n/i18n.ts'
 import { templatePage } from '../../__tests__/hub-index.factory.ts'
 import { TemplateOverview } from './TemplateOverview.tsx'
 
@@ -22,5 +24,22 @@ describe('TemplateOverview', () => {
     const languages = screen.getByRole('navigation', { name: 'Langage' })
     expect(within(languages).getByRole('link', { name: 'TypeScript' }).getAttribute('aria-current')).toBe('page')
     expect(within(languages).getByRole('link', { name: 'Go' }).getAttribute('href')).toBe('/templates/strategy-go')
+  })
+
+  it('says the content is in English when the interface is not', () => {
+    render(<TemplateOverview page={templatePage()} />)
+
+    expect(screen.getByText('Le contenu des templates est en anglais.')).toBeDefined()
+    expect(screen.getByRole('heading', { level: 1 }).getAttribute('lang')).toBe('en')
+  })
+
+  it('says nothing about the content language in English', () => {
+    render(
+      <I18nextProvider i18n={i18n.cloneInstance({ lng: 'en' })}>
+        <TemplateOverview page={templatePage()} />
+      </I18nextProvider>
+    )
+
+    expect(screen.queryByText('Template content is in English.')).toBeNull()
   })
 })

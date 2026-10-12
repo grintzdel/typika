@@ -22,20 +22,26 @@ const FacetCheckbox = ({
   readonly count: number
   readonly checked: boolean
   readonly onChange: () => void
-}) => (
-  <label
-    className={`flex items-center gap-2 py-0.5 text-sm ${count === 0 && !checked ? 'text-neutral-400 dark:text-neutral-600' : ''}`}
-  >
-    <input
-      type="checkbox"
-      checked={checked}
-      disabled={count === 0 && !checked}
-      onChange={onChange}
-      className="accent-sky-700"
-    />
-    {label} <span className="ml-auto text-xs text-neutral-500 tabular-nums dark:text-neutral-400">{count}</span>
-  </label>
-)
+}) => {
+  const { t } = useTranslation('hub')
+  return (
+    <label
+      className={`flex items-center gap-2 py-0.5 text-sm ${count === 0 && !checked ? 'text-neutral-400 dark:text-neutral-600' : ''}`}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={count === 0 && !checked}
+        onChange={onChange}
+        className="accent-sky-700"
+      />
+      {label}{' '}
+      <span className="ml-auto text-xs text-neutral-500 tabular-nums dark:text-neutral-400">
+        {t('facets.count', { count })}
+      </span>
+    </label>
+  )
+}
 
 export const FacetFilters = ({ options, filters, counts, onToggle }: FacetFiltersProps) => {
   const { t } = useTranslation('hub')

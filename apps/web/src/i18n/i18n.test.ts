@@ -1,3 +1,4 @@
+import { createInstance } from 'i18next'
 import { describe, expect, it } from 'vitest'
 
 import { detectLanguage } from './i18n.ts'
@@ -19,5 +20,12 @@ describe('i18n', () => {
 
   it('has the same keys in every language', () => {
     expect(keysOf(resources.fr)).toEqual(keysOf(resources.en))
+  })
+
+  it('formats the dates and the numbers in the chosen language', async () => {
+    const t = await createInstance().init({ resources, lng: 'fr', interpolation: { escapeValue: false } })
+
+    expect(t('hub:template.updatedOn', { date: new Date('2026-10-12') })).toBe('12 octobre 2026')
+    expect(t('hub:list.count', { count: 1234 })).toMatch(/^1\s234 templates$/u)
   })
 })

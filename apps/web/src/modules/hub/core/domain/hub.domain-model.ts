@@ -42,6 +42,7 @@ export type TemplatePage = {
   readonly level: Level
   readonly license: string
   readonly ref: string
+  readonly updatedAt: string
   readonly category: IndexTemplate['category']
   readonly maintainers: ReadonlyArray<string>
   readonly trail: ReadonlyArray<TopicCrumb>
@@ -167,6 +168,7 @@ export const templatePageOf = (index: RegistryIndex, name: string): TemplatePage
     level: manifest.facets.level,
     license: manifest.license,
     ref: template.ref,
+    updatedAt: template.updatedAt,
     category: template.category,
     maintainers: template.maintainers,
     trail: topics[0] === undefined ? [] : trailOf(topics[0]),
