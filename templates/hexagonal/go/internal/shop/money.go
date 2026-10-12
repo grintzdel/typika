@@ -1,0 +1,34 @@
+package shop
+
+import "fmt"
+
+type Money struct {
+	cents    int64
+	currency string
+}
+
+func EUR(cents int64) Money {
+	return Money{cents: cents, currency: "EUR"}
+}
+
+var Zero = EUR(0)
+
+func (m Money) Cents() int64 {
+	return m.cents
+}
+
+func (m Money) Currency() string {
+	return m.currency
+}
+
+func (m Money) Add(other Money) Money {
+	return EUR(m.cents + other.cents)
+}
+
+func (m Money) Times(quantity int) Money {
+	return EUR(m.cents * int64(quantity))
+}
+
+func (m Money) String() string {
+	return fmt.Sprintf("%d.%02d %s", m.cents/100, m.cents%100, m.currency)
+}

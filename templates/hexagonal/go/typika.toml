@@ -1,0 +1,56 @@
+schema = 1
+name = "hexagonal-go"
+title = "Hexagonal architecture: the orders module"
+summary = "Keep the business rules in a core that declares ports, and plug HTTP, storage and providers in as adapters."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "go"
+paradigm = ["oop"]
+topic = ["architecture/hexagonal", "principle/dependency-inversion"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "go"
+entry = "cmd/shop/main.go"
+
+[commands]
+test = "go test"
+
+[tests]
+include = ["**/*_test.go"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-domain.md",
+  "tour/03-ports.md",
+  "tour/04-adapters.md",
+  "tour/05-wiring.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/go"
+focus = ["internal/orders/**", "internal/app/open_shop.go"]
+
+[variants]
+typescript = "github:typika/templates/hexagonal/ts"
+
+[[exercises]]
+name = "add-csv-import"
+kind = "refactor"
+title = "Import orders from a CSV file"
+from = "base"
+solutionFrom = "self"
+failing = ["internal/app/csv_import_test.go"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "add-email-adapter"
+kind = "fix"
+title = "Write the email adapter"
+failing = ["internal/app/notifications_test.go"]
+hints = ["hint-1.md", "hint-2.md"]
