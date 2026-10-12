@@ -1,6 +1,6 @@
 import { notFound } from '@tanstack/react-router'
 
-import { filtersOfSearch, searchOfFilters } from '../../modules/hub/core/domain/template-filters.domain-model.ts'
+import { queryOfSearch, searchOfQuery } from '../../modules/hub/core/domain/template-query.domain-model.ts'
 import { runHubProgram } from '../../modules/hub/core/hub.runtime.ts'
 import { getTemplatePageProgram } from '../../modules/hub/core/programs/get-template-page/get-template-page.program.ts'
 import { listConceptsProgram } from '../../modules/hub/core/programs/list-concepts/list-concepts.program.ts'
@@ -17,4 +17,4 @@ export const loadTemplatePage = async (name: string) => {
 }
 
 export const validateTemplatesSearch = (search: Readonly<Record<string, unknown>>) =>
-  searchOfFilters(filtersOfSearch(search))
+  searchOfQuery(queryOfSearch(search))

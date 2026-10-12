@@ -1,4 +1,4 @@
-ref = "github:typika/templates/strategy/kotlin@17f8f058901a"
+ref = "github:typika/templates/strategy/kotlin@1318eae7665d"
 maintainers = ["github:maoudin"]
 category = "official"
 added = 2026-10-08

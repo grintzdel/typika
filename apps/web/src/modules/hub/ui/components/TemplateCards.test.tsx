@@ -15,6 +15,8 @@ describe('TemplateCards', () => {
             summary: 'Pick an algorithm.',
             language: 'go',
             level: 'intermediate',
+            updatedAt: '2026-10-08',
+            searchText: 'strategy-go',
             values: NO_FILTERS,
           },
         ]}

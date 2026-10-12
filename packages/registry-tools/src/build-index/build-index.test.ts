@@ -47,7 +47,7 @@ describe('buildIndex on the local registry', () => {
 
   it('resolves the base to its pinned ref and the variants to template names', () => {
     expect(templateNamed('strategy-ts')).toMatchObject({
-      ref: 'github:typika/templates/strategy/ts@2be9bdff96b6',
+      ref: 'github:typika/templates/strategy/ts@1318eae7665d',
       addedAt: '2026-10-08',
       updatedAt: '2026-10-12',
       manifest: {
@@ -69,10 +69,10 @@ describe('buildIndex on the local registry', () => {
     expect(templateNamed('strategy-base-ts')?.manifest).toMatchObject({ role: 'base', base: null, tour: { steps: [] } })
   })
 
-  it('builds the search text from the title, the topic labels and the tour', () => {
+  it('builds the search text from the title, the keywords, the topic labels and the tour', () => {
     const text = templateNamed('strategy-ts')?.search.text.split(' ')
 
-    expect(text).toEqual(expect.arrayContaining(['strategy', 'shipping', 'open', 'closed', 'delegates']))
+    expect(text).toEqual(expect.arrayContaining(['strategy', 'switch', 'shipping', 'open', 'closed', 'delegates']))
     expect(new Set(text).size).toBe(text?.length)
   })
 

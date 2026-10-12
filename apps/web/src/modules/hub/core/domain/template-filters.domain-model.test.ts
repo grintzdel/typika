@@ -32,11 +32,11 @@ describe('template filters', () => {
   })
 
   it('keeps every template without filters', () => {
-    expect(namesMatching({})).toEqual(['hexagonal-ts', 'observer-ts', 'strategy-go', 'strategy-ts'])
+    expect(namesMatching({})).toEqual(['hexagonal-ts', 'strategy-ts', 'strategy-go', 'observer-ts'])
   })
 
   it('matches a branch of the topic tree', () => {
-    expect(namesMatching({ topic: 'design-pattern/behavioral' })).toEqual(['observer-ts', 'strategy-go', 'strategy-ts'])
+    expect(namesMatching({ topic: 'design-pattern/behavioral' })).toEqual(['strategy-ts', 'strategy-go', 'observer-ts'])
     expect(namesMatching({ topic: 'design-pattern/behav' })).toEqual([])
   })
 

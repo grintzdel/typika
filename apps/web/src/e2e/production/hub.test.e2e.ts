@@ -30,6 +30,16 @@ test.describe('without JavaScript', () => {
     )
   })
 
+  test('sends a search from the header to the list', async ({ page }) => {
+    await page.goto(`${APP_URL}/`)
+
+    await page.getByRole('searchbox', { name: 'Search templates' }).fill('switch')
+    await page.getByRole('searchbox', { name: 'Search templates' }).press('Enter')
+
+    await expect(page).toHaveURL(`${APP_URL}/templates?q=switch`)
+    await expect(page.getByRole('list', { name: 'Templates' }).getByRole('listitem')).toHaveCount(21)
+  })
+
   test('reads a template page', async ({ page }) => {
     await page.goto(`${APP_URL}/templates/strategy-ts`)
 
@@ -53,6 +63,15 @@ test('restores the filters of a list URL after a reload, within the content secu
   await expect(page.getByRole('group', { name: 'Langage' }).getByRole('checkbox', { name: 'Go' })).toBeChecked()
   await expect(page.getByRole('list', { name: 'Templates' }).getByRole('listitem')).toHaveCount(1)
   expect(violations).toEqual([])
+})
+
+test('restores a search after a reload', async ({ page }) => {
+  await page.goto(`${APP_URL}/templates?language=typescript&q=switch`)
+
+  await expect(page.getByRole('searchbox', { name: 'Rechercher des templates' })).toHaveValue('switch')
+  await expect(
+    page.getByRole('list', { name: 'Templates' }).getByRole('link', { name: /^Strategy: shipping options/ })
+  ).toHaveAttribute('href', '/templates/strategy-ts')
 })
 
 for (const path of ['/', '/templates', '/templates/strategy-ts'])

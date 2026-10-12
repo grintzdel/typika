@@ -7,17 +7,27 @@ import { useHubLabels } from '../hooks/use-hub-labels.ts'
 
 export type EmptyResultsProps = {
   readonly active: ReadonlyArray<ActiveFilter>
+  readonly text: string
   readonly onRemove: (facet: Facet, value: string) => void
+  readonly onClearSearch: () => void
   readonly onReset: () => void
 }
 
-export const EmptyResults = ({ active, onRemove, onReset }: EmptyResultsProps) => {
+export const EmptyResults = ({ active, text, onRemove, onClearSearch, onReset }: EmptyResultsProps) => {
   const { t } = useTranslation('hub')
   const labels = useHubLabels()
   return (
     <div className="rounded-lg border border-dashed border-neutral-300 p-6 dark:border-neutral-700">
       <p className="font-semibold">{t('list.empty')}</p>
       <ul aria-label={t('list.activeFilters')} className="mt-3 flex flex-wrap gap-2">
+        {text.trim() === '' ? null : (
+          <li>
+            <Button onClick={onClearSearch}>
+              {t('list.removeSearch', { text: text.trim() })}
+              <span aria-hidden="true">×</span>
+            </Button>
+          </li>
+        )}
         {active.map(({ facet, value }) => (
           <li key={`${facet}=${value}`}>
             <Button onClick={() => onRemove(facet, value)}>

@@ -20,13 +20,18 @@ export const hubIndex = (): RegistryIndex =>
     },
     templates: [
       indexTemplate('hexagonal-ts', {
+        updatedAt: '2026-10-11',
+        search: { text: 'hexagonal-ts hexagonal ports and adapters architecture' },
         manifest: { title: 'Hexagonal', summary: 'Ports and adapters.', facets: { topic: [HEXAGONAL] } },
       }),
       indexTemplate('observer-ts', {
+        updatedAt: '2026-10-10',
+        search: { text: 'observer-ts observer react to events' },
         manifest: { title: 'Observer', summary: 'React to events.', facets: { topic: [OBSERVER], level: 'beginner' } },
       }),
       indexTemplate('strategy-base-ts', { manifest: { role: 'base', facets: { topic: [STRATEGY] } } }),
       indexTemplate('strategy-go', {
+        search: { text: 'strategy-go strategy in go a function per rule switch' },
         manifest: {
           title: 'Strategy in Go',
           base: 'github:typika/templates/strategy-base-go@0123456789ab',
@@ -35,6 +40,7 @@ export const hubIndex = (): RegistryIndex =>
         },
       }),
       indexTemplate('strategy-ts', {
+        search: { text: 'strategy-ts strategy replace a growing switches' },
         manifest: {
           title: 'Strategy',
           summary: 'Replace a growing switch.',
