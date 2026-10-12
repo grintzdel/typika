@@ -30,6 +30,13 @@ describe('parseManifest', () => {
     expect(manifest.facets.framework).toEqual([])
     expect(manifest.exercises[1]).toMatchObject({ from: 'self', solutionFrom: 'start', hints: ['hint-1.md'] })
     expect(manifest.exercises[0]?.hints).toEqual([])
+    expect(manifest.keywords).toEqual([])
+  })
+
+  it('decodes the search keywords', async () => {
+    const manifest = await valueOf(parseManifest(toToml(manifestFixture({ keywords: ['switch', 'if-else'] }))))
+
+    expect(manifest.keywords).toEqual(['switch', 'if-else'])
   })
 
   it('accepts a base template', async () => {
@@ -90,6 +97,9 @@ describe('parseManifest', () => {
     [{ authors: [] }, 'authors'],
     [{ authors: ['maoudin'] }, 'authors[0]'],
     [{ role: 'library' }, 'role'],
+    [{ keywords: ['Switch'] }, 'keywords[0]'],
+    [{ keywords: ['x'.repeat(33)] }, 'keywords[0]'],
+    [{ keywords: Array.from({ length: 11 }, (_, position) => `word-${position}`) }, 'keywords'],
   ])('rejects the invalid top-level value %o', async (override, path) => {
     expect(await issuesFor(manifestFixture(override))).toEqual([`E_INVALID_VALUE ${path}`])
   })

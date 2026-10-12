@@ -55,6 +55,7 @@ Dépassement : avertissement `W_SIZE` en local, erreur à l'entrée dans le regi
 | `name` | chaîne | oui | — | Slug kebab-case `^[a-z0-9]+(-[a-z0-9]+)*$`, 3 à 64 caractères. Unique dans le registre. |
 | `title` | chaîne | oui | — | 1 à 80 caractères, anglais. |
 | `summary` | chaîne | oui | — | 1 à 200 caractères, une phrase, anglais. Affiché dans les cartes du hub. |
+| `keywords` | tableau de chaînes | non | `[]` | ≤ 10 mots en minuscules (`^[a-z0-9]+(-[a-z0-9]+)*$`, 32 caractères au plus), anglais. Ajoutés au texte de recherche de l'index : les mots que l'apprenant tape pour décrire son problème, quand le titre et le résumé ne les contiennent pas (`switch` pour Strategy). |
 | `license` | chaîne | oui | — | Identifiant SPDX (`MIT-0`, `MIT`, `Apache-2.0`…). Voir §9. |
 | `authors` | tableau de chaînes | oui | — | ≥ 1 élément, chacun `github:<login>`. |
 | `role` | `"template"` \| `"base"` | non | `"template"` | `base` : template servant uniquement de base de diff (§7). Masqué des listes du hub. |
@@ -359,6 +360,8 @@ le hub l'utilise pour afficher la filiation et le diff avec le parent.
   énumérations fermées (`language`, `runtime.kind`, `kind` d'exercice, `paradigm`, `level`, `useCase`).
   Un champ ajouté est une nouvelle version parce que la validation refuse les clés inconnues : sans nouvelle version, une app
   qui ne connaît que l'ancien schéma rejetterait un manifeste valide.
+- Exception : tant qu'aucun manifeste n'est publié hors de ce dépôt (lot 7 du M3), le schéma 1 accueille encore des
+  champs optionnels sans changer de version ([0024](../decisions/0024-manifest-keywords.md)). `keywords` en est un.
 - Un nouvel avertissement `W_` ne change pas la version : il n'empêche pas l'ouverture.
 - Chaque changement de version s'accompagne d'une migration automatique dans le package `manifest`, exposée par le CLI.
 - Le registre refuse les nouvelles entrées dans une version dépréciée et ouvre une PR de migration sur les templates
@@ -436,6 +439,7 @@ schema = 1
 name = "strategy-ts"
 title = "Strategy: shipping options"
 summary = "Pick an algorithm at runtime without the caller knowing which one runs."
+keywords = ["switch", "if-else", "conditional", "polymorphism"]
 license = "MIT-0"
 authors = ["github:maoudin"]
 

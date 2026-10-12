@@ -76,6 +76,25 @@ describe('buildIndex on the local registry', () => {
     expect(new Set(text).size).toBe(text?.length)
   })
 
+  it('adds the keywords of the manifest to the search text', () => {
+    const withKeywords = report.templates.map((template) =>
+      template.manifest.name === 'strategy-ts'
+        ? { ...template, manifest: { ...template.manifest, keywords: ['switch', 'if-else'] } }
+        : template
+    )
+    const rebuilt = buildIndex({
+      templates: withKeywords,
+      vocabulary: report.vocabulary,
+      generatedAt: '2026-10-12T08:00:00.000Z',
+      registryCommit: '14d396d46047',
+      updatedAtOf: () => undefined,
+    })
+
+    expect(rebuilt.templates.find((template) => template.name === 'strategy-ts')?.search.text.split(' ')).toEqual(
+      expect.arrayContaining(['switch', 'if-else'])
+    )
+  })
+
   it('splits each topic into its category and family', () => {
     expect(index.vocabulary.topics).toContainEqual({
       id: 'design-pattern/behavioral/strategy',
