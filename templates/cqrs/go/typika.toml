@@ -1,0 +1,56 @@
+schema = 1
+name = "cqrs-go"
+title = "CQRS: the customer order history"
+summary = "Change orders through commands, and answer reads from read models that projections keep up to date."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "go"
+paradigm = ["oop"]
+topic = ["architecture/cqrs"]
+level = "advanced"
+useCase = ["backend"]
+
+[runtime]
+kind = "go"
+entry = "cmd/shop/main.go"
+
+[commands]
+test = "go test"
+
+[tests]
+include = ["**/*_test.go"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-write-model.md",
+  "tour/03-read-model.md",
+  "tour/04-projection.md",
+  "tour/05-consistency.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/go"
+focus = ["internal/orders/**", "internal/app/open_shop.go"]
+
+[variants]
+typescript = "github:typika/templates/cqrs/ts"
+
+[[exercises]]
+name = "add-revenue-dashboard"
+kind = "refactor"
+title = "Add a daily revenue dashboard"
+from = "base"
+solutionFrom = "self"
+failing = ["internal/app/daily_revenue_test.go"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "project-cancellation"
+kind = "fix"
+title = "Project cancellations into the customer history"
+failing = ["internal/app/customer_history_test.go"]
+hints = ["hint-1.md", "hint-2.md"]

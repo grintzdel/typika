@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"example.com/shop/internal/app"
-	"example.com/shop/internal/infra"
 )
 
 func TestOrderEvents(t *testing.T) {
@@ -14,12 +13,12 @@ func TestOrderEvents(t *testing.T) {
 
 		placeOrder(shop, orderOf(ada, 3250))
 
-		want := []infra.Message{{
-			Topic:   "OrderPlaced",
-			Payload: `{"customerEmail":"ada@example.com","orderId":"order-1","totalCents":3250}`,
-		}}
-		if !slices.Equal(shop.Broker.Published, want) {
-			t.Errorf("published %v, want %v", shop.Broker.Published, want)
+		want := `{"orderId":"order-1","customerEmail":"ada@example.com","totalCents":3250}`
+		if len(shop.Broker.Published) != 1 {
+			t.Fatalf("published %v, want one message", shop.Broker.Published)
+		}
+		if message := shop.Broker.Published[0]; message.Topic != "OrderPlaced" || !sameJSON(message.Payload, want) {
+			t.Errorf("published %s %s, want OrderPlaced %s", message.Topic, message.Payload, want)
 		}
 	})
 
