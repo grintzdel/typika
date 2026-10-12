@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { hasErrors, runTestsInProcess, type TemplateCheck } from '@typika/template-check'
+import { hasErrors, inProcessRunners, type TemplateCheck } from '@typika/template-check'
 import * as Effect from 'effect/Effect'
 
 import { buildIndex } from '../build-index/build-index.ts'
@@ -31,7 +31,7 @@ export const buildLocalIndex = async (
 ): Promise<LocalIndexBuild> => {
   const root = resolve(registryDir)
   const report = await Effect.runPromise(
-    checkRegistry(await readRegistry(root), makeGitResolver(checkouts), runTestsInProcess)
+    checkRegistry(await readRegistry(root), makeGitResolver(checkouts), inProcessRunners)
   )
   if (hasErrors(report.checks)) return { checks: report.checks, index: undefined, deprecated: new Set() }
   const health = await readHealth(root)

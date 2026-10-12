@@ -419,6 +419,7 @@ Les erreurs bloquent ; les avertissements (`W_`) n'empêchent pas l'ouverture da
 | `E_REFACTOR_EXERCISE_MISSING` | registre | `A {category} template needs at least one refactor exercise.` |
 | `E_TOUR_REQUIRED_STEP` | registre | `An official tour must start with "overview" and end with "trade-offs".` |
 | `E_SIZE` | registre | `Template exceeds {limit}: {actual}.` |
+| `E_GO_IMPORT_UNAVAILABLE` | registre | `package {path} is not available: Typika runs Go with the standard library only.` |
 | `W_SIZE` | workspace | `Template exceeds {limit}: {actual}.` |
 | `W_UNKNOWN_TOPIC` | workspace | `Topic "{topic}" is not in the registry vocabulary yet.` |
 | `W_EXERCISE_UNDECLARED` | workspace | `Folder "exercises/{name}" is not declared in [[exercises]].` |

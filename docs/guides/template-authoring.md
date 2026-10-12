@@ -296,7 +296,8 @@ package, ce qui impose :
 
 Le runtime `go` est la toolchain Go officielle ([0018](../decisions/0018-go-runtime.md)) : tout le langage est
 disponible, goroutines, génériques et `context` compris. Restent interdits : les modules tiers, les packages de la stdlib
-hors du jeu précompilé (la CI du registre les signale), `cgo`, `go:embed`, `os/exec` et les serveurs `net/http`.
+hors du jeu précompilé (`E_GO_IMPORT_UNAVAILABLE`, liste dans [runtimes §6.3](../specs/runtimes.md)), `cgo`,
+`go:embed`, `os/exec` et les serveurs `net/http`. `pnpm template-check` lance les exercices Go avec ce runtime.
 
 ### 8.4 Kotlin
 

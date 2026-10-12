@@ -9,7 +9,7 @@ import {
   type TemplateFiles,
   type TourStep,
 } from '@typika/manifest'
-import { checkTemplates, type RunTests, type TemplateCheck } from '@typika/template-check'
+import { checkTemplates, type TemplateCheck, type TemplateRunners } from '@typika/template-check'
 import * as Effect from 'effect/Effect'
 import * as Option from 'effect/Option'
 import spdxLicenses from 'spdx-license-list/spdx.json' with { type: 'json' }
@@ -178,7 +178,7 @@ const asRegistryIssue = (issue: ManifestIssue): ManifestIssue =>
 export const checkRegistry = (
   source: RegistrySource,
   resolveRef: ResolveRef,
-  runTests: RunTests
+  runners: TemplateRunners
 ): Effect.Effect<RegistryReport> =>
   Effect.gen(function* () {
     const vocabularyResult = yield* Effect.result(decodeToml(VocabularySchema, VOCABULARY_FILE, source.vocabulary))
@@ -214,7 +214,7 @@ export const checkRegistry = (
     const keys = new Set(resolved.map((template) => template.key))
     const templateChecks = yield* checkTemplates(
       new Map(resolved.map((template) => [template.key, template.files])),
-      runTests,
+      runners,
       { refOf: (key) => key, dirOf: (ref) => Option.getOrUndefined(keyOfRef(ref)) }
     )
     const checkOfKey = new Map(templateChecks.map((check) => [check.dir, check]))

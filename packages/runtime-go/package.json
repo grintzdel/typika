@@ -1,0 +1,25 @@
+{
+  "name": "@typika/runtime-go",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts"
+  },
+  "scripts": {
+    "build:assets": "node scripts/build-assets.ts",
+    "typecheck": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@typika/manifest": "workspace:*",
+    "@typika/runtime-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "@typika/config": "workspace:*",
+    "effect": "4.0.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  }
+}

@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { listFilesWithGit, readTemplates } from '../read-templates/read-templates.ts'
-import { runTestsInProcess } from '../run-tests-in-process/run-tests-in-process.ts'
+import { inProcessRunners } from '../run-tests-in-process/run-tests-in-process.ts'
 import { checkTemplates, type TemplateSet } from './check-templates.ts'
 
 const ROOT = join(import.meta.dirname, '..', '..', '..', '..', 'templates')
@@ -28,7 +28,7 @@ const withStrategyFiles = (overrides: Readonly<Record<string, string>>): Templat
   new Map([...templates, [STRATEGY, new Map([...(templates.get(STRATEGY) ?? []), ...Object.entries(overrides)])]])
 
 const strategyIssues = async (set: TemplateSet) => {
-  const checks = await Effect.runPromise(checkTemplates(set, runTestsInProcess))
+  const checks = await Effect.runPromise(checkTemplates(set, inProcessRunners))
   return checks.find((check) => check.dir === STRATEGY)
 }
 

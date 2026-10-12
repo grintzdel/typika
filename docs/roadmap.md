@@ -303,6 +303,18 @@ s'appuyant sur les trois premiers.
 Le critère de fin du M4 est joué à la fin du lot 3. Firefox et Safari (R2, R7) se vérifient à la main pendant la revue
 du M4.
 
+État (2026-10-12) : lot 1 livré. `packages/runtime-go` reconstruit les assets avec le Go local
+(`pnpm --filter @typika/runtime-go build:assets`) : 11,9 Mo en brotli avec Go 1.24.5, dont une stdlib de 76 packages.
+`regexp` en est sorti pour tenir sous 12 Mo : `-test.run` cherche donc une sous-chaîne. Le pilote tourne sur un FS en
+mémoire branché sous l'API qu'attend `wasm_exec.js`, compile et linke chaque package avec un cache par hash, génère le
+`_testmain.go`, et convertit la sortie avec un portage de `test2json`. La suite de conformité compare ses événements à
+ceux de `go test -json` natif : sous-tests, tests externes avec `TestMain`, goroutines, panic, `TestMain` qui sort,
+erreurs de compilation, et `strategy-go` avec sa base, le `run` et les quatre états de ses exercices. Les verts, les
+rouges, les messages, les `fichier:ligne` et les sorties sont identiques. Sous Node, `strategy-go` passe ses tests en
+0,65 s, puis en 0,12 s avec le cache. `template-check` lance les exercices Go et refuse un import hors du jeu
+(`E_GO_IMPORT_UNAVAILABLE`). `registry-tools` ne le fait pas encore : il tourne dans le build de l'app, qui n'aura les
+assets Go qu'au lot 2.
+
 ## M5 — Partage
 
 **Objectif** : sortir les templates de Typika.

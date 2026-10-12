@@ -1,3 +1,5 @@
 templates/
 packages/test-runner/conformance/fixtures/
 apps/web/src/routeTree.gen.ts
+packages/runtime-go/src/wasm-exec/wasm-exec.js
+packages/runtime-go/conformance/fixtures/
