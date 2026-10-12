@@ -29,6 +29,8 @@ export {
   keyOf,
   keyOfRef,
   makeGitResolver,
+  parseCheckout,
+  type LocalCheckout,
   type LocalCheckouts,
   type PinnedRef,
   type ResolveRef,

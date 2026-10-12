@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process'
 import { join, relative, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 import { hasErrors, runTestsInProcess, type TemplateCheck } from '@typika/template-check'
 import * as Effect from 'effect/Effect'
@@ -9,9 +10,11 @@ import { checkRegistry } from '../check-registry/check-registry.ts'
 import type { RegistryIndex } from '../domain/registry-index.domain-model.ts'
 import { readHealth } from '../read-health/read-health.ts'
 import { readRegistry } from '../read-registry/read-registry.ts'
-import { makeGitResolver } from '../resolve-ref/resolve-ref.ts'
+import { makeGitResolver, type LocalCheckouts } from '../resolve-ref/resolve-ref.ts'
 
-export const LOCAL_CHECKOUTS = { 'typika/templates': 'templates' }
+export const MONOREPO_CHECKOUTS: LocalCheckouts = {
+  'typika/templates': { repo: fileURLToPath(new URL('../../../..', import.meta.url)), prefix: 'templates' },
+}
 
 export type LocalIndexBuild = {
   readonly checks: ReadonlyArray<TemplateCheck>
@@ -22,11 +25,13 @@ export type LocalIndexBuild = {
 export const git = (cwd: string, args: ReadonlyArray<string>) =>
   execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8' }).trim()
 
-export const buildLocalIndex = async (registryDir: string): Promise<LocalIndexBuild> => {
+export const buildLocalIndex = async (
+  registryDir: string,
+  checkouts: LocalCheckouts = MONOREPO_CHECKOUTS
+): Promise<LocalIndexBuild> => {
   const root = resolve(registryDir)
-  const repoRoot = git(root, ['rev-parse', '--show-toplevel'])
   const report = await Effect.runPromise(
-    checkRegistry(await readRegistry(root), makeGitResolver(repoRoot, LOCAL_CHECKOUTS), runTestsInProcess)
+    checkRegistry(await readRegistry(root), makeGitResolver(checkouts), runTestsInProcess)
   )
   if (hasErrors(report.checks)) return { checks: report.checks, index: undefined, deprecated: new Set() }
   const health = await readHealth(root)

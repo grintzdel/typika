@@ -6,40 +6,46 @@ import { join } from 'node:path'
 import * as Effect from 'effect/Effect'
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import { makeGitResolver, type PinnedRef } from './resolve-ref.ts'
+import { makeGitResolver, parseCheckout, type PinnedRef } from './resolve-ref.ts'
 
 let root: string
+let templatesRepo: string
 let first: string
 
-const git = (...args: ReadonlyArray<string>) => execFileSync('git', ['-C', root, ...args], { encoding: 'utf8' }).trim()
+const gitIn = (cwd: string, ...args: ReadonlyArray<string>) =>
+  execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8' }).trim()
 
-const write = (path: string, content: string | Uint8Array) => {
-  mkdirSync(join(root, path, '..'), { recursive: true })
-  writeFileSync(join(root, path), content)
+const write = (cwd: string, path: string, content: string | Uint8Array) => {
+  mkdirSync(join(cwd, path, '..'), { recursive: true })
+  writeFileSync(join(cwd, path), content)
 }
 
-const commit = (message: string) => {
-  git('add', '-A')
-  git('-c', 'user.name=Test', '-c', 'user.email=test@example.com', 'commit', '-q', '-m', message)
-  return git('rev-parse', '--short=12', 'HEAD')
+const commit = (cwd: string, message: string) => {
+  gitIn(cwd, 'add', '-A')
+  gitIn(cwd, '-c', 'user.name=Test', '-c', 'user.email=test@example.com', 'commit', '-q', '-m', message)
+  return gitIn(cwd, 'rev-parse', '--short=12', 'HEAD')
 }
 
 beforeAll(() => {
   root = mkdtempSync(join(tmpdir(), 'registry-tools-'))
-  git('init', '-q')
-  write('templates/strategy/ts/typika.toml', 'name = "strategy-ts"\n')
-  write('templates/strategy/ts/src/main.ts', 'console.log("v1")\n')
-  write('templates/strategy/ts/tour/diagram.png', new Uint8Array([0x89, 0x50, 0x00, 0x47]))
-  write('templates/strategy-base/ts/typika.toml', 'name = "strategy-base-ts"\n')
-  first = commit('first')
-  write('templates/strategy/ts/src/main.ts', 'console.log("v2")\n')
-  commit('second')
+  gitIn(root, 'init', '-q')
+  write(root, 'templates/strategy/ts/typika.toml', 'name = "strategy-ts"\n')
+  write(root, 'templates/strategy/ts/src/main.ts', 'console.log("v1")\n')
+  write(root, 'templates/strategy/ts/tour/diagram.png', new Uint8Array([0x89, 0x50, 0x00, 0x47]))
+  write(root, 'templates/strategy-base/ts/typika.toml', 'name = "strategy-base-ts"\n')
+  first = commit(root, 'first')
+  write(root, 'templates/strategy/ts/src/main.ts', 'console.log("v2")\n')
+  commit(root, 'second')
+
+  templatesRepo = mkdtempSync(join(tmpdir(), 'registry-tools-templates-'))
+  gitIn(templatesRepo, 'init', '-q')
+  write(templatesRepo, 'strategy/ts/typika.toml', 'name = "strategy-ts"\n')
 })
 
 const resolve = (ref: Partial<PinnedRef> = {}) =>
   Effect.runPromise(
     Effect.result(
-      makeGitResolver(root, { 'typika/templates': 'templates' })({
+      makeGitResolver({ 'typika/templates': { repo: root, prefix: 'templates' } })({
         owner: 'typika',
         repo: 'templates',
         path: 'strategy/ts',
@@ -79,5 +85,36 @@ describe('makeGitResolver', () => {
       _tag: 'Failure',
       failure: { reason: 'no local checkout of github:someone/patterns' },
     })
+  })
+
+  it('reads a template from a repository of its own, from its root', async () => {
+    const ref = commit(templatesRepo, 'extracted')
+
+    const result = await Effect.runPromise(
+      Effect.result(
+        makeGitResolver({ 'typika/templates': { repo: templatesRepo, prefix: '' } })({
+          owner: 'typika',
+          repo: 'templates',
+          path: 'strategy/ts',
+          ref,
+        })
+      )
+    )
+
+    expect(result._tag).toBe('Success')
+    if (result._tag !== 'Success') return
+    expect([...result.success.keys()]).toEqual(['typika.toml'])
+  })
+})
+
+describe('parseCheckout', () => {
+  it('maps a repository to the root of a local clone', () => {
+    expect(parseCheckout('typika/templates=../templates', '/work/registry')).toEqual({
+      'typika/templates': { repo: '/work/templates', prefix: '' },
+    })
+  })
+
+  it('rejects a value without a repository', () => {
+    expect(() => parseCheckout('../templates', '/work')).toThrow('owner/repo=<directory>')
   })
 })
