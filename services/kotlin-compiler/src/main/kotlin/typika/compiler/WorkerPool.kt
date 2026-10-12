@@ -2,6 +2,8 @@ package typika.compiler
 
 import java.io.DataInputStream
 import java.io.DataOutputStream
+import java.io.File
+import java.nio.file.Files
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
@@ -15,7 +17,7 @@ sealed interface WorkerResult {
     data object Crashed : WorkerResult
 }
 
-private class WorkerProcess(val process: Process) {
+private class WorkerProcess(val process: Process, private val tmpDir: File) {
     private val input = DataInputStream(process.inputStream.buffered())
     private val output = DataOutputStream(process.outputStream.buffered())
 
@@ -29,7 +31,8 @@ private class WorkerProcess(val process: Process) {
     }
 
     fun kill() {
-        process.destroyForcibly()
+        process.destroyForcibly().waitFor(5, TimeUnit.SECONDS)
+        tmpDir.deleteRecursively()
     }
 }
 
@@ -69,7 +72,7 @@ class WorkerPool(private val config: Config) {
     private fun spawn() {
         executor.submit {
             while (true) {
-                val worker = WorkerProcess(launch())
+                val worker = launch()
                 try {
                     worker.awaitReady()
                     ready.incrementAndGet()
@@ -84,12 +87,14 @@ class WorkerPool(private val config: Config) {
         }
     }
 
-    private fun launch(): Process {
-        val aot = config.aotCache?.let { "-XX:AOTCache=$it" }
-        return ProcessBuilder(workerCommand(config, listOfNotNull(aot)))
+    private fun launch(): WorkerProcess {
+        val tmpDir = Files.createTempDirectory("worker").toFile()
+        val options = listOfNotNull(config.aotCache?.let { "-XX:AOTCache=$it" }, "-Djava.io.tmpdir=${tmpDir.path}")
+        val process = ProcessBuilder(workerCommand(config, options))
             .redirectError(ProcessBuilder.Redirect.INHERIT)
             .also { it.environment().remove("JAVA_TOOL_OPTIONS") }
             .start()
+        return WorkerProcess(process, tmpDir)
     }
 }
 

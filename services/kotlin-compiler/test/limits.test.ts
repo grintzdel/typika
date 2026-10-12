@@ -1,3 +1,5 @@
+import { execFileSync } from 'node:child_process'
+
 import { beforeEach, describe, expect, inject, it } from 'vitest'
 
 import {
@@ -13,7 +15,12 @@ import {
   waitUntil,
 } from './compile-client.ts'
 
-const { url } = inject('limitedService')
+const { url, container } = inject('limitedService')
+
+const tmpEntries = () =>
+  execFileSync('docker', ['exec', container, 'find', '/tmp', '-mindepth', '1', '-maxdepth', '2'], { encoding: 'utf8' })
+    .split('\n')
+    .filter(Boolean)
 
 const strategy = () => uniqueVariant(templateFiles('strategy/kotlin'), crypto.randomUUID())
 
@@ -43,6 +50,15 @@ describe('service limits', () => {
     expect(await readError(response)).toEqual({ error: 'compilation timed out after 4000 ms' })
     expect(ms).toBeGreaterThanOrEqual(4000)
     expect(ms).toBeLessThan(8000)
+  })
+
+  it('removes the working files of a killed compilation', async () => {
+    const response = await postCompile(url, compileBody(typeBomb(24)))
+    await waitForReadyWorkers()
+
+    expect(response.status).toBe(504)
+    expect(tmpEntries().filter((path) => path.includes('/compile'))).toEqual([])
+    expect(tmpEntries()).toHaveLength(2)
   })
 
   it('keeps compiling other projects while a compilation runs into the timeout', async () => {
