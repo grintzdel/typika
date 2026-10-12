@@ -359,6 +359,21 @@ déclare l'interface qu'il appelle. Dans `cqrs-go`, une commande est une struct 
 les read models sont des maps. Dans `outbox-go`, le relais publie après chaque écriture et `Run` le relance dans une
 goroutine arrêtée par un `context`. Reste la revue du M4, avec Firefox et Safari vérifiés à la main.
 
+Revue (2026-10-12) : le M4 est livré. Le runtime `go` compile et teste dans le navigateur, avec des résultats
+identiques à `go test` natif. Les 9 variantes Go du catalogue sont au registre, `healthy`, et se comparent étape par
+étape à leur variante TS. Strategy en TS et en Go joue le critère de fin. L'index compte 52 entrées. Le contrôle
+complet est vert, avec 70 E2E en dev et 35 en production. Le runtime Go est couvert dans Chromium et dans le WebKit de
+Playwright, et Safari est vérifié à la main sur le build de production. On passe au M6 plutôt qu'au M5 : le M6 se construit en local comme le M4, alors que le
+gist, `npx typika create` et l'embed dans une page tierce supposent un déploiement public, bloqué comme le lot 7 du M3.
+Ce qui reste ouvert :
+
+- Firefox n'est pas vérifié (R2, R7, R8). Le Firefox de Playwright (build 1555) ne démarre pas sous macOS 27, même en
+  mode fenêtré, et aucun Firefox n'est installé sur le poste de développement. La vérification passe au M6, qui
+  ajoute un runtime de plus.
+- Le M3 reste ouvert : la publication attend la recherche de marques (R6), l'organisation `typika` et `typika.dev`.
+- La configuration Vercel, `SECURITY.md` et la CI GitHub sont toujours en attente. Le service Kotlin les rend plus
+  pressants : c'est le premier composant qui exécute un compilateur sur du code non fiable.
+
 ## M5 — Partage
 
 **Objectif** : sortir les templates de Typika.
@@ -387,6 +402,23 @@ Livrables :
 Terminé quand : les 16 concepts sont comparables TS / Kotlin, et le service de compilation tient une charge de test
 sans dépasser ses limites.
 
+### Découpage
+
+Un lot = une branche `m6/<lot>` et une PR. Le M6 suit le M4 : d'abord le service et le runtime, testés hors de l'app,
+puis leur intégration, puis le catalogue. `strategy-kotlin` et `strategy-base-kotlin` existent depuis le spike R8 et
+servent de référence aux trois premiers lots. Tout tourne en local avec Docker, sans déploiement public.
+
+| # | Lot | Contenu | Terminé quand |
+|---|---|---|---|
+| 1 | `kotlin-compiler` | `services/kotlin-compiler` ([0019](decisions/0019-kotlin-runtime.md), [runtimes §6.4](specs/runtimes.md)) : serveur HTTP minimal sur `kotlin-compiler-embeddable`, protocole 1 (`POST /compile`), compilation en deux phases vers un module ES avec source map, stdlib et `kotlin.test` comme seules bibliothèques, compilation de chauffe au démarrage. Limites de [hosting](guides/hosting.md) : corps, concurrence, file, cache mémoire, timeout. Le lot tranche comment interrompre une compilation (processus séparé ou redémarrage du conteneur), dans une ADR. Image durcie de [security §3.3](specs/security.md) : non-root, FS en lecture seule, aucun réseau sortant, logs sans corps. Tests HTTP (Vitest) contre le conteneur. | `strategy-kotlin` et les quatre états de ses exercices compilent. Une erreur répond avec ses diagnostics `fichier:ligne:colonne`. Un corps trop gros reçoit `413`, une file pleine `503`, une compilation qui dépasse le timeout est interrompue sans bloquer les suivantes. |
+| 2 | `runtime-kotlin` | `packages/runtime-kotlin` : client du protocole avec ses erreurs (`429`, `503`, réseau), cache par hash, harness `kotlin.test` (`describe` / `it` / `xit`) qui émet les `TestEvent`, `location` tirée de la source map, `println` capturé en `Stdout`. Une suite de conformité compare ses résultats à ceux de `gradle test` sur JVM. `template-check` lance les templates Kotlin contre le service. | Sur `strategy-kotlin` et les quatre états de ses exercices, la suite de conformité donne les mêmes verts, rouges, messages et `fichier:ligne` que `gradle test`. |
+| 3 | `runtime-kotlin-app` | Le runtime `kotlin` dans l'app : `KOTLIN_COMPILER_URL`, templates Kotlin masqués quand il manque, toasts `429` / `503`, diagnostics du dernier run dans l'éditeur, coloration Kotlin, cache client en IndexedDB, CSP `connect-src`. Profil Docker `kotlin` sur un réseau interne, `/api/kotlin/*` routé par Caddy, rate limiting par IP (R9, une ADR). Le run de santé et `registry-tools` (V9) couvrent Kotlin. Un test de charge mesure le service derrière Caddy. | `/play/strategy-kotlin` lance Run, les tests et les deux exercices dans Chromium et WebKit. Sans service, le hub masque Kotlin. Le test de charge reste dans les limites (`429` / `503` au-delà, aucun crash ni dépassement mémoire). `strategy-kotlin` et sa base sont `healthy`. |
+| 4 | `kotlin-artifacts` | Artefacts précompilés ([runtimes §6.4](specs/runtimes.md)) : `registry-tools` compile chaque template Kotlin à l'indexation et publie l'artefact avec l'index. Le runtime l'utilise tant que le projet n'est pas modifié. | Ouvrir `strategy-kotlin` et lancer ses tests ne fait aucun appel au service. Après une modification, le run suivant le rappelle. |
+| 5 | `catalogue-kotlin` | Les 15 variantes Kotlin restantes du [catalogue](specs/catalogue.md), avec leurs bases, une PR par concept et une PR de registre par vague. (a) Fondamentaux et principes : `composition-over-inheritance-kotlin`, `single-responsibility-kotlin`, `open-closed-kotlin`, `liskov-substitution-kotlin`, `interface-segregation-kotlin`, `dependency-inversion-kotlin`. (b) Design patterns : `observer-kotlin`, `decorator-kotlin`, `factory-method-kotlin`, `adapter-kotlin`. (c) Architectures : `naive-crud-kotlin`, puis `hexagonal-kotlin`, `cqrs-kotlin`, `event-sourcing-kotlin`, `outbox-kotlin` et `state-machine-kotlin`. Chaque tour reprend les ids de la variante TS. Le guide d'écriture complète sa section Kotlin. | Les 16 variantes Kotlin sont au registre, `healthy`, et se comparent à leur variante TS sans `W_TOUR_ORDER_DIVERGES`. |
+
+Le critère de fin du M6 est joué à la fin du lot 5, le test de charge au lot 3. Firefox (R2, R7, R8) se vérifie
+pendant la revue du M6, à la main ou avec un Playwright qui le lance.
+
 ---
 
 ## Après M6 (non planifié)
@@ -405,11 +437,11 @@ Pistes, à prioriser le moment venu :
 | # | Risque | Traitement |
 |---|---|---|
 | R1 | Licence WebContainers | Levé : pas de runtime `node` en V1 ([0017](decisions/0017-node-runtime.md)) |
-| R2 | COOP/COEP casse l'embed | Levé pour `browser-js` ([0016](decisions/0016-isolation-and-embed.md)) ; Firefox et Safari réel à vérifier |
+| R2 | COOP/COEP casse l'embed | Levé pour `browser-js` ([0016](decisions/0016-isolation-and-embed.md)) ; Safari vérifié, Firefox à vérifier |
 | R3 | Poids des runtimes | Lazy-load, Cache Storage ([0027](decisions/0027-go-assets-delivery.md)), CDN plus tard — M1 / M4 |
 | R4 | IntelliSense TS dans CodeMirror 6 | Levé : CodeMirror 6 confirmé ([0015](decisions/0015-editor.md)) |
 | R5 | Pourrissement des templates | CI de santé + Renovate — M3 |
 | R6 | Nom du projet | Typika retenu ([0014](decisions/0014-name-typika.md)) ; recherche de marques au M0 |
-| R7 | Go dans le navigateur | Levé : toolchain Go en WASM ([0018](decisions/0018-go-runtime.md)) ; Firefox à vérifier |
+| R7 | Go dans le navigateur | Levé : toolchain Go en WASM ([0018](decisions/0018-go-runtime.md)) ; Safari vérifié, Firefox à vérifier |
 | R8 | Service de compilation Kotlin | Levé : service maison, cible JS ([0019](decisions/0019-kotlin-runtime.md)) ; Firefox à vérifier |
 | R9 | Abus du service de compilation | Limites et isolation — M6 |
