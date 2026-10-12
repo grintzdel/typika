@@ -53,6 +53,7 @@ export const serveRuntimeFrame = (
     port.start()
     yield* Effect.addFinalizer(() => Effect.sync(() => port.removeEventListener('message', listener)))
 
+    const frameScope = yield* Effect.scope
     let current: Current | undefined
     const running = new Map<number, Fiber.Fiber<unknown, unknown>>()
     const reply = (response: FrameResponse) => port.postMessage(response)
@@ -82,33 +83,34 @@ export const serveRuntimeFrame = (
         current = { bootId, session, scope }
       })
 
+    const relay = <A>(id: number, stream: Stream.Stream<A, RuntimeError>, scope: Scope.Scope) =>
+      Stream.runForEach(stream, (item) => Effect.sync(() => reply({ _tag: 'Emitted', id, item }))).pipe(
+        Effect.onExit((exit) =>
+          Effect.sync(() => {
+            running.delete(id)
+            const error = Exit.isSuccess(exit) ? Option.none() : Cause.findErrorOption(exit.cause)
+            if (Exit.isSuccess(exit)) reply({ _tag: 'Ended', id })
+            else if (Option.isSome(error)) reply({ _tag: 'Failed', id, error: toRuntimeErrorData(error.value) })
+            else if (Cause.hasInterruptsOnly(exit.cause)) reply({ _tag: 'Interrupted', id })
+            else
+              reply({
+                _tag: 'Failed',
+                id,
+                error: { _tag: 'RuntimeProcessError', cause: Cause.pretty(exit.cause) },
+              })
+          })
+        ),
+        Effect.forkIn(scope),
+        Effect.tap((fiber) => Effect.sync(() => running.set(id, fiber)))
+      )
+
     const forward = <A>(id: number, stream: (session: RuntimeSession) => Stream.Stream<A, RuntimeError>) =>
-      Effect.gen(function* () {
+      Effect.suspend(() => {
         if (current === undefined) {
           reply({ _tag: 'Failed', id, error: { _tag: 'RuntimeProcessError', cause: 'No runtime session' } })
-          return
+          return Effect.void
         }
-        const fiber = yield* Stream.runForEach(stream(current.session), (item) =>
-          Effect.sync(() => reply({ _tag: 'Emitted', id, item }))
-        ).pipe(
-          Effect.onExit((exit) =>
-            Effect.sync(() => {
-              running.delete(id)
-              const error = Exit.isSuccess(exit) ? Option.none() : Cause.findErrorOption(exit.cause)
-              if (Exit.isSuccess(exit)) reply({ _tag: 'Ended', id })
-              else if (Option.isSome(error)) reply({ _tag: 'Failed', id, error: toRuntimeErrorData(error.value) })
-              else if (Cause.hasInterruptsOnly(exit.cause)) reply({ _tag: 'Interrupted', id })
-              else
-                reply({
-                  _tag: 'Failed',
-                  id,
-                  error: { _tag: 'RuntimeProcessError', cause: Cause.pretty(exit.cause) },
-                })
-            })
-          ),
-          Effect.forkIn(current.scope)
-        )
-        running.set(id, fiber)
+        return relay(id, stream(current.session), current.scope)
       })
 
     const acknowledge = (id: number, effect: Effect.Effect<void, RuntimeError>) =>
@@ -121,6 +123,12 @@ export const serveRuntimeFrame = (
 
     const handle = (request: FrameRequest): Effect.Effect<void> => {
       switch (request._tag) {
+        case 'Load':
+          return relay(
+            request.id,
+            Stream.unwrap(Effect.map(registry.get(request.kind), (runtime) => runtime.load)),
+            frameScope
+          )
         case 'Boot':
           return acknowledge(request.id, boot(request.id, request.files))
         case 'WriteFile':

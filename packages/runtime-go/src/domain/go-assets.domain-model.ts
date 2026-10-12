@@ -11,6 +11,9 @@ export type GoAssetManifest = {
   }>
 }
 
+export const isAssetManifest = (value: unknown): value is GoAssetManifest =>
+  typeof value === 'object' && value !== null && 'key' in value && 'files' in value && Array.isArray(value.files)
+
 export type GoToolchain = {
   readonly compile: WebAssembly.Module
   readonly link: WebAssembly.Module

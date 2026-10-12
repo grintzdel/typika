@@ -36,6 +36,8 @@ beforeAll(async () => {
     'client/registry/gh/typika/templates@0123456789ab/strategy/ts/typika.toml': 'name = "strategy-ts"',
     'runtime/frame.html': '<!doctype html>',
     'runtime/assets/esbuild-abc.wasm': 'wasm',
+    'runtime/assets/go/0123/compile.wasm': 'compile',
+    'runtime/assets/go/0123/compile.wasm.br': 'brotli',
   })
   handle = await makeRequestHandler({
     config: {
@@ -164,6 +166,28 @@ describe('makeRequestHandler on the runtime origin', () => {
     expect((await get(`${RUNTIME}/runtime/assets/esbuild-abc.wasm`)).headers.get('content-type')).toBe(
       'application/wasm'
     )
+  })
+
+  it('serves the brotli version of an asset to a browser that accepts it', async () => {
+    const response = await handle(
+      new Request(`${RUNTIME}/runtime/assets/go/0123/compile.wasm`, { headers: { 'Accept-Encoding': 'gzip, br' } })
+    )
+
+    expect(await response.text()).toBe('brotli')
+    expect(response.headers.get('content-encoding')).toBe('br')
+    expect(response.headers.get('content-type')).toBe('application/wasm')
+    expect(response.headers.get('vary')).toBe('Accept-Encoding')
+    expect(response.headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
+  })
+
+  it('serves the plain asset to a browser that does not accept brotli', async () => {
+    const response = await handle(
+      new Request(`${RUNTIME}/runtime/assets/go/0123/compile.wasm`, { headers: { 'Accept-Encoding': 'gzip' } })
+    )
+
+    expect(await response.text()).toBe('compile')
+    expect(response.headers.get('content-encoding')).toBeNull()
+    expect(response.headers.get('vary')).toBe('Accept-Encoding')
   })
 
   it('serves the public configuration to the frame', async () => {

@@ -315,6 +315,15 @@ rouges, les messages, les `fichier:ligne` et les sorties sont identiques. Sous N
 (`E_GO_IMPORT_UNAVAILABLE`). `registry-tools` ne le fait pas encore : il tourne dans le build de l'app, qui n'aura les
 assets Go qu'au lot 2.
 
+État (2026-10-12) : lot 2 livré. `/play/strategy-go` exécute Run, les tests et les deux exercices dans Chromium et
+WebKit. Le runtime tourne dans un worker gardé pour la session ; Arrêter ou le watchdog le termine, et le run suivant
+en recrée un. La barre d'outils montre le téléchargement des assets et un bouton Arrêter. Une erreur de build est
+soulignée dans l'éditeur, et les fichiers `.go` sont colorés. Les assets sont construits dans l'image Docker, servis en
+brotli et gardés en Cache Storage plutôt que par un Service Worker ([0027](decisions/0027-go-assets-delivery.md)) : un
+rechargement ne les retélécharge pas. Le language service TypeScript ne démarre plus pour un template Go.
+`registry-tools` lance les exercices Go à l'indexation (V9, V11), et `strategy-go` comme `strategy-base-go` sont
+`healthy`.
+
 ## M5 — Partage
 
 **Objectif** : sortir les templates de Typika.
@@ -362,7 +371,7 @@ Pistes, à prioriser le moment venu :
 |---|---|---|
 | R1 | Licence WebContainers | Levé : pas de runtime `node` en V1 ([0017](decisions/0017-node-runtime.md)) |
 | R2 | COOP/COEP casse l'embed | Levé pour `browser-js` ([0016](decisions/0016-isolation-and-embed.md)) ; Firefox et Safari réel à vérifier |
-| R3 | Poids des runtimes | Lazy-load, cache Service Worker, CDN — M1 / M4 |
+| R3 | Poids des runtimes | Lazy-load, Cache Storage ([0027](decisions/0027-go-assets-delivery.md)), CDN plus tard — M1 / M4 |
 | R4 | IntelliSense TS dans CodeMirror 6 | Levé : CodeMirror 6 confirmé ([0015](decisions/0015-editor.md)) |
 | R5 | Pourrissement des templates | CI de santé + Renovate — M3 |
 | R6 | Nom du projet | Typika retenu ([0014](decisions/0014-name-typika.md)) ; recherche de marques au M0 |

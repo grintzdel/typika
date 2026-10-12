@@ -10,11 +10,13 @@ import {
   keymap,
   lineNumbers,
 } from '@codemirror/view'
+import type { Diagnostic } from '@typika/runtime-core'
 import * as Effect from 'effect/Effect'
 import { useEffect, useRef } from 'react'
 
 import { isAnalyzedPath } from '../../core/domain/language-service.domain-model.ts'
 import type { LanguageServiceSession } from '../../core/ports/language-service.port.ts'
+import { buildDiagnostics, setBuildDiagnostics, toLintDiagnostics } from './build-diagnostics.ts'
 import { editorTheme } from './editor-theme.ts'
 import { languageSupportOf } from './language-support.ts'
 import { isCompletionPending, pendingCompletion } from './pending-completion.ts'
@@ -27,6 +29,7 @@ export type CodeEditorProps = {
   readonly content: string
   readonly readOnly: boolean
   readonly highlight: LineRange | undefined
+  readonly diagnostics: ReadonlyArray<Diagnostic>
   readonly label: string
   readonly languageService: LanguageServiceSession | undefined
   readonly onChange: (path: string, content: string) => void
@@ -63,6 +66,7 @@ const makeState = (
     }),
     editorTheme,
     tourHighlight,
+    buildDiagnostics,
     pendingCompletion,
     languageService,
   ]
@@ -78,6 +82,7 @@ export const CodeEditor = ({
   content,
   readOnly,
   highlight,
+  diagnostics,
   label,
   languageService,
   onChange,
@@ -87,6 +92,7 @@ export const CodeEditor = ({
   const states = useRef(new Map<string, EditorState>())
   const documents = useRef(new Map<string, OpenDocument>())
   const highlights = useRef(new Map<string, LineRange>())
+  const appliedDiagnostics = useRef(new Map<string, string>())
   const current = useRef<OpenDocument | null>(null)
   const latestOnChange = useRef(onChange)
   const latestLanguageService = useRef(languageService)
@@ -106,6 +112,7 @@ export const CodeEditor = ({
       view.current = null
       current.current = null
       highlights.current.clear()
+      appliedDiagnostics.current.clear()
     }
   }, [])
 
@@ -142,6 +149,15 @@ export const CodeEditor = ({
     editor.dispatch({ effects: setTourHighlight.of(highlight ?? null) })
     scrollToTourHighlight(editor)
   }, [documentKey, highlight])
+
+  useEffect(() => {
+    const editor = view.current
+    if (editor === null) return
+    const signature = JSON.stringify(diagnostics)
+    if (appliedDiagnostics.current.get(documentKey) === signature) return
+    appliedDiagnostics.current.set(documentKey, signature)
+    editor.dispatch({ effects: setBuildDiagnostics.of(toLintDiagnostics(editor.state.doc, diagnostics)) })
+  }, [documentKey, diagnostics])
 
   useEffect(() => {
     latestLanguageService.current = languageService

@@ -49,6 +49,17 @@ export const projectFixture = (
 const textOf = (content: FileContent | undefined) =>
   typeof content === 'string' ? content : new TextDecoder().decode(content)
 
+export const LOAD_PROGRESS = [
+  { asset: 'esbuild.wasm', loadedBytes: 0, totalBytes: 2 },
+  { asset: 'esbuild.wasm', loadedBytes: 2, totalBytes: 2 },
+]
+
+export const LOCATED_DIAGNOSTIC = {
+  severity: 'error' as const,
+  message: 'Expected ";"',
+  location: { file: 'src/main.ts', line: 1, column: 7 },
+}
+
 export const makeFakeRuntime = () => {
   const journal: Array<string> = []
 
@@ -71,17 +82,17 @@ export const makeFakeRuntime = () => {
           }),
       },
       run: ({ command }) => {
-        if (command === 'hang')
+        const content = textOf(files.get(projectPath(command)))
+        if (content === 'syntax error')
+          return Stream.fail(new RuntimeCompileError({ diagnostics: [LOCATED_DIAGNOSTIC] }))
+        if (command === 'hang' || content === 'hang')
           return Stream.never.pipe(Stream.ensuring(Effect.sync(() => journal.push('run stopped'))))
         if (command === 'preempted') return Stream.failCause(Cause.interrupt())
         if (command === 'broken')
           return Stream.fail(
             new RuntimeCompileError({ diagnostics: [{ severity: 'error', message: 'Unexpected end of file' }] })
           )
-        return Stream.make(
-          { _tag: 'Stdout' as const, chunk: textOf(files.get(projectPath(command))) },
-          { _tag: 'Exit' as const, code: 0 }
-        )
+        return Stream.make({ _tag: 'Stdout' as const, chunk: content }, { _tag: 'Exit' as const, code: 0 })
       },
       test: () =>
         Stream.make(
@@ -110,7 +121,7 @@ export const makeFakeRuntime = () => {
 
   const port: RuntimePort = {
     kind: 'browser-js',
-    load: Stream.empty,
+    load: Stream.fromIterable(LOAD_PROGRESS),
     boot: (snapshot) =>
       Effect.acquireRelease(
         Effect.sync(() => {

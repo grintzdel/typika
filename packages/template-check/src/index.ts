@@ -17,5 +17,6 @@ export {
   readTemplates,
   type ListFiles,
 } from './read-templates/read-templates.ts'
+export { loadTemplateRunners } from './load-template-runners/load-template-runners.ts'
 export { makeGoRunner } from './run-go-tests/run-go-tests.ts'
 export { inProcessRunners, runTestsInProcess } from './run-tests-in-process/run-tests-in-process.ts'

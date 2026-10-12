@@ -1,5 +1,9 @@
-import { RuntimeFsError, RuntimeLimit, type FileContent, type ProjectPath, type RuntimeFs } from '@typika/runtime-core'
 import * as Effect from 'effect/Effect'
+
+import { RuntimeLimit } from '../domain/constants/runtime-limits.constant.ts'
+import { RuntimeFsError } from '../domain/errors/runtime-fs.error.ts'
+import type { FileContent, ProjectPath } from '../domain/project.domain-model.ts'
+import type { RuntimeFs } from '../domain/runtime.port.ts'
 
 export type VirtualFsLimits = {
   readonly files: number

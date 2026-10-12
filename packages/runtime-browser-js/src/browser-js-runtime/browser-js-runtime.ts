@@ -1,11 +1,12 @@
 import {
   decodeTestEventLine,
+  makeForegroundExecution,
+  makeVirtualFs,
   RuntimeAssetLoadError,
   RuntimeBootError,
   RuntimeCompileError,
   RuntimeLimit,
   RuntimeProcessError,
-  RuntimeTimeoutError,
   type Diagnostic,
   type ProcessOutput,
   type RuntimeExecutionError,
@@ -30,7 +31,6 @@ import {
   type ExecutionWorkerOutput,
 } from '../domain/worker-protocol.domain-model.ts'
 import { selectTestFiles } from '../select-test-files/select-test-files.ts'
-import { makeVirtualFs } from '../virtual-fs/virtual-fs.ts'
 import { startBuildClient } from './build-client.ts'
 
 export type BrowserJsRuntimeOptions = {
@@ -138,30 +138,7 @@ export const makeBrowserJsRuntime = (options: BrowserJsRuntimeOptions): RuntimeP
         (client) => Effect.sync(() => client.terminate())
       )
 
-      let preemptCurrent: (() => void) | undefined
-
-      const execute = <A>(
-        limitMs: number,
-        body: (
-          queue: Queue.Queue<A, RuntimeExecutionError | Cause.Done>
-        ) => Effect.Effect<unknown, RuntimeExecutionError, Scope.Scope>
-      ) =>
-        Stream.callback<A, RuntimeExecutionError>((queue) =>
-          Effect.gen(function* () {
-            preemptCurrent?.()
-            const preempt = () => Queue.failCauseUnsafe(queue, Cause.interrupt())
-            preemptCurrent = preempt
-            yield* Effect.addFinalizer(() =>
-              Effect.sync(() => {
-                if (preemptCurrent === preempt) preemptCurrent = undefined
-              })
-            )
-            yield* Effect.forkScoped(
-              Effect.sleep(limitMs).pipe(Effect.andThen(Queue.fail(queue, new RuntimeTimeoutError({ limitMs }))))
-            )
-            yield* body(queue)
-          })
-        )
+      const execute = makeForegroundExecution()
 
       const bundleFiles = (request: BundleRequest) =>
         Effect.tryPromise({

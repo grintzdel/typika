@@ -2,8 +2,8 @@ import { fileURLToPath } from 'node:url'
 
 import { defineConfig } from 'vite'
 
-import { RUNTIME_HEADERS } from './server/security-headers.ts'
-import { runtimeConfigEndpoint, withDevEnv } from './vite/dev-servers.ts'
+import { runtimeConfigEndpoint, runtimeHeaders, withDevEnv } from './vite/dev-servers.ts'
+import { goAssetsPlugin } from './vite/go-assets.ts'
 
 withDevEnv()
 
@@ -13,8 +13,8 @@ export default defineConfig({
   publicDir: false,
   cacheDir: fileURLToPath(new URL('./node_modules/.vite-runtime', import.meta.url)),
   clearScreen: false,
-  server: { host: '127.0.0.1', port: 3001, strictPort: true, hmr: false, headers: RUNTIME_HEADERS },
-  plugins: [runtimeConfigEndpoint()],
+  server: { host: '127.0.0.1', port: 3001, strictPort: true, hmr: false },
+  plugins: [runtimeHeaders(), runtimeConfigEndpoint(), goAssetsPlugin()],
   worker: { format: 'es' },
   build: {
     outDir: '../../dist/runtime',

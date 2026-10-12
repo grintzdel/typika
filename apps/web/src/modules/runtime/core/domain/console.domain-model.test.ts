@@ -11,7 +11,13 @@ const stderr = (chunk: string): ConsoleEvent => ({ _tag: 'Output', output: { _ta
 
 describe('reduceConsole', () => {
   it('starts running with no output', () => {
-    expect(EMPTY_CONSOLE).toEqual({ entries: [], size: 0, truncated: false, outcome: { _tag: 'Running' } })
+    expect(EMPTY_CONSOLE).toEqual({
+      entries: [],
+      diagnostics: [],
+      size: 0,
+      truncated: false,
+      outcome: { _tag: 'Running' },
+    })
   })
 
   it('keeps stdout and stderr in order', () => {
@@ -46,6 +52,7 @@ describe('reduceConsole', () => {
       { stream: 'diagnostic', text: 'src/main.ts:3:7 Expected ";"' },
       { stream: 'diagnostic', text: 'Unused import' },
     ])
+    expect(state.diagnostics).toEqual(error.diagnostics)
   })
 
   it('records an interruption', () => {

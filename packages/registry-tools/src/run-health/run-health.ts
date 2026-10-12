@@ -6,7 +6,7 @@ import { CheckResult } from '../domain/constants/health-status.constant.ts'
 import type { IndexTemplate } from '../domain/registry-index.domain-model.ts'
 import type { HealthChecks, TemplateHealth } from '../domain/template-health.domain-model.ts'
 
-export const PROBED_RUNTIMES: ReadonlySet<string> = new Set([RuntimeKind.BROWSER_JS])
+export const PROBED_RUNTIMES: ReadonlySet<string> = new Set([RuntimeKind.BROWSER_JS, RuntimeKind.GO])
 
 export type ProbeResult = {
   readonly checks: Omit<HealthChecks, 'deps'>

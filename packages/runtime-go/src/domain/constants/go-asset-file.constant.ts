@@ -8,3 +8,5 @@ export const GoAssetFile = {
 export type GoAssetFile = (typeof GoAssetFile)[keyof typeof GoAssetFile]
 
 export const GO_ASSET_MANIFEST = 'manifest.json'
+
+export const BROTLI_SUFFIX = '.br'

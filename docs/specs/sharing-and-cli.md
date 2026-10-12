@@ -38,7 +38,7 @@ type ProjectOrigin =
 
 Fichiers stockés en texte UTF-8. Les binaires sont refusés à l'import (limites dans [security](security.md)).
 
-Les runtimes lourds (WASM, toolchains) ne sont pas dans IndexedDB : ils sont mis en cache par le Service Worker.
+Les runtimes lourds (WASM, toolchains) ne sont pas dans IndexedDB : ils sont mis en Cache Storage par leur runtime ([0027](../decisions/0027-go-assets-delivery.md)).
 
 ### 1.2 Quotas
 

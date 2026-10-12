@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import * as Effect from 'effect/Effect'
 import { createServer, type Plugin, type ViteDevServer } from 'vite'
 
-import { appHeaders as headersOfAppPath } from '../server/security-headers.ts'
+import { appHeaders as headersOfAppPath, RUNTIME_HEADERS } from '../server/security-headers.ts'
 import { publicConfigFromEnv } from '../src/modules/shared/core/public-config/public-config-from-env.ts'
 
 const DEV_ENV = {
@@ -23,6 +23,16 @@ export const appHeaders = (): Plugin => ({
     server.middlewares.use((request, response, next) => {
       const pathname = new URL(request.url ?? '/', 'http://localhost').pathname
       for (const [name, value] of Object.entries(headersOfAppPath(pathname))) response.setHeader(name, value)
+      next()
+    })
+  },
+})
+
+export const runtimeHeaders = (): Plugin => ({
+  name: 'typika:runtime-headers',
+  configureServer: (server) => {
+    server.middlewares.use((_, response, next) => {
+      for (const [name, value] of Object.entries(RUNTIME_HEADERS)) response.setHeader(name, value)
       next()
     })
   },

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 import { makeRegistryWrapper } from '../../../app/__tests__/registry-wrapper.tsx'
 import { makeExerciseProgressInMemory } from '../../../exercise/core/exercise.test-layer.ts'
-import { templateFiles } from '../../../project/__tests__/template.factory.ts'
+import { templateFiles, templateToml } from '../../../project/__tests__/template.factory.ts'
 import { makeProjectTestLayer } from '../../../project/core/project.test-layer.ts'
 import { makeFakeRuntime } from '../../../runtime/__tests__/runtime.factory.ts'
 import { makeRuntimeTestLayer } from '../../../runtime/core/runtime.test-layer.ts'
@@ -14,10 +14,19 @@ import { makeLanguageServiceInMemory } from '../../core/editor.test-layer.ts'
 import { LanguageServicePort } from '../../core/ports/language-service.port.ts'
 import { useLanguageService } from './use-language-service.ts'
 
-const TEMPLATES = { 'sample-ts': templateFiles('sample-ts', { 'src/main.ts': 'const total: number = 1\n' }) }
+const TEMPLATES = {
+  'sample-ts': templateFiles('sample-ts', { 'src/main.ts': 'const total: number = 1\n' }),
+  'sample-go': templateFiles('sample-go', {
+    'typika.toml': templateToml('sample-go')
+      .replace('language = "typescript"', 'language = "go"')
+      .replace('kind = "browser-js"', 'kind = "go"')
+      .replace('src/main.ts', 'main.go'),
+    'main.go': 'package main\n',
+  }),
+}
 
-const renderLanguageService = (languageService: Layer.Layer<LanguageServicePort>) =>
-  renderHook(() => useLanguageService('sample-ts'), {
+const renderLanguageService = (languageService: Layer.Layer<LanguageServicePort>, name = 'sample-ts') =>
+  renderHook(() => useLanguageService(name), {
     wrapper: makeRegistryWrapper(
       Layer.mergeAll(
         makeProjectTestLayer(TEMPLATES),
@@ -56,5 +65,14 @@ describe('useLanguageService', () => {
     )
 
     await waitFor(() => expect(result.current).toEqual({ session: undefined, status: 'unavailable' }))
+  })
+
+  it('stays off for a template that TypeScript does not analyze', async () => {
+    const languageService = makeLanguageServiceInMemory()
+    const { result } = renderLanguageService(languageService.layer, 'sample-go')
+
+    await waitFor(() => expect(result.current.status).toBe('off'))
+    expect(result.current.session).toBeUndefined()
+    expect(languageService.started).toEqual([])
   })
 })

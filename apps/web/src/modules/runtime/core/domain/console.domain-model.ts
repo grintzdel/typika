@@ -17,6 +17,7 @@ export type ConsoleOutcome =
 
 export type ConsoleState = {
   readonly entries: ReadonlyArray<ConsoleEntry>
+  readonly diagnostics: ReadonlyArray<Diagnostic>
   readonly size: number
   readonly truncated: boolean
   readonly outcome: ConsoleOutcome
@@ -27,7 +28,13 @@ export type ConsoleEvent =
   | { readonly _tag: 'Failed'; readonly error: RuntimeExecutionError }
   | { readonly _tag: 'Interrupted' }
 
-export const EMPTY_CONSOLE: ConsoleState = { entries: [], size: 0, truncated: false, outcome: { _tag: 'Running' } }
+export const EMPTY_CONSOLE: ConsoleState = {
+  entries: [],
+  diagnostics: [],
+  size: 0,
+  truncated: false,
+  outcome: { _tag: 'Running' },
+}
 
 export const formatDiagnostic = (diagnostic: Diagnostic) => {
   const location = diagnostic.location
@@ -68,14 +75,12 @@ export const reduceConsole = (
 ): ConsoleState => {
   if (event._tag === 'Interrupted') return { ...state, outcome: { _tag: 'Interrupted' } }
   if (event._tag === 'Failed') {
-    const diagnostics =
-      event.error._tag === 'RuntimeCompileError'
-        ? event.error.diagnostics.map((diagnostic) => ({
-            stream: 'diagnostic' as const,
-            text: formatDiagnostic(diagnostic),
-          }))
-        : []
-    return { ...append(state, diagnostics, limit), outcome: outcomeOf(event.error) }
+    const diagnostics = event.error._tag === 'RuntimeCompileError' ? event.error.diagnostics : []
+    const entries = diagnostics.map((diagnostic) => ({
+      stream: 'diagnostic' as const,
+      text: formatDiagnostic(diagnostic),
+    }))
+    return { ...append(state, entries, limit), diagnostics, outcome: outcomeOf(event.error) }
   }
   switch (event.output._tag) {
     case 'Stdout':

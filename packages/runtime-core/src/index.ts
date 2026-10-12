@@ -39,3 +39,5 @@ export {
 } from './domain/test-event.domain-model.ts'
 export { makeSuiteId, makeTestId } from './make-test-id/make-test-id.ts'
 export { makeRuntimeRegistry, RuntimeRegistry, type RuntimeLoaders } from './runtime-registry/runtime-registry.ts'
+export { makeVirtualFs, type VirtualFs, type VirtualFsLimits } from './virtual-fs/virtual-fs.ts'
+export { makeForegroundExecution, type ForegroundBody } from './foreground-execution/foreground-execution.ts'

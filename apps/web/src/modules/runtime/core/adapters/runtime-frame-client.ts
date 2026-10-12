@@ -1,5 +1,7 @@
+import type { RuntimeKind } from '@typika/manifest'
 import {
   ProcessOutputSchema,
+  RuntimeAssetLoadError,
   RuntimeBootError,
   RuntimeFsError,
   RuntimeProcessError,
@@ -20,10 +22,11 @@ import * as Stream from 'effect/Stream'
 import { fromRuntimeErrorData, type RuntimeError } from '../domain/runtime-error-data.ts'
 import {
   FrameResponseSchema,
+  RuntimeLoadProgressSchema,
   type FrameRequest,
   type FrameResponse,
 } from '../domain/runtime-frame-protocol.domain-model.ts'
-import type { RuntimeFrameBootError, RuntimeFramePort } from '../ports/runtime-frame.port.ts'
+import type { RuntimeFrameBootError, RuntimeFrameLoadError, RuntimeFramePort } from '../ports/runtime-frame.port.ts'
 
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
 type Request = DistributiveOmit<FrameRequest, 'id'>
@@ -44,6 +47,18 @@ const asExecutionError = (error: RuntimeError): RuntimeExecutionError => {
       return new RuntimeProcessError({ cause: error })
   }
 }
+
+const asLoadError =
+  (kind: RuntimeKind) =>
+  (error: RuntimeError): RuntimeFrameLoadError => {
+    switch (error._tag) {
+      case 'RuntimeAssetLoadError':
+      case 'RuntimeUnsupportedError':
+        return error
+      default:
+        return new RuntimeAssetLoadError({ asset: kind, cause: error })
+    }
+  }
 
 const asFsError = (path: ProjectPath) => (error: RuntimeError) =>
   error._tag === 'RuntimeFsError' ? error : new RuntimeFsError({ path, reason: error._tag })
@@ -76,9 +91,9 @@ export const makeRuntimeFrameClient = (port: MessagePort): Context.Service.Shape
 
   const call = (request: Request) => Effect.suspend(() => callAs(nextId++, request))
 
-  const stream = <A>(request: Request, schema: Schema.Codec<A, unknown>) => {
+  const stream = <A, E>(request: Request, schema: Schema.Codec<A, unknown>, asError: (error: RuntimeError) => E) => {
     const decodeItem = Schema.decodeUnknownOption(schema)
-    return Stream.callback<A, RuntimeExecutionError>((queue) =>
+    return Stream.callback<A, E>((queue) =>
       Effect.gen(function* () {
         const id = nextId++
         let settled = false
@@ -94,7 +109,7 @@ export const makeRuntimeFrameClient = (port: MessagePort): Context.Service.Shape
           if (response._tag === 'Ended') Queue.endUnsafe(queue)
           if (response._tag === 'Interrupted') Queue.failCauseUnsafe(queue, Cause.interrupt())
           if (response._tag === 'Failed')
-            Queue.failCauseUnsafe(queue, Cause.fail(asExecutionError(fromRuntimeErrorData(response.error))))
+            Queue.failCauseUnsafe(queue, Cause.fail(asError(fromRuntimeErrorData(response.error))))
         })
         yield* Effect.addFinalizer(() =>
           Effect.sync(() => {
@@ -117,12 +132,14 @@ export const makeRuntimeFrameClient = (port: MessagePort): Context.Service.Shape
           Effect.mapError((error) => new RuntimeFsError({ path: '', reason: error._tag }))
         ),
     },
-    run: (command) => stream({ _tag: 'Run', command: command.command, args: command.args }, ProcessOutputSchema),
-    test: (options) => stream({ _tag: 'Test', ...options }, TestEventSchema),
+    run: (command) =>
+      stream({ _tag: 'Run', command: command.command, args: command.args }, ProcessOutputSchema, asExecutionError),
+    test: (options) => stream({ _tag: 'Test', ...options }, TestEventSchema, asExecutionError),
     preview: Effect.succeed(Option.none()),
   })
 
   return {
+    load: (kind) => stream({ _tag: 'Load', kind }, RuntimeLoadProgressSchema, asLoadError(kind)),
     boot: (snapshot) => {
       const bootId = nextId++
       return Effect.acquireRelease(

@@ -4,6 +4,7 @@ import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 import * as Option from 'effect/Option'
 import * as Schema from 'effect/Schema'
+import * as Stream from 'effect/Stream'
 
 import { AppConfig } from '../../../shared/core/ports/app-config.port.ts'
 import { RuntimeFrameUnavailableError } from '../domain/errors/runtime-frame-unavailable.error.ts'
@@ -65,6 +66,7 @@ export const makeRuntimeFrameIframe = (runtimeOrigin: string): Context.Service.S
   })
 
   return {
+    load: (kind) => Stream.unwrap(Effect.map(connect, (frame) => frame.load(kind))),
     boot: (snapshot) => Effect.flatMap(connect, (frame) => frame.boot(snapshot)),
   }
 }

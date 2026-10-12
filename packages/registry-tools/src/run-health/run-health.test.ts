@@ -86,10 +86,21 @@ describe('runHealth', () => {
     const probe = probeOf()
 
     const reports = await run(probe, {
-      templates: [indexTemplate('strategy-go', { manifest: { runtime: { kind: 'go' } } })],
+      templates: [indexTemplate('strategy-kotlin', { manifest: { runtime: { kind: 'kotlin' } } })],
     })
 
     expect(probe).not.toHaveBeenCalled()
-    expect(reports).toEqual([{ name: 'strategy-go', health: undefined, notes: [] }])
+    expect(reports).toEqual([{ name: 'strategy-kotlin', health: undefined, notes: [] }])
+  })
+
+  it('probes the Go templates', async () => {
+    const probe = probeOf(PASS)
+
+    const [report] = await run(probe, {
+      templates: [indexTemplate('strategy-go', { manifest: { runtime: { kind: 'go' } } })],
+    })
+
+    expect(probe).toHaveBeenCalledOnce()
+    expect(report).toMatchObject({ name: 'strategy-go', health: { status: 'healthy' } })
   })
 })

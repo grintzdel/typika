@@ -7,7 +7,7 @@ import * as Scope from 'effect/Scope'
 import * as Stream from 'effect/Stream'
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { makeFakeRuntime, projectFixture, projectPath } from '../../__tests__/runtime.factory.ts'
+import { LOAD_PROGRESS, makeFakeRuntime, projectFixture, projectPath } from '../../__tests__/runtime.factory.ts'
 import { serveRuntimeFrame } from '../frame-host/serve-runtime-frame.ts'
 import { makeRuntimeFrameClient } from './runtime-frame-client.ts'
 
@@ -96,6 +96,24 @@ describe('runtime frame channel', () => {
     const exit = await run
 
     expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBe(true)
+  })
+
+  it('streams the asset download of a runtime', async () => {
+    const { client } = connect()
+
+    const progress = await Effect.runPromise(Stream.runCollect(client.load('browser-js')))
+
+    expect(progress).toEqual(LOAD_PROGRESS)
+  })
+
+  it('fails to load a runtime the frame does not support', async () => {
+    const { client } = connect()
+
+    const exit = await Effect.runPromiseExit(Stream.runCollect(client.load('kotlin')))
+
+    expect(Exit.isFailure(exit) && Cause.findErrorOption(exit.cause)).toMatchObject({
+      value: { _tag: 'RuntimeUnsupportedError', kind: 'kotlin' },
+    })
   })
 
   it('fails to boot a runtime the frame does not support', async () => {
