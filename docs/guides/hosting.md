@@ -46,14 +46,24 @@ Variables du service `kotlin-compiler` :
 |---|---|---|
 | `KOTLIN_COMPILER_ALLOWED_ORIGIN` | — | Origine autorisée en CORS (l'app) ; inutile si le service est derrière le même domaine |
 | `KOTLIN_COMPILER_MAX_BODY_KB` | `256` | Taille max des sources |
-| `KOTLIN_COMPILER_TIMEOUT_MS` | `15000` | Timeout de compilation |
-| `KOTLIN_COMPILER_CONCURRENCY` | `2` | Compilations simultanées ; les suivantes attendent |
-| `KOTLIN_COMPILER_QUEUE_MAX` | `20` | Au-delà, réponse `503` |
-| `KOTLIN_COMPILER_CACHE_MB` | `128` | Cache mémoire des artefacts (`0` pour désactiver) |
+| `KOTLIN_COMPILER_TIMEOUT_MS` | `15000` | Timeout de compilation ; au-delà, le processus de compilation est tué et la réponse est `504` |
+| `KOTLIN_COMPILER_CONCURRENCY` | `2` | Processus de compilation, donc compilations simultanées ; les suivantes attendent |
+| `KOTLIN_COMPILER_QUEUE_MAX` | `20` | Compilations en attente ; au-delà, réponse `503` |
+| `KOTLIN_COMPILER_CACHE_MB` | `32` | Cache mémoire des artefacts (`0` pour désactiver) |
+| `KOTLIN_COMPILER_WORKER_JAVA_OPTS` | voir [0028](../decisions/0028-kotlin-compilation-workers.md) | Options JVM des processus de compilation |
 
-Valeurs alignées sur [runtimes.md](../specs/runtimes.md) §8. Dimensionnement mesuré au spike R8
-([0019](../decisions/0019-kotlin-runtime.md)) : 2 compilations simultanées tiennent dans 1 Gio (pic à 656 Mio) ; en
-dessous, le ramasse-miettes s'effondre.
+Valeurs alignées sur [runtimes.md](../specs/runtimes.md) §8. Dimensionnement mesuré au lot 1 du M6
+([0028](../decisions/0028-kotlin-compilation-workers.md)) : avec 2 vCPU et 1 Gio, 2 processus de compilation tiennent
+2,4 compilations par seconde de `strategy-kotlin`, avec un pic à 815 Mio. Chaque processus de plus coûte environ
+380 Mio.
+
+L'image se lance comme ceci hors de Compose, avec les protections de [security §3.3](../specs/security.md) :
+
+```sh
+docker build -t typika-kotlin-compiler services/kotlin-compiler
+docker run --read-only --tmpfs /tmp:size=64m --cap-drop ALL --security-opt no-new-privileges \
+  --memory 1g --cpus 2 -p 127.0.0.1:8080:8080 typika-kotlin-compiler
+```
 
 ## 3. Build
 

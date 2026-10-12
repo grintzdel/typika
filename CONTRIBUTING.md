@@ -29,6 +29,8 @@ Ouvrez une issue avant tout changement important. Pour remettre en cause une dé
 - Go : les assets du runtime `go` se reconstruisent avec le Go installé, qui doit être en version 1.24.5. Le contrôle
   local, `template-check`, `registry:build` et le build Docker s'en chargent ; une reconstruction complète prend
   environ 100 s et elle est sautée quand rien n'a changé. Le serveur de dev de l'app sert les assets déjà construits.
+- Kotlin : les tests de `services/kotlin-compiler` construisent son image et la lancent en conteneur ; Docker doit
+  tourner. Le build compile le service dans l'image : ni JDK ni Gradle ne sont nécessaires en local.
 - App : `pnpm --filter @typika/web dev` sert l'app sur `http://localhost:3000` et la runtime frame sur
   `http://127.0.0.1:3001`. Les tests E2E (`pnpm --filter @typika/web test:e2e`) démarrent ce serveur s'il ne tourne
   pas déjà.

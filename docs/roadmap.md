@@ -419,6 +419,17 @@ servent de référence aux trois premiers lots. Tout tourne en local avec Docker
 Le critère de fin du M6 est joué à la fin du lot 5, le test de charge au lot 3. Firefox (R2, R7, R8) se vérifie
 pendant la revue du M6, à la main ou avec un Playwright qui le lance.
 
+État (2026-10-13) : lot 1 livré. `services/kotlin-compiler` compile avec Kotlin 2.4.21 dans une image JRE 25, non-root,
+qui tourne sur un FS en lecture seule avec un `tmpfs` pour `/tmp`. Le superviseur HTTP confie chaque compilation à un
+processus de compilation chaud, et le tue au timeout ([0028](decisions/0028-kotlin-compilation-workers.md)) : une
+compilation piégée reçoit `504` pendant que l'autre processus continue de compiler. Un processus à court de mémoire
+fait répondre `503`, puis il est relancé. Sur 2 vCPU et 1 Gio, `strategy-kotlin` compile en 0,7 s seul et à 2,4
+compilations par seconde sous charge, avec un pic à 815 Mio. Le cache mémoire passe à 32 Mio par défaut. Une suite
+Vitest lance l'image en conteneur durci : `strategy-kotlin` et les quatre états de ses exercices compilent, les
+diagnostics sont en `fichier:ligne:colonne`, et `400`, `405`, `413`, `503` (file pleine, crash), `504`, CORS, cache et
+logs sans sources sont couverts. La suite demande Docker. Le réseau interne sans accès sortant arrive avec le profil
+Compose du lot 3.
+
 ---
 
 ## Après M6 (non planifié)

@@ -1,0 +1,8 @@
+build
+.gradle
+.kotlin
+node_modules
+test
+*.ts
+package.json
+tsconfig.json

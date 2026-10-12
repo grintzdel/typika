@@ -34,3 +34,4 @@ Statuts : `Proposée` (en attente d'un spike), `Acceptée`, `Remplacée par NNNN
 | [0024](0024-manifest-keywords.md) | Mots-clés de recherche dans le manifeste, sans changer de schéma | Acceptée |
 | [0025](0025-health-run.md) | Le run de santé pilote l'app | Acceptée |
 | [0027](0027-go-assets-delivery.md) | Assets Go : servis par l'image, gardés en Cache Storage | Acceptée |
+| [0028](0028-kotlin-compilation-workers.md) | Compilation Kotlin : des processus qu'on tue au timeout | Acceptée |
