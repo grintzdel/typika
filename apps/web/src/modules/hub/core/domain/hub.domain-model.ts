@@ -93,24 +93,33 @@ const nameOfRef = (index: RegistryIndex, ref: string | null): string | undefined
   return index.templates.find((template) => Option.contains(refKeyOf(template.ref), key.value))?.name ?? ref
 }
 
-export const conceptSectionsOf = (index: RegistryIndex): ReadonlyArray<ConceptSection> => {
-  const listed = index.templates.filter(isOnHome)
-  const concepts = new Map<string, ConceptCard & { readonly topic: IndexTopic }>()
+const variantGroupsOf = (listed: ReadonlyArray<IndexTemplate>): ReadonlyArray<ReadonlyArray<IndexTemplate>> => {
+  const groupOf = new Map<string, Set<string>>()
   for (const template of listed) {
-    const languages = languagesOf(template).filter(({ name }) => listed.some((other) => other.name === name))
-    const key = languages.map(({ name }) => name).join(' ')
-    const lead = listed.find((other) => other.name === languages[0]?.name) ?? template
-    if (concepts.has(key)) continue
-    const topic = topicOf(index, lead.manifest.facets.topic[0] ?? lead.name)
-    concepts.set(key, { name: lead.name, label: topic.label, summary: lead.manifest.summary, languages, topic })
+    const linked = languagesOf(template)
+      .map(({ name }) => name)
+      .filter((name) => listed.some((other) => other.name === name))
+    const group = new Set(linked.flatMap((name) => [...(groupOf.get(name) ?? [name])]))
+    for (const name of group) groupOf.set(name, group)
   }
+  return [...new Set(groupOf.values())].map((group) => listed.filter(({ name }) => group.has(name)))
+}
+
+export const conceptSectionsOf = (index: RegistryIndex): ReadonlyArray<ConceptSection> => {
+  const concepts = variantGroupsOf(index.templates.filter(isOnHome)).flatMap((members) => {
+    const languages = members
+      .map((member) => ({ language: member.manifest.facets.language, name: member.name }))
+      .toSorted(byLanguage)
+    const lead = members.find(({ name }) => name === languages[0]?.name)
+    if (lead === undefined) return []
+    const topic = topicOf(index, lead.manifest.facets.topic[0] ?? lead.name)
+    return [{ name: lead.name, label: topic.label, summary: lead.manifest.summary, languages, topic }]
+  })
   const rank = (topic: IndexTopic) => {
     const position = index.vocabulary.topics.findIndex(({ id }) => id === topic.id)
     return position === -1 ? Number.MAX_SAFE_INTEGER : position
   }
-  const ordered = [...concepts.values()].toSorted(
-    (a, b) => rank(a.topic) - rank(b.topic) || a.name.localeCompare(b.name)
-  )
+  const ordered = concepts.toSorted((a, b) => rank(a.topic) - rank(b.topic) || a.name.localeCompare(b.name))
   const sections = new Map<string, { families: Array<string>; concepts: Array<ConceptCard> }>()
   for (const { topic, ...concept } of ordered) {
     const section = sections.get(topic.category) ?? { families: [], concepts: [] }

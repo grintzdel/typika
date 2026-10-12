@@ -16,6 +16,9 @@ test.describe('home', () => {
       page.getByRole('region', { name: 'Architecture' }).getByRole('link', { name: /^Hexagonal architecture/ })
     ).toHaveAttribute('href', '/templates/hexagonal-ts')
     await expect(page.getByRole('region', { name: 'Principes SOLID' }).getByRole('listitem')).toHaveCount(5)
+    const fundamentals = page.getByRole('region', { name: 'Fondamentaux POO' })
+    await expect(fundamentals.getByRole('listitem')).toHaveCount(1)
+    await expect(fundamentals.getByRole('link')).toContainText(['TypeScriptJavaScriptGo'])
     await expect(page.locator('a[href*="-base-"]')).toHaveCount(0)
   })
 

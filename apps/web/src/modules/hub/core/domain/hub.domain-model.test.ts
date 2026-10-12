@@ -38,6 +38,35 @@ describe('conceptSectionsOf', () => {
     ])
   })
 
+  it('groups every variant of a concept in one card when only the TypeScript template lists them all', () => {
+    const topic = { facets: { topic: ['design-pattern/behavioral/strategy'] } }
+    const sections = conceptSectionsOf({
+      ...hubIndex(),
+      templates: [
+        indexTemplate('decorator-go', {
+          manifest: { variants: { typescript: 'decorator-ts' }, facets: { ...topic.facets, language: 'go' } },
+        }),
+        indexTemplate('decorator-js', {
+          manifest: { variants: { typescript: 'decorator-ts' }, facets: { ...topic.facets, language: 'javascript' } },
+        }),
+        indexTemplate('decorator-ts', {
+          manifest: { variants: { go: 'decorator-go', javascript: 'decorator-js' }, ...topic },
+        }),
+      ],
+    })
+
+    expect(sections.flatMap(({ concepts }) => concepts)).toEqual([
+      expect.objectContaining({
+        name: 'decorator-ts',
+        languages: [
+          { language: 'typescript', name: 'decorator-ts' },
+          { language: 'javascript', name: 'decorator-js' },
+          { language: 'go', name: 'decorator-go' },
+        ],
+      }),
+    ])
+  })
+
   it('leaves the deprecated templates out of the home page', () => {
     const index = hubIndex()
     const sections = conceptSectionsOf({
