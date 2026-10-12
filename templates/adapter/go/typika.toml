@@ -1,0 +1,56 @@
+schema = 1
+name = "adapter-go"
+title = "Adapter: taking payments"
+summary = "Wrap a foreign interface in one type that speaks the interface your code expects."
+keywords = ["sdk", "wrapper"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "go"
+paradigm = ["oop"]
+topic = ["design-pattern/structural/adapter"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "go"
+entry = "cmd/shop/main.go"
+
+[commands]
+test = "go test"
+
+[tests]
+include = ["**/*_test.go"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-foreign-interface.md",
+  "tour/03-target-interface.md",
+  "tour/04-translation.md",
+  "tour/05-error-mapping.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/adapter-base/go"
+focus = ["internal/checkout/**", "internal/payments/**"]
+
+[variants]
+typescript = "github:typika/templates/adapter/ts"
+
+[[exercises]]
+name = "switch-provider"
+kind = "refactor"
+title = "Switch to another payment provider"
+from = "base"
+solutionFrom = "self"
+failing = ["internal/checkout/swiftpay_test.go"]
+
+[[exercises]]
+name = "map-declined-code"
+kind = "fix"
+title = "Decline the codes the adapter does not know"
+failing = ["internal/checkout/checkout_test.go", "internal/payments/legacypay_adapter_test.go"]
+hints = ["hint-1.md", "hint-2.md"]

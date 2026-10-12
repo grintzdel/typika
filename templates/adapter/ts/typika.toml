@@ -36,6 +36,9 @@ steps = [
 template = "github:typika/templates/adapter-base/ts"
 focus = ["src/checkout/**", "src/payments/**"]
 
+[variants]
+go = "github:typika/templates/adapter/go"
+
 [[exercises]]
 name = "switch-provider"
 kind = "refactor"
