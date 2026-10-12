@@ -100,12 +100,12 @@ apps/web/
 | `editor` | CodeMirror 6, onglets, langages, adaptateur du language service TS en worker ([0015](../decisions/0015-editor.md)), décorations (tour, diagnostics) | `LanguageServicePort` |
 | `runtime` | Pont entre un projet et une `RuntimeSession` : boot, synchro FS, run, tests, console, preview | `RuntimeRegistry`, `RuntimeFramePort` |
 | `tour` | Étapes de tour, rendu Markdown sûr, ancrage sur fichiers et lignes | `MarkdownRendererPort` |
-| `compare` | Deux variantes côte à côte, alignement des étapes, diff depuis la base | `DiffPort` |
+| `compare` | Deux variantes côte à côte en lecture seule, alignement des étapes par id | — |
 | `exercise` | Chargement d'un exercice, suivi des tests, validation | — |
 | `share` | Partage par fragment d'URL ou gist, export zip, import d'un lien | `ShareCodecPort`, `ArchivePort` |
 | `github` | OAuth, gists, création de repo, push | `GitHubPort`, `GitHubTokenPort` |
 
-Dépendances entre modules : `editor` → `project` ; `exercise` → `runtime`, `project` ; `compare` → `project`, `tour` ; `share` → `project`,
+Dépendances entre modules : `editor` → `project` ; `exercise` → `runtime`, `project` ; `compare` → `project`, `editor`, `tour` ; `share` → `project`,
 `github` ; `runtime` → `project`. Tout module peut utiliser `shared`. Pas de cycle.
 
 ### 3.3 Topologie d'un module
@@ -230,7 +230,7 @@ pour afficher la santé à jour.
 | `/templates/$name` | `hub/templates/$name/template.page.tsx` | prérendu | non |
 | `/play/$templateName` (`?exercise=…`, `?panel=diff`) | `play/play-template.page.tsx` | SPA | oui |
 | `/p/$projectId` | `projects/project.page.tsx` | SPA | oui |
-| `/compare?left=…&right=…` | `compare/compare.page.tsx` | SPA | oui |
+| `/compare/$name` (`?a=<langage>&b=<langage>`) | `compare/compare.page.tsx` | SPA | oui |
 | `/projects` | `projects/projects.page.tsx` | SPA | non |
 | `/s` (état dans le fragment `#…`) | `share/open-shared.page.tsx` | SPA | oui |
 | `/embed/$templateId` | `embed/embed.page.tsx` | SPA | non ([0016](../decisions/0016-isolation-and-embed.md)) |

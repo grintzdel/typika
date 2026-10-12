@@ -122,6 +122,7 @@ describe('templatePageOf', () => {
         { language: 'typescript', name: 'strategy-ts' },
         { language: 'go', name: 'strategy-go' },
       ],
+      comparisons: [{ language: 'go', name: 'strategy-go' }],
       tourSteps: ['The growing switch'],
       base: 'strategy-base-ts',
       parent: undefined,
@@ -146,6 +147,23 @@ describe('templatePageOf', () => {
       status: 'broken',
       runUrl: 'https://ci.example/runs/1',
     })
+  })
+
+  it('offers to compare only with the variants that the index holds', () => {
+    const index = hubIndex()
+    const withKotlin = {
+      ...index,
+      templates: index.templates.map((template) =>
+        template.name === 'strategy-ts'
+          ? {
+              ...template,
+              manifest: { ...template.manifest, variants: { go: 'strategy-go', kotlin: 'strategy-kotlin' } },
+            }
+          : template
+      ),
+    }
+
+    expect(templatePageOf(withKotlin, 'strategy-ts')?.comparisons).toEqual([{ language: 'go', name: 'strategy-go' }])
   })
 
   it('keeps the base ref when the index does not hold the base', () => {

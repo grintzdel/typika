@@ -324,6 +324,16 @@ rechargement ne les retélécharge pas. Le language service TypeScript ne démar
 `registry-tools` lance les exercices Go à l'indexation (V9, V11), et `strategy-go` comme `strategy-base-go` sont
 `healthy`.
 
+État (2026-10-12) : lot 3 livré. `/compare/<name>?a=<langage>&b=<langage>` est retenu plutôt que le
+`/compare?left=…&right=…` d'`architecture.md`, mis à jour : il suit [ui §9](specs/ui.md) et garde le nom du concept
+dans l'URL. Le module `compare` charge les deux variantes depuis l'index et les fichiers du registre, aligne les tours
+par id d'étape, et réutilise l'éditeur en lecture seule, les onglets et la navigation du tour (`Alt+←` / `Alt+→`,
+`#step=`). Une étape absente d'un côté grise la colonne avec « Cette étape n'a pas d'équivalent en <langage> ». La
+page template propose « Comparer avec <langage> » pour chaque variante de l'index ; `strategy-kotlin` y figure, et se
+compare donc déjà en lecture seule avant son runtime (M6). L'E2E parcourt Strategy en TS et en Go étape par étape et
+vérifie la plage ouverte dans chaque colonne. Aucun template ne manque encore d'étape : l'E2E retire une étape du
+manifeste Go à la volée pour couvrir ce cas.
+
 ## M5 — Partage
 
 **Objectif** : sortir les templates de Typika.

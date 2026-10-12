@@ -26,6 +26,20 @@ describe('TemplateOverview', () => {
     expect(within(languages).getByRole('link', { name: 'Go' }).getAttribute('href')).toBe('/templates/strategy-go')
   })
 
+  it('links a comparison with each other variant', () => {
+    render(<TemplateOverview page={templatePage()} />)
+
+    expect(screen.getByRole('link', { name: 'Comparer avec Go' }).getAttribute('href')).toBe(
+      '/compare/strategy-ts?a=typescript&b=go'
+    )
+  })
+
+  it('offers no comparison without another variant', () => {
+    render(<TemplateOverview page={templatePage({ comparisons: [] })} />)
+
+    expect(screen.queryByRole('link', { name: /Comparer/ })).toBeNull()
+  })
+
   it('shows a degraded health in words', () => {
     render(<TemplateOverview page={templatePage({ health: { status: 'degraded', runUrl: null } })} />)
 

@@ -1,21 +1,13 @@
-import { Language, Level, Paradigm, UseCase } from '@typika/manifest'
+import { Level, Paradigm, UseCase } from '@typika/manifest'
 import { HealthStatus } from '@typika/registry-tools/health-status'
 import { useTranslation } from 'react-i18next'
 
+import { languageNameOf } from '../../../shared/core/domain/language-name.domain-model.ts'
 import { Facet } from '../../core/domain/constants/facet.constant.ts'
 import { TopicCategory, TopicFamily } from '../../core/domain/constants/topic-category.constant.ts'
 
-const LANGUAGE_NAMES: Readonly<Record<Language, string>> = {
-  typescript: 'TypeScript',
-  javascript: 'JavaScript',
-  go: 'Go',
-  kotlin: 'Kotlin',
-}
-
 const isOneOf = <T extends string>(values: Readonly<Record<string, T>>, value: string): value is T =>
   (Object.values(values) as ReadonlyArray<string>).includes(value)
-
-const languageName = (id: string) => (isOneOf(Language, id) ? LANGUAGE_NAMES[id] : id)
 
 export const useHubLabels = () => {
   const { t } = useTranslation('hub')
@@ -34,7 +26,7 @@ export const useHubLabels = () => {
       case Facet.TOPIC:
         return topic(id)
       case Facet.LANGUAGE:
-        return languageName(id)
+        return languageNameOf(id)
       case Facet.LEVEL:
         return level(id)
       case Facet.PARADIGM:
@@ -50,5 +42,5 @@ export const useHubLabels = () => {
     }
   }
 
-  return { category, family, language: languageName, level, value, facet: (id: Facet) => t(`facets.${id}`) }
+  return { category, family, language: languageNameOf, level, value, facet: (id: Facet) => t(`facets.${id}`) }
 }

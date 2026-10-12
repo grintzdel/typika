@@ -74,6 +74,7 @@ export const templatePage = (overrides: Partial<TemplatePage> = {}): TemplatePag
     { language: 'typescript', name: 'strategy-ts' },
     { language: 'go', name: 'strategy-go' },
   ],
+  comparisons: [{ language: 'go', name: 'strategy-go' }],
   tourSteps: ['The growing switch', 'Extracting the strategy'],
   base: 'strategy-base-ts',
   parent: undefined,

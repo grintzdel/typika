@@ -1,31 +1,19 @@
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '../../../../ui/Button.tsx'
-import { ContentMarkdown } from '../../../shared/ui/components/ContentMarkdown.tsx'
 
 export type TourPanelStep = { readonly id: string; readonly title: string }
 
 export type TourPanelProps = {
   readonly steps: ReadonlyArray<TourPanelStep>
   readonly index: number
-  readonly body: string
-  readonly isChanged: boolean
   readonly announcement: string
-  readonly embeddedTemplates: ReadonlyArray<string>
   readonly onSelect: (index: number) => void
-  readonly onOpenOriginal: () => void
+  readonly children: ReactNode
 }
 
-export const TourPanel = ({
-  steps,
-  index,
-  body,
-  isChanged,
-  announcement,
-  embeddedTemplates,
-  onSelect,
-  onOpenOriginal,
-}: TourPanelProps) => {
+export const TourPanel = ({ steps, index, announcement, onSelect, children }: TourPanelProps) => {
   const { t } = useTranslation('tour')
   const step = steps[index]
   if (step === undefined) return null
@@ -42,15 +30,7 @@ export const TourPanel = ({
         <h2 className="mt-1 text-base font-semibold">{step.title}</h2>
       </header>
       <div key={step.id} className="min-h-0 flex-1 overflow-auto px-4">
-        {isChanged ? (
-          <div className="mt-3 rounded border border-amber-300 bg-amber-50 p-3 text-amber-950 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
-            <p>{t('changed')}</p>
-            <Button className="mt-2" onClick={onOpenOriginal}>
-              {t('openOriginal')}
-            </Button>
-          </div>
-        ) : null}
-        <ContentMarkdown markdown={body} embeddedTemplates={embeddedTemplates} />
+        {children}
       </div>
       <div className="flex justify-between gap-2 border-t border-neutral-200 px-4 py-2 dark:border-neutral-800">
         <Button aria-label={t('previousLabel')} disabled={index === 0} onClick={() => onSelect(index - 1)}>

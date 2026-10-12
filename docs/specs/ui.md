@@ -128,8 +128,10 @@ Objectif : amener l'apprenant vers un concept en deux clics.
 - Copie de la commande CLI et du snippet d'embed en un clic, avec confirmation accessible.
 - Si `parent` existe : lien vers le parent et « diff avec le parent ».
 - Livré au lot 3 du M3 : le fil d'Ariane, le sélecteur de langage (liens, utilisables sans JavaScript), le tour, la
-  base avec « Voir le diff », les exercices, les topics, les variantes, les mainteneurs, la licence et la ref. Restent
-  à venir : la comparaison (M4), la commande CLI, l'embed, les templates liés et le diff avec le parent. Le badge et
+  base avec « Voir le diff », les exercices, les topics, les variantes, les mainteneurs, la licence et la ref. La
+  comparaison est livrée au lot 3 du M4 : un lien « Comparer avec <langage> » par variante présente dans l'index, qui
+  garde le template courant à gauche. Restent à venir : la commande CLI, l'embed, les templates liés et le diff avec
+  le parent. Le badge et
   les bandeaux de santé sont livrés au lot 6 (§2).
 
 ## 6. Sandbox — `/play/<name>`, `/p/<projectId>`, `/s#…`, `/g/<gistId>`
@@ -211,6 +213,13 @@ Objectif : amener l'apprenant vers un concept en deux clics.
   spécifique de la variante s'il existe (cas où le pattern se dissout dans le langage).
 - `a` et `b` absents : `a` = TS, `b` = première variante disponible. Langage inconnu : message et sélecteurs.
 - « Ouvrir dans la sandbox » sur chaque colonne.
+- Livré au lot 3 du M4. `<name>` est n'importe quelle variante du concept ; les langages proposés sont le sien et ceux
+  de ses `[variants]` présents dans l'index. Le panneau Tour montre, pour l'étape courante, le texte de chaque variante
+  sous le nom de son langage : le titre vient de la colonne `a`, et une étape propre à `b` s'insère après celle qui la
+  précède dans son tour. Une étape présente des deux côtés sans code (`the-problem`, `trade-offs`) laisse les
+  colonnes telles quelles. La colonne n'est grisée que si l'étape manque, ou si elle n'a pas de code alors que
+  l'autre côté en a (le pattern s'est dissous) : son texte s'affiche alors dans la colonne. Sous 768 px, une bascule
+  montre un panneau à la fois : colonne `a`, colonne `b` ou Tour.
 
 ## 10. Exercices — `/play/<name>?exercise=<id>`
 
@@ -323,7 +332,8 @@ Cible : WCAG 2.2 niveau AA.
 | 640-1023 px | Arbre en tiroir ; panneau latéral en onglet à côté de l'éditeur. |
 | < 640 px | Un panneau à la fois, navigation par onglets en bas : Code, Tour, Sortie. |
 
-- **Mobile** : hub, page template, tour, comparaison (une colonne à la fois avec bascule) et diff sont pleinement
+- **Mobile** : hub, page template, tour, comparaison (un panneau à la fois avec bascule : chaque colonne, puis le
+  tour) et diff sont pleinement
   utilisables.
 - **Édition limitée** : édition possible mais non optimisée ; un message suggère un écran plus large pour les
   exercices. Runtimes lourds : avertissement de taille de téléchargement avant chargement sur réseau mobile si le
