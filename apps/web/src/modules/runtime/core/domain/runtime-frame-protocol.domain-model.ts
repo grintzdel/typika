@@ -8,6 +8,7 @@ const FilesSchema = Schema.Array(Schema.Tuple([ProjectPathSchema, FileContentSch
 const RuntimeKindSchema = Schema.Literals(Object.values(RuntimeKind))
 
 export const FrameRequestSchema = Schema.Union([
+  Schema.TaggedStruct('Load', { id: Id, kind: RuntimeKindSchema }),
   Schema.TaggedStruct('Boot', { id: Id, files: FilesSchema }),
   Schema.TaggedStruct('WriteFile', { id: Id, path: ProjectPathSchema, content: FileContentSchema }),
   Schema.TaggedStruct('DeleteFile', { id: Id, path: ProjectPathSchema }),
@@ -24,6 +25,12 @@ export const FrameRequestSchema = Schema.Union([
 ])
 
 export type FrameRequest = typeof FrameRequestSchema.Type
+
+export const RuntimeLoadProgressSchema = Schema.Struct({
+  asset: Schema.String,
+  loadedBytes: Schema.Number,
+  totalBytes: Schema.Number,
+})
 
 export const RuntimeErrorDataSchema = Schema.Union([
   Schema.TaggedStruct('RuntimeUnsupportedError', { kind: RuntimeKindSchema }),

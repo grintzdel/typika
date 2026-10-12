@@ -5,6 +5,7 @@ import * as Stream from 'effect/Stream'
 import { appRuntime } from '../../../app/core/app.runtime.ts'
 import { templateProjectAtom } from '../../../project/core/atoms/project.atoms.ts'
 import type { FileWrite } from '../domain/file-write.domain-model.ts'
+import { loadRuntimeProgram } from '../programs/load-runtime/load-runtime.program.ts'
 import { runProjectProgram } from '../programs/run-project/run-project.program.ts'
 import { startRuntimeSessionProgram } from '../programs/start-runtime-session/start-runtime-session.program.ts'
 import { testProjectProgram } from '../programs/test-project/test-project.program.ts'
@@ -14,6 +15,16 @@ const LATEST = { suspendOnWaiting: true }
 
 export const runtimeSessionAtom = Atom.family((name: string) =>
   appRuntime.atom((get) => Effect.flatMap(get.result(templateProjectAtom(name), LATEST), startRuntimeSessionProgram))
+)
+
+export const runtimeDownloadAtom = Atom.family((name: string) =>
+  appRuntime.atom((get) =>
+    Stream.unwrap(
+      Effect.map(get.result(templateProjectAtom(name), LATEST), (project) =>
+        loadRuntimeProgram(project.manifest.runtime.kind)
+      )
+    )
+  )
 )
 
 export const runProjectAtom = Atom.family((name: string) =>

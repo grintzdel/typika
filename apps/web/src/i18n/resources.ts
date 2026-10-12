@@ -198,8 +198,13 @@ export const resources = {
       run: 'Run',
       test: 'Tests',
       loading: 'Loading the runtime…',
+      download: {
+        label: 'Downloading the runtime',
+        progress: '{{loaded, number(maximumFractionDigits: 1)}} / {{total, number(maximumFractionDigits: 1)}} MB',
+      },
       bootFailed: 'The runtime could not start: {{reason}}',
       retry: 'Retry',
+      stop: 'Stop',
       panels: { console: 'Console', tests: 'Tests' },
       console: {
         label: 'Console',
@@ -430,8 +435,13 @@ export const resources = {
       run: 'Exécuter',
       test: 'Tests',
       loading: 'Chargement du runtime…',
+      download: {
+        label: 'Téléchargement du runtime',
+        progress: '{{loaded, number(maximumFractionDigits: 1)}} / {{total, number(maximumFractionDigits: 1)}} Mo',
+      },
       bootFailed: 'Le runtime n’a pas pu démarrer : {{reason}}',
       retry: 'Réessayer',
+      stop: 'Arrêter',
       panels: { console: 'Console', tests: 'Tests' },
       console: {
         label: 'Console',

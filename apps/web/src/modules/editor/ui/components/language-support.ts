@@ -1,3 +1,4 @@
+import { go } from '@codemirror/lang-go'
 import { javascript } from '@codemirror/lang-javascript'
 import { markdown } from '@codemirror/lang-markdown'
 import type { LanguageSupport } from '@codemirror/language'
@@ -7,6 +8,7 @@ import { languageOf, type EditorLanguage } from '../../core/domain/language.doma
 const LANGUAGES: Readonly<Record<EditorLanguage, () => LanguageSupport | undefined>> = {
   typescript: () => javascript({ typescript: true }),
   javascript: () => javascript(),
+  go: () => go(),
   json: () => javascript(),
   markdown: () => markdown(),
   text: () => undefined,

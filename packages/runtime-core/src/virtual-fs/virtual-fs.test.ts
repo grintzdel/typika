@@ -1,9 +1,9 @@
-import { RuntimeFsError } from '@typika/runtime-core'
 import * as Effect from 'effect/Effect'
 import * as Exit from 'effect/Exit'
 import { describe, expect, it } from 'vitest'
 
 import { filesOf, projectFixture, projectPath } from '../__tests__/project.factory.ts'
+import type { RuntimeFsError } from '../domain/errors/runtime-fs.error.ts'
 import { makeVirtualFs } from './virtual-fs.ts'
 
 const limits = { files: 3, bytes: 10 }

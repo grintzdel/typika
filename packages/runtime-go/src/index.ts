@@ -1,4 +1,4 @@
-export { GO_ASSET_MANIFEST, GoAssetFile } from './domain/constants/go-asset-file.constant.ts'
+export { BROTLI_SUFFIX, GO_ASSET_MANIFEST, GoAssetFile } from './domain/constants/go-asset-file.constant.ts'
 export { GoRelease } from './domain/constants/go-release.constant.ts'
 export type { GoAssetManifest, GoToolchain } from './domain/go-assets.domain-model.ts'
 export {

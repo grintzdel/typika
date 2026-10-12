@@ -1,3 +1,4 @@
+import type { Diagnostic } from '@typika/runtime-core'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -50,6 +51,7 @@ import { WorkbenchLayout } from '../../ui/WorkbenchLayout.tsx'
 type SideTab = 'tour' | 'diff' | 'exercise'
 
 const NO_FILES: ReadonlyMap<string, string> = new Map()
+const NO_DIAGNOSTICS: ReadonlyArray<Diagnostic> = []
 
 const DIFF_TABS: Readonly<Record<DiffSource, (path: string) => EditorTab>> = {
   [DiffSource.BASE]: baseDiffTab,
@@ -131,6 +133,7 @@ export const PlayTemplatePage = ({ templateName, exercise, initialPanel }: PlayT
             <RunToolbar
               status={runtime.status}
               bootError={runtime.bootError}
+              download={runtime.download}
               isRunning={runtime.isRunning}
               isTesting={runtime.isTesting}
               onRun={() => {
@@ -141,6 +144,7 @@ export const PlayTemplatePage = ({ templateName, exercise, initialPanel }: PlayT
                 setPanel('tests')
                 runtime.handleTest()
               }}
+              onStop={runtime.handleStop}
               onRetry={runtime.handleRetry}
             />
             <ResetProjectDialog
@@ -177,6 +181,11 @@ export const PlayTemplatePage = ({ templateName, exercise, initialPanel }: PlayT
                 }
                 readOnly={editorTab.kind === EditorTabKind.ORIGINAL || isTypikaFile(editorTab.path)}
                 highlight={tabs.highlight}
+                diagnostics={
+                  editorTab.kind === EditorTabKind.FILE
+                    ? runtime.diagnostics.filter((diagnostic) => diagnostic.location?.file === editorTab.path)
+                    : NO_DIAGNOSTICS
+                }
                 label={t('label')}
                 languageService={languageService.session}
                 onChange={edits.handleChange}

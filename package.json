@@ -8,8 +8,8 @@
     "format": "oxfmt -c packages/config/oxfmt.json --ignore-path .gitignore --ignore-path .oxfmtignore",
     "format:check": "oxfmt -c packages/config/oxfmt.json --ignore-path .gitignore --ignore-path .oxfmtignore --check",
     "typecheck": "turbo run typecheck",
-    "registry:build": "node packages/registry-tools/src/cli.ts build registry --out registry/dist/index.json",
-    "registry:health": "node packages/registry-tools/src/cli.ts health registry",
+    "registry:build": "pnpm --filter @typika/runtime-go build:assets && node packages/registry-tools/src/cli.ts build registry --out registry/dist/index.json",
+    "registry:health": "pnpm --filter @typika/runtime-go build:assets && node packages/registry-tools/src/cli.ts health registry",
     "registry:schema": "node packages/registry-tools/src/cli.ts schema",
     "template-check": "pnpm --filter @typika/runtime-go build:assets && node packages/template-check/src/cli.ts templates",
     "test": "turbo run test"

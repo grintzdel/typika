@@ -14,7 +14,10 @@ export default defineConfig({
     timezoneId: 'Europe/Paris',
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] }, testMatch: '**/play-template-go.test.e2e.ts' },
+  ],
   webServer: {
     command: 'pnpm dev',
     url: 'http://localhost:3000',

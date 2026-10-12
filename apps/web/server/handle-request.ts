@@ -2,6 +2,7 @@ import { readFile, stat } from 'node:fs/promises'
 import { extname, join, resolve, sep } from 'node:path'
 
 import { DEFAULT_PACKAGE_URL_TEMPLATE } from '@typika/runtime-browser-js/default-package-url-template'
+import { BROTLI_SUFFIX } from '@typika/runtime-go'
 
 import type { PublicConfig } from '../src/modules/shared/core/domain/public-config.domain-model.ts'
 import {
@@ -63,15 +64,23 @@ const pathWithin = (root: string, pathname: string, ...segments: ReadonlyArray<s
   return path.startsWith(`${root}${sep}`) ? path : undefined
 }
 
-const serveFile = async (root: string, pathname: string): Promise<Response | undefined> => {
+const isFile = async (path: string) => (await stat(path).catch(() => undefined))?.isFile() === true
+
+const acceptsBrotli = (request: Request) =>
+  (request.headers.get('Accept-Encoding') ?? '').split(',').some((coding) => coding.trim().split(';')[0] === 'br')
+
+const serveFile = async (root: string, pathname: string, request: Request): Promise<Response | undefined> => {
   const path = pathWithin(root, pathname)
-  if (path === undefined) return undefined
-  const info = await stat(path).catch(() => undefined)
-  if (info?.isFile() !== true) return undefined
-  return new Response(await readFile(path), {
+  if (path === undefined || !(await isFile(path))) return undefined
+  const compressed = `${path}${BROTLI_SUFFIX}`
+  const hasBrotli = await isFile(compressed)
+  const brotli = hasBrotli && acceptsBrotli(request)
+  return new Response(await readFile(brotli ? compressed : path), {
     headers: {
       'Content-Type': MEDIA_TYPES[extname(path)] ?? 'application/octet-stream',
       'Cache-Control': isImmutable(pathname) ? IMMUTABLE : 'no-cache',
+      ...(hasBrotli ? { Vary: 'Accept-Encoding' } : {}),
+      ...(brotli ? { 'Content-Encoding': 'br' } : {}),
     },
   })
 }
@@ -115,11 +124,11 @@ export const makeRequestHandler = async ({ config, clientDir, runtimeDir, appSer
     }),
   }
 
-  const serveRuntime = async (pathname: string) => {
+  const serveRuntime = async (request: Request, pathname: string) => {
     if (pathname === `${RUNTIME_PREFIX}config.json`)
       return Response.json(config, { headers: { 'Cache-Control': 'no-store' } })
     if (!pathname.startsWith(RUNTIME_PREFIX)) return notFound()
-    return (await serveFile(runtimeRoot, pathname.slice(RUNTIME_PREFIX.length - 1))) ?? notFound()
+    return (await serveFile(runtimeRoot, pathname.slice(RUNTIME_PREFIX.length - 1), request)) ?? notFound()
   }
 
   const serveApp = async (request: Request, pathname: string) => {
@@ -129,7 +138,7 @@ export const makeRequestHandler = async ({ config, clientDir, runtimeDir, appSer
     const file =
       extname(pathname) === '.html'
         ? undefined
-        : ((await serveFile(clientRoot, pathname)) ?? (await servePrerendered(pathname)))
+        : ((await serveFile(clientRoot, pathname, request)) ?? (await servePrerendered(pathname)))
     if (file !== undefined) return file
     if (pathname.startsWith('/assets/')) return notFound()
     return pageResponse(shell, appPolicy)
@@ -137,7 +146,7 @@ export const makeRequestHandler = async ({ config, clientDir, runtimeDir, appSer
 
   return async (request: Request): Promise<Response> => {
     const { host, pathname } = new URL(request.url)
-    if (host === runtimeHost) return withHeaders(await serveRuntime(pathname), runtimeHeaders)
+    if (host === runtimeHost) return withHeaders(await serveRuntime(request, pathname), runtimeHeaders)
     const response = await serveApp(request, pathname)
     return withHeaders(response, {
       ...appHeaders(pathname),

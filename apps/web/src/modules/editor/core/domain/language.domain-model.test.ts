@@ -7,6 +7,8 @@ describe('languageOf', () => {
     ['src/main.ts', 'typescript'],
     ['src/app.tsx', 'typescript'],
     ['src/main.js', 'javascript'],
+    ['cmd/shop/main.go', 'go'],
+    ['go.mod', 'text'],
     ['package.json', 'json'],
     ['tour/01-overview.md', 'markdown'],
     ['LICENSE', 'text'],

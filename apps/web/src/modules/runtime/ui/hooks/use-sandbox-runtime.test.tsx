@@ -14,7 +14,7 @@ import {
   makeProjectTestLayer,
   type InMemoryProjectStorage,
 } from '../../../project/core/project.test-layer.ts'
-import { makeFakeRuntime, projectPath } from '../../__tests__/runtime.factory.ts'
+import { LOAD_PROGRESS, LOCATED_DIAGNOSTIC, makeFakeRuntime, projectPath } from '../../__tests__/runtime.factory.ts'
 import type { FileWrite } from '../../core/domain/file-write.domain-model.ts'
 import { makeRuntimeTestLayer } from '../../core/runtime.test-layer.ts'
 import { useSandboxRuntime } from './use-sandbox-runtime.ts'
@@ -94,5 +94,38 @@ describe('useSandboxRuntime', () => {
     act(() => result.current.handleRun())
 
     await waitFor(() => expect(result.current.console?.entries).toEqual([{ stream: 'stdout', text: 'saved later' }]))
+  })
+
+  it('reports the download of the runtime assets', async () => {
+    const { result } = renderSandbox()
+
+    await waitFor(() =>
+      expect(result.current.download).toEqual({ loadedBytes: LOAD_PROGRESS.at(-1)?.loadedBytes, totalBytes: 2 })
+    )
+  })
+
+  it('stops a running program', async () => {
+    const { result, journal } = renderSandbox(undefined, [[projectPath('src/main.ts'), 'hang']])
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+    act(() => result.current.handleRun())
+    await waitFor(() => expect(result.current.isRunning).toBe(true))
+
+    act(() => result.current.handleStop())
+
+    await waitFor(() => expect(result.current.console?.outcome).toEqual({ _tag: 'Interrupted' }))
+    expect(result.current.isRunning).toBe(false)
+    await waitFor(() => expect(journal).toContain('run stopped'))
+  })
+
+  it('exposes the located diagnostics of the last build', async () => {
+    const { result } = renderSandbox(undefined, [[projectPath('src/main.ts'), 'syntax error']])
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+
+    act(() => result.current.handleRun())
+
+    await waitFor(() => expect(result.current.diagnostics).toEqual([LOCATED_DIAGNOSTIC]))
+    act(() => result.current.handleTest())
+    await waitFor(() => expect(result.current.testRun?.outcome).toMatchObject({ _tag: 'Finished' }))
+    expect(result.current.diagnostics).toEqual([])
   })
 })

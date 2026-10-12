@@ -5,7 +5,7 @@ import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { brotliCompressSync, constants } from 'node:zlib'
 
-import { GO_ASSET_MANIFEST, GoAssetFile } from '../src/domain/constants/go-asset-file.constant.ts'
+import { BROTLI_SUFFIX, GO_ASSET_MANIFEST, GoAssetFile } from '../src/domain/constants/go-asset-file.constant.ts'
 import { GoRelease } from '../src/domain/constants/go-release.constant.ts'
 import { STD_ROOTS } from '../src/domain/constants/std-roots.constant.ts'
 import type { GoAssetManifest } from '../src/domain/go-assets.domain-model.ts'
@@ -70,10 +70,10 @@ const buildStdPack = async () => {
   return encodeStdPack(archives)
 }
 
-const brotliSize = (bytes: Uint8Array) =>
+const brotli = (bytes: Uint8Array) =>
   brotliCompressSync(bytes, {
     params: { [constants.BROTLI_PARAM_QUALITY]: 11, [constants.BROTLI_PARAM_SIZE_HINT]: bytes.byteLength },
-  }).byteLength
+  })
 
 const main = async () => {
   checkGoVersion()
@@ -93,7 +93,9 @@ const main = async () => {
   const files: Array<GoAssetManifest['files'][number]> = []
   for (const name of Object.values(GoAssetFile)) {
     const bytes = await readFile(join(outDir, name))
-    files.push({ name, bytes: bytes.byteLength, brotliBytes: brotliSize(bytes), sha256: sha256(bytes) })
+    const compressed = brotli(bytes)
+    await writeFile(join(outDir, `${name}${BROTLI_SUFFIX}`), compressed)
+    files.push({ name, bytes: bytes.byteLength, brotliBytes: compressed.byteLength, sha256: sha256(bytes) })
   }
   const manifest: GoAssetManifest = { goVersion: GoRelease.VERSION, key, files }
   await writeFile(join(outDir, GO_ASSET_MANIFEST), `${JSON.stringify(manifest, null, 2)}\n`)

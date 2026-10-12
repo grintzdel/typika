@@ -4,6 +4,7 @@ import * as Fiber from 'effect/Fiber'
 import * as Option from 'effect/Option'
 import * as Schema from 'effect/Schema'
 import esbuildWasmUrl from 'esbuild-wasm/esbuild.wasm?url'
+import goAssets from 'virtual:typika/go-assets'
 
 import {
   FrameHandshakeSchema,
@@ -24,6 +25,10 @@ const registry = makeRuntimeRegistry({
       esbuildWasmUrl,
       ...(config.packageUrlTemplate === undefined ? {} : { packageUrlTemplate: config.packageUrlTemplate }),
     })
+  },
+  go: async () => {
+    const { makeGoRuntime } = await import('@typika/runtime-go/browser')
+    return makeGoRuntime({ assetsUrl: new URL(goAssets.assetsUrl, location.href).href, manifest: goAssets.manifest })
   },
 })
 

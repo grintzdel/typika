@@ -299,11 +299,13 @@ Idle ──────────▶ Loaded ──────────▶ 
 
 - **Code** : chaque `runtime-*` est un chunk séparé, chargé par `RuntimeRegistry` à la première ouverture d'un template
   de ce `kind`.
-- **Assets** (fichiers `.wasm`, bundle du test runner, harness) : servis depuis `TYPIKA_ASSETS_BASE_URL` (CDN par
-  défaut, auto-hébergeable — voir [hosting.md](../guides/hosting.md)). Chaque asset est versionné dans son URL et listé
-  dans un manifeste d'assets avec son hash SRI.
-- **Cache** : un Service Worker sur l'origine runtime met les assets en Cache Storage. URL versionnées ⇒ cache
-  immuable, pas d'invalidation à gérer.
+- **Assets** (fichiers `.wasm`, bundle du test runner, harness) : servis par l'origine runtime, depuis l'image de l'app
+  ([0027](../decisions/0027-go-assets-delivery.md)). Chaque asset est versionné dans son URL et listé dans un manifeste
+  d'assets avec sa taille et son SHA-256, vérifié après le téléchargement. Un CDN (`TYPIKA_ASSETS_BASE_URL`) reste
+  possible : le runtime reçoit une URL de base.
+- **Cache** : le chargeur du runtime met ses assets en Cache Storage, dans un cache nommé d'après la clé des assets, et
+  supprime les caches des autres clés. URL versionnées ⇒ cache immuable, pas d'invalidation à gérer. Pas de Service
+  Worker pour ces assets ([0027](../decisions/0027-go-assets-delivery.md)).
 - **Progression** : `load` émet `RuntimeLoadProgress` (`{ asset, loadedBytes, totalBytes }`) ; l'UI affiche la taille à
   télécharger avant le premier chargement d'un runtime lourd.
 - **Préchargement** : au survol de « Ouvrir dans la sandbox », au plus un runtime à la fois.
@@ -423,6 +425,10 @@ auto-hébergeable (V2).
 - **Stdlib** : un jeu fermé, défini par ses racines dans `std-roots.constant.ts` et complété par leurs dépendances (76
   packages avec Go 1.24.5). Un template n'importe que ces packages, hors `internal/` ; un autre import est une erreur de
   compilation au run, et `E_GO_IMPORT_UNAVAILABLE` dans `template-check` et au registre.
+- **Dans le navigateur** : `@typika/runtime-go/browser` charge les assets (Cache Storage, progression par asset), puis
+  fait tourner le pilote dans un worker gardé pour la session, avec son cache d'archives. `run` et `test` envoient au
+  worker l'état complet du FS. Une interruption ou le watchdog termine le worker, et le prochain appel en recrée un.
+  Le serveur sert les `.br` précompressés par `build:assets` avec `Content-Encoding: br`.
 - **Hors navigateur** : `@typika/runtime-go/node` charge les assets depuis le disque et fait tourner le même pilote dans
   Node. `template-check` s'en sert pour les exercices Go. La suite de `conformance/` compare ses résultats à ceux de
   `go test` natif sur des fixtures et sur `strategy-go`.

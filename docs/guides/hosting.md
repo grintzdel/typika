@@ -31,7 +31,7 @@ valeurs publiques au client via `/config.json`.
 | `TYPIKA_REGISTRY_INDEX_URL` | non | oui | `https://…/index.json` | Index du registre ; défaut : `/registry/index.json`, servi par l'app jusqu'au lot 7 du M3 |
 | `TYPIKA_TEMPLATE_FILE_URL_TEMPLATE` | non | oui | `https://cdn.jsdelivr.net/gh/{owner}/{repo}@{ref}/{path}` | Fichier d'un template à sa ref épinglée ([0022](../decisions/0022-template-files-source.md)) ; défaut : le miroir de l'app |
 | `TYPIKA_TEMPLATE_LISTING_URL_TEMPLATE` | non | oui | `https://data.jsdelivr.com/v1/packages/gh/{owner}/{repo}@{ref}?structure=flat` | Liste des fichiers d'un dépôt à un commit, au format de jsDelivr ; défaut : le miroir de l'app |
-| `TYPIKA_ASSETS_BASE_URL` | non | oui | `https://cdn.jsdelivr.net/npm/@typika/runtime-assets@1.0.0/` | Base des assets de runtime ; défaut : CDN public |
+| `TYPIKA_ASSETS_BASE_URL` | non | oui | `https://cdn.jsdelivr.net/npm/@typika/runtime-assets@1.0.0/` | Base des assets de runtime. Pas encore lue : l'image sert ses propres assets ([0027](../decisions/0027-go-assets-delivery.md)) |
 | `TYPIKA_PACKAGE_URL_TEMPLATE` | non | oui | `https://esm.sh/{name}@{version}{path}` | CDN ESM des dépendances npm des templates `browser-js` ; défaut : jsDelivr ([runtimes](../specs/runtimes.md) §6.1) |
 | `TYPIKA_EMBED_ENABLED` | non | oui | `true` | Active `/embed/*` |
 | `KOTLIN_COMPILER_URL` | non | oui | `/api/kotlin` ou `https://kotlin.example.org` | Service de compilation ; absent ⇒ Kotlin désactivé |
@@ -168,15 +168,17 @@ Exigences pour toute plateforme :
 
 ## 7. Assets lourds
 
-Les assets de runtime (WASM d'esbuild, runtime Go, harness de test, test runner) sont publiés par version, avec un
-manifeste d'assets qui liste chaque fichier et son hash SRI.
+Les assets de runtime (WASM d'esbuild, toolchain Go) sont dans l'image et servis par le domaine runtime
+([0027](../decisions/0027-go-assets-delivery.md)).
 
-- **Par défaut** : CDN public (jsDelivr). Le CDN doit servir `Cross-Origin-Resource-Policy: cross-origin` ou des
-  en-têtes CORS compatibles avec COEP ; jsDelivr envoie les deux (vérifié le 2026-10-09).
-- **Auto-hébergé** : télécharger l'archive d'assets de la version de l'app, la servir sous un chemin (par exemple
-  `/assets/runtime/<version>/` sur le domaine runtime) et pointer `TYPIKA_ASSETS_BASE_URL` dessus. En-têtes requis :
-  `Cache-Control: public, max-age=31536000, immutable`, `Cross-Origin-Resource-Policy: cross-origin`,
-  `Access-Control-Allow-Origin: *`.
+- **Build** : l'étape de build du `Dockerfile` copie Go 1.24.5 depuis l'image `golang` épinglée par digest et
+  reconstruit les assets Go (`pnpm --filter @typika/runtime-go build:assets`, environ 100 s). Hors Docker, le Go
+  installé sur la machine doit être exactement la version épinglée.
+- **Service** : `/runtime/assets/go/<clé>/` en `Cache-Control: public, max-age=31536000, immutable`. Chaque fichier
+  a sa version `.br`, servie avec `Content-Encoding: br` quand le navigateur l'accepte (11,9 Mo au lieu de 79 Mo). Un
+  proxy placé devant ne doit pas recompresser une réponse qui a déjà un `Content-Encoding` ; Caddy ne le fait pas.
+- **Cache** : le navigateur garde les assets Go en Cache Storage sur le domaine runtime ; un rechargement ne les
+  retélécharge pas.
 - La version des assets est figée par la version de l'app : ne pas mélanger.
 
 ## 8. GitHub OAuth
@@ -196,8 +198,9 @@ manifeste d'assets qui liste chaque fichier et son hash SRI.
       sans COOP ni COEP.
 - [ ] Dans la sandbox, la console de la runtime frame renvoie `self.crossOriginIsolated === true`.
 - [ ] Une page de l'app demandée sur le domaine runtime n'est pas servie.
-- [ ] Un template TS s'ouvre, ses tests passent ; le premier chargement télécharge les assets depuis
-      `TYPIKA_ASSETS_BASE_URL`, le second vient du cache.
+- [ ] Un template TS s'ouvre, ses tests passent.
+- [ ] `/play/strategy-go` télécharge la toolchain Go en brotli (`Content-Encoding: br` sur `compile.wasm`), ses tests
+      passent, et un rechargement ne la retélécharge pas.
 - [ ] `/config.json` ne contient aucun secret.
 - [ ] Avec Kotlin : un template Kotlin compile ; une rafale de requêtes reçoit des `429` ; une connexion sortante
       depuis le conteneur `kotlin-compiler` échoue.

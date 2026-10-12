@@ -3,15 +3,12 @@ import { join } from 'node:path'
 
 import { GO_ASSET_MANIFEST, GoAssetFile } from '../domain/constants/go-asset-file.constant.ts'
 import { GoRelease } from '../domain/constants/go-release.constant.ts'
-import type { GoAssetManifest, GoToolchain } from '../domain/go-assets.domain-model.ts'
+import { isAssetManifest, type GoAssetManifest, type GoToolchain } from '../domain/go-assets.domain-model.ts'
 import { decodeStdPack } from '../std-pack/std-pack.ts'
 
 const defaultPackageDir = join(import.meta.dirname, '../..')
 
 export const goAssetsDir = (packageDir: string = defaultPackageDir) => join(packageDir, 'assets', GoRelease.VERSION)
-
-const isAssetManifest = (value: unknown): value is GoAssetManifest =>
-  typeof value === 'object' && value !== null && 'key' in value && 'files' in value && Array.isArray(value.files)
 
 export const readAssetManifest = async (packageDir: string = defaultPackageDir): Promise<GoAssetManifest> => {
   const manifest: unknown = JSON.parse(await readFile(join(goAssetsDir(packageDir), GO_ASSET_MANIFEST), 'utf8'))
