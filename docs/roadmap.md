@@ -247,6 +247,13 @@ nombre de résultats qu'elle donnerait, désactive celles à 0, et trie par pert
 à jour (`?q=` et `?sort=`). L'état vide retire aussi la recherche. Aucune dépendance n'est entrée : 21 templates se
 cherchent en parcourant l'index.
 
+Lot 5 livré. Un menu de langue est dans l'en-tête du hub et dans la barre d'outils de la sandbox. Le choix est gardé
+localement et l'emporte sur la langue du navigateur au rechargement. Le menu est désactivé jusqu'à l'hydratation, pour
+qu'un choix fait trop tôt ne soit pas perdu. Les pages prérendues restent en anglais, et la langue choisie s'applique
+après l'hydratation. Les compteurs et les durées sont formatés selon la langue. La page template affiche sa date de mise
+à jour et, dans une autre langue que l'anglais, indique que le contenu des templates est en anglais. Un test vérifie que
+chaque clé `en` existe en `fr`, et un E2E change de langue sur le hub et dans la sandbox, puis recharge la page.
+
 ## M4 — Go & comparaison
 
 **Objectif** : la deuxième langue et la comparaison, cœur de la leçon « le langage fait partie du pattern ».

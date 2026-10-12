@@ -1,3 +1,4 @@
+import { useLanguageMenu } from '../../../../modules/app/ui/hooks/use-language-menu.ts'
 import type { TemplatePage } from '../../../../modules/hub/core/domain/hub.domain-model.ts'
 import { HubHeader } from '../../../../modules/hub/ui/components/HubHeader.tsx'
 import { TemplateDetails } from '../../../../modules/hub/ui/components/TemplateDetails.tsx'
@@ -6,10 +7,11 @@ import { TemplateOverview } from '../../../../modules/hub/ui/components/Template
 import { useSearchShortcut } from '../../../../modules/hub/ui/hooks/use-search-shortcut.ts'
 
 export const TemplateDetailPage = ({ page }: { readonly page: TemplatePage }) => {
+  const languageMenu = useLanguageMenu()
   const searchRef = useSearchShortcut()
   return (
     <>
-      <HubHeader searchRef={searchRef} />
+      <HubHeader languageMenu={languageMenu} searchRef={searchRef} />
       <main className="mx-auto max-w-6xl px-4 py-8">
         <TemplateOverview page={page} />
         <TemplateDetails page={page} />
@@ -19,10 +21,11 @@ export const TemplateDetailPage = ({ page }: { readonly page: TemplatePage }) =>
 }
 
 export const TemplateNotFoundPage = ({ name }: { readonly name: string }) => {
+  const languageMenu = useLanguageMenu()
   const searchRef = useSearchShortcut()
   return (
     <>
-      <HubHeader searchRef={searchRef} />
+      <HubHeader languageMenu={languageMenu} searchRef={searchRef} />
       <TemplateNotFound name={name} />
     </>
   )

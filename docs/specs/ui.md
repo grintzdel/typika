@@ -335,3 +335,7 @@ Cible : WCAG 2.2 niveau AA.
   discret l'indique sur la page template.
 - Dates et nombres formatés selon la langue choisie.
 - Aucune chaîne en dur dans les composants ; clés de traduction par module.
+- Livré au lot 5 du M3 : le menu de langue est dans l'en-tête du hub et la barre d'outils de la sandbox. Il reste
+  désactivé jusqu'à l'hydratation, et le choix est gardé dans `localStorage` (`typika:language`), avant la langue du
+  navigateur. Les nombres passent par le formateur `number` d'i18next, les dates par `datetime`, en UTC. La page template
+  montre sa date de mise à jour, et le titre, le résumé et le tour portent `lang="en"`.

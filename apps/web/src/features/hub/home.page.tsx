@@ -1,3 +1,4 @@
+import { useLanguageMenu } from '../../modules/app/ui/hooks/use-language-menu.ts'
 import type { ConceptSection } from '../../modules/hub/core/domain/hub.domain-model.ts'
 import { ConceptSections } from '../../modules/hub/ui/components/ConceptSections.tsx'
 import { HomeHero } from '../../modules/hub/ui/components/HomeHero.tsx'
@@ -12,10 +13,11 @@ export type HomePageProps = {
 
 export const HomePage = ({ sections }: HomePageProps) => {
   const recent = useRecentProjects()
+  const languageMenu = useLanguageMenu()
   const searchRef = useSearchShortcut()
   return (
     <>
-      <HubHeader searchRef={searchRef} />
+      <HubHeader languageMenu={languageMenu} searchRef={searchRef} />
       <main className="mx-auto max-w-6xl px-4 pb-10">
         <HomeHero />
         <ConceptSections sections={sections} />

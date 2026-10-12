@@ -33,7 +33,7 @@ export const TemplateDetails = ({ page }: TemplateDetailsProps) => {
     <div className="grid gap-8 py-6 md:grid-cols-[1fr_16rem]">
       <div className="space-y-6">
         <Section id="template-tour" title={t('template.tour')}>
-          <ol className="list-decimal space-y-1 pl-6 text-sm">
+          <ol lang="en" className="list-decimal space-y-1 pl-6 text-sm">
             {page.tourSteps.map((step) => (
               <li key={step}>{step}</li>
             ))}
@@ -103,6 +103,10 @@ export const TemplateDetails = ({ page }: TemplateDetailsProps) => {
             <dd>{page.license}</dd>
             <dt className="text-neutral-600 dark:text-neutral-400">{t('template.ref')}</dt>
             <dd className="font-mono text-xs break-all">{page.ref}</dd>
+            <dt className="text-neutral-600 dark:text-neutral-400">{t('template.updated')}</dt>
+            <dd>
+              <time dateTime={page.updatedAt}>{t('template.updatedOn', { date: new Date(page.updatedAt) })}</time>
+            </dd>
           </dl>
         </Section>
       </aside>

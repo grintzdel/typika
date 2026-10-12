@@ -1,12 +1,15 @@
 import type { Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { LanguageMenu, type LanguageMenuProps } from '../../../app/ui/components/LanguageMenu.tsx'
+
 export type HubHeaderProps = {
+  readonly languageMenu: LanguageMenuProps
   readonly searchRef?: Ref<HTMLInputElement>
   readonly search?: { readonly text: string; readonly onSearch: (text: string) => void }
 }
 
-export const HubHeader = ({ searchRef, search }: HubHeaderProps) => {
+export const HubHeader = ({ languageMenu, searchRef, search }: HubHeaderProps) => {
   const { t } = useTranslation('hub')
   return (
     <header className="border-b border-neutral-200 dark:border-neutral-800">
@@ -45,6 +48,7 @@ export const HubHeader = ({ searchRef, search }: HubHeaderProps) => {
             /
           </kbd>
         </form>
+        <LanguageMenu {...languageMenu} />
       </div>
     </header>
   )
