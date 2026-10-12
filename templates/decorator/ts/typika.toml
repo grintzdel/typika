@@ -37,6 +37,7 @@ template = "github:typika/templates/decorator-base/ts"
 focus = ["src/notifications/**"]
 
 [variants]
+go = "github:typika/templates/decorator/go"
 javascript = "github:typika/templates/decorator/js"
 
 [[exercises]]

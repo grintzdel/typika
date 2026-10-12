@@ -1,0 +1,56 @@
+schema = 1
+name = "decorator-go"
+title = "Decorator: sending notifications"
+summary = "Add behaviour to a value by wrapping it in another value with the same interface."
+keywords = ["middleware", "wrapper"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "go"
+paradigm = ["oop"]
+topic = ["design-pattern/structural/decorator", "principle/open-closed"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "go"
+entry = "cmd/shop/main.go"
+
+[commands]
+test = "go test"
+
+[tests]
+include = ["**/*_test.go"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-flag-soup.md",
+  "tour/03-same-interface.md",
+  "tour/04-wrapping.md",
+  "tour/05-stacking-order.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/decorator-base/go"
+focus = ["internal/notifications/**"]
+
+[variants]
+typescript = "github:typika/templates/decorator/ts"
+
+[[exercises]]
+name = "add-sms-with-retry"
+kind = "refactor"
+title = "Send text messages with retry"
+from = "base"
+solutionFrom = "self"
+failing = ["internal/notifications/sms_notifier_test.go"]
+
+[[exercises]]
+name = "stacking-order"
+kind = "fix"
+title = "Log each notification once"
+failing = ["internal/notifications/email_notifier_test.go"]
+hints = ["hint-1.md", "hint-2.md"]

@@ -26,4 +26,5 @@ npm test
 
 ## Variants
 
+- Go: `decorator-go`, where each decorator embeds the notifier it wraps, like HTTP middleware.
 - JavaScript: `decorator-js`, where each decorator is a function that wraps `notify`.
