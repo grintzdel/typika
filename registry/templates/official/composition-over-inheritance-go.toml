@@ -1,0 +1,4 @@
+ref = "github:typika/templates/composition-over-inheritance/go@b5c1dc70b1b0"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-12

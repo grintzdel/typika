@@ -334,6 +334,15 @@ compare donc déjà en lecture seule avant son runtime (M6). L'E2E parcourt Stra
 vérifie la plage ouverte dans chaque colonne. Aucun template ne manque encore d'étape : l'E2E retire une étape du
 manifeste Go à la volée pour couvrir ce cas.
 
+État (2026-10-12) : lot 4, vague (a) livrée. `composition-over-inheritance-go`, `interface-segregation-go` et
+`dependency-inversion-go` sont au registre avec leurs bases, `healthy`, et se comparent à leur variante TS sans
+`W_TOUR_ORDER_DIVERGES` (#46, #47, #48). La base de composition chaîne des structs embarqués derrière une interface
+`Product`, et son tour montre que l'embedding promeut des méthodes sans créer de sous-type ni de liaison tardive. Dans
+l'ISP, `payments` ne déclare plus aucune interface : chaque client déclare la sienne, d'une méthode. Dans le DIP,
+`checkout` déclare `Notifier` et `OrderRepository` et `memstore` importe `checkout`. L'exercice du DIP révèle une
+contrainte propre à Go : un test qui appelle une API absente de la base ne compile pas, donc `start/` déclare cette
+API avec un corps qui ignore ses arguments. Le guide d'écriture l'ajoute à sa section Go (§8.3).
+
 ## M5 — Partage
 
 **Objectif** : sortir les templates de Typika.
