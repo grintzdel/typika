@@ -8,7 +8,7 @@ test.describe('templates list', () => {
   test('lists every template, without the bases', async ({ page }) => {
     await page.goto('/templates')
 
-    await expect(results(page).getByRole('listitem')).toHaveCount(21)
+    await expect(results(page).getByRole('listitem')).toHaveCount(24)
     await expect(results(page).getByRole('link', { name: /Strategy: shipping options.*Kotlin/ })).toHaveAttribute(
       'href',
       '/templates/strategy-kotlin'
@@ -18,18 +18,18 @@ test.describe('templates list', () => {
 
   test('keeps its filters in the query string, across a reload and the back button', async ({ page }) => {
     await page.goto('/templates')
-    await expect(results(page).getByRole('listitem')).toHaveCount(21)
+    await expect(results(page).getByRole('listitem')).toHaveCount(24)
 
     await facet(page, 'Langage').getByRole('checkbox', { name: 'Go' }).check()
 
     await expect(page).toHaveURL('/templates?language=go')
-    await expect(results(page).getByRole('listitem')).toHaveCount(1)
+    await expect(results(page).getByRole('listitem')).toHaveCount(4)
     await page.reload()
     await expect(facet(page, 'Langage').getByRole('checkbox', { name: 'Go' })).toBeChecked()
     await expect(results(page).getByRole('link', { name: /Strategy: shipping options.*Go/ })).toBeVisible()
-    await expect(results(page).getByRole('listitem')).toHaveCount(1)
+    await expect(results(page).getByRole('listitem')).toHaveCount(4)
     await page.goBack()
-    await expect(results(page).getByRole('listitem')).toHaveCount(21)
+    await expect(results(page).getByRole('listitem')).toHaveCount(24)
   })
 
   test('filters by a branch of the topic tree', async ({ page }) => {
@@ -42,22 +42,22 @@ test.describe('templates list', () => {
   })
 
   test('shows an empty state that removes its filters one by one', async ({ page }) => {
-    await page.goto('/templates?language=go&level=beginner')
+    await page.goto('/templates?language=go&level=advanced')
 
     await expect(page.getByText('Aucun template ne correspond')).toBeVisible()
-    await page.getByRole('button', { name: 'Retirer Niveau : Débutant' }).click()
+    await page.getByRole('button', { name: 'Retirer Niveau : Avancé' }).click()
 
     await expect(page).toHaveURL('/templates?language=go')
-    await expect(results(page).getByRole('listitem')).toHaveCount(1)
-    await page.goto('/templates?language=go&level=beginner')
+    await expect(results(page).getByRole('listitem')).toHaveCount(4)
+    await page.goto('/templates?language=go&level=advanced')
     await page.getByRole('button', { name: 'Réinitialiser' }).click()
     await expect(page).toHaveURL('/templates')
-    await expect(results(page).getByRole('listitem')).toHaveCount(21)
+    await expect(results(page).getByRole('listitem')).toHaveCount(24)
   })
 
   test('finds strategy-ts by its symptom, combined with a language', async ({ page }) => {
     await page.goto('/templates')
-    await expect(results(page).getByRole('listitem')).toHaveCount(21)
+    await expect(results(page).getByRole('listitem')).toHaveCount(24)
 
     await searchbox(page).pressSequentially('switch')
     await expect(page).toHaveURL('/templates?q=switch')
@@ -95,6 +95,6 @@ test.describe('templates list', () => {
 
     await expect(page).toHaveURL('/templates?language=go')
     await expect(searchbox(page)).toHaveValue('')
-    await expect(results(page).getByRole('listitem')).toHaveCount(1)
+    await expect(results(page).getByRole('listitem')).toHaveCount(4)
   })
 })
