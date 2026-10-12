@@ -28,7 +28,7 @@ beforeAll(async () => {
   report = await Effect.runPromise(
     checkRegistry(
       await readRegistry(`${REPO_ROOT}/registry`),
-      makeGitResolver(REPO_ROOT, { 'typika/templates': 'templates' }),
+      makeGitResolver({ 'typika/templates': { repo: REPO_ROOT, prefix: 'templates' } }),
       runTestsInProcess
     )
   )

@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { resolve } from 'node:path'
 
 import { formatTemplateRef, parseTemplateRef, type TemplateFiles, type TemplateRef } from '@typika/manifest'
 import { contentOf } from '@typika/template-check'
@@ -16,7 +17,16 @@ export const keyOf = ({ owner, repo, path }: TemplateRef): string =>
 
 export const keyOfRef = (ref: string): Option.Option<string> => Option.map(parseTemplateRef(ref), keyOf)
 
-export type LocalCheckouts = Readonly<Record<string, string>>
+export type LocalCheckout = { readonly repo: string; readonly prefix: string }
+
+export type LocalCheckouts = Readonly<Record<string, LocalCheckout>>
+
+export const parseCheckout = (value: string, cwd: string): LocalCheckouts => {
+  const [repo, dir] = value.split('=')
+  if (repo === undefined || dir === undefined || !/^[^/=]+\/[^/=]+$/.test(repo) || dir === '')
+    throw new Error(`--checkout expects owner/repo=<directory>, got ${value}`)
+  return { [repo]: { repo: resolve(cwd, dir), prefix: '' } }
+}
 
 const git = (cwd: string, args: ReadonlyArray<string>, input?: string) =>
   Effect.callback<Buffer, RefUnresolvableError>((resume) => {
@@ -48,24 +58,27 @@ const readBlobs = (cwd: string, ids: ReadonlyArray<string>) =>
   })
 
 export const makeGitResolver =
-  (repoRoot: string, checkouts: LocalCheckouts): ResolveRef =>
+  (checkouts: LocalCheckouts): ResolveRef =>
   ({ owner, repo, path, ref }) =>
     Effect.gen(function* () {
       const checkout = checkouts[`${owner}/${repo}`]
       if (checkout === undefined) {
         return yield* new RefUnresolvableError({ reason: `no local checkout of github:${owner}/${repo}` })
       }
+      const repoRoot = checkout.repo
       yield* git(repoRoot, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`]).pipe(
         Effect.mapError(() => new RefUnresolvableError({ reason: `commit ${ref} does not exist` }))
       )
-      const dir = [checkout, path].filter((segment) => segment !== undefined && segment !== '').join('/')
-      const listing = (yield* git(repoRoot, ['ls-tree', '-r', '-z', ref, '--', `${dir}/`])).toString('utf8')
+      const dir = [checkout.prefix, path].filter((segment) => segment !== undefined && segment !== '').join('/')
+      const listing = (yield* git(repoRoot, ['ls-tree', '-r', '-z', ref, '--', dir === '' ? '.' : `${dir}/`])).toString(
+        'utf8'
+      )
       const blobs = listing
         .split('\0')
         .filter((line) => line !== '')
         .map((line) => {
           const [meta = '', file = ''] = line.split('\t')
-          return { id: meta.split(' ')[2] ?? '', path: file.slice(dir.length + 1) }
+          return { id: meta.split(' ')[2] ?? '', path: dir === '' ? file : file.slice(dir.length + 1) }
         })
       if (blobs.length === 0) return yield* new RefUnresolvableError({ reason: `no template at ${ref}` })
       const contents = yield* readBlobs(
