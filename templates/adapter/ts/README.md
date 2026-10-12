@@ -22,3 +22,7 @@ npm test
 - `src/payments/payment-gateway.ts`: the interface the shop wants.
 - `src/payments/legacy-pay-adapter.ts`: the adapter, which translates calls, units and codes.
 - `src/checkout/`: the code that uses payments, which no longer knows LegacyPay.
+
+## Variants
+
+- Go: `adapter-go`, where the adapter satisfies the gateway implicitly and SwiftPay reports Go errors.
