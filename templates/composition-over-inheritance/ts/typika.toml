@@ -37,6 +37,7 @@ template = "github:typika/templates/composition-over-inheritance-base/ts"
 focus = ["src/catalog/**"]
 
 [variants]
+go = "github:typika/templates/composition-over-inheritance/go"
 javascript = "github:typika/templates/composition-over-inheritance/js"
 
 [[exercises]]
