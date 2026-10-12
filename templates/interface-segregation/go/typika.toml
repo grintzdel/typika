@@ -1,0 +1,47 @@
+schema = 1
+name = "interface-segregation-go"
+title = "Interface segregation: payment methods"
+summary = "Let each client declare an interface with only the methods it calls, so no implementation has to fake the rest."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "go"
+paradigm = ["oop"]
+topic = ["principle/interface-segregation"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "go"
+entry = "cmd/shop/main.go"
+
+[commands]
+test = "go test"
+
+[tests]
+include = ["**/*_test.go"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-fat-interface.md",
+  "tour/03-split-by-client.md",
+  "tour/04-compose.md",
+  "tour/05-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/interface-segregation-base/go"
+focus = ["internal/payments/**", "internal/checkout/**", "internal/wallet/**", "internal/teaclub/**", "internal/app/open_shop.go"]
+
+[variants]
+typescript = "github:typika/templates/interface-segregation/ts"
+
+[[exercises]]
+name = "add-gift-card-payment"
+kind = "refactor"
+title = "Add gift card payments"
+from = "base"
+solutionFrom = "self"
+failing = ["internal/app/gift_card_payment_test.go"]
