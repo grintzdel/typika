@@ -36,6 +36,9 @@ steps = [
 template = "github:typika/templates/naive-crud/ts"
 focus = ["src/orders/**", "src/open-shop.ts"]
 
+[variants]
+go = "github:typika/templates/hexagonal/go"
+
 [[exercises]]
 name = "add-csv-import"
 kind = "refactor"
