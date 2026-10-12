@@ -3,6 +3,7 @@ import * as Option from 'effect/Option'
 
 import type { RegisteredTemplate } from '../check-registry/check-registry.ts'
 import { INDEX_SCHEMA_VERSION, type IndexTemplate, type RegistryIndex } from '../domain/registry-index.domain-model.ts'
+import type { TemplateHealth } from '../domain/template-health.domain-model.ts'
 import type { Vocabulary } from '../domain/vocabulary.domain-model.ts'
 import { keyOfRef } from '../resolve-ref/resolve-ref.ts'
 
@@ -14,6 +15,7 @@ export type BuildIndexInput = {
   readonly generatedAt: string
   readonly registryCommit: string
   readonly updatedAtOf: (file: string) => string | undefined
+  readonly healthOf: (name: string) => TemplateHealth | undefined
 }
 
 const searchTextOf = (template: RegisteredTemplate, labels: ReadonlyMap<string, string>) => {
@@ -40,6 +42,7 @@ export const buildIndex = ({
   generatedAt,
   registryCommit,
   updatedAtOf,
+  healthOf,
 }: BuildIndexInput): RegistryIndex => {
   const byKey = new Map(
     templates.flatMap((template) =>
@@ -83,7 +86,7 @@ export const buildIndex = ({
         })),
       },
       parent: entry.parent ?? null,
-      health: null,
+      health: healthOf(manifest.name) ?? null,
       search: { text: searchTextOf(template, labels) },
     }
   }

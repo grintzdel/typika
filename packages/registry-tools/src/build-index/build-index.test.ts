@@ -8,9 +8,18 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { REPO_ROOT } from '../__tests__/registry.factory.ts'
 import { checkRegistry, type RegistryReport } from '../check-registry/check-registry.ts'
 import { RegistryIndexSchema, type RegistryIndex } from '../domain/registry-index.domain-model.ts'
+import type { TemplateHealth } from '../domain/template-health.domain-model.ts'
 import { readRegistry } from '../read-registry/read-registry.ts'
 import { makeGitResolver } from '../resolve-ref/resolve-ref.ts'
 import { buildIndex, INDEX_MAX_GZIP_BYTES } from './build-index.ts'
+
+const BROKEN: TemplateHealth = {
+  status: 'broken',
+  checkedAt: '2026-10-12T03:00:00.000Z',
+  brokenSince: '2026-10-12T03:00:00.000Z',
+  checks: { boot: 'pass', tests: 'fail', exercises: 'pass', deps: 'skip' },
+  runUrl: null,
+}
 
 let report: RegistryReport
 let index: RegistryIndex
@@ -29,6 +38,7 @@ beforeAll(async () => {
     generatedAt: '2026-10-12T08:00:00.000Z',
     registryCommit: '14d396d46047',
     updatedAtOf: (file) => (file.endsWith('strategy-ts.toml') ? '2026-10-12' : undefined),
+    healthOf: (name) => (name === 'strategy-ts' ? BROKEN : undefined),
   })
 }, 30_000)
 
@@ -88,11 +98,17 @@ describe('buildIndex on the local registry', () => {
       generatedAt: '2026-10-12T08:00:00.000Z',
       registryCommit: '14d396d46047',
       updatedAtOf: () => undefined,
+      healthOf: () => undefined,
     })
 
     expect(rebuilt.templates.find((template) => template.name === 'strategy-ts')?.search.text.split(' ')).toEqual(
       expect.arrayContaining(['switch', 'if-else'])
     )
+  })
+
+  it('carries the health of each template, and null where no run checked it', () => {
+    expect(templateNamed('strategy-ts')?.health).toEqual(BROKEN)
+    expect(templateNamed('strategy-base-ts')?.health).toBeNull()
   })
 
   it('splits each topic into its category and family', () => {

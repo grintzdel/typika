@@ -83,8 +83,9 @@ Objectif : amener l'apprenant vers un concept en deux clics.
   l'URL est partageable et le bouton retour restaure l'état. Plusieurs valeurs d'une facette sont séparées par des
   virgules et se combinent en OU ; les facettes se combinent en ET. Un topic filtre sa branche de l'arbre. Le HTML
   prérendu n'a pas de filtre : la query string s'applique après l'hydratation.
-- Livré aux lots 3 et 4 du M3 : les facettes, la recherche, les compteurs, le tri et l'état vide. La facette de santé
-  arrive au lot 6.
+- Livré aux lots 3, 4 et 6 du M3 : les facettes, la recherche, les compteurs, le tri, l'état vide et la facette de
+  santé. Un template jamais vérifié passe le filtre de santé par défaut, et la query string ne garde `health` que
+  s'il diffère du défaut.
 - Recherche plein texte (`?q=`) dans le champ de l'en-tête, présent sur toutes les pages du hub, combinée aux
   facettes. Elle porte sur `search.text` de l'index ([registry §3](registry.md)). Chaque mot tapé doit commencer un mot
   du texte. Sur la liste, la query string suit la frappe sans créer d'entrée d'historique. Ailleurs, et sans
@@ -128,8 +129,8 @@ Objectif : amener l'apprenant vers un concept en deux clics.
 - Si `parent` existe : lien vers le parent et « diff avec le parent ».
 - Livré au lot 3 du M3 : le fil d'Ariane, le sélecteur de langage (liens, utilisables sans JavaScript), le tour, la
   base avec « Voir le diff », les exercices, les topics, les variantes, les mainteneurs, la licence et la ref. Restent
-  à venir : la comparaison (M4), la commande CLI, l'embed, les templates liés, le badge de santé (lot 6) et le diff
-  avec le parent.
+  à venir : la comparaison (M4), la commande CLI, l'embed, les templates liés et le diff avec le parent. Le badge et
+  les bandeaux de santé sont livrés au lot 6 (§2).
 
 ## 6. Sandbox — `/play/<name>`, `/p/<projectId>`, `/s#…`, `/g/<gistId>`
 

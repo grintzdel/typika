@@ -7,18 +7,27 @@ import { gzipSync } from 'node:zlib'
 import { formatReport } from '@typika/template-check'
 import * as Effect from 'effect/Effect'
 import * as Schema from 'effect/Schema'
+import { chromium } from 'playwright'
 
 import { INDEX_MAX_GZIP_BYTES } from './build-index/build-index.ts'
 import { buildLocalIndex, git, LOCAL_CHECKOUTS } from './build-local-index/build-local-index.ts'
 import { RegistryIndexSchema } from './domain/registry-index.domain-model.ts'
 import { indexJsonSchema } from './index-json-schema/index-json-schema.ts'
 import { mirrorTemplates } from './mirror-templates/mirror-templates.ts'
+import { makePlaywrightProbe } from './probe-template/probe-template.playwright.ts'
+import { readHealth, writeHealth } from './read-health/read-health.ts'
 import { makeGitResolver } from './resolve-ref/resolve-ref.ts'
+import { runHealth } from './run-health/run-health.ts'
 
 const { positionals, values } = parseArgs({
   args: argv.slice(2),
   allowPositionals: true,
-  options: { out: { type: 'string' } },
+  options: {
+    out: { type: 'string' },
+    app: { type: 'string' },
+    only: { type: 'string' },
+    'run-url': { type: 'string' },
+  },
 })
 const [command, registryDir = 'registry'] = positionals
 
@@ -48,9 +57,40 @@ if (command === 'mirror' && values.out !== undefined) {
   exit(0)
 }
 
+if (command === 'health' && values.app !== undefined) {
+  const root = resolve(registryDir)
+  const { checks, index, deprecated } = await buildLocalIndex(root)
+  if (index === undefined) {
+    console.log(formatReport(checks))
+    exit(1)
+  }
+  const only = values.only === undefined ? undefined : new Set(values.only.split(','))
+  const previous = await readHealth(root)
+  const browser = await chromium.launch()
+  const reports = await Effect.runPromise(
+    runHealth({
+      templates: index.templates.filter((template) => only?.has(template.name) ?? true),
+      probe: makePlaywrightProbe(browser, values.app),
+      previousOf: (name) => previous.get(name),
+      deprecatedOf: (name) => deprecated.has(name),
+      checkedAt: new Date().toISOString(),
+      runUrl: values['run-url'] ?? null,
+    })
+  ).finally(() => browser.close())
+  await Promise.all(
+    reports.flatMap(({ name, health }) => (health === undefined ? [] : [writeHealth(root, name, health)]))
+  )
+  for (const { name, health, notes } of reports) {
+    console.log(`${name}: ${health?.status ?? 'skipped, its runtime is not in the app yet'}`)
+    for (const note of notes) console.log(`  ${note}`)
+  }
+  const failing = reports.filter(({ health }) => health?.status === 'broken' || health?.status === 'deprecated')
+  exit(failing.length > 0 ? 1 : 0)
+}
+
 if (command !== 'build') {
   console.error(
-    'Usage: registry-tools build <registry> [--out <index.json>] | mirror <index.json> --out <dir> | schema [--out <index.schema.json>]'
+    'Usage: registry-tools build <registry> [--out <index.json>] | health <registry> --app <url> [--only <names>] [--run-url <url>] | mirror <index.json> --out <dir> | schema [--out <index.schema.json>]'
   )
   exit(2)
 }

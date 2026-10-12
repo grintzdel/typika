@@ -28,6 +28,7 @@ const COUNTS: FacetCounts = {
   library: {},
   useCase: {},
   category: {},
+  health: {},
 }
 
 describe('FacetFilters', () => {

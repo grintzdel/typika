@@ -1,4 +1,5 @@
 import { formatTemplateRef, parseTemplateRef, type Language, type Level, type Manifest } from '@typika/manifest'
+import type { HealthStatus } from '@typika/registry-tools/health-status'
 import * as Option from 'effect/Option'
 
 export type TemplateEntry = {
@@ -9,7 +10,10 @@ export type TemplateEntry = {
   readonly summary: string
   readonly language: Language
   readonly level: Level
+  readonly health: TemplateEntryHealth | undefined
 }
+
+export type TemplateEntryHealth = { readonly status: HealthStatus; readonly runUrl: string | null }
 
 export const entryOfManifest = (manifest: Manifest, ref: string): TemplateEntry => ({
   name: manifest.name,
@@ -19,6 +23,7 @@ export const entryOfManifest = (manifest: Manifest, ref: string): TemplateEntry 
   summary: manifest.summary,
   language: manifest.facets.language,
   level: manifest.facets.level,
+  health: undefined,
 })
 
 const keyOfRef = (ref: string) =>

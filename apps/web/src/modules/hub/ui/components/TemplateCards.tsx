@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import type { ListedTemplate } from '../../core/domain/hub.domain-model.ts'
 import { useHubLabels } from '../hooks/use-hub-labels.ts'
+import { HealthBadge } from './HealthBadge.tsx'
 
 export type TemplateCardsProps = {
   readonly templates: ReadonlyArray<ListedTemplate>
@@ -27,6 +28,7 @@ export const TemplateCards = ({ templates }: TemplateCardsProps) => {
               <span className="rounded bg-neutral-100 px-1.5 py-0.5 dark:bg-neutral-800">
                 {labels.level(template.level)}
               </span>
+              <HealthBadge status={template.health} />
             </span>
           </a>
         </li>

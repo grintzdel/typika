@@ -2,6 +2,8 @@ import type { ExerciseKind, TemplateFiles, TourStep } from '@typika/manifest'
 import { ProjectPathSchema, type FileContent, type ProjectPath, type ProjectSnapshot } from '@typika/runtime-core'
 import * as Schema from 'effect/Schema'
 
+import type { TemplateEntryHealth } from './template-entry.domain-model.ts'
+
 export const ProjectOriginSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal('template'), name: Schema.String }),
   Schema.Struct({ kind: Schema.Literal('exercise'), name: Schema.String, exercise: Schema.String }),
@@ -79,6 +81,7 @@ export type TemplateProject = ProjectSnapshot & {
   readonly tourSteps: ReadonlyArray<TourStep>
   readonly templateFiles: ProjectFiles
   readonly modifiedPaths: ReadonlyArray<ProjectPath>
+  readonly health: TemplateEntryHealth | undefined
 }
 
 export const textOf = (content: FileContent): string =>

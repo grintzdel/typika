@@ -32,3 +32,4 @@ Statuts : `Proposée` (en attente d'un spike), `Acceptée`, `Remplacée par NNNN
 | [0022](0022-template-files-source.md) | Fichiers des templates : jsDelivr à la ref épinglée | Acceptée |
 | [0023](0023-hub-prerendering.md) | Prérendu du hub depuis l'index du build | Acceptée |
 | [0024](0024-manifest-keywords.md) | Mots-clés de recherche dans le manifeste, sans changer de schéma | Acceptée |
+| [0025](0025-health-run.md) | Le run de santé pilote l'app | Acceptée |

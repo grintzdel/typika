@@ -26,6 +26,12 @@ describe('TemplateOverview', () => {
     expect(within(languages).getByRole('link', { name: 'Go' }).getAttribute('href')).toBe('/templates/strategy-go')
   })
 
+  it('shows a degraded health in words', () => {
+    render(<TemplateOverview page={templatePage({ health: { status: 'degraded', runUrl: null } })} />)
+
+    expect(screen.getByText('Dégradé')).toBeDefined()
+  })
+
   it('says the content is in English when the interface is not', () => {
     render(<TemplateOverview page={templatePage()} />)
 

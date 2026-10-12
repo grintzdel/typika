@@ -55,6 +55,7 @@ export const useTemplateProject = (templateName: string) => {
           name: opened.templateName,
           title: opened.manifest.title,
           exercise: opened.exercise,
+          health: opened.health,
           exercises: opened.manifest.exercises.map(({ name, title, kind }) => ({ name, title, kind })),
           entry: opened.manifest.runtime.entry,
           generation: opened.generation,

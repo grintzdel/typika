@@ -1,4 +1,5 @@
 import { Language, Level, Paradigm, UseCase } from '@typika/manifest'
+import { HealthStatus } from '@typika/registry-tools/health-status'
 import { useTranslation } from 'react-i18next'
 
 import { Facet } from '../../core/domain/constants/facet.constant.ts'
@@ -42,6 +43,8 @@ export const useHubLabels = () => {
         return isOneOf(UseCase, id) ? t(`values.useCase.${id}`) : id
       case Facet.CATEGORY:
         return id === 'official' || id === 'community' ? t(`values.category.${id}`) : id
+      case Facet.HEALTH:
+        return isOneOf(HealthStatus, id) ? t(`values.health.${id}`) : id
       default:
         return id
     }

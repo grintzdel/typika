@@ -1,4 +1,5 @@
 import { formatTemplateRef, Language, parseTemplateRef, type ExerciseKind, type Level } from '@typika/manifest'
+import { HealthStatus } from '@typika/registry-tools/health-status'
 import type { IndexTemplate, RegistryIndex } from '@typika/registry-tools/index-schema'
 import * as Option from 'effect/Option'
 
@@ -28,6 +29,7 @@ export type ListedTemplate = {
   readonly language: Language
   readonly level: Level
   readonly updatedAt: string
+  readonly health: HealthStatus | undefined
   readonly searchText: string
   readonly values: Readonly<Record<Facet, ReadonlyArray<string>>>
 }
@@ -52,6 +54,8 @@ export type TemplatePage = {
   readonly base: string | undefined
   readonly parent: string | undefined
   readonly exercises: ReadonlyArray<{ readonly name: string; readonly kind: ExerciseKind; readonly title: string }>
+  readonly health: { readonly status: HealthStatus; readonly runUrl: string | null } | undefined
+  readonly alternatives: string
 }
 
 const LANGUAGE_ORDER: ReadonlyArray<Language> = Object.values(Language)
@@ -60,6 +64,8 @@ const byLanguage = (a: LanguageLink, b: LanguageLink) =>
   LANGUAGE_ORDER.indexOf(a.language) - LANGUAGE_ORDER.indexOf(b.language)
 
 const isListed = (template: IndexTemplate) => template.manifest.role === 'template'
+
+const isOnHome = (template: IndexTemplate) => isListed(template) && template.health?.status !== HealthStatus.DEPRECATED
 
 const topicOf = (index: RegistryIndex, id: string): IndexTopic =>
   index.vocabulary.topics.find((topic) => topic.id === id) ?? { id, label: id, category: id.split('/')[0] ?? id }
@@ -87,7 +93,7 @@ const nameOfRef = (index: RegistryIndex, ref: string | null): string | undefined
 }
 
 export const conceptSectionsOf = (index: RegistryIndex): ReadonlyArray<ConceptSection> => {
-  const listed = index.templates.filter(isListed)
+  const listed = index.templates.filter(isOnHome)
   const concepts = new Map<string, ConceptCard & { readonly topic: IndexTopic }>()
   for (const template of listed) {
     const languages = languagesOf(template).filter(({ name }) => listed.some((other) => other.name === name))
@@ -127,13 +133,14 @@ export const listedTemplatesOf = (index: RegistryIndex): ReadonlyArray<ListedTem
         LANGUAGE_ORDER.indexOf(a.manifest.facets.language) - LANGUAGE_ORDER.indexOf(b.manifest.facets.language) ||
         a.name.localeCompare(b.name)
     )
-    .map(({ name, category, manifest, updatedAt, search }) => ({
+    .map(({ name, category, manifest, updatedAt, health, search }) => ({
       name,
       title: manifest.title,
       summary: manifest.summary,
       language: manifest.facets.language,
       level: manifest.facets.level,
       updatedAt,
+      health: health?.status,
       searchText: search.text,
       values: {
         topic: manifest.facets.topic,
@@ -144,6 +151,7 @@ export const listedTemplatesOf = (index: RegistryIndex): ReadonlyArray<ListedTem
         library: manifest.facets.library,
         useCase: manifest.facets.useCase,
         category: [category],
+        health: health === null ? [] : [health.status],
       },
     }))
 }
@@ -178,5 +186,10 @@ export const templatePageOf = (index: RegistryIndex, name: string): TemplatePage
     base: nameOfRef(index, manifest.base),
     parent: nameOfRef(index, template.parent),
     exercises: manifest.exercises,
+    health: template.health === null ? undefined : { status: template.health.status, runUrl: template.health.runUrl },
+    alternatives:
+      manifest.facets.topic[0] === undefined
+        ? '/templates'
+        : `/templates?${new URLSearchParams({ topic: manifest.facets.topic[0] }).toString()}`,
   }
 }

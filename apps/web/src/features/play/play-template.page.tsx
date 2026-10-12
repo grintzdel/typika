@@ -26,6 +26,7 @@ import { useLanguageService } from '../../modules/editor/ui/hooks/use-language-s
 import { ExerciseList } from '../../modules/exercise/ui/components/ExerciseList.tsx'
 import { ExercisePanel } from '../../modules/exercise/ui/components/ExercisePanel.tsx'
 import { useExercise } from '../../modules/exercise/ui/hooks/use-exercise.ts'
+import { HealthBanner } from '../../modules/hub/ui/components/HealthBanner.tsx'
 import { isTypikaFile } from '../../modules/project/core/domain/file-tree.domain-model.ts'
 import { projectKeyOf } from '../../modules/project/core/domain/project.domain-model.ts'
 import { FileTree } from '../../modules/project/ui/components/FileTree.tsx'
@@ -118,37 +119,40 @@ export const PlayTemplatePage = ({ templateName, exercise, initialPanel }: PlayT
   return (
     <WorkbenchLayout
       toolbar={
-        <Toolbar>
-          <ProjectStatus
-            title={template.title}
-            isModified={project.modifiedPaths.length > 0}
-            saveFailed={project.saveFailed}
-          />
-          <LanguageServiceStatus status={languageService.status} />
-          <RunToolbar
-            status={runtime.status}
-            bootError={runtime.bootError}
-            isRunning={runtime.isRunning}
-            isTesting={runtime.isTesting}
-            onRun={() => {
-              setPanel('console')
-              runtime.handleRun()
-            }}
-            onTest={() => {
-              setPanel('tests')
-              runtime.handleTest()
-            }}
-            onRetry={runtime.handleRetry}
-          />
-          <ResetProjectDialog
-            modifiedPaths={project.modifiedPaths}
-            onConfirm={() => {
-              edits.discardPending()
-              project.handleReset()
-            }}
-          />
-          <LanguageMenu {...languageMenu} />
-        </Toolbar>
+        <>
+          <HealthBanner health={template.health} alternatives={`/templates/${template.name}`} />
+          <Toolbar>
+            <ProjectStatus
+              title={template.title}
+              isModified={project.modifiedPaths.length > 0}
+              saveFailed={project.saveFailed}
+            />
+            <LanguageServiceStatus status={languageService.status} />
+            <RunToolbar
+              status={runtime.status}
+              bootError={runtime.bootError}
+              isRunning={runtime.isRunning}
+              isTesting={runtime.isTesting}
+              onRun={() => {
+                setPanel('console')
+                runtime.handleRun()
+              }}
+              onTest={() => {
+                setPanel('tests')
+                runtime.handleTest()
+              }}
+              onRetry={runtime.handleRetry}
+            />
+            <ResetProjectDialog
+              modifiedPaths={project.modifiedPaths}
+              onConfirm={() => {
+                edits.discardPending()
+                project.handleReset()
+              }}
+            />
+            <LanguageMenu {...languageMenu} />
+          </Toolbar>
+        </>
       }
       sidebar={
         <FileTree

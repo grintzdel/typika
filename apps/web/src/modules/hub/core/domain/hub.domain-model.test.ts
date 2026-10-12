@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { indexTemplate } from '../../../shared/__tests__/registry-index.factory.ts'
+import { indexTemplate, templateHealth } from '../../../shared/__tests__/registry-index.factory.ts'
 import { hubIndex } from '../../__tests__/hub-index.factory.ts'
 import { conceptSectionsOf, listedTemplatesOf, templatePageOf } from './hub.domain-model.ts'
 
@@ -38,6 +38,18 @@ describe('conceptSectionsOf', () => {
     ])
   })
 
+  it('leaves the deprecated templates out of the home page', () => {
+    const index = hubIndex()
+    const sections = conceptSectionsOf({
+      ...index,
+      templates: index.templates.map((template) =>
+        template.name === 'hexagonal-ts' ? { ...template, health: templateHealth('deprecated') } : template
+      ),
+    })
+
+    expect(sections.map(({ category }) => category)).toEqual(['design-pattern'])
+  })
+
   it('names a concept after its topic id when the vocabulary does not know it', () => {
     const index = hubIndex()
     const sections = conceptSectionsOf({
@@ -68,6 +80,7 @@ describe('listedTemplatesOf', () => {
       language: 'go',
       level: 'intermediate',
       updatedAt: '2026-10-08',
+      health: undefined,
       searchText: 'strategy-go strategy in go a function per rule switch',
       values: {
         topic: ['design-pattern/behavioral/strategy', 'principle/open-closed'],
@@ -78,6 +91,7 @@ describe('listedTemplatesOf', () => {
         library: [],
         useCase: [],
         category: ['official'],
+        health: [],
       },
     })
   })
@@ -112,6 +126,25 @@ describe('templatePageOf', () => {
       base: 'strategy-base-ts',
       parent: undefined,
       exercises: [{ name: 'implement-express', kind: 'refactor', title: 'Implement express' }],
+      health: undefined,
+      alternatives: '/templates?topic=design-pattern%2Fbehavioral%2Fstrategy',
+    })
+  })
+
+  it('gives the health of the template and the link to its run', () => {
+    const index = hubIndex()
+    const broken = {
+      ...index,
+      templates: index.templates.map((template) =>
+        template.name === 'strategy-ts'
+          ? { ...template, health: templateHealth('broken', { runUrl: 'https://ci.example/runs/1' }) }
+          : template
+      ),
+    }
+
+    expect(templatePageOf(broken, 'strategy-ts')?.health).toEqual({
+      status: 'broken',
+      runUrl: 'https://ci.example/runs/1',
     })
   })
 
