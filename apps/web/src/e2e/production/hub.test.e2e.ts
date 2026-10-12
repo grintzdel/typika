@@ -23,7 +23,7 @@ test.describe('without JavaScript', () => {
     await page.goto(`${APP_URL}/templates`)
 
     const results = page.getByRole('list', { name: 'Templates' })
-    await expect(results.getByRole('listitem')).toHaveCount(26)
+    await expect(results.getByRole('listitem')).toHaveCount(29)
     await expect(results.getByRole('link', { name: /Strategy: shipping options.*Go/ })).toHaveAttribute(
       'href',
       '/templates/strategy-go'
@@ -37,7 +37,7 @@ test.describe('without JavaScript', () => {
     await page.getByRole('searchbox', { name: 'Search templates' }).press('Enter')
 
     await expect(page).toHaveURL(`${APP_URL}/templates?q=switch`)
-    await expect(page.getByRole('list', { name: 'Templates' }).getByRole('listitem')).toHaveCount(26)
+    await expect(page.getByRole('list', { name: 'Templates' }).getByRole('listitem')).toHaveCount(29)
   })
 
   test('reads a template page', async ({ page }) => {
@@ -61,7 +61,7 @@ test('restores the filters of a list URL after a reload, within the content secu
   await page.reload()
 
   await expect(page.getByRole('group', { name: 'Langage' }).getByRole('checkbox', { name: 'Go' })).toBeChecked()
-  await expect(page.getByRole('list', { name: 'Templates' }).getByRole('listitem')).toHaveCount(6)
+  await expect(page.getByRole('list', { name: 'Templates' }).getByRole('listitem')).toHaveCount(9)
   expect(violations).toEqual([])
 })
 

@@ -295,7 +295,16 @@ package, ce qui impose :
   *Service { return NewService() }` dans `dependency-inversion-go`) : le test compile, seul son comportement est rouge.
   Le template met ces déclarations dans le même fichier, pour que `solution/` le remplace.
 - **Un `start/` de `fix` qui ne panique pas.** Un `panic` dans un test arrête le binaire de test : les tests suivants
-  ne tournent pas. Renvoyer une valeur fausse (`shop.Zero`), pas `panic("not implemented")`.
+  ne tournent pas. Renvoyer une valeur fausse (`shop.Zero`), pas `panic("not implemented")`. La règle vaut aussi pour
+  les helpers des tests partagés : `lastEmail` de `naive-crud-go` indexait la liste des e-mails envoyés, et paniquait
+  dès que l'adapter de l'exercice n'envoyait rien. Un helper renvoie une valeur vide quand il n'a rien à renvoyer.
+- **Pas de `net/http`** dans le jeu précompilé : un gestionnaire HTTP reste simulé (`web.Request` / `web.Response`),
+  avec des corps JSON lus et écrits par `encoding/json`. Comparer un JSON dont l'ordre des clés dépend de
+  l'implémentation (une `map` trie ses clés, une struct suit ses champs) en le décodant (`sameJSON`), pas comme une
+  chaîne.
+- **Une goroutine dans un test** se synchronise explicitement : attendre une condition lue sous verrou avec une
+  échéance, annuler le `context`, puis attendre la fin de la goroutine sur un channel avant de lire ce qu'elle a
+  écrit. `outbox-go` le fait pour son relais, et passe `go test -race`.
 - Tests boîte noire dans le package `<pkg>_test`, avec des sous-tests `t.Run("<phrase de comportement>", …)` : les
   noms restent ceux de la variante TS.
 
