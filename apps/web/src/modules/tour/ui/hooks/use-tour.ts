@@ -1,25 +1,24 @@
-import type { TourStep } from '@typika/manifest'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { hashOfStep, stepIndexFromHash, type TourAnchor } from '../../core/domain/tour.domain-model.ts'
+import { hashOfStep, stepIndexFromHash, type TourStepRef } from '../../core/domain/tour.domain-model.ts'
 
-export type UseTourOptions = {
-  readonly steps: ReadonlyArray<TourStep>
-  readonly anchorOf: (step: TourStep) => TourAnchor
-  readonly onOpen: (step: TourStep, anchor: TourAnchor) => void
+export type UseTourOptions<S extends TourStepRef, A> = {
+  readonly steps: ReadonlyArray<S>
+  readonly anchorOf: (step: S) => A
+  readonly onOpen: (step: S, anchor: A) => void
 }
 
-type OpenedStep = { readonly index: number; readonly anchor: TourAnchor; readonly announced: boolean }
+type OpenedStep<A> = { readonly index: number; readonly anchor: A; readonly announced: boolean }
 
 const KEEPS_ARROW_KEYS = '.cm-editor, input, textarea, select, [contenteditable="true"]'
 
 const keepsArrowKeys = (target: EventTarget | null) =>
   target instanceof Element && target.closest(KEEPS_ARROW_KEYS) !== null
 
-export const useTour = ({ steps, anchorOf, onOpen }: UseTourOptions) => {
+export const useTour = <S extends TourStepRef, A>({ steps, anchorOf, onOpen }: UseTourOptions<S, A>) => {
   const { t } = useTranslation('tour')
-  const [opened, setOpened] = useState<OpenedStep | undefined>(undefined)
+  const [opened, setOpened] = useState<OpenedStep<A> | undefined>(undefined)
 
   const open = (index: number, announced: boolean) => {
     const step = steps[index]

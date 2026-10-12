@@ -62,12 +62,27 @@ export const TemplateOverview = ({ page }: TemplateOverviewProps) => {
         </p>
         <HealthBadge status={page.health?.status} />
       </div>
-      <a
-        href={`/play/${page.name}`}
-        className="inline-flex h-9 items-center rounded-md bg-sky-700 px-3.5 text-sm font-medium text-white hover:bg-sky-800"
-      >
-        {t('template.open')}
-      </a>
+      <div className="flex flex-wrap items-center gap-2">
+        <a
+          href={`/play/${page.name}`}
+          className="inline-flex h-9 items-center rounded-md bg-sky-700 px-3.5 text-sm font-medium text-white hover:bg-sky-800"
+        >
+          {t('template.open')}
+        </a>
+        {page.comparisons.length === 0 ? null : (
+          <nav aria-label={t('template.compare')} className="flex flex-wrap gap-2">
+            {page.comparisons.map(({ language }) => (
+              <a
+                key={language}
+                href={`/compare/${page.name}?${new URLSearchParams({ a: page.language, b: language }).toString()}`}
+                className="inline-flex h-9 items-center rounded-md border border-neutral-300 px-3.5 text-sm font-medium hover:border-sky-600 dark:border-neutral-700"
+              >
+                {t('template.compareWith', { language: labels.language(language) })}
+              </a>
+            ))}
+          </nav>
+        )}
+      </div>
     </div>
   )
 }

@@ -43,6 +43,7 @@ import { useSandboxRuntime } from '../../modules/runtime/ui/hooks/use-sandbox-ru
 import { useWriteProjectFiles } from '../../modules/runtime/ui/hooks/use-write-project-files.ts'
 import { anchorOf, filesOfStep } from '../../modules/tour/core/domain/tour.domain-model.ts'
 import { TourPanel } from '../../modules/tour/ui/components/TourPanel.tsx'
+import { TourStepBody } from '../../modules/tour/ui/components/TourStepBody.tsx'
 import { useTour } from '../../modules/tour/ui/hooks/use-tour.ts'
 import { SidePanel } from '../../ui/SidePanel.tsx'
 import { Toolbar } from '../../ui/Toolbar.tsx'
@@ -243,16 +244,19 @@ export const PlayTemplatePage = ({ templateName, exercise, initialPanel }: PlayT
                       <TourPanel
                         steps={template.tourSteps}
                         index={tour.index}
-                        body={tour.step.body}
-                        isChanged={anchor?._tag === 'Changed'}
                         announcement={tour.announcement}
-                        embeddedTemplates={project.embeddedTemplates}
                         onSelect={tour.handleSelect}
-                        onOpenOriginal={() => {
-                          if (anchor?._tag === 'Changed')
-                            tabs.handleOpenTabs([originalTab(anchor.path)], anchor.originalRange)
-                        }}
-                      />
+                      >
+                        <TourStepBody
+                          body={tour.step.body}
+                          isChanged={anchor?._tag === 'Changed'}
+                          embeddedTemplates={project.embeddedTemplates}
+                          onOpenOriginal={() => {
+                            if (anchor?._tag === 'Changed')
+                              tabs.handleOpenTabs([originalTab(anchor.path)], anchor.originalRange)
+                          }}
+                        />
+                      </TourPanel>
                     ),
                   },
                 ]),

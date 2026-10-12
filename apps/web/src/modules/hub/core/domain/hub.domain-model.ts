@@ -50,6 +50,7 @@ export type TemplatePage = {
   readonly trail: ReadonlyArray<TopicCrumb>
   readonly topics: ReadonlyArray<{ readonly id: string; readonly label: string }>
   readonly languages: ReadonlyArray<LanguageLink>
+  readonly comparisons: ReadonlyArray<LanguageLink>
   readonly tourSteps: ReadonlyArray<string>
   readonly base: string | undefined
   readonly parent: string | undefined
@@ -182,6 +183,9 @@ export const templatePageOf = (index: RegistryIndex, name: string): TemplatePage
     trail: topics[0] === undefined ? [] : trailOf(topics[0]),
     topics: topics.map(({ id, label }) => ({ id, label })),
     languages: languagesOf(template),
+    comparisons: languagesOf(template).filter(
+      (link) => link.name !== name && index.templates.some((other) => other.name === link.name)
+    ),
     tourSteps: manifest.tour.steps.map((step) => step.title),
     base: nameOfRef(index, manifest.base),
     parent: nameOfRef(index, template.parent),

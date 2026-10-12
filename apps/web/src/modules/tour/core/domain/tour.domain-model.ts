@@ -1,5 +1,7 @@
 import type { TourStep } from '@typika/manifest'
 
+export type TourStepRef = { readonly id: string; readonly title: string }
+
 export type LineSpan = { readonly from: number; readonly to: number }
 
 export type TourAnchor =
@@ -61,9 +63,9 @@ export const anchorOf = (step: TourStep, current: string | undefined, original: 
 export const filesOfStep = (step: TourStep): ReadonlyArray<string> =>
   step.file === undefined ? step.also : [step.file, ...step.also]
 
-export const hashOfStep = (step: TourStep): string => `${STEP_HASH_PREFIX}${step.id}`
+export const hashOfStep = (step: TourStepRef): string => `${STEP_HASH_PREFIX}${step.id}`
 
-export const stepIndexFromHash = (hash: string, steps: ReadonlyArray<TourStep>): number => {
+export const stepIndexFromHash = (hash: string, steps: ReadonlyArray<TourStepRef>): number => {
   const value = hash.replace(/^#/, '')
   if (!value.startsWith(STEP_HASH_PREFIX)) return 0
   const id = value.slice(STEP_HASH_PREFIX.length)
