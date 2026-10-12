@@ -491,12 +491,17 @@ Content-Type: application/json
 |---|---|---|
 | `200` | `{ "ok": true, "artifact": { "kind": "js", "code": "...", "sourceMap": "..." }, "diagnostics": [...] }` | Exécution ; les warnings vont en `Diagnostics` |
 | `200` | `{ "ok": false, "diagnostics": [...] }` | `Diagnostics` puis `RunFinished` `errored` (ou `RuntimeCompileError` pour `run`) |
-| `413` | — | `RuntimeCompileError` « projet trop gros » |
+| `400` | `{ "error": "..." }` | Requête refusée (protocole, cible, version de Kotlin, chemin) : bug du client, `KotlinCompilerUnavailableError` |
+| `413` | `{ "error": "..." }` | `RuntimeCompileError` « projet trop gros » |
 | `429` | `Retry-After` | `KotlinCompilerRateLimitedError { retryAfterSeconds }` |
-| `503` / `504` / réseau | — | `KotlinCompilerUnavailableError` |
+| `503` | `{ "error": "..." }`, `Retry-After` si la file est pleine | File pleine, ou processus de compilation mort et relancé : `KotlinCompilerUnavailableError` |
+| `504` | `{ "error": "..." }` | Compilation interrompue au timeout du service : `KotlinCompilerUnavailableError` |
+| réseau | — | `KotlinCompilerUnavailableError` |
 
 `mode: "test"` compile les tests avec les sources et n'appelle pas `main` ; le harness reste côté navigateur. Les
-diagnostics suivent `DiagnosticSchema`, chemins relatifs à la racine du projet.
+diagnostics suivent `DiagnosticSchema`, chemins relatifs à la racine du projet. Le service n'accepte que des fichiers
+`.kt` aux chemins relatifs, 500 au plus, et la version de Kotlin qu'il embarque (`GET /health` la donne). Le code de
+l'artefact ne contient pas de commentaire `sourceMappingURL` : la source map arrive à côté.
 
 **Cache de compilation**
 
