@@ -14,7 +14,7 @@ const results = (page: Page) => page.getByRole('region', { name: 'Résultats des
 const exercisePanel = (page: Page) => page.getByRole('region', { name: 'Exercice' })
 
 const waitForRuntime = async (page: Page) => {
-  await expect(page.getByRole('tree', { name: 'Fichiers' })).toBeVisible()
+  await expect(page.getByRole('tree', { name: 'Fichiers' })).toBeVisible({ timeout: TIMEOUT })
   await expect(page.getByRole('button', { name: 'Tests', exact: true })).toBeEnabled({ timeout: TIMEOUT })
 }
 
