@@ -36,6 +36,9 @@ steps = [
 template = "github:typika/templates/dependency-inversion-base/ts"
 focus = ["src/checkout/**", "src/infrastructure/**", "src/open-shop.ts"]
 
+[variants]
+go = "github:typika/templates/dependency-inversion/go"
+
 [[exercises]]
 name = "test-without-smtp"
 kind = "refactor"
