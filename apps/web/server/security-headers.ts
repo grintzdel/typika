@@ -39,15 +39,17 @@ const policy = (directives: Readonly<Record<string, ReadonlyArray<string>>>) =>
 export const appContentSecurityPolicy = ({
   runtimeOrigin,
   scriptHashes,
+  connectOrigins = [],
 }: {
   readonly runtimeOrigin: string
   readonly scriptHashes: ReadonlyArray<string>
+  readonly connectOrigins?: ReadonlyArray<string>
 }) =>
   policy({
     'default-src': ["'self'"],
     'script-src': ["'self'", ...scriptHashes],
     'worker-src': ["'self'", 'blob:'],
-    'connect-src': ["'self'"],
+    'connect-src': ["'self'", ...new Set(connectOrigins)],
     'frame-src': [runtimeOrigin],
     'img-src': ["'self'", 'data:'],
     'style-src': ["'self'", "'unsafe-inline'"],

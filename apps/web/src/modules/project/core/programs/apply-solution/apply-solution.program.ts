@@ -18,6 +18,7 @@ export const applySolutionProgram = (project: TemplateProject) =>
             id: yield* Effect.sync(() => crypto.randomUUID()),
             name: project.templateName,
             origin: project.origin,
+            ref: project.ref,
             createdAt: now,
             updatedAt: now,
           },

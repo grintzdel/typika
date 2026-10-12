@@ -20,6 +20,7 @@ export const saveProjectFilesProgram = ({
         id,
         name: project.templateName,
         origin: project.origin,
+        ref: project.ref,
         createdAt: now,
         updatedAt: now,
       },

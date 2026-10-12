@@ -116,7 +116,9 @@ Les templates communautaires restent libres de leur organisation (un dépôt, un
 puis écrit l'index. Elle lit chaque template à son SHA épinglé. Tant que `typika/templates` n'existe pas (lot 7 du M3),
 le dossier `registry/` du monorepo tient lieu de registre, et `github:typika/templates/<chemin>@<sha>` se lit dans le
 dossier `templates/` du monorepo, à ce commit. V8 arrive avec la CI de santé ; les exercices Go et Kotlin ne sont pas
-encore exécutés (V9).
+encore exécutés (V9). `registry-tools mirror <index.json> --out <dossier>` écrit les fichiers de chaque entrée à sa ref
+épinglée, au format de jsDelivr ([0022](../decisions/0022-template-files-source.md)) : c'est la source des fichiers
+quand l'app sert son propre registre.
 
 ### 2.3 Revue humaine — critères d'acceptation
 

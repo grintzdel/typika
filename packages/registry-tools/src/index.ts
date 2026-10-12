@@ -12,6 +12,7 @@ export {
 } from './domain/registry-index.domain-model.ts'
 export { VocabularySchema, type Vocabulary } from './domain/vocabulary.domain-model.ts'
 export { indexJsonSchema } from './index-json-schema/index-json-schema.ts'
+export { mirrorTemplates, type MirrorFile } from './mirror-templates/mirror-templates.ts'
 export { readRegistry, VOCABULARY_FILE, type RegistrySource } from './read-registry/read-registry.ts'
 export {
   keyOf,

@@ -27,6 +27,7 @@ export const ProjectRecordSchema = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
   origin: ProjectOriginSchema,
+  ref: Schema.optionalKey(Schema.String),
   createdAt: Schema.Number,
   updatedAt: Schema.Number,
 })
@@ -60,6 +61,7 @@ export type ProjectExercise = {
 
 export type TemplateProject = ProjectSnapshot & {
   readonly templateName: string
+  readonly ref: string
   readonly origin: ProjectOrigin
   readonly exercise: ProjectExercise | undefined
   readonly tourSteps: ReadonlyArray<TourStep>

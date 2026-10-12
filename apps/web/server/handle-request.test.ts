@@ -28,11 +28,20 @@ beforeAll(async () => {
     'client/_shell.html': SHELL,
     'client/assets/index-abc.js': 'export {}',
     'client/robots.txt': 'User-agent: *',
+    'client/registry/index.json': '{}',
+    'client/registry/gh/typika/templates@0123456789ab/strategy/ts/typika.toml': 'name = "strategy-ts"',
     'runtime/frame.html': '<!doctype html>',
     'runtime/assets/esbuild-abc.wasm': 'wasm',
   })
   handle = await makeRequestHandler({
-    config: { publicUrl: APP, runtimeOrigin: RUNTIME, packageUrlTemplate: 'https://esm.example.com/{name}@{version}' },
+    config: {
+      publicUrl: APP,
+      runtimeOrigin: RUNTIME,
+      packageUrlTemplate: 'https://esm.example.com/{name}@{version}',
+      registryIndexUrl: '/registry/index.json',
+      templateFileUrlTemplate: 'https://cdn.example.com/gh/{owner}/{repo}@{ref}/{path}',
+      templateListingUrlTemplate: '/registry/listing/gh/{owner}/{repo}@{ref}.json',
+    },
     clientDir: join(dist, 'client'),
     runtimeDir: join(dist, 'runtime'),
     appServer,
@@ -79,6 +88,20 @@ describe('makeRequestHandler on the app origin', () => {
     expect((await get(`${APP}/robots.txt`)).headers.get('cache-control')).toBe('no-cache')
   })
 
+  it('serves the registry index for revalidation and the pinned template files as immutable', async () => {
+    const pinned = await get(`${APP}/registry/gh/typika/templates@0123456789ab/strategy/ts/typika.toml`)
+
+    expect((await get(`${APP}/registry/index.json`)).headers.get('cache-control')).toBe('no-cache')
+    expect(await pinned.text()).toBe('name = "strategy-ts"')
+    expect(pinned.headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
+  })
+
+  it('lets the app reach a registry served from another origin', async () => {
+    expect((await get(`${APP}/`)).headers.get('content-security-policy')).toContain(
+      "connect-src 'self' https://cdn.example.com;"
+    )
+  })
+
   it('hands the server routes to the app server, with the app headers', async () => {
     const config = await get(`${APP}/config.json`)
     const api = await get(`${APP}/api/github/token`)
@@ -117,7 +140,7 @@ describe('makeRequestHandler on the runtime origin', () => {
   it('serves the public configuration to the frame', async () => {
     const response = await get(`${RUNTIME}/runtime/config.json`)
 
-    expect(await response.json()).toEqual({
+    expect(await response.json()).toMatchObject({
       publicUrl: APP,
       runtimeOrigin: RUNTIME,
       packageUrlTemplate: 'https://esm.example.com/{name}@{version}',

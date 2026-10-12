@@ -29,3 +29,4 @@ Statuts : `Proposée` (en attente d'un spike), `Acceptée`, `Remplacée par NNNN
 | [0019](0019-kotlin-runtime.md) | Runtime Kotlin : un service de compilation maison, cible JS | Acceptée — Firefox à vérifier |
 | [0020](0020-tour-markdown.md) | Rendu Markdown du tour : react-markdown | Acceptée |
 | [0021](0021-diff-engine.md) | Moteur de diff : @codemirror/merge | Acceptée |
+| [0022](0022-template-files-source.md) | Fichiers des templates : jsDelivr à la ref épinglée | Acceptée |

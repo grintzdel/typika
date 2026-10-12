@@ -4,6 +4,7 @@ import * as Option from 'effect/Option'
 
 import { ProjectExerciseNotFoundError } from '../../domain/errors/project-exercise-not-found.error.ts'
 import { ProjectTemplateInvalidError } from '../../domain/errors/project-template-invalid.error.ts'
+import { ProjectTemplateNotFoundError } from '../../domain/errors/project-template-not-found.error.ts'
 import {
   modifiedPathsOf,
   originOfKey,
@@ -13,22 +14,37 @@ import {
   type ProjectFiles,
   type TemplateProject,
 } from '../../domain/project.domain-model.ts'
+import { entryForRef, entryNamed, type TemplateEntry } from '../../domain/template-entry.domain-model.ts'
 import { ProjectStoragePort } from '../../ports/project-storage.port.ts'
-import { TemplateSourcePort } from '../../ports/template-source.port.ts'
+import { TemplateFilesPort } from '../../ports/template-files.port.ts'
+import { TemplateIndexPort } from '../../ports/template-index.port.ts'
 
 const textAt = (files: TemplateFiles, path: string): string => {
   const content = files.get(path)
   return content === undefined ? '' : textOf(content)
 }
 
-const openExercise = (name: string, manifest: Manifest, files: TemplateFiles, exerciseName: string) =>
+const loadBase = (entries: ReadonlyArray<TemplateEntry>, ref: string) =>
   Effect.gen(function* () {
-    const source = yield* TemplateSourcePort
+    const source = yield* TemplateFilesPort
+    const entry = entryForRef(entries, ref)
+    if (entry === undefined) return yield* new ProjectTemplateNotFoundError({ name: ref })
+    return yield* source.load(entry.ref)
+  })
+
+const openExercise = (
+  name: string,
+  manifest: Manifest,
+  files: TemplateFiles,
+  exerciseName: string,
+  entries: ReadonlyArray<TemplateEntry>
+) =>
+  Effect.gen(function* () {
     const exercise = manifest.exercises.find((candidate) => candidate.name === exerciseName)
     if (exercise === undefined) return yield* new ProjectExerciseNotFoundError({ name, exercise: exerciseName })
     const base =
       exercise.from === 'base' && manifest.base !== undefined
-        ? yield* Effect.flatMap(source.resolveRef(manifest.base.template), source.load)
+        ? yield* loadBase(entries, manifest.base.template)
         : undefined
     const states = yield* exerciseStates({ template: files, base, exercise }).pipe(
       Effect.mapError(() => new ProjectTemplateInvalidError({ name, issues: [] }))
@@ -50,11 +66,17 @@ const openExercise = (name: string, manifest: Manifest, files: TemplateFiles, ex
 
 export const openTemplateProgram = (key: string) =>
   Effect.gen(function* () {
-    const source = yield* TemplateSourcePort
+    const index = yield* TemplateIndexPort
+    const source = yield* TemplateFilesPort
     const storage = yield* ProjectStoragePort
     const origin = originOfKey(key)
     const { name } = origin
-    const files = yield* source.load(name)
+    const entries = yield* index.entries
+    const entry = entryNamed(entries, name)
+    if (entry === undefined) return yield* new ProjectTemplateNotFoundError({ name })
+    const stored = yield* storage.findByOrigin(origin).pipe(Effect.orElseSucceed(() => Option.none()))
+    const ref = Option.match(stored, { onNone: () => entry.ref, onSome: (project) => project.record.ref ?? entry.ref })
+    const files = yield* source.load(ref)
     const { manifest, tourSteps } = yield* validateTemplate(files).pipe(
       Effect.mapError(
         (error) =>
@@ -63,13 +85,13 @@ export const openTemplateProgram = (key: string) =>
     )
     const opened: { readonly start: ProjectFiles; readonly exercise: ProjectExercise | undefined } =
       origin.kind === 'exercise'
-        ? yield* openExercise(name, manifest, files, origin.exercise)
+        ? yield* openExercise(name, manifest, files, origin.exercise, entries)
         : { start: projectFilesOf(files), exercise: undefined }
     const templateFiles = opened.start
-    const stored = yield* storage.findByOrigin(origin).pipe(Effect.orElseSucceed(() => Option.none()))
     const projectFiles = Option.match(stored, { onNone: () => templateFiles, onSome: (project) => project.files })
     return {
       templateName: name,
+      ref,
       origin,
       exercise: opened.exercise,
       manifest,

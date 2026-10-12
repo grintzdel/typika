@@ -5,6 +5,10 @@ import type { PublicConfig } from '../domain/public-config.domain-model.ts'
 
 type Env = Readonly<Record<string, string | undefined>>
 
+export const DEFAULT_REGISTRY_INDEX_URL = '/registry/index.json'
+export const DEFAULT_TEMPLATE_FILE_URL_TEMPLATE = '/registry/gh/{owner}/{repo}@{ref}/{path}'
+export const DEFAULT_TEMPLATE_LISTING_URL_TEMPLATE = '/registry/listing/gh/{owner}/{repo}@{ref}.json'
+
 const parseUrl = (name: string, value: string | undefined) =>
   Effect.suspend(() => {
     if (value === undefined || value === '')
@@ -14,6 +18,16 @@ const parseUrl = (name: string, value: string | undefined) =>
       : Effect.fail(new AppConfigInvalidError({ reason: `${name} is not a URL: ${value}` }))
   })
 
+const parseLocation = (name: string, value: string | undefined, fallback: string) =>
+  Effect.suspend(() => {
+    if (value === undefined || value === '') return Effect.succeed(fallback)
+    const isPath = value.startsWith('/') && !value.startsWith('//')
+    const isHttp = URL.canParse(value) && ['http:', 'https:'].includes(new URL(value).protocol)
+    return isPath || isHttp
+      ? Effect.succeed(value)
+      : Effect.fail(new AppConfigInvalidError({ reason: `${name} is neither a URL nor an absolute path: ${value}` }))
+  })
+
 export const publicConfigFromEnv = (env: Env): Effect.Effect<PublicConfig, AppConfigInvalidError> =>
   Effect.gen(function* () {
     const publicUrl = yield* parseUrl('TYPIKA_PUBLIC_URL', env.TYPIKA_PUBLIC_URL)
@@ -21,9 +35,27 @@ export const publicConfigFromEnv = (env: Env): Effect.Effect<PublicConfig, AppCo
     if (runtimeUrl.origin === publicUrl.origin)
       return yield* new AppConfigInvalidError({ reason: 'TYPIKA_RUNTIME_ORIGIN must differ from the app origin' })
     const packageUrlTemplate = env.TYPIKA_PACKAGE_URL_TEMPLATE
+    const registryIndexUrl = yield* parseLocation(
+      'TYPIKA_REGISTRY_INDEX_URL',
+      env.TYPIKA_REGISTRY_INDEX_URL,
+      DEFAULT_REGISTRY_INDEX_URL
+    )
+    const templateFileUrlTemplate = yield* parseLocation(
+      'TYPIKA_TEMPLATE_FILE_URL_TEMPLATE',
+      env.TYPIKA_TEMPLATE_FILE_URL_TEMPLATE,
+      DEFAULT_TEMPLATE_FILE_URL_TEMPLATE
+    )
+    const templateListingUrlTemplate = yield* parseLocation(
+      'TYPIKA_TEMPLATE_LISTING_URL_TEMPLATE',
+      env.TYPIKA_TEMPLATE_LISTING_URL_TEMPLATE,
+      DEFAULT_TEMPLATE_LISTING_URL_TEMPLATE
+    )
     return {
       publicUrl: publicUrl.href.replace(/\/$/, ''),
       runtimeOrigin: runtimeUrl.origin,
       ...(packageUrlTemplate === undefined || packageUrlTemplate === '' ? {} : { packageUrlTemplate }),
+      registryIndexUrl,
+      templateFileUrlTemplate,
+      templateListingUrlTemplate,
     }
   })

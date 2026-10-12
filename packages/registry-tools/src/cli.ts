@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve } from 'node:path'
 import { argv, exit } from 'node:process'
 import { parseArgs } from 'node:util'
@@ -7,10 +7,13 @@ import { gzipSync } from 'node:zlib'
 
 import { formatReport, hasErrors, runTestsInProcess } from '@typika/template-check'
 import * as Effect from 'effect/Effect'
+import * as Schema from 'effect/Schema'
 
 import { buildIndex, INDEX_MAX_GZIP_BYTES } from './build-index/build-index.ts'
 import { checkRegistry } from './check-registry/check-registry.ts'
+import { RegistryIndexSchema } from './domain/registry-index.domain-model.ts'
 import { indexJsonSchema } from './index-json-schema/index-json-schema.ts'
+import { mirrorTemplates } from './mirror-templates/mirror-templates.ts'
 import { readRegistry } from './read-registry/read-registry.ts'
 import { makeGitResolver } from './resolve-ref/resolve-ref.ts'
 
@@ -36,8 +39,26 @@ if (command === 'schema') {
   exit(0)
 }
 
+if (command === 'mirror' && values.out !== undefined) {
+  const index = Schema.decodeUnknownSync(RegistryIndexSchema)(JSON.parse(await readFile(resolve(registryDir), 'utf8')))
+  const repoRoot = git(dirname(resolve(registryDir)), ['rev-parse', '--show-toplevel'])
+  const files = await Effect.runPromise(mirrorTemplates(index.templates, makeGitResolver(repoRoot, LOCAL_CHECKOUTS)))
+  const out = resolve(values.out)
+  await Promise.all(
+    files.map(async (file) => {
+      const path = join(out, file.path)
+      await mkdir(dirname(path), { recursive: true })
+      await writeFile(path, file.content)
+    })
+  )
+  console.log(`mirror: ${index.templates.length} templates, ${files.length} files in ${values.out}.`)
+  exit(0)
+}
+
 if (command !== 'build') {
-  console.error('Usage: registry-tools build <registry> [--out <index.json>] | schema [--out <index.schema.json>]')
+  console.error(
+    'Usage: registry-tools build <registry> [--out <index.json>] | mirror <index.json> --out <dir> | schema [--out <index.schema.json>]'
+  )
   exit(2)
 }
 

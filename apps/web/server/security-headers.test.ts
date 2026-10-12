@@ -48,6 +48,17 @@ describe('appContentSecurityPolicy', () => {
     expect(policy).toContain("frame-ancestors 'none'")
   })
 
+  it('connects to the app origin only, unless the registry lives elsewhere', () => {
+    expect(policy).toContain("connect-src 'self';")
+    expect(
+      appContentSecurityPolicy({
+        runtimeOrigin: 'https://run.example.net',
+        scriptHashes: [],
+        connectOrigins: ['https://cdn.jsdelivr.net', 'https://data.jsdelivr.com', 'https://cdn.jsdelivr.net'],
+      })
+    ).toContain("connect-src 'self' https://cdn.jsdelivr.net https://data.jsdelivr.com;")
+  })
+
   it('allows the inline scripts of the shell by hash, not every inline script', () => {
     expect(policy).toContain("script-src 'self' 'sha256-abc';")
     expect(policy).not.toMatch(/script-src[^;]*unsafe-inline/)

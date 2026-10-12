@@ -1,13 +1,17 @@
 import { useTranslation } from 'react-i18next'
 
+import { Button } from '../../../../ui/Button.tsx'
 import { ErrorState } from '../../../../ui/ErrorState.tsx'
 import type { OpenTemplateFailure } from '../hooks/use-template-project.ts'
 
 export type TemplateLoadErrorProps = {
   readonly failure: OpenTemplateFailure
+  readonly onRetry: () => void
 }
 
-export const TemplateLoadError = ({ failure }: TemplateLoadErrorProps) => {
+const RETRYABLE: ReadonlySet<OpenTemplateFailure['_tag']> = new Set(['IndexUnavailable', 'FilesUnavailable', 'Unknown'])
+
+export const TemplateLoadError = ({ failure, onRetry }: TemplateLoadErrorProps) => {
   const { t } = useTranslation('project')
   return (
     <ErrorState title={t('loadFailed.title')}>
@@ -17,7 +21,11 @@ export const TemplateLoadError = ({ failure }: TemplateLoadErrorProps) => {
         {failure._tag === 'ExerciseNotFound'
           ? t('loadFailed.exerciseNotFound', { name: failure.name, exercise: failure.exercise })
           : null}
+        {failure._tag === 'IndexUnavailable' ? t(`indexFailed.${failure.failure}`) : null}
+        {failure._tag === 'FilesUnavailable' ? t('loadFailed.filesUnavailable', { name: failure.name }) : null}
+        {failure._tag === 'Unknown' ? t('loadFailed.unknown') : null}
       </p>
+      {RETRYABLE.has(failure._tag) ? <Button onClick={onRetry}>{t('retry')}</Button> : null}
     </ErrorState>
   )
 }
