@@ -1,4 +1,5 @@
 import { Language, Level, Paradigm } from '@typika/manifest'
+import { HealthStatus } from '@typika/registry-tools/health-status'
 
 import { Facet, FACETS } from './constants/facet.constant.ts'
 import type { IndexTopic, ListedTemplate } from './hub.domain-model.ts'
@@ -27,14 +28,23 @@ export const byFacet = <A>(valueOf: (facet: Facet) => A): Readonly<Record<Facet,
   library: valueOf(Facet.LIBRARY),
   useCase: valueOf(Facet.USE_CASE),
   category: valueOf(Facet.CATEGORY),
+  health: valueOf(Facet.HEALTH),
 })
 
-export const NO_FILTERS: TemplateFilters = byFacet(() => [])
+const DEFAULT_HEALTH: ReadonlyArray<string> = [HealthStatus.HEALTHY, HealthStatus.DEGRADED]
+
+export const NO_FILTERS: TemplateFilters = { ...byFacet(() => []), health: DEFAULT_HEALTH }
+
+const isDefault = (filters: TemplateFilters, facet: Facet) =>
+  facet === Facet.HEALTH
+    ? filters.health.length === DEFAULT_HEALTH.length && DEFAULT_HEALTH.every((value) => filters.health.includes(value))
+    : filters[facet].length === 0
 
 const VALUE_ORDER: Partial<Record<Facet, ReadonlyArray<string>>> = {
   language: Object.values(Language),
   paradigm: Object.values(Paradigm),
   level: Object.values(Level),
+  health: Object.values(HealthStatus),
 }
 
 const valuesOfParam = (param: unknown): ReadonlyArray<string> => {
@@ -47,11 +57,13 @@ const valuesOfParam = (param: unknown): ReadonlyArray<string> => {
 }
 
 export const filtersOfSearch = (search: Readonly<Record<string, unknown>>): TemplateFilters =>
-  byFacet((facet) => [...new Set(valuesOfParam(search[facet]))])
+  byFacet((facet) =>
+    facet in search || facet !== Facet.HEALTH ? [...new Set(valuesOfParam(search[facet]))] : NO_FILTERS.health
+  )
 
 export const searchOfFilters = (filters: TemplateFilters): Readonly<Partial<Record<Facet, string>>> =>
   Object.fromEntries(
-    FACETS.filter((facet) => filters[facet].length > 0).map((facet) => [facet, filters[facet].join(',')])
+    FACETS.filter((facet) => !isDefault(filters, facet)).map((facet) => [facet, filters[facet].join(',')])
   )
 
 const isWithinTopic = (topic: string, selected: string) => topic === selected || topic.startsWith(`${selected}/`)
@@ -59,6 +71,7 @@ const isWithinTopic = (topic: string, selected: string) => topic === selected ||
 export const matchesFacet = (template: ListedTemplate, facet: Facet, selected: ReadonlyArray<string>): boolean => {
   if (selected.length === 0) return true
   const values = template.values[facet]
+  if (facet === Facet.HEALTH && values.length === 0) return selected.includes(HealthStatus.HEALTHY)
   return facet === Facet.TOPIC
     ? selected.some((topic) => values.some((value) => isWithinTopic(value, topic)))
     : selected.some((value) => values.includes(value))
@@ -75,7 +88,9 @@ export const toggleFilter = (filters: TemplateFilters, facet: Facet, value: stri
 })
 
 export const activeFiltersOf = (filters: TemplateFilters): ReadonlyArray<ActiveFilter> =>
-  FACETS.flatMap((facet) => filters[facet].map((value) => ({ facet, value })))
+  FACETS.filter((facet) => !isDefault(filters, facet)).flatMap((facet) =>
+    filters[facet].map((value) => ({ facet, value }))
+  )
 
 const topicOptionsOf = (
   templates: ReadonlyArray<ListedTemplate>,

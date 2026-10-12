@@ -47,6 +47,7 @@ added = 2026-10-08
 | `category` | oui | `official` : dépôt sous `typika/*`, maintenu par l'équipe de curation. `community` : tout autre dépôt. |
 | `added` | oui | Date d'entrée, renseignée par la PR. |
 | `parent` | non | Ref épinglée du template dont celui-ci est un remix (§7). |
+| `deprecated` | non | `true` : décision de l'équipe de déprécier le template (§5), appliquée au run de santé suivant. |
 
 Le nom du fichier doit être égal au `name` du manifeste pointé. Les noms sont uniques sur tout le registre, toutes
 catégories confondues.
@@ -115,7 +116,7 @@ Les templates communautaires restent libres de leur organisation (un dépôt, un
 `packages/registry-tools` porte ces vérifications : `registry-tools build <registre> --out <index.json>` les exécute,
 puis écrit l'index. Elle lit chaque template à son SHA épinglé. Tant que `typika/templates` n'existe pas (lot 7 du M3),
 le dossier `registry/` du monorepo tient lieu de registre, et `github:typika/templates/<chemin>@<sha>` se lit dans le
-dossier `templates/` du monorepo, à ce commit. V8 arrive avec la CI de santé ; les exercices Go et Kotlin ne sont pas
+dossier `templates/` du monorepo, à ce commit. V8 dépend du run de santé (§4), que `registry-tools health` mène ; les exercices Go et Kotlin ne sont pas
 encore exécutés (V9). `registry-tools mirror <index.json> --out <dossier>` écrit les fichiers de chaque entrée à sa ref
 épinglée, au format de jsDelivr ([0022](../decisions/0022-template-files-source.md)) : c'est la source des fichiers
 quand l'app sert son propre registre.
@@ -246,6 +247,12 @@ Règles :
 - Un échec isolé est relancé une fois avant de passer `broken`, pour absorber les erreurs réseau.
 - `brokenSince` est conservé tant que l'état reste `broken` ; il repart à zéro dès un run `healthy` ou `degraded`.
 - Un template `deprecated` qui redevient sain via une nouvelle ref repasse `healthy` après revue.
+
+`registry-tools health <registre> --app <url> [--only <noms>] [--run-url <url>]` mène ce run sur une instance de
+l'app qui sert les templates à leur ref épinglée ([0025](../decisions/0025-health-run.md)). Elle écrit
+`health/<name>.json`, que `registry-tools build` recopie dans l'index. Les templates dont l'app n'exécute pas encore
+le runtime (Go, Kotlin) sont sautés et gardent `health: null`. Le contrôle des dépendances (étape 5) vaut `skip` pour
+l'instant, et un boot de plus de 20 s rend le template `degraded`.
 
 ### 4.4 Renovate
 

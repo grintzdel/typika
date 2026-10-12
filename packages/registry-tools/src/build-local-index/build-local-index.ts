@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect'
 import { buildIndex } from '../build-index/build-index.ts'
 import { checkRegistry } from '../check-registry/check-registry.ts'
 import type { RegistryIndex } from '../domain/registry-index.domain-model.ts'
+import { readHealth } from '../read-health/read-health.ts'
 import { readRegistry } from '../read-registry/read-registry.ts'
 import { makeGitResolver } from '../resolve-ref/resolve-ref.ts'
 
@@ -15,6 +16,7 @@ export const LOCAL_CHECKOUTS = { 'typika/templates': 'templates' }
 export type LocalIndexBuild = {
   readonly checks: ReadonlyArray<TemplateCheck>
   readonly index: RegistryIndex | undefined
+  readonly deprecated: ReadonlySet<string>
 }
 
 export const git = (cwd: string, args: ReadonlyArray<string>) =>
@@ -26,9 +28,15 @@ export const buildLocalIndex = async (registryDir: string): Promise<LocalIndexBu
   const report = await Effect.runPromise(
     checkRegistry(await readRegistry(root), makeGitResolver(repoRoot, LOCAL_CHECKOUTS), runTestsInProcess)
   )
-  if (hasErrors(report.checks)) return { checks: report.checks, index: undefined }
+  if (hasErrors(report.checks)) return { checks: report.checks, index: undefined, deprecated: new Set() }
+  const health = await readHealth(root)
   return {
     checks: report.checks,
+    deprecated: new Set(
+      report.templates
+        .filter((template) => template.entry.deprecated === true)
+        .map((template) => template.manifest.name)
+    ),
     index: buildIndex({
       templates: report.templates,
       vocabulary: report.vocabulary,
@@ -36,6 +44,7 @@ export const buildLocalIndex = async (registryDir: string): Promise<LocalIndexBu
       registryCommit: git(root, ['rev-parse', '--short=12', 'HEAD']),
       updatedAtOf: (file) =>
         git(root, ['log', '-1', '--format=%cs', '--', relative(root, join(root, file))]) || undefined,
+      healthOf: (name) => health.get(name),
     }),
   }
 }

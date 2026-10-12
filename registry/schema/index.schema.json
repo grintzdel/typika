@@ -254,7 +254,68 @@
             ]
           },
           "health": {
-            "type": "null"
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["healthy", "degraded", "broken", "deprecated"]
+                  },
+                  "checkedAt": {
+                    "type": "string"
+                  },
+                  "brokenSince": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "checks": {
+                    "type": "object",
+                    "properties": {
+                      "boot": {
+                        "type": "string",
+                        "enum": ["pass", "warn", "fail", "skip"]
+                      },
+                      "tests": {
+                        "type": "string",
+                        "enum": ["pass", "warn", "fail", "skip"]
+                      },
+                      "exercises": {
+                        "type": "string",
+                        "enum": ["pass", "warn", "fail", "skip"]
+                      },
+                      "deps": {
+                        "type": "string",
+                        "enum": ["pass", "warn", "fail", "skip"]
+                      }
+                    },
+                    "required": ["boot", "tests", "exercises", "deps"],
+                    "additionalProperties": true
+                  },
+                  "runUrl": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": ["status", "checkedAt", "brokenSince", "checks", "runUrl"],
+                "additionalProperties": true
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "search": {
             "type": "object",

@@ -25,6 +25,8 @@ export const makeTemplateIndexFetch = (
         summary: template.manifest.summary,
         language: template.manifest.facets.language,
         level: template.manifest.facets.level,
+        health:
+          template.health === null ? undefined : { status: template.health.status, runUrl: template.health.runUrl },
       }))
     ),
     Effect.tap((entries) =>

@@ -2,6 +2,7 @@ import { ExerciseKind, Language, Level, Paradigm, RuntimeKind, UseCase } from '@
 import * as Schema from 'effect/Schema'
 
 import { RegistryCategory } from './constants/registry-category.constant.ts'
+import { TemplateHealthSchema } from './template-health.domain-model.ts'
 
 export const INDEX_SCHEMA_VERSION = 1
 
@@ -48,7 +49,7 @@ export const IndexTemplateSchema = Schema.Struct({
     exercises: Schema.Array(Schema.Struct({ name: Schema.String, kind: literals(ExerciseKind), title: Schema.String })),
   }),
   parent: Schema.NullOr(Schema.String),
-  health: Schema.Null,
+  health: Schema.NullOr(TemplateHealthSchema),
   search: Schema.Struct({ text: Schema.String }),
 })
 

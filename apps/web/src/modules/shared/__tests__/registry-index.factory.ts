@@ -1,4 +1,5 @@
 import type { IndexTemplate, RegistryIndex } from '@typika/registry-tools/index-schema'
+import type { TemplateHealth } from '@typika/registry-tools/template-health'
 
 type Manifest = IndexTemplate['manifest']
 
@@ -52,5 +53,17 @@ export const registryIndex = (overrides: Partial<RegistryIndex> = {}): RegistryI
   registryCommit: '0123456789ab',
   vocabulary: { topics: [], languages: ['typescript'] },
   templates: [indexTemplate('strategy-ts'), indexTemplate('strategy-base-ts', { manifest: { role: 'base' } })],
+  ...overrides,
+})
+
+export const templateHealth = (
+  status: TemplateHealth['status'],
+  overrides: Partial<TemplateHealth> = {}
+): TemplateHealth => ({
+  status,
+  checkedAt: '2026-10-12T03:00:00.000Z',
+  brokenSince: status === 'broken' || status === 'deprecated' ? '2026-10-12T03:00:00.000Z' : null,
+  checks: { boot: 'pass', tests: status === 'broken' ? 'fail' : 'pass', exercises: 'pass', deps: 'skip' },
+  runUrl: null,
   ...overrides,
 })

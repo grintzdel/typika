@@ -254,6 +254,18 @@ après l'hydratation. Les compteurs et les durées sont formatés selon la langu
 à jour et, dans une autre langue que l'anglais, indique que le contenu des templates est en anglais. Un test vérifie que
 chaque clé `en` existe en `fr`, et un E2E change de langue sur le hub et dans la sandbox, puis recharge la page.
 
+Lot 6 livré ([0025](decisions/0025-health-run.md)). `pnpm registry:health --app <url>` ouvre chaque template
+dans Chromium sur une instance de l'app. Il lance Run, puis les tests, et rejoue chaque exercice jusqu'à « Apply the
+solution ». Un échec est relancé une fois, puis l'état est écrit dans `registry/health/<name>.json`, et
+`registry:build` le met dans l'index. Les 34 templates TypeScript et JavaScript sont `healthy` ; les quatre templates
+Go et Kotlin sont sautés tant que l'app n'a pas leur runtime. Le hub montre un badge sur les cartes et la page
+template, un bandeau rouge `broken` sur la page et dans la sandbox, et un bandeau `deprecated` avec « Voir des
+alternatives ». La liste a une facette de santé, et un template `deprecated` quitte l'accueil. Le critère a été joué
+sur le build de production : `strategy-ts` épinglé sur un commit jetable dont le Run plante passe `broken` et affiche
+ses bandeaux, puis redevient `healthy` une fois le pin rétabli. Un tel commit passe V9, puisque ses tests restent
+verts : c'est ce que le run de santé ajoute à l'indexation. L'E2E de production lance la sonde sur `strategy-ts`, puis
+sur un exercice et un template introuvables.
+
 ## M4 — Go & comparaison
 
 **Objectif** : la deuxième langue et la comparaison, cœur de la leçon « le langage fait partie du pattern ».

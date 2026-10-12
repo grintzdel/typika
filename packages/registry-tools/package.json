@@ -4,7 +4,10 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./index-schema": "./src/domain/registry-index.domain-model.ts"
+    "./index-schema": "./src/domain/registry-index.domain-model.ts",
+    "./health-status": "./src/domain/constants/health-status.constant.ts",
+    "./health-probe": "./src/probe-template/probe-template.playwright.ts",
+    "./template-health": "./src/domain/template-health.domain-model.ts"
   },
   "scripts": {
     "typecheck": "tsc",
@@ -14,6 +17,7 @@
     "@typika/manifest": "workspace:*",
     "@typika/template-check": "workspace:*",
     "effect": "4.0.2",
+    "playwright": "1.64.0",
     "smol-toml": "1.9.0",
     "spdx-license-list": "6.12.0"
   },

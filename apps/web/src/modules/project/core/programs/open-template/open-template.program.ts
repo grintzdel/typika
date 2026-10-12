@@ -99,5 +99,6 @@ export const openTemplateProgram = (key: string) =>
       files: projectFiles,
       templateFiles,
       modifiedPaths: modifiedPathsOf(templateFiles, projectFiles),
+      health: entry.health,
     } satisfies TemplateProject
   })

@@ -1,5 +1,7 @@
+import type { TemplateHealth } from '@typika/registry-tools/template-health'
 import { describe, expect, it } from 'vitest'
 
+import { templateHealth } from '../../../shared/__tests__/registry-index.factory.ts'
 import { hubIndex } from '../../__tests__/hub-index.factory.ts'
 import { listedTemplatesOf } from './hub.domain-model.ts'
 import {
@@ -69,5 +71,59 @@ describe('template filters', () => {
       { facet: 'level', values: ['beginner', 'intermediate'] },
       { facet: 'category', values: ['official'] },
     ])
+  })
+})
+
+describe('the health facet', () => {
+  const index = hubIndex()
+  const withHealth = {
+    ...index,
+    templates: index.templates.map((template) => {
+      const health = new Map<string, TemplateHealth['status']>([
+        ['hexagonal-ts', 'degraded'],
+        ['strategy-go', 'broken'],
+        ['observer-ts', 'deprecated'],
+      ]).get(template.name)
+      return health === undefined ? template : { ...template, health: templateHealth(health) }
+    }),
+  }
+  const namesWithHealth = (search: Readonly<Record<string, unknown>>) =>
+    listedTemplatesOf(withHealth)
+      .filter((template) => matchesFilters(template, filtersOfSearch(search)))
+      .map((template) => template.name)
+
+  it('keeps the healthy, the degraded and the unchecked templates by default', () => {
+    expect(NO_FILTERS.health).toEqual(['healthy', 'degraded'])
+    expect(namesWithHealth({})).toEqual(['hexagonal-ts', 'strategy-ts'])
+  })
+
+  it('shows the broken and the deprecated templates once they are checked', () => {
+    expect(namesWithHealth({ health: 'broken,deprecated' })).toEqual(['strategy-go', 'observer-ts'])
+  })
+
+  it('keeps every template when no health is checked', () => {
+    expect(namesWithHealth({ health: '' })).toEqual(['hexagonal-ts', 'strategy-ts', 'strategy-go', 'observer-ts'])
+  })
+
+  it('writes the health to the query string only when it differs from the default', () => {
+    expect(searchOfFilters(NO_FILTERS)).toEqual({})
+    expect(searchOfFilters(toggleFilter(NO_FILTERS, 'health', 'broken'))).toEqual({
+      health: 'healthy,degraded,broken',
+    })
+    expect(searchOfFilters({ ...NO_FILTERS, health: [] })).toEqual({ health: '' })
+  })
+
+  it('lists the health as an active filter only when it differs from the default', () => {
+    expect(activeFiltersOf(NO_FILTERS)).toEqual([])
+    expect(activeFiltersOf(toggleFilter(NO_FILTERS, 'health', 'degraded'))).toEqual([
+      { facet: 'health', value: 'healthy' },
+    ])
+  })
+
+  it('offers the health values in their order of severity', () => {
+    expect(facetOptionsOf(listedTemplatesOf(withHealth), withHealth.vocabulary.topics).values).toContainEqual({
+      facet: 'health',
+      values: ['degraded', 'broken', 'deprecated'],
+    })
   })
 })

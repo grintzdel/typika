@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import type { TemplatePage } from '../../core/domain/hub.domain-model.ts'
 import { useHubLabels } from '../hooks/use-hub-labels.ts'
+import { HealthBadge } from './HealthBadge.tsx'
 
 export type TemplateOverviewProps = {
   readonly page: TemplatePage
@@ -59,6 +60,7 @@ export const TemplateOverview = ({ page }: TemplateOverviewProps) => {
           <span className="text-neutral-600 dark:text-neutral-400">{t('template.level')} </span>
           {labels.level(page.level)}
         </p>
+        <HealthBadge status={page.health?.status} />
       </div>
       <a
         href={`/play/${page.name}`}

@@ -26,6 +26,7 @@ export const resources = {
         library: 'Library',
         useCase: 'Use case',
         category: 'Category',
+        health: 'Health',
         count: '{{count, number}}',
       },
       values: {
@@ -39,6 +40,13 @@ export const resources = {
           cli: 'CLI',
         },
         category: { official: 'Official', community: 'Community' },
+        health: { healthy: 'Healthy', degraded: 'Degraded', broken: 'Broken', deprecated: 'Deprecated' },
+      },
+      health: {
+        broken: 'This template currently fails its automatic check.',
+        deprecated: 'This template is deprecated: it is no longer maintained.',
+        run: 'See the check run',
+        alternatives: 'See alternatives',
       },
       list: {
         title: 'Templates',
@@ -249,6 +257,7 @@ export const resources = {
         library: 'Bibliothèque',
         useCase: 'Cas d’usage',
         category: 'Catégorie',
+        health: 'Santé',
         count: '{{count, number}}',
       },
       values: {
@@ -262,6 +271,13 @@ export const resources = {
           cli: 'CLI',
         },
         category: { official: 'Officiel', community: 'Communauté' },
+        health: { healthy: 'Sain', degraded: 'Dégradé', broken: 'Cassé', deprecated: 'Déprécié' },
+      },
+      health: {
+        broken: 'Ce template échoue actuellement à la vérification automatique.',
+        deprecated: 'Ce template est déprécié : il n’est plus maintenu.',
+        run: 'Voir le run de vérification',
+        alternatives: 'Voir des alternatives',
       },
       list: {
         title: 'Templates',

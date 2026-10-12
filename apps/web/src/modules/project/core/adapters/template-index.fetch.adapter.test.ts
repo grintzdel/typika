@@ -2,7 +2,7 @@ import * as Effect from 'effect/Effect'
 import * as Exit from 'effect/Exit'
 import { describe, expect, it, vi } from 'vitest'
 
-import { registryIndex } from '../../../shared/__tests__/registry-index.factory.ts'
+import { registryIndex, templateHealth } from '../../../shared/__tests__/registry-index.factory.ts'
 import { makeTemplateIndexFetch } from './template-index.fetch.adapter.ts'
 
 const URL = 'https://registry.example.org/index.json'
@@ -31,9 +31,29 @@ describe('makeTemplateIndexFetch', () => {
         summary: 'Replace a growing switch.',
         language: 'typescript',
         level: 'intermediate',
+        health: undefined,
       },
       expect.objectContaining({ name: 'strategy-base-ts', role: 'base' }),
     ])
+  })
+
+  it('gives the health of a checked template', async () => {
+    const checked = registryIndex()
+    const index = makeTemplateIndexFetch(
+      URL,
+      fetchReturning({
+        ...checked,
+        templates: checked.templates.map((template) => ({
+          ...template,
+          health: templateHealth('broken', { runUrl: 'https://ci.example/runs/1' }),
+        })),
+      })
+    )
+
+    expect((await Effect.runPromise(index.entries))[0]?.health).toEqual({
+      status: 'broken',
+      runUrl: 'https://ci.example/runs/1',
+    })
   })
 
   it('downloads the index once', async () => {

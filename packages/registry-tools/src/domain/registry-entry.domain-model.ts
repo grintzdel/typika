@@ -9,6 +9,7 @@ export const RegistryEntrySchema = Schema.Struct({
   category: Schema.Literals(Object.values(RegistryCategory)),
   added: Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/, { expected: 'a date such as 2026-10-08' })),
   parent: Schema.optionalKey(Schema.String),
+  deprecated: Schema.optionalKey(Schema.Boolean),
 })
 
 export type RegistryEntry = typeof RegistryEntrySchema.Type

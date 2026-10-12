@@ -78,5 +78,7 @@ export const templatePage = (overrides: Partial<TemplatePage> = {}): TemplatePag
   base: 'strategy-base-ts',
   parent: undefined,
   exercises: [{ name: 'implement-express', kind: 'refactor', title: 'Implement express' }],
+  health: undefined,
+  alternatives: '/templates?topic=design-pattern%2Fbehavioral%2Fstrategy',
   ...overrides,
 })

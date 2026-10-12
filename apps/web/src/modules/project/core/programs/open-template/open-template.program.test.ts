@@ -5,7 +5,9 @@ import { describe, expect, it } from 'vitest'
 
 import { projectFiles, projectRecord } from '../../../__tests__/project.factory.ts'
 import { templateFiles, templateToml } from '../../../__tests__/template.factory.ts'
+import type { TemplateEntry } from '../../domain/template-entry.domain-model.ts'
 import { TemplateFilesPort } from '../../ports/template-files.port.ts'
+import { TemplateIndexPort } from '../../ports/template-index.port.ts'
 import {
   failingProjectStorage,
   makeProjectStorageInMemory,
@@ -82,6 +84,35 @@ describe('openTemplateProgram', () => {
 
     expect(Exit.isSuccess(exit) && exit.value.ref).toBe(before)
     expect(Exit.isSuccess(exit) && new Map<string, unknown>(exit.value.templateFiles).get('src/main.ts')).toBe('before')
+  })
+
+  it('opens a template with the health the index gives it', async () => {
+    const health = { status: 'broken', runUrl: null } as const
+    const exit = await Effect.runPromiseExit(
+      openTemplateProgram('sample-ts').pipe(
+        Effect.provide(
+          Layer.mergeAll(
+            makeProjectTestLayer({ 'sample-ts': templateFiles() }),
+            Layer.succeed(TemplateIndexPort, {
+              entries: Effect.succeed<ReadonlyArray<TemplateEntry>>([
+                {
+                  name: 'sample-ts',
+                  ref: testRefOf('sample-ts'),
+                  role: 'template',
+                  title: 'Sample',
+                  summary: 'A sample.',
+                  language: 'typescript',
+                  level: 'beginner',
+                  health,
+                },
+              ]),
+            })
+          )
+        )
+      )
+    )
+
+    expect(Exit.isSuccess(exit) && exit.value.health).toEqual(health)
   })
 
   it('opens a new project at the ref the index pins', async () => {
