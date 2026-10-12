@@ -38,6 +38,11 @@ export const TopicSchema = Schema.String.check(
   Schema.isPattern(TOPIC, { expected: 'a topic such as "design-pattern/behavioral/strategy"' })
 )
 
+const KeywordSchema = Schema.String.check(
+  Schema.isPattern(SLUG, { expected: 'a lowercase word of 1 to 32 characters' }),
+  Schema.isMaxLength(32, { expected: 'a lowercase word of 1 to 32 characters' })
+)
+
 export const LanguageSchema = literals(Language)
 export const RuntimeKindSchema = literals(RuntimeKind)
 export const LevelSchema = literals(Level)
@@ -123,6 +128,10 @@ export const ManifestSchema = Schema.Struct({
   ),
   title: lengthBetween(1, 80),
   summary: lengthBetween(1, 200),
+  keywords: withDefault(
+    Schema.Array(KeywordSchema).check(Schema.isMaxLength(10, { expected: 'at most 10 keywords' })),
+    []
+  ),
   license: Schema.String,
   authors: Schema.NonEmptyArray(Schema.String.check(Schema.isPattern(AUTHOR, { expected: '"github:<login>"' }))),
   role: withDefault(Schema.Literals(['template', 'base']), 'template'),

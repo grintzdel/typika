@@ -330,6 +330,8 @@ sur les deux plateformes. Cela impose :
 Manifeste et structure :
 
 - [ ] Le validateur ne remonte aucune erreur ; chaque avertissement restant est justifié dans la PR.
+- [ ] `keywords` contient les mots qu'un apprenant taperait pour décrire son problème et qui manquent au titre, au
+  résumé et au tour (`switch` pour Strategy) ; vide sinon.
 - [ ] `name` respecte la convention du catalogue (`<concept>-<lang>`, `<concept>-base-<lang>`).
 - [ ] Topic principal en premier dans `facets.topic` ; `level` cohérent avec le catalogue.
 - [ ] `LICENSE` présent et conforme à `license`.

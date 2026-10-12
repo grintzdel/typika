@@ -210,6 +210,8 @@ Règles :
   manifeste.
 - `health` vaut `null` tant que la CI de santé n'a pas tourné sur le template.
 - `schema/index.schema.json` est généré depuis le schéma Effect de l'index (`registry-tools schema`).
+- `search.text` réunit, en minuscules et sans doublon, les mots du nom, du titre, du résumé, des `keywords`, des
+  libellés de topic, des titres d'étapes du tour et des titres d'exercices.
 - Le contenu des fichiers (code, tours) n'est pas dans l'index : l'app le charge à l'ouverture depuis la ref épinglée.
 - L'index ne contient que les métadonnées nécessaires au hub et à la recherche. Cible : < 500 Ko compressé.
 - `schema` est versionné ; l'app refuse un index de version majeure inconnue et affiche un message.

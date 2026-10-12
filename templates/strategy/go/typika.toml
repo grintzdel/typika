@@ -2,6 +2,7 @@ schema = 1
 name = "strategy-go"
 title = "Strategy: shipping options"
 summary = "Pick an algorithm at runtime without the caller knowing which one runs."
+keywords = ["switch", "if-else", "conditional", "polymorphism"]
 license = "MIT-0"
 authors = ["github:maoudin"]
 
