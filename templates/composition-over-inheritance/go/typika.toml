@@ -1,0 +1,49 @@
+schema = 1
+name = "composition-over-inheritance-go"
+title = "Composition vs inheritance: a product catalogue"
+summary = "Build values from small, swappable parts instead of a chain of embedded structs."
+keywords = ["embedding", "embed"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "go"
+paradigm = ["oop"]
+topic = ["fundamental/composition-over-inheritance"]
+level = "beginner"
+useCase = ["backend"]
+
+[runtime]
+kind = "go"
+entry = "cmd/shop/main.go"
+
+[commands]
+test = "go test"
+
+[tests]
+include = ["**/*_test.go"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-hierarchy.md",
+  "tour/03-explosion.md",
+  "tour/04-compose.md",
+  "tour/05-delegate.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/composition-over-inheritance-base/go"
+focus = ["internal/catalog/**"]
+
+[variants]
+typescript = "github:typika/templates/composition-over-inheritance/ts"
+
+[[exercises]]
+name = "add-gift-wrap"
+kind = "refactor"
+title = "Add gift wrap"
+from = "base"
+solutionFrom = "self"
+failing = ["internal/catalog/gift_wrap_test.go"]

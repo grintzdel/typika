@@ -25,4 +25,5 @@ npm test
 
 ## Variants
 
+- Go: `composition-over-inheritance-go`, where the base embeds structs instead of extending classes.
 - JavaScript: `composition-over-inheritance-js`, where a factory function builds each product as a plain object.
