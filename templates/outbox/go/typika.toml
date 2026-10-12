@@ -1,0 +1,55 @@
+schema = 1
+name = "outbox-go"
+title = "Transactional outbox: publishing order events"
+summary = "Save each event in the same transaction as the order, and let a relay publish it to the broker."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "go"
+paradigm = ["oop"]
+topic = ["architecture/outbox"]
+level = "advanced"
+useCase = ["backend"]
+
+[runtime]
+kind = "go"
+entry = "cmd/shop/main.go"
+
+[commands]
+test = "go test"
+
+[tests]
+include = ["**/*_test.go"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-dual-write.md",
+  "tour/03-same-transaction.md",
+  "tour/04-relay.md",
+  "tour/05-idempotent-consumer.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/go"
+focus = ["internal/orders/**", "internal/loyalty/**", "internal/infra/in_memory_database.go", "internal/app/open_shop.go"]
+
+[variants]
+typescript = "github:typika/templates/outbox/ts"
+
+[[exercises]]
+name = "survive-broker-outage"
+kind = "refactor"
+title = "Survive a broker outage"
+from = "base"
+failing = ["internal/app/broker_outage_test.go"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "deduplicate-deliveries"
+kind = "fix"
+title = "Deduplicate deliveries"
+failing = ["internal/loyalty/loyalty_points_test.go"]
+hints = ["hint-1.md", "hint-2.md"]
