@@ -36,6 +36,9 @@ steps = [
 template = "github:typika/templates/naive-crud/ts"
 focus = ["src/orders/**", "src/loyalty/**", "src/infrastructure/in-memory-database.ts", "src/open-shop.ts"]
 
+[variants]
+go = "github:typika/templates/outbox/go"
+
 [[exercises]]
 name = "survive-broker-outage"
 kind = "refactor"
