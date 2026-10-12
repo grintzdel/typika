@@ -1,0 +1,48 @@
+schema = 1
+name = "dependency-inversion-go"
+title = "Dependency inversion: confirming an order"
+summary = "Make the business code own the interfaces it needs, and let the infrastructure plug into them."
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "go"
+paradigm = ["oop"]
+topic = ["principle/dependency-inversion"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "go"
+entry = "cmd/shop/main.go"
+
+[commands]
+test = "go test"
+
+[tests]
+include = ["**/*_test.go"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-concrete-dependencies.md",
+  "tour/03-own-the-abstraction.md",
+  "tour/04-inject.md",
+  "tour/05-composition-root.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/dependency-inversion-base/go"
+focus = ["internal/checkout/**", "internal/memstore/**", "internal/smtp/**", "internal/app/open_shop.go"]
+
+[variants]
+typescript = "github:typika/templates/dependency-inversion/ts"
+
+[[exercises]]
+name = "test-without-smtp"
+kind = "refactor"
+title = "Test the confirmation without SMTP"
+from = "base"
+failing = ["internal/checkout/order_confirmation_test.go"]
+hints = ["hint-1.md"]

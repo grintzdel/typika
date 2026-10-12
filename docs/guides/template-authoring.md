@@ -289,6 +289,11 @@ package, ce qui impose :
 - **Des tests `failing` qui compilent contre l'état de départ.** Un fichier de test qui ne compile pas casse tout son
   package, donc tous ses tests. Pour une valeur que la base ne connaît pas encore, écrire la conversion
   (`checkout.ShippingOption("pickup-point")`) plutôt que la constante de la solution.
+- **Une nouvelle API déclarée par `start/`.** Quand l'exigence change la signature que le test appelle (le DIP, dont
+  le test construit le service avec ses dépendances), le test ne peut pas compiler contre la base. `start/` déclare
+  alors l'API attendue avec un corps qui ignore ses arguments (`func New(orders OrderRepository, notifier Notifier)
+  *Service { return NewService() }` dans `dependency-inversion-go`) : le test compile, seul son comportement est rouge.
+  Le template met ces déclarations dans le même fichier, pour que `solution/` le remplace.
 - **Un `start/` de `fix` qui ne panique pas.** Un `panic` dans un test arrête le binaire de test : les tests suivants
   ne tournent pas. Renvoyer une valeur fausse (`shop.Zero`), pas `panic("not implemented")`.
 - Tests boîte noire dans le package `<pkg>_test`, avec des sous-tests `t.Run("<phrase de comportement>", …)` : les
@@ -357,7 +362,7 @@ Exercices :
 
 - [ ] Au moins un `refactor` qui part de la base ; l'exigence est pénible dans la base (vérifié en l'y écrivant).
 - [ ] État de départ : seuls les tests `failing` sont rouges. Avec `solution/` : tout est vert. `pnpm template-check` le vérifie pour
-  les templates `browser-js`.
+  les templates `browser-js` et `go`.
 - [ ] Énoncés sans solution ; indices progressifs.
 
 Variantes :

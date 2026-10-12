@@ -22,3 +22,7 @@ npm test
 - `src/checkout/checkout-service.ts`: receives its dependencies and names no implementation.
 - `src/infrastructure/`: the SMTP mailer and the store implement the checkout's interfaces.
 - `src/open-shop.ts`: the composition root, the one place that picks the implementations.
+
+## Variants
+
+- Go: `dependency-inversion-go`, where the checkout declares its interfaces and the mailer fits them implicitly.
