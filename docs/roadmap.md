@@ -343,6 +343,14 @@ l'ISP, `payments` ne déclare plus aucune interface : chaque client déclare la 
 contrainte propre à Go : un test qui appelle une API absente de la base ne compile pas, donc `start/` déclare cette
 API avec un corps qui ignore ses arguments. Le guide d'écriture l'ajoute à sa section Go (§8.3).
 
+État (2026-10-12) : lot 4, vague (b) livrée. `decorator-go` et `adapter-go` sont au registre avec leurs bases,
+`healthy`, et se comparent à leur variante TS sans `W_TOUR_ORDER_DIVERGES` (#51, #52). Les décorateurs Go sont des
+structs qui embarquent le `Notifier` qu'ils enveloppent, comme un middleware `http.Handler` ; le tour explique ce que
+l'embedding transmet, et le risque d'une méthode transmise sans le comportement du décorateur. L'adapter Go satisfait
+`payments.Gateway` implicitement, vérifié par `var _ Gateway = (*LegacyPayAdapter)(nil)`. Le SDK simulé vit dans
+`internal/legacypay`, pas sous `vendor/`. Les tests qui espionnaient le SDK en TS vérifient ce qu'il détient. Les deux
+exercices `refactor` appliquent la règle Go du guide : `start/` déclare l'API nouvelle avec un corps sans effet.
+
 ## M5 — Partage
 
 **Objectif** : sortir les templates de Typika.
