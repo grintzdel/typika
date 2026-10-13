@@ -35,6 +35,9 @@ steps = [
 template = "github:typika/templates/open-closed-base/ts"
 focus = ["src/pricing/**", "src/receipts/**"]
 
+[variants]
+kotlin = "github:typika/templates/open-closed/kotlin"
+
 [[exercises]]
 name = "add-black-friday-rule"
 kind = "refactor"
