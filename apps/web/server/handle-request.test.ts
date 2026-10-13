@@ -34,6 +34,7 @@ beforeAll(async () => {
     'client/assets/index-abc.js': 'export {}',
     'client/robots.txt': 'User-agent: *',
     'client/registry/index.json': '{}',
+    'client/registry/artifacts/kotlin/0123.json': '{"_tag":"Failed","diagnostics":[]}',
     'client/registry/gh/typika/templates@0123456789ab/strategy/ts/typika.toml': 'name = "strategy-ts"',
     'runtime/frame.html': '<!doctype html>',
     'runtime/assets/esbuild-abc.wasm': 'wasm',
@@ -127,6 +128,14 @@ describe('makeRequestHandler on the app origin', () => {
     expect((await get(`${APP}/registry/index.json`)).headers.get('cache-control')).toBe('no-cache')
     expect(await pinned.text()).toBe('name = "strategy-ts"')
     expect(pinned.headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
+  })
+
+  it('serves the precompiled Kotlin artifacts as immutable, and answers 404 for a missing one', async () => {
+    const artifact = await get(`${APP}/registry/artifacts/kotlin/0123.json`)
+
+    expect(await artifact.json()).toEqual({ _tag: 'Failed', diagnostics: [] })
+    expect(artifact.headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
+    expect((await get(`${APP}/registry/artifacts/kotlin/4567.json`)).status).toBe(404)
   })
 
   it('lets the app reach a registry served from another origin', async () => {

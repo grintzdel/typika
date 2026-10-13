@@ -483,6 +483,14 @@ Un template qui ne compile pas fait échouer le build ; sans service, le build s
 périmés. Ceux de `strategy-kotlin` et de sa base sont commités : 100 à 220 Ko chacun, 18 à 37 Ko compressés, et deux
 builds successifs écrivent les mêmes fichiers.
 
+(b) livré : l'app cherche chaque compilation dans son cache IndexedDB, puis dans `artifacts/kotlin/<clé>.json` à côté
+de l'index du registre, en lecture seule ; un artefact absent ou illisible compte comme absent du cache. Le plugin Vite
+`registry-index` sert ces artefacts en dev et les émet au build, et le serveur de production les sert comme immuables,
+avec un `404` pour un artefact absent. L'E2E de dev ouvre `strategy-kotlin`, lance ses tests et `main` sans aucun appel
+à `/api/kotlin/compile`, puis l'appelle une fois après une modification. Sur le build de production, Chromium et WebKit
+ne font aucun appel. Les exercices ne sont pas précompilés : leur état de départ passe par le service. Le lot 4 est
+livré.
+
 ---
 
 ## Après M6 (non planifié)

@@ -536,8 +536,11 @@ l'artefact ne contient pas de commentaire `sourceMappingURL` : la source map arr
   pas.
 - **Artefacts précompilés** : la CI du registre (`registry-tools build`) compile chaque template Kotlin, sans son
   dossier `exercises/`, en modes `test` et `run`. Elle écrit chaque compilation sous sa clé de cache dans
-  `artifacts/kotlin/<clé>.json` du registre, publié avec l'index. Ouvrir un template et lancer ses tests ne coûte
-  aucun appel au service tant que l'utilisateur n'a rien modifié : une modification change la clé.
+  `artifacts/kotlin/<clé>.json` du registre, publié à côté de l'index. L'app les lit à cette adresse, relative à
+  `TYPIKA_REGISTRY_INDEX_URL`, derrière son cache IndexedDB et en lecture seule : un artefact absent ou illisible
+  compte comme absent du cache. Ouvrir un template et lancer ses tests ne coûte aucun appel au service tant que
+  l'utilisateur n'a rien modifié : une modification change la clé. Un exercice part d'un autre état que le template :
+  il passe par le service.
 - **Cache serveur** : facultatif, en mémoire uniquement (LRU), perdu au redémarrage. Le service reste sans stockage.
 - Compilation **à la demande** (`run` / `test`), jamais à la frappe. Les diagnostics de l'éditeur Kotlin viennent du
   dernier `run` / `test`, pas d'un language server (hors V1).

@@ -1,5 +1,10 @@
 import { RuntimeLimit } from '@typika/runtime-core'
-import { makeIndexedDbCompileCache, makeKotlinCompilerClient, type KotlinCompilerClient } from '@typika/runtime-kotlin'
+import {
+  makeIndexedDbCompileCache,
+  makeKotlinCompilerClient,
+  makePrecompiledCompileCache,
+  type KotlinCompilerClient,
+} from '@typika/runtime-kotlin'
 import type * as Context from 'effect/Context'
 import * as Duration from 'effect/Duration'
 import * as Effect from 'effect/Effect'
@@ -78,15 +83,25 @@ export const makeRuntimeFrameIframe = (
   }
 }
 
-const kotlinCompilerOf = (url: string): KotlinCompilerClient =>
-  makeKotlinCompilerClient({ url, cache: makeIndexedDbCompileCache({ maxBytes: RuntimeLimit.COMPILE_CACHE_BYTES }) })
+const KOTLIN_ARTIFACTS_PATH = 'artifacts/kotlin/'
+
+const kotlinCompilerOf = (url: string, registryIndexUrl: string): KotlinCompilerClient =>
+  makeKotlinCompilerClient({
+    url,
+    cache: makePrecompiledCompileCache({
+      artifactsUrl: new URL(KOTLIN_ARTIFACTS_PATH, new URL(registryIndexUrl, window.location.href)).href,
+      cache: makeIndexedDbCompileCache({ maxBytes: RuntimeLimit.COMPILE_CACHE_BYTES }),
+    }),
+  })
 
 export const RuntimeFrameIframeLayer = Layer.effect(
   RuntimeFramePort,
   Effect.map(AppConfig, (config) =>
     makeRuntimeFrameIframe(
       config.runtimeOrigin,
-      config.kotlinCompilerUrl === undefined ? {} : { kotlinCompiler: kotlinCompilerOf(config.kotlinCompilerUrl) }
+      config.kotlinCompilerUrl === undefined
+        ? {}
+        : { kotlinCompiler: kotlinCompilerOf(config.kotlinCompilerUrl, config.registryIndexUrl) }
     )
   )
 )

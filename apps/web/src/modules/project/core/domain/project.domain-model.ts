@@ -1,4 +1,4 @@
-import type { ExerciseKind, TemplateFiles, TourStep } from '@typika/manifest'
+import { withoutExercises, type ExerciseKind, type TemplateFiles, type TourStep } from '@typika/manifest'
 import { ProjectPathSchema, type FileContent, type ProjectPath, type ProjectSnapshot } from '@typika/runtime-core'
 import * as Schema from 'effect/Schema'
 
@@ -87,15 +87,10 @@ export type TemplateProject = ProjectSnapshot & {
 export const textOf = (content: FileContent): string =>
   typeof content === 'string' ? content : new TextDecoder().decode(content)
 
-const EXERCISES_DIR = 'exercises/'
 const toProjectPath = Schema.decodeUnknownSync(ProjectPathSchema)
 
 export const projectFilesOf = (files: TemplateFiles): ProjectFiles =>
-  new Map(
-    [...files]
-      .filter(([path]) => !path.startsWith(EXERCISES_DIR))
-      .map(([path, content]) => [toProjectPath(path), textOf(content)])
-  )
+  new Map([...withoutExercises(files)].map(([path, content]) => [toProjectPath(path), textOf(content)]))
 
 export type BaseTemplate = {
   readonly name: string

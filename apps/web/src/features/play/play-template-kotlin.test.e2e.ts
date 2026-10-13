@@ -36,6 +36,12 @@ const replaceFile = async (page: Page, name: string, content: string) => {
 
 const source = (...path: ReadonlyArray<string>) => readFile(join(STRATEGY_DIR, ...path), 'utf8')
 
+const modifyMain = async (page: Page) => {
+  const main = await source('src', 'main', 'kotlin', 'Main.kt')
+  await replaceFile(page, 'Main.kt', main.replace('fun main() {', 'fun main() {\n    println("modified")'))
+  await expect(page.getByRole('status', { name: 'État du projet' })).toHaveText('Modifié')
+}
+
 test.describe('Kotlin sandbox', () => {
   test('runs main of strategy-kotlin', async ({ page }) => {
     await open(page)
@@ -55,8 +61,27 @@ test.describe('Kotlin sandbox', () => {
     await expect(results(page).getByText('0 échec')).toBeVisible()
   })
 
+  test('runs strategy-kotlin from its precompiled artifacts, then compiles once it is modified', async ({ page }) => {
+    const compilations: Array<string> = []
+    page.on('request', (request) => {
+      if (COMPILE.test(request.url())) compilations.push(request.url())
+    })
+    await open(page)
+
+    await runTests(page)
+    await page.getByRole('button', { name: 'Exécuter' }).click()
+    await expect(consoleRegion(page).getByText('Terminé avec le code 0')).toBeVisible({ timeout: TIMEOUT })
+    expect(compilations).toEqual([])
+
+    await modifyMain(page)
+    await Promise.all([page.waitForRequest(COMPILE), runTests(page)])
+
+    expect(compilations).toHaveLength(1)
+  })
+
   test('does not compile the same sources again after a reload', async ({ page }) => {
     await open(page)
+    await modifyMain(page)
     await runTests(page)
     const compilations: Array<string> = []
     page.on('request', (request) => {

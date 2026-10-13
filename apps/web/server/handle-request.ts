@@ -45,7 +45,8 @@ const MEDIA_TYPES: Readonly<Record<string, string>> = {
   '.txt': 'text/plain; charset=utf-8',
 }
 
-const PINNED_REGISTRY_PATHS = ['/registry/gh/', '/registry/listing/']
+const PINNED_REGISTRY_PATHS = ['/registry/gh/', '/registry/listing/', '/registry/artifacts/']
+const STATIC_ONLY_PATHS = ['/assets/', '/registry/']
 
 const isImmutable = (pathname: string) =>
   pathname.includes('/assets/') || PINNED_REGISTRY_PATHS.some((prefix) => pathname.startsWith(prefix))
@@ -150,7 +151,7 @@ export const makeRequestHandler = async ({
         ? undefined
         : ((await serveFile(clientRoot, pathname, request)) ?? (await servePrerendered(pathname)))
     if (file !== undefined) return file
-    if (pathname.startsWith('/assets/')) return notFound()
+    if (STATIC_ONLY_PATHS.some((prefix) => pathname.startsWith(prefix))) return notFound()
     return pageResponse(shell, appPolicy)
   }
 
