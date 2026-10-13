@@ -1,0 +1,24 @@
+schema = 1
+name = "liskov-substitution-base-kotlin"
+title = "Liskov substitution base: shipping products"
+summary = "A digital product that extends an open physical one and throws when shipped, before the fix."
+license = "MIT-0"
+authors = ["github:maoudin"]
+role = "base"
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["principle/liskov-substitution"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
