@@ -39,6 +39,7 @@ focus = ["src/catalog/**"]
 [variants]
 go = "github:typika/templates/composition-over-inheritance/go"
 javascript = "github:typika/templates/composition-over-inheritance/js"
+kotlin = "github:typika/templates/composition-over-inheritance/kotlin"
 
 [[exercises]]
 name = "add-gift-wrap"
