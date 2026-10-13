@@ -430,6 +430,16 @@ diagnostics sont en `fichier:ligne:colonne`, et `400`, `405`, `413`, `503` (file
 logs sans sources sont couverts. La suite demande Docker. Le réseau interne sans accès sortant arrive avec le profil
 Compose du lot 3.
 
+Lot 2 livré : `packages/runtime-kotlin` compile par le service (client du protocole, erreurs `429`, `503`, `504` et
+réseau, cache LRU en mémoire par hash en attendant IndexedDB au lot 3), puis exécute l'artefact dans un worker neuf
+par run, ou dans un contexte `node:vm` hors navigateur. Le harness `kotlin.test` émet les `TestEvent` par fichier,
+situe chaque échec sur la ligne du test par la source map et capture `println`. La suite de conformité compare
+`strategy-kotlin`, sa base, les quatre états de ses exercices et des fixtures (exceptions, `@Ignore`, package par
+défaut, chaque assertion, erreurs de compilation) à `gradle test`, et `main` à `gradle run` : mêmes verts, rouges,
+`fichier:ligne` et messages, une fois traduits les quatre messages que JUnit 5 formule autrement (§6.4 de
+[runtimes](specs/runtimes.md)). `template-check` lance les exercices Kotlin quand `KOTLIN_COMPILER_URL` est défini.
+Les tests du navigateur passent dans Chromium et WebKit.
+
 ---
 
 ## Après M6 (non planifié)

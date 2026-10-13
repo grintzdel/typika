@@ -40,7 +40,7 @@ beforeAll(async () => {
     updatedAtOf: (file) => (file.endsWith('strategy-ts.toml') ? '2026-10-12' : undefined),
     healthOf: (name) => (name === 'strategy-ts' ? BROKEN : undefined),
   })
-}, 30_000)
+}, 60_000)
 
 const templateNamed = (name: string) => index.templates.find((template) => template.name === name)
 

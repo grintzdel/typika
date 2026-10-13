@@ -241,7 +241,7 @@ export type TestEvent = Schema.Schema.Type<typeof TestEventSchema>
 |---|---|---|
 | `browser-js` | `@typika/test-runner` émet directement des `TestEvent` | Aucune |
 | `go` | Format `test2json` (`go test -json`) : `Action` = `run` / `pass` / `fail` / `skip` / `output` | `run` → aucun événement, `pass` → `TestPassed`, `fail` → `TestFailed` (message = sorties `output` accumulées du test), `skip` → `TestSkipped`, `output` → `Output` ; sous-tests `TestX/sub` → `SuiteStarted` pour `TestX` |
-| `kotlin` | Le compilateur enregistre chaque classe de test comme suite et chaque `@Test` comme test auprès de l'adaptateur de `kotlin.test` ; le harness du runtime fournit cet adaptateur (`describe` / `it`) | Suite racine = package, puis une suite par classe ; test réussi → `TestPassed`, exception → `TestFailed` (message de l'`AssertionError`, `location` tirée de la source map), `@Ignore` → `TestSkipped` |
+| `kotlin` | Le compilateur enregistre chaque classe de test comme suite et chaque `@Test` comme test auprès de l'adaptateur de `kotlin.test` ; le harness du runtime fournit cet adaptateur (`describe` / `it`) | Par fichier de test : suite racine = package (aucune pour le package par défaut), puis une suite par classe ; test réussi → `TestPassed`, exception → `TestFailed` (§6.4), `@Ignore` sur un test ou une classe → `TestSkipped` |
 
 Une ligne qui ne valide pas le schéma est transmise en `Output` `stderr` et logguée ; elle ne casse pas le run
 (`decodeTestEventLine(runId, line)`).
@@ -465,7 +465,26 @@ Projet (app) ──POST /compile──▶ kotlin-compiler (service) ──▶ mo
   position d'échec). La cible est un choix du runtime, pas du template.
 - `run` importe le module produit : `main` s'exécute au chargement, `println` est capturé en `Stdout`.
 - `test` installe l'adaptateur `kotlin.test` du harness (`describe`, `it`, `xit`), importe le module, puis exécute les
-  tests enregistrés et émet les `TestEvent` (§2.3).
+  tests enregistrés et émet les `TestEvent` (§2.3). Le fichier d'une classe de test vient des sources : sa déclaration
+  `package` et ses classes de premier niveau. Les tests passent dans l'ordre d'enregistrement, fichier par fichier ;
+  `TestOptions.files` restreint aux tests de ces fichiers, `TestOptions.namePattern` suit la règle de `browser-js`
+  (expression régulière sur « suites nom », sinon sous-chaîne ; un test écarté est `TestSkipped` `filtered`).
+- **Échecs.** Le message est celui de l'exception ; une exception autre qu'une `AssertionError` est préfixée de son
+  nom simple (`IllegalStateException: cannot divide 1 by zero`), comme dans le rapport de `gradle test`. `expected` et
+  `actual` sont tirés de la forme `Expected <…>, actual <…>.`. La pile est ramenée par la source map aux fichiers du
+  projet ; `location` est la première frame dans le fichier du test, sinon la première frame du projet.
+- **Messages** : ceux de l'asserter de `kotlin.test`. Sur la JVM, `kotlin-test-junit5` confie `assertEquals`,
+  `assertNotEquals`, `assertNull` et `assertNotNull` à JUnit 5, qui les formule autrement (`expected: <1> but was:
+  <2>` pour `Expected <1>, actual <2>.`) ; les autres assertions et `fail` donnent le même texte. Un message qui nomme
+  un type diffère aussi : la JVM écrit `java.lang.String`, JS `String`.
+- **Dans le navigateur** : `@typika/runtime-kotlin/browser`. La session compile depuis l'app, puis exécute l'artefact
+  dans un worker neuf par `run` ou `test`, importé depuis une URL `blob:`. Le worker est terminé à la fin, à
+  l'interruption ou au watchdog : pas d'état d'une exécution à l'autre. `load` n'a rien à télécharger.
+- **Hors navigateur** : `@typika/runtime-kotlin/node` exécute l'artefact dans un contexte `node:vm` sans `process`,
+  pour que `println` passe par la console du harness comme dans le navigateur. `template-check` s'en sert pour les
+  exercices Kotlin quand `KOTLIN_COMPILER_URL` désigne un service. La suite de `conformance/` compare ses résultats
+  à ceux de `gradle test` (statut, message après la correspondance JUnit 5 ci-dessus, `fichier:ligne` de la frame du
+  test), et la sortie de `main` à celle de `gradle run`, sur des fixtures et sur `strategy-kotlin`.
 - **Isolation** : aucune exigence. Pas de `SharedArrayBuffer`, le runtime tourne aussi en embed.
 - Contrainte templates : pas d'API spécifique JVM (`java.*`), stdlib et `kotlin.test` uniquement.
 
@@ -492,7 +511,7 @@ Content-Type: application/json
 | `200` | `{ "ok": true, "artifact": { "kind": "js", "code": "...", "sourceMap": "..." }, "diagnostics": [...] }` | Exécution ; les warnings vont en `Diagnostics` |
 | `200` | `{ "ok": false, "diagnostics": [...] }` | `Diagnostics` puis `RunFinished` `errored` (ou `RuntimeCompileError` pour `run`) |
 | `400` | `{ "error": "..." }` | Requête refusée (protocole, cible, version de Kotlin, chemin) : bug du client, `KotlinCompilerUnavailableError` |
-| `413` | `{ "error": "..." }` | `RuntimeCompileError` « projet trop gros » |
+| `413` | `{ "error": "..." }` | Diagnostic « projet trop gros » : `RuntimeCompileError` pour `run`, run `errored` pour `test` |
 | `429` | `Retry-After` | `KotlinCompilerRateLimitedError { retryAfterSeconds }` |
 | `503` | `{ "error": "..." }`, `Retry-After` si la file est pleine | File pleine, ou processus de compilation mort et relancé : `KotlinCompilerUnavailableError` |
 | `504` | `{ "error": "..." }` | Compilation interrompue au timeout du service : `KotlinCompilerUnavailableError` |
@@ -507,6 +526,8 @@ l'artefact ne contient pas de commentaire `sourceMappingURL` : la source map arr
 
 - Clé : `sha256(protocol + target + kotlinVersion + mode + fichiers triés par chemin)`.
 - **Cache client** : IndexedDB, LRU borné (§8). Relancer les tests sans modification ne rappelle pas le service.
+  Le runtime prend un `CompileCache` ; par défaut, un LRU en mémoire de la même taille pour la session. Un échec de
+  compilation est mis en cache comme un succès ; un projet trop gros, un `429` ou une erreur du service ne le sont pas.
 - **Artefacts précompilés** : la CI du registre compile chaque template Kotlin non modifié et publie l'artefact avec
   l'index. Ouvrir un template et lancer ses tests ne coûte aucun appel au service tant que l'utilisateur n'a rien
   modifié.
