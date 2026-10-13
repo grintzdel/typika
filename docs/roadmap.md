@@ -440,6 +440,16 @@ défaut, chaque assertion, erreurs de compilation) à `gradle test`, et `main` �
 [runtimes](specs/runtimes.md)). `template-check` lance les exercices Kotlin quand `KOTLIN_COMPILER_URL` est défini.
 Les tests du navigateur passent dans Chromium et WebKit.
 
+Lot 3 en trois PR : (a) l'intégration dans l'app, (b) le déploiement (profil Compose, test de charge), (c) le run
+de santé et `registry-tools`. (a) livré : la frame demande chaque compilation à l'app par son `MessagePort`, l'app
+compile avec un cache IndexedDB et appelle `/api/kotlin/compile` sur sa propre origine. Son serveur relaie vers
+`KOTLIN_COMPILER_URL` avec un rate limiting par IP ([0029](decisions/0029-kotlin-relay-rate-limit.md)), en dev comme
+en production ; Caddy n'a pas de route vers le service, contrairement à ce que prévoyait ce lot. La sandbox colore
+Kotlin, souligne les erreurs du dernier run, explique un compilateur saturé (`429`) ou indisponible, et un runtime
+absent de l'instance. Sans service, le hub masque Kotlin une fois hydraté. L'E2E de dev lance le service et passe
+`/play/strategy-kotlin` (Run, tests, erreur de compilation, cache après rechargement, les deux exercices) dans
+Chromium et WebKit.
+
 ---
 
 ## Après M6 (non planifié)

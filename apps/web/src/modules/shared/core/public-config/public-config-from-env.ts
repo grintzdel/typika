@@ -8,6 +8,7 @@ type Env = Readonly<Record<string, string | undefined>>
 export const DEFAULT_REGISTRY_INDEX_URL = '/registry/index.json'
 export const DEFAULT_TEMPLATE_FILE_URL_TEMPLATE = '/registry/gh/{owner}/{repo}@{ref}/{path}'
 export const DEFAULT_TEMPLATE_LISTING_URL_TEMPLATE = '/registry/listing/gh/{owner}/{repo}@{ref}.json'
+export const KOTLIN_COMPILER_PATH = '/api/kotlin'
 
 const parseUrl = (name: string, value: string | undefined) =>
   Effect.suspend(() => {
@@ -50,6 +51,12 @@ export const publicConfigFromEnv = (env: Env): Effect.Effect<PublicConfig, AppCo
       env.TYPIKA_TEMPLATE_LISTING_URL_TEMPLATE,
       DEFAULT_TEMPLATE_LISTING_URL_TEMPLATE
     )
+    const kotlinCompiler = env.KOTLIN_COMPILER_URL
+    if (kotlinCompiler !== undefined && kotlinCompiler !== '') {
+      const { protocol } = yield* parseUrl('KOTLIN_COMPILER_URL', kotlinCompiler)
+      if (protocol !== 'http:' && protocol !== 'https:')
+        return yield* new AppConfigInvalidError({ reason: `KOTLIN_COMPILER_URL is not an HTTP URL: ${kotlinCompiler}` })
+    }
     return {
       publicUrl: publicUrl.href.replace(/\/$/, ''),
       runtimeOrigin: runtimeUrl.origin,
@@ -57,5 +64,6 @@ export const publicConfigFromEnv = (env: Env): Effect.Effect<PublicConfig, AppCo
       registryIndexUrl,
       templateFileUrlTemplate,
       templateListingUrlTemplate,
+      ...(kotlinCompiler === undefined || kotlinCompiler === '' ? {} : { kotlinCompilerUrl: KOTLIN_COMPILER_PATH }),
     }
   })

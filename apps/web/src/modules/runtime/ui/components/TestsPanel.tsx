@@ -66,6 +66,10 @@ const OutcomeNote = ({ outcome }: { readonly outcome: TestRunOutcome }) => {
       return <span>{t('tests.interrupted')}</span>
     case 'TimedOut':
       return <span>{t('tests.timedOut', { seconds: Math.round(outcome.limitMs / 1000) })}</span>
+    case 'CompilerBusy':
+      return <span>{t('tests.compilerBusy', { seconds: outcome.retryAfterSeconds })}</span>
+    case 'CompilerUnavailable':
+      return <span>{t('tests.compilerUnavailable')}</span>
     default:
       return <span>{t('tests.crashed', { message: outcome.message })}</span>
   }

@@ -1,3 +1,5 @@
+import { RuntimeLimit } from '@typika/runtime-core'
+import { makeIndexedDbCompileCache, makeKotlinCompilerClient, type KotlinCompilerClient } from '@typika/runtime-kotlin'
 import type * as Context from 'effect/Context'
 import * as Duration from 'effect/Duration'
 import * as Effect from 'effect/Effect'
@@ -10,7 +12,7 @@ import { AppConfig } from '../../../shared/core/ports/app-config.port.ts'
 import { RuntimeFrameUnavailableError } from '../domain/errors/runtime-frame-unavailable.error.ts'
 import { FrameHandshakeSchema, type FrameHandshake } from '../domain/runtime-frame-protocol.domain-model.ts'
 import { RuntimeFramePort } from '../ports/runtime-frame.port.ts'
-import { makeRuntimeFrameClient } from './runtime-frame-client.ts'
+import { makeRuntimeFrameClient, type RuntimeFrameClientOptions } from './runtime-frame-client.ts'
 
 const FRAME_PATH = '/runtime/frame.html'
 const READY_TIMEOUT = Duration.seconds(20)
@@ -49,13 +51,18 @@ const openFrame = (runtimeOrigin: string) =>
     })
   )
 
-export const makeRuntimeFrameIframe = (runtimeOrigin: string): Context.Service.Shape<typeof RuntimeFramePort> => {
+export const makeRuntimeFrameIframe = (
+  runtimeOrigin: string,
+  options: RuntimeFrameClientOptions = {}
+): Context.Service.Shape<typeof RuntimeFramePort> => {
   let client: Promise<Context.Service.Shape<typeof RuntimeFramePort>> | undefined
 
   const connect = Effect.tryPromise({
     try: () => {
       if (client !== undefined) return client
-      const connecting = Effect.runPromise(openFrame(runtimeOrigin)).then(makeRuntimeFrameClient)
+      const connecting = Effect.runPromise(openFrame(runtimeOrigin)).then((port) =>
+        makeRuntimeFrameClient(port, options)
+      )
       client = connecting
       connecting.catch(() => {
         if (client === connecting) client = undefined
@@ -71,7 +78,15 @@ export const makeRuntimeFrameIframe = (runtimeOrigin: string): Context.Service.S
   }
 }
 
+const kotlinCompilerOf = (url: string): KotlinCompilerClient =>
+  makeKotlinCompilerClient({ url, cache: makeIndexedDbCompileCache({ maxBytes: RuntimeLimit.COMPILE_CACHE_BYTES }) })
+
 export const RuntimeFrameIframeLayer = Layer.effect(
   RuntimeFramePort,
-  Effect.map(AppConfig, (config) => makeRuntimeFrameIframe(config.runtimeOrigin))
+  Effect.map(AppConfig, (config) =>
+    makeRuntimeFrameIframe(
+      config.runtimeOrigin,
+      config.kotlinCompilerUrl === undefined ? {} : { kotlinCompiler: kotlinCompilerOf(config.kotlinCompilerUrl) }
+    )
+  )
 )

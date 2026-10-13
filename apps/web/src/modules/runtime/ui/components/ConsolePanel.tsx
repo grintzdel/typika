@@ -26,6 +26,10 @@ const useOutcomeText = () => {
         return t('console.compileFailed')
       case 'TimedOut':
         return t('console.timedOut', { seconds: Math.round(outcome.limitMs / 1000) })
+      case 'CompilerBusy':
+        return t('console.compilerBusy', { seconds: outcome.retryAfterSeconds })
+      case 'CompilerUnavailable':
+        return t('console.compilerUnavailable')
       default:
         return t('console.crashed', { message: outcome.message })
     }

@@ -18,7 +18,7 @@ import type { FileWrite } from '../../core/domain/file-write.domain-model.ts'
 import { describeCause } from '../../core/domain/runtime-error-data.ts'
 import { EMPTY_TEST_RUN, type TestRunState } from '../../core/domain/test-run.domain-model.ts'
 
-export type SandboxRuntimeStatus = 'loading' | 'ready' | 'failed'
+export type SandboxRuntimeStatus = 'loading' | 'ready' | 'failed' | 'unsupported'
 
 const reasonOf = <A, E>(result: AsyncResult.AsyncResult<A, E>) =>
   Option.match(AsyncResult.error(result), { onNone: () => 'unknown', onSome: describeCause })
@@ -45,11 +45,16 @@ export const useSandboxRuntime = (templateName: string, takePending: () => Reado
   const download = Option.getOrUndefined(AsyncResult.value(useAtomValue(runtimeDownloadAtom(templateName))))
   const [lastAction, setLastAction] = useState<'run' | 'test'>('run')
 
+  const isUnsupported =
+    AsyncResult.isFailure(session) &&
+    Option.getOrUndefined(Cause.findErrorOption(session.cause))?._tag === 'RuntimeUnsupportedError'
   const status: SandboxRuntimeStatus = AsyncResult.isSuccess(session)
     ? 'ready'
-    : AsyncResult.isFailure(session)
-      ? 'failed'
-      : 'loading'
+    : isUnsupported
+      ? 'unsupported'
+      : AsyncResult.isFailure(session)
+        ? 'failed'
+        : 'loading'
 
   const consoleState = latest<ConsoleState, unknown>(runResult, EMPTY_CONSOLE, (message) => ({
     _tag: 'Crashed',

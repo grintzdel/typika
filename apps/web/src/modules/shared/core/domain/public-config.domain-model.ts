@@ -7,6 +7,7 @@ export const PublicConfigSchema = Schema.Struct({
   registryIndexUrl: Schema.String,
   templateFileUrlTemplate: Schema.String,
   templateListingUrlTemplate: Schema.String,
+  kotlinCompilerUrl: Schema.optionalKey(Schema.String),
 })
 
 export type PublicConfig = typeof PublicConfigSchema.Type

@@ -1,4 +1,9 @@
-import { RuntimeTimeoutError, type TestEvent } from '@typika/runtime-core'
+import {
+  KotlinCompilerRateLimitedError,
+  KotlinCompilerUnavailableError,
+  RuntimeTimeoutError,
+  type TestEvent,
+} from '@typika/runtime-core'
 import { describe, expect, it } from 'vitest'
 
 import { EMPTY_TEST_RUN, reduceTestRun, type TestRunEvent, type TestRunState } from './test-run.domain-model.ts'
@@ -110,6 +115,13 @@ describe('reduceTestRun', () => {
 
   it('records an interrupted run', () => {
     expect(play([started, passed, { _tag: 'Interrupted' }]).outcome).toEqual({ _tag: 'Interrupted' })
+  })
+
+  it.each([
+    [new KotlinCompilerRateLimitedError({ retryAfterSeconds: 12 }), { _tag: 'CompilerBusy', retryAfterSeconds: 12 }],
+    [new KotlinCompilerUnavailableError({ cause: 'HTTP 503' }), { _tag: 'CompilerUnavailable' }],
+  ])('records a Kotlin compiler that cannot compile now', (error, outcome) => {
+    expect(play([{ _tag: 'Failed', error }]).outcome).toEqual(outcome)
   })
 
   it('records a run stopped by the watchdog', () => {

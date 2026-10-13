@@ -1,5 +1,6 @@
 import type { RuntimeKind } from '@typika/manifest'
 import {
+  KotlinCompilerUnavailableError,
   ProcessOutputSchema,
   RuntimeAssetLoadError,
   RuntimeBootError,
@@ -11,15 +12,17 @@ import {
   type RuntimeExecutionError,
   type RuntimeSession,
 } from '@typika/runtime-core'
+import type { KotlinCompilerClient } from '@typika/runtime-kotlin'
 import * as Cause from 'effect/Cause'
 import * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
+import * as Exit from 'effect/Exit'
 import * as Option from 'effect/Option'
 import * as Queue from 'effect/Queue'
 import * as Schema from 'effect/Schema'
 import * as Stream from 'effect/Stream'
 
-import { fromRuntimeErrorData, type RuntimeError } from '../domain/runtime-error-data.ts'
+import { fromRuntimeErrorData, toRuntimeErrorData, type RuntimeError } from '../domain/runtime-error-data.ts'
 import {
   FrameResponseSchema,
   RuntimeLoadProgressSchema,
@@ -63,14 +66,42 @@ const asLoadError =
 const asFsError = (path: ProjectPath) => (error: RuntimeError) =>
   error._tag === 'RuntimeFsError' ? error : new RuntimeFsError({ path, reason: error._tag })
 
-export const makeRuntimeFrameClient = (port: MessagePort): Context.Service.Shape<typeof RuntimeFramePort> => {
+type CompileCall = Extract<FrameResponse, { readonly _tag: 'CompileKotlin' }>
+
+const KOTLIN_DISABLED = new KotlinCompilerUnavailableError({ cause: 'Kotlin is not enabled on this instance' })
+
+export type RuntimeFrameClientOptions = { readonly kotlinCompiler?: KotlinCompilerClient }
+
+export const makeRuntimeFrameClient = (
+  port: MessagePort,
+  { kotlinCompiler }: RuntimeFrameClientOptions = {}
+): Context.Service.Shape<typeof RuntimeFramePort> => {
   const listeners = new Map<number, (response: FrameResponse) => void>()
   let nextId = 0
+
+  const compileForFrame = async ({ callId, mode, files }: CompileCall) => {
+    const exit = await Effect.runPromiseExit(
+      kotlinCompiler === undefined ? Effect.fail(KOTLIN_DISABLED) : kotlinCompiler.compile(mode, files)
+    )
+    const error = Exit.isFailure(exit) ? Option.getOrUndefined(Cause.findErrorOption(exit.cause)) : undefined
+    port.postMessage(
+      Exit.isSuccess(exit)
+        ? { _tag: 'KotlinCompiled', callId, compilation: exit.value }
+        : {
+            _tag: 'KotlinCompileFailed',
+            callId,
+            error: toRuntimeErrorData(error ?? new KotlinCompilerUnavailableError({ cause: Cause.pretty(exit.cause) })),
+          }
+    )
+  }
 
   port.addEventListener('message', (event: MessageEvent<unknown>) =>
     Option.match(decodeResponse(event.data), {
       onNone: () => console.warn('Ignored a malformed runtime frame message', event.data),
-      onSome: (response) => listeners.get(response.id)?.(response),
+      onSome: (response) => {
+        if (response._tag === 'CompileKotlin') void compileForFrame(response)
+        else listeners.get(response.id)?.(response)
+      },
     })
   )
   port.start()

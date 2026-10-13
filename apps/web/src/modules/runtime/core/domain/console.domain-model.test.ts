@@ -1,4 +1,10 @@
-import { RuntimeCompileError, RuntimeProcessError, RuntimeTimeoutError } from '@typika/runtime-core'
+import {
+  KotlinCompilerRateLimitedError,
+  KotlinCompilerUnavailableError,
+  RuntimeCompileError,
+  RuntimeProcessError,
+  RuntimeTimeoutError,
+} from '@typika/runtime-core'
 import { describe, expect, it } from 'vitest'
 
 import { EMPTY_CONSOLE, reduceConsole, type ConsoleEvent, type ConsoleState } from './console.domain-model.ts'
@@ -70,6 +76,13 @@ describe('reduceConsole', () => {
     const state = play([{ _tag: 'Failed', error: new RuntimeProcessError({ cause: 'Out of memory' }) }])
 
     expect(state.outcome).toEqual({ _tag: 'Crashed', message: 'Out of memory' })
+  })
+
+  it.each([
+    [new KotlinCompilerRateLimitedError({ retryAfterSeconds: 12 }), { _tag: 'CompilerBusy', retryAfterSeconds: 12 }],
+    [new KotlinCompilerUnavailableError({ cause: 'HTTP 503' }), { _tag: 'CompilerUnavailable' }],
+  ])('records a Kotlin compiler that cannot compile now', (error, outcome) => {
+    expect(play([{ _tag: 'Failed', error }]).outcome).toEqual(outcome)
   })
 
   it('drops the oldest output beyond the limit', () => {

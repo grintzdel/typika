@@ -21,6 +21,7 @@ const writeTree = (root: string, files: Readonly<Record<string, string>>) =>
 
 let handle: (request: Request) => Promise<Response>
 const appServer = { fetch: vi.fn(async (request: Request) => Response.json({ path: new URL(request.url).pathname })) }
+const kotlinRelay = vi.fn(async () => Response.json({ ok: true, diagnostics: [] }))
 
 beforeAll(async () => {
   const dist = await mkdtemp(join(tmpdir(), 'typika-dist-'))
@@ -51,6 +52,7 @@ beforeAll(async () => {
     clientDir: join(dist, 'client'),
     runtimeDir: join(dist, 'runtime'),
     appServer,
+    kotlinRelay,
   })
 })
 
@@ -148,6 +150,25 @@ describe('makeRequestHandler on the app origin', () => {
 
   it('does not serve files outside of its folder', async () => {
     expect(await (await get(`${APP}/assets/..%2f..%2fsecret.txt`)).text()).not.toBe('secret')
+  })
+})
+
+describe('makeRequestHandler for Kotlin', () => {
+  it('hands the compile route of the app to the Kotlin relay, with the app headers', async () => {
+    const response = await handle(new Request(`${APP}/api/kotlin/compile`, { method: 'POST', body: '{}' }))
+
+    expect(await response.json()).toEqual({ ok: true, diagnostics: [] })
+    expect(kotlinRelay).toHaveBeenCalledOnce()
+    expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff')
+  })
+
+  it('does not relay from the runtime origin', async () => {
+    kotlinRelay.mockClear()
+
+    const response = await handle(new Request(`${RUNTIME}/api/kotlin/compile`, { method: 'POST', body: '{}' }))
+
+    expect(response.status).toBe(404)
+    expect(kotlinRelay).not.toHaveBeenCalled()
   })
 })
 

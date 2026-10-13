@@ -1,9 +1,11 @@
-import { DiagnosticSchema, type Diagnostic } from '@typika/runtime-core'
+import { DiagnosticSchema } from '@typika/runtime-core'
 import * as Schema from 'effect/Schema'
 
 import type { KotlinCompileMode } from './constants/kotlin-compile-mode.constant.ts'
 
-export type KotlinSourceFile = { readonly path: string; readonly content: string }
+export const KotlinSourceFileSchema = Schema.Struct({ path: Schema.String, content: Schema.String })
+
+export type KotlinSourceFile = typeof KotlinSourceFileSchema.Type
 
 export type KotlinCompileRequest = {
   readonly protocol: number
@@ -29,10 +31,9 @@ export const CompileResponseSchema = Schema.Struct({
 
 export const CompileErrorBodySchema = Schema.Struct({ error: Schema.String })
 
-export type KotlinCompilation =
-  | {
-      readonly _tag: 'Compiled'
-      readonly artifact: KotlinArtifact
-      readonly diagnostics: ReadonlyArray<Diagnostic>
-    }
-  | { readonly _tag: 'Failed'; readonly diagnostics: ReadonlyArray<Diagnostic> }
+export const KotlinCompilationSchema = Schema.Union([
+  Schema.TaggedStruct('Compiled', { artifact: KotlinArtifactSchema, diagnostics: Schema.Array(DiagnosticSchema) }),
+  Schema.TaggedStruct('Failed', { diagnostics: Schema.Array(DiagnosticSchema) }),
+])
+
+export type KotlinCompilation = typeof KotlinCompilationSchema.Type

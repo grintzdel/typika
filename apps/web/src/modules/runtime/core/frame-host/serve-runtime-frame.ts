@@ -26,6 +26,7 @@ import {
   type FrameRequest,
   type FrameResponse,
 } from '../domain/runtime-frame-protocol.domain-model.ts'
+import type { HostKotlinCompiler } from './host-kotlin-compiler.ts'
 
 type Files = ReadonlyArray<readonly [ProjectPath, FileContent]>
 type Current = { readonly bootId: number; readonly session: RuntimeSession; readonly scope: Scope.Closeable }
@@ -44,7 +45,8 @@ const snapshotOf = (files: Files): Effect.Effect<ProjectSnapshot, RuntimeBootErr
 
 export const serveRuntimeFrame = (
   port: MessagePort,
-  registry: Context.Service.Shape<typeof RuntimeRegistry>
+  registry: Context.Service.Shape<typeof RuntimeRegistry>,
+  kotlinCompiler?: HostKotlinCompiler
 ): Effect.Effect<never, never, Scope.Scope> =>
   Effect.gen(function* () {
     const inbox = yield* Queue.unbounded<unknown>()
@@ -57,6 +59,7 @@ export const serveRuntimeFrame = (
     let current: Current | undefined
     const running = new Map<number, Fiber.Fiber<unknown, unknown>>()
     const reply = (response: FrameResponse) => port.postMessage(response)
+    kotlinCompiler?.attach(reply)
 
     const shutdown = Effect.suspend(() => {
       const closing = current
@@ -163,6 +166,9 @@ export const serveRuntimeFrame = (
               ...(request.namePattern === undefined ? {} : { namePattern: request.namePattern }),
             })
           )
+        case 'KotlinCompiled':
+        case 'KotlinCompileFailed':
+          return Effect.sync(() => kotlinCompiler?.settle(request))
         case 'Interrupt': {
           const fiber = running.get(request.target)
           return fiber === undefined ? Effect.void : Fiber.interrupt(fiber)

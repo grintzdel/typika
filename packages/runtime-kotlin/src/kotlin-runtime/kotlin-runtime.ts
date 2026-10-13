@@ -12,17 +12,13 @@ import * as Option from 'effect/Option'
 import * as Queue from 'effect/Queue'
 import * as Stream from 'effect/Stream'
 
-import type { CompileCache } from '../domain/compile-cache.port.ts'
-import { makeKotlinCompilerClient } from '../kotlin-compiler-client/kotlin-compiler-client.ts'
+import type { KotlinCompilerClient } from '../kotlin-compiler-client/kotlin-compiler-client.ts'
 import { makeKotlinProject } from '../kotlin-project/kotlin-project.ts'
 import { DEFAULT_TEST_GLOBS } from '../kotlin-sources/kotlin-sources.ts'
-import { makeMemoryCompileCache } from '../memory-compile-cache/memory-compile-cache.ts'
 import { workerKotlinExecutor } from '../worker-kotlin-executor/worker-kotlin-executor.ts'
 
 export type KotlinRuntimeOptions = {
-  readonly compilerUrl: string
-  readonly cache?: CompileCache
-  readonly fetch?: typeof globalThis.fetch
+  readonly compiler: KotlinCompilerClient
   readonly limits?: {
     readonly runTimeoutMs?: number
     readonly testTimeoutMs?: number
@@ -34,12 +30,7 @@ const KIND = 'kotlin'
 export const makeKotlinRuntime = (options: KotlinRuntimeOptions): RuntimePort => {
   const runTimeoutMs = options.limits?.runTimeoutMs ?? RuntimeLimit.RUN_TIMEOUT_MS
   const testTimeoutMs = options.limits?.testTimeoutMs ?? RuntimeLimit.TEST_RUN_TIMEOUT_MS
-  const compiler = makeKotlinCompilerClient({
-    url: options.compilerUrl,
-    cache: options.cache ?? makeMemoryCompileCache(RuntimeLimit.COMPILE_CACHE_BYTES),
-    ...(options.fetch === undefined ? {} : { fetch: options.fetch }),
-  })
-  const project = makeKotlinProject(compiler, workerKotlinExecutor)
+  const project = makeKotlinProject(options.compiler, workerKotlinExecutor)
 
   const boot: RuntimePort['boot'] = (snapshot) =>
     Effect.gen(function* () {

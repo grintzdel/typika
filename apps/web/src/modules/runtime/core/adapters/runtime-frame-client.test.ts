@@ -1,15 +1,25 @@
-import { makeRuntimeRegistry, type ProcessOutput, type RuntimeLoaders, type RuntimeSession } from '@typika/runtime-core'
+import {
+  KotlinCompilerRateLimitedError,
+  KotlinCompilerUnavailableError,
+  makeRuntimeRegistry,
+  type ProcessOutput,
+  type RuntimeLoaders,
+  type RuntimeSession,
+} from '@typika/runtime-core'
+import type { KotlinCompilation, KotlinCompilerClient } from '@typika/runtime-kotlin'
 import * as Cause from 'effect/Cause'
 import * as Effect from 'effect/Effect'
 import * as Exit from 'effect/Exit'
 import * as Fiber from 'effect/Fiber'
+import * as Option from 'effect/Option'
 import * as Scope from 'effect/Scope'
 import * as Stream from 'effect/Stream'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { LOAD_PROGRESS, makeFakeRuntime, projectFixture, projectPath } from '../../__tests__/runtime.factory.ts'
+import { makeHostKotlinCompiler } from '../frame-host/host-kotlin-compiler.ts'
 import { serveRuntimeFrame } from '../frame-host/serve-runtime-frame.ts'
-import { makeRuntimeFrameClient } from './runtime-frame-client.ts'
+import { makeRuntimeFrameClient, type RuntimeFrameClientOptions } from './runtime-frame-client.ts'
 
 const channels: Array<MessageChannel> = []
 
@@ -20,14 +30,23 @@ afterEach(() => {
   }
 })
 
-const connect = (loaders?: RuntimeLoaders) => {
+const connect = (loaders?: RuntimeLoaders, options: RuntimeFrameClientOptions = {}) => {
   const fake = makeFakeRuntime()
   const channel = new MessageChannel()
   channels.push(channel)
   const registry = makeRuntimeRegistry(loaders ?? { 'browser-js': () => Promise.resolve(fake.port) })
-  Effect.runFork(Effect.scoped(serveRuntimeFrame(channel.port2, registry)))
-  return { client: makeRuntimeFrameClient(channel.port1), port: channel.port1, journal: fake.journal }
+  const host = makeHostKotlinCompiler()
+  Effect.runFork(Effect.scoped(serveRuntimeFrame(channel.port2, registry, host)))
+  return {
+    client: makeRuntimeFrameClient(channel.port1, options),
+    port: channel.port1,
+    journal: fake.journal,
+    frameCompiler: host.compiler,
+  }
 }
+
+const errorOf = <A, E>(exit: Exit.Exit<A, E>) =>
+  Exit.isFailure(exit) ? Option.getOrUndefined(Cause.findErrorOption(exit.cause)) : undefined
 
 const stdoutOf = (outputs: ReadonlyArray<ProcessOutput>) =>
   outputs.flatMap((output) => (output._tag === 'Stdout' ? [output.chunk] : [])).join('')
@@ -182,5 +201,39 @@ describe('runtime frame channel', () => {
     )
 
     expect(stdoutOf(outputs)).toBe('hello')
+  })
+
+  describe('Kotlin compilation from the frame', () => {
+    const FILES = [{ path: 'src/main/kotlin/Main.kt', content: 'fun main() {}' }]
+    const COMPILED: KotlinCompilation = {
+      _tag: 'Compiled',
+      artifact: { kind: 'js', code: 'main()', sourceMap: '{}' },
+      diagnostics: [],
+    }
+
+    it('asks the app to compile and receives its compilation', async () => {
+      const compile = vi.fn<KotlinCompilerClient['compile']>(() => Effect.succeed(COMPILED))
+      const { frameCompiler } = connect(undefined, { kotlinCompiler: { compile } })
+
+      const compilation = await Effect.runPromise(frameCompiler.compile('test', FILES))
+
+      expect(compilation).toEqual(COMPILED)
+      expect(compile).toHaveBeenCalledWith('test', FILES)
+    })
+
+    it('passes on a compiler that is rate limited', async () => {
+      const limited = new KotlinCompilerRateLimitedError({ retryAfterSeconds: 7 })
+      const { frameCompiler } = connect(undefined, { kotlinCompiler: { compile: () => Effect.fail(limited) } })
+
+      expect(errorOf(await Effect.runPromiseExit(frameCompiler.compile('run', FILES)))).toEqual(limited)
+    })
+
+    it('answers that Kotlin is disabled when the app has no compiler', async () => {
+      const { frameCompiler } = connect()
+
+      expect(errorOf(await Effect.runPromiseExit(frameCompiler.compile('run', FILES)))).toBeInstanceOf(
+        KotlinCompilerUnavailableError
+      )
+    })
   })
 })

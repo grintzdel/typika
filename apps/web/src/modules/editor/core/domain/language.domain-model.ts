@@ -2,6 +2,7 @@ export const EditorLanguage = {
   TYPESCRIPT: 'typescript',
   JAVASCRIPT: 'javascript',
   GO: 'go',
+  KOTLIN: 'kotlin',
   JSON: 'json',
   MARKDOWN: 'markdown',
   TEXT: 'text',
@@ -17,6 +18,8 @@ const BY_EXTENSION: Readonly<Record<string, EditorLanguage>> = {
   jsx: EditorLanguage.JAVASCRIPT,
   mjs: EditorLanguage.JAVASCRIPT,
   go: EditorLanguage.GO,
+  kt: EditorLanguage.KOTLIN,
+  kts: EditorLanguage.KOTLIN,
   json: EditorLanguage.JSON,
   md: EditorLanguage.MARKDOWN,
 }

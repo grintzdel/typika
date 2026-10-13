@@ -1,10 +1,15 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { fileURLToPath } from 'node:url'
 
 import * as Effect from 'effect/Effect'
 import { createServer, type Plugin, type ViteDevServer } from 'vite'
 
+import { kotlinRelayFromEnv } from '../server/kotlin-relay.ts'
 import { appHeaders as headersOfAppPath, RUNTIME_HEADERS } from '../server/security-headers.ts'
-import { publicConfigFromEnv } from '../src/modules/shared/core/public-config/public-config-from-env.ts'
+import {
+  KOTLIN_COMPILER_PATH,
+  publicConfigFromEnv,
+} from '../src/modules/shared/core/public-config/public-config-from-env.ts'
 
 const DEV_ENV = {
   TYPIKA_PUBLIC_URL: 'http://localhost:3000',
@@ -63,3 +68,41 @@ export const runtimeFrameDevServer = (): Plugin => {
     },
   }
 }
+
+const toWebRequest = async (request: IncomingMessage, origin: string) => {
+  const headers = new Headers()
+  for (const [name, value] of Object.entries(request.headers)) {
+    if (typeof value === 'string') headers.set(name, value)
+  }
+  const chunks: Array<Uint8Array> = []
+  for await (const chunk of request) if (chunk instanceof Uint8Array) chunks.push(chunk)
+  const hasBody = request.method !== 'GET' && request.method !== 'HEAD'
+  return Object.assign(
+    new Request(`${origin}${request.url ?? '/'}`, {
+      method: request.method ?? 'GET',
+      headers,
+      ...(hasBody ? { body: Buffer.concat(chunks) } : {}),
+    }),
+    { ip: request.socket.remoteAddress ?? '' }
+  )
+}
+
+const sendWebResponse = async (response: Response, target: ServerResponse) => {
+  target.writeHead(response.status, Object.fromEntries(response.headers))
+  target.end(Buffer.from(await response.arrayBuffer()))
+}
+
+export const kotlinCompilerRelay = (): Plugin => ({
+  name: 'typika:kotlin-compiler-relay',
+  configureServer: (server) => {
+    const origin = DEV_ENV.TYPIKA_PUBLIC_URL
+    const relay = kotlinRelayFromEnv(process.env, origin)
+    if (relay === undefined) return
+    server.middlewares.use((request, response, next) => {
+      if (!(request.url ?? '').startsWith(`${KOTLIN_COMPILER_PATH}/`)) return next()
+      void toWebRequest(request, origin)
+        .then(relay)
+        .then((answer) => sendWebResponse(answer, response))
+    })
+  },
+})
