@@ -331,6 +331,10 @@ sur les deux plateformes. Cela impose :
   seul fichier qui ne compile pas, et aucun test ne tourne. Pour une valeur que la base ne connaît pas encore, la
   chercher à l'exécution (`ShippingOption.entries.find { it.label == "pickup-point" }`) plutôt que de nommer la
   constante de la solution.
+- **Une nouvelle API déclarée par `start/`.** Quand le test appelle un membre que la base n'a pas
+  (`downloadInvoice` dans `single-responsibility-kotlin`), `start/` remplace le fichier de la base par la même classe
+  avec ce membre en `TODO()`, et recopie les fichiers qui ne compilent plus (`Main.kt` quand le constructeur gagne un
+  paramètre). Une exception reste dans son test : seuls les tests de l'exigence sont rouges.
 - Les surcouches d'exercice vivent hors de `src/` : Gradle ne les voit pas, aucun fichier en plus n'est nécessaire.
 - **Des messages d'échec qui ne dépendent pas de la plateforme.** Typika affiche ceux de `kotlin.test`
   (`Expected <12.90 EUR>, actual <0.00 EUR>.`) ; Gradle, ceux de JUnit 5 pour `assertEquals`, `assertNotEquals`,
