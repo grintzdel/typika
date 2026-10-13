@@ -26,6 +26,7 @@ export type RegisteredTemplate = {
   readonly entry: RegistryEntry
   readonly manifest: Manifest
   readonly tourSteps: ReadonlyArray<TourStep>
+  readonly files: TemplateFiles
 }
 
 export type RegistryReport = {
@@ -232,7 +233,7 @@ export const checkRegistry = (
         const registryIssues = Option.match(valid, {
           onNone: () => [],
           onSome: ({ manifest, tourSteps }) => {
-            templates.push({ file, entry: template.entry, manifest, tourSteps })
+            templates.push({ file, entry: template.entry, manifest, tourSteps, files: template.files })
             return checkManifest(file, template.entry, manifest, tourSteps, vocabulary)
           },
         })

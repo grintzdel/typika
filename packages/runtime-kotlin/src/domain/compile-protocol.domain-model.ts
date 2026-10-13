@@ -2,6 +2,7 @@ import { DiagnosticSchema } from '@typika/runtime-core'
 import * as Schema from 'effect/Schema'
 
 import type { KotlinCompileMode } from './constants/kotlin-compile-mode.constant.ts'
+import { KotlinProtocol } from './constants/kotlin-protocol.constant.ts'
 
 export const KotlinSourceFileSchema = Schema.Struct({ path: Schema.String, content: Schema.String })
 
@@ -14,6 +15,17 @@ export type KotlinCompileRequest = {
   readonly mode: KotlinCompileMode
   readonly files: ReadonlyArray<KotlinSourceFile>
 }
+
+export const kotlinCompileRequest = (
+  mode: KotlinCompileMode,
+  files: ReadonlyArray<KotlinSourceFile>
+): KotlinCompileRequest => ({
+  protocol: KotlinProtocol.VERSION,
+  target: KotlinProtocol.TARGET,
+  kotlinVersion: KotlinProtocol.KOTLIN_VERSION,
+  mode,
+  files,
+})
 
 export const KotlinArtifactSchema = Schema.Struct({
   kind: Schema.Literal('js'),

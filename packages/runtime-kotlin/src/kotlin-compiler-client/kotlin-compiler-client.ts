@@ -7,12 +7,11 @@ import type { CompileCache } from '../domain/compile-cache.port.ts'
 import {
   CompileErrorBodySchema,
   CompileResponseSchema,
+  kotlinCompileRequest,
   type KotlinCompilation,
-  type KotlinCompileRequest,
   type KotlinSourceFile,
 } from '../domain/compile-protocol.domain-model.ts'
 import type { KotlinCompileMode } from '../domain/constants/kotlin-compile-mode.constant.ts'
-import { KotlinProtocol } from '../domain/constants/kotlin-protocol.constant.ts'
 
 export type KotlinCompilerClientOptions = {
   readonly url: string
@@ -88,13 +87,7 @@ export const makeKotlinCompilerClient = (options: KotlinCompilerClientOptions): 
   return {
     compile: (mode, files) =>
       Effect.gen(function* () {
-        const request: KotlinCompileRequest = {
-          protocol: KotlinProtocol.VERSION,
-          target: KotlinProtocol.TARGET,
-          kotlinVersion: KotlinProtocol.KOTLIN_VERSION,
-          mode,
-          files,
-        }
+        const request = kotlinCompileRequest(mode, files)
         const body = JSON.stringify(request)
         if (encoder.encode(body).byteLength > RuntimeLimit.KOTLIN_COMPILE_REQUEST_BYTES) return tooLarge
 

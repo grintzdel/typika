@@ -3,9 +3,11 @@ export { buildLocalIndex, type LocalIndexBuild, type LocalIndexOptions } from '.
 export { formatReport } from '@typika/template-check'
 export { computeHealth, DEPRECATED_AFTER_DAYS, type HealthInput } from './compute-health/compute-health.ts'
 export { checkRegistry, type RegisteredTemplate, type RegistryReport } from './check-registry/check-registry.ts'
+export { compileKotlinArtifacts, type KotlinArtifactFile } from './compile-kotlin-artifacts/compile-kotlin-artifacts.ts'
 export { CheckResult, HealthStatus } from './domain/constants/health-status.constant.ts'
 export { RegistryCategory } from './domain/constants/registry-category.constant.ts'
 export { AppConfigUnreadableError } from './domain/errors/app-config-unreadable.error.ts'
+export { KotlinArtifactFailedError } from './domain/errors/kotlin-artifact-failed.error.ts'
 export { RefUnresolvableError } from './domain/errors/ref-unresolvable.error.ts'
 export { RegistryEntrySchema, type RegistryEntry } from './domain/registry-entry.domain-model.ts'
 export {
@@ -23,6 +25,10 @@ export {
 } from './domain/template-health.domain-model.ts'
 export { VocabularySchema, type Vocabulary } from './domain/vocabulary.domain-model.ts'
 export { indexJsonSchema } from './index-json-schema/index-json-schema.ts'
+export {
+  kotlinArtifactRequests,
+  type KotlinArtifactRequest,
+} from './kotlin-artifact-requests/kotlin-artifact-requests.ts'
 export { readAppRuntimes } from './read-app-runtimes/read-app-runtimes.ts'
 export { mirrorTemplates, type MirrorFile } from './mirror-templates/mirror-templates.ts'
 export { HEALTH_DIR, readHealth, writeHealth } from './read-health/read-health.ts'
@@ -44,3 +50,8 @@ export {
   type ProbeResult,
   type ProbeTemplate,
 } from './run-health/run-health.ts'
+export {
+  KOTLIN_ARTIFACTS_DIR,
+  readKotlinArtifactKeys,
+  writeKotlinArtifacts,
+} from './write-kotlin-artifacts/write-kotlin-artifacts.ts'

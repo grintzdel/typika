@@ -219,6 +219,12 @@ importers:
       '@typika/manifest':
         specifier: workspace:*
         version: link:../manifest
+      '@typika/runtime-core':
+        specifier: workspace:*
+        version: link:../runtime-core
+      '@typika/runtime-kotlin':
+        specifier: workspace:*
+        version: link:../runtime-kotlin
       '@typika/template-check':
         specifier: workspace:*
         version: link:../template-check

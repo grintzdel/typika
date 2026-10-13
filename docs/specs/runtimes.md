@@ -534,9 +534,10 @@ l'artefact ne contient pas de commentaire `sourceMappingURL` : la source map arr
   Le client de compilation prend un `CompileCache` : IndexedDB dans l'app, aucun par défaut hors navigateur. Un échec
   de compilation est mis en cache comme un succès ; un projet trop gros, un `429` ou une erreur du service ne le sont
   pas.
-- **Artefacts précompilés** : la CI du registre compile chaque template Kotlin non modifié et publie l'artefact avec
-  l'index. Ouvrir un template et lancer ses tests ne coûte aucun appel au service tant que l'utilisateur n'a rien
-  modifié.
+- **Artefacts précompilés** : la CI du registre (`registry-tools build`) compile chaque template Kotlin, sans son
+  dossier `exercises/`, en modes `test` et `run`. Elle écrit chaque compilation sous sa clé de cache dans
+  `artifacts/kotlin/<clé>.json` du registre, publié avec l'index. Ouvrir un template et lancer ses tests ne coûte
+  aucun appel au service tant que l'utilisateur n'a rien modifié : une modification change la clé.
 - **Cache serveur** : facultatif, en mémoire uniquement (LRU), perdu au redémarrage. Le service reste sans stockage.
 - Compilation **à la demande** (`run` / `test`), jamais à la frappe. Les diagnostics de l'éditeur Kotlin viennent du
   dernier `run` / `test`, pas d'un language server (hors V1).
