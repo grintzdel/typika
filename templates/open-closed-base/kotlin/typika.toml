@@ -1,0 +1,24 @@
+schema = 1
+name = "open-closed-base-kotlin"
+title = "Open/closed base: discounts"
+summary = "Discounts as a when on the customer tier, repeated wherever a price is shown, before the rules."
+license = "MIT-0"
+authors = ["github:maoudin"]
+role = "base"
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["principle/open-closed"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]

@@ -22,3 +22,7 @@ npm test
 - `src/pricing/rules/`: one file per discount.
 - `src/pricing/discount-rules.ts`: the list of rules in use.
 - `src/pricing/price-order.ts` and `src/receipts/receipt.ts`: they read the list and never change when a rule is added.
+
+## Variants
+
+- Kotlin: `open-closed-kotlin`, where each rule is a lambda behind a `fun interface`.
