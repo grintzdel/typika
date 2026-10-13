@@ -27,6 +27,10 @@ export {
 export { DEFAULT_TEST_GLOBS, kotlinSources } from './kotlin-sources/kotlin-sources.ts'
 export { makeMemoryCompileCache } from './memory-compile-cache/memory-compile-cache.ts'
 export {
+  makePrecompiledCompileCache,
+  type PrecompiledCompileCacheOptions,
+} from './precompiled-compile-cache/precompiled-compile-cache.ts'
+export {
   makeIndexedDbCompileCache,
   type IndexedDbCompileCacheOptions,
 } from './indexed-db-compile-cache/indexed-db-compile-cache.ts'

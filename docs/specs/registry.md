@@ -152,7 +152,9 @@ V1-V10 passent.
 ## 3. `index.json`
 
 Généré par `build-index.yml` à chaque merge et après chaque run de santé. Publié comme asset statique versionné avec
-l'app, et sous une URL stable pour les instances auto-hébergées. L'app ne lit jamais le registre directement.
+l'app, et sous une URL stable pour les instances auto-hébergées. L'app ne lit jamais le registre directement. Les
+artefacts Kotlin sont publiés avec lui, dans `artifacts/kotlin/` à côté de `index.json` : l'app les y cherche
+([runtimes §6.4](./runtimes.md)).
 
 ### 3.1 Schéma
 
