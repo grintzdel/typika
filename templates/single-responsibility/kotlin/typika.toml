@@ -1,0 +1,48 @@
+schema = 1
+name = "single-responsibility-kotlin"
+title = "Single responsibility: placing an order"
+summary = "Split a class along its reasons to change, so each change touches one small piece."
+keywords = ["function", "top-level"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop", "functional"]
+topic = ["principle/single-responsibility"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-reasons-to-change.md",
+  "tour/03-split.md",
+  "tour/04-orchestrator.md",
+  "tour/05-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/single-responsibility-base/kotlin"
+focus = ["src/main/kotlin/orders/**", "src/main/kotlin/pricing/**", "src/main/kotlin/invoices/**"]
+
+[variants]
+typescript = "github:typika/templates/single-responsibility/ts"
+
+[[exercises]]
+name = "add-pdf-invoice"
+kind = "refactor"
+title = "Add a PDF invoice"
+from = "base"
+solutionFrom = "self"
+failing = ["src/test/kotlin/orders/PdfInvoiceTest.kt"]

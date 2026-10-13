@@ -22,3 +22,7 @@ npm test
 - `src/pricing/price-calculator.ts`: discounts, shipping and the total, without any text.
 - `src/invoices/invoice-formatter.ts`: the wording of the invoice, without any rule.
 - `src/orders/order-service.ts`: the orchestrator that calls them in order.
+
+## Variants
+
+- Kotlin: `single-responsibility-kotlin`, where the jobs without state are top-level functions.
