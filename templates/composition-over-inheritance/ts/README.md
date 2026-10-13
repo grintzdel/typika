@@ -27,3 +27,5 @@ npm test
 
 - Go: `composition-over-inheritance-go`, where the base embeds structs instead of extending classes.
 - JavaScript: `composition-over-inheritance-js`, where a factory function builds each product as a plain object.
+- Kotlin: `composition-over-inheritance-kotlin`, where classes are final unless marked `open`, and `by` delegates to
+  the parts.
