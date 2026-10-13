@@ -3,9 +3,13 @@ import { loadGoToolchainFromDisk } from '@typika/runtime-go/node'
 
 import type { TemplateRunners } from '../check-templates/check-templates.ts'
 import { makeGoRunner } from '../run-go-tests/run-go-tests.ts'
+import { makeKotlinRunner } from '../run-kotlin-tests/run-kotlin-tests.ts'
 import { inProcessRunners } from '../run-tests-in-process/run-tests-in-process.ts'
 
-export const loadTemplateRunners = async (): Promise<TemplateRunners> => ({
+export const loadTemplateRunners = async ({
+  kotlinCompilerUrl,
+}: { readonly kotlinCompilerUrl?: string } = {}): Promise<TemplateRunners> => ({
   ...inProcessRunners,
   [RuntimeKind.GO]: makeGoRunner(await loadGoToolchainFromDisk()),
+  ...(kotlinCompilerUrl === undefined ? {} : { [RuntimeKind.KOTLIN]: makeKotlinRunner(kotlinCompilerUrl) }),
 })

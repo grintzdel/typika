@@ -53,7 +53,7 @@
       }
     },
     {
-      "files": ["**/runtime-go/**"],
+      "files": ["**/runtime-go/**", "**/runtime-kotlin/**"],
       "rules": {
         "eslint/no-await-in-loop": "off"
       }

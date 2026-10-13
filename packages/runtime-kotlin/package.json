@@ -1,0 +1,30 @@
+{
+  "name": "@typika/runtime-kotlin",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts",
+    "./browser": "./src/browser.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@jridgewell/trace-mapping": "0.3.31",
+    "@typika/manifest": "workspace:*",
+    "@typika/runtime-core": "workspace:*",
+    "effect": "4.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "@typika/config": "workspace:*",
+    "@typika/kotlin-compiler": "workspace:*",
+    "@vitest/browser-playwright": "5.0.3",
+    "playwright": "1.64.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.3"
+  }
+}

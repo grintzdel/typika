@@ -3,34 +3,8 @@ import type { TestEvent } from '@typika/runtime-core'
 import { findUnavailableImports, makeGoProject, type GoToolchain } from '@typika/runtime-go'
 import * as Effect from 'effect/Effect'
 
-import type { TestRun } from '../check-exercises/check-exercises.ts'
 import type { TemplateRunner } from '../check-templates/check-templates.ts'
-
-const STATUSES = { TestPassed: 'passed', TestFailed: 'failed', TestSkipped: 'skipped' } as const
-
-const testRunOf = (events: ReadonlyArray<TestEvent>): TestRun => {
-  const diagnostics = events.flatMap((event) => (event._tag === 'Diagnostics' ? event.diagnostics : []))
-  if (diagnostics.length > 0) {
-    return {
-      _tag: 'BuildFailed',
-      message: diagnostics
-        .map((diagnostic) =>
-          diagnostic.location === undefined
-            ? diagnostic.message
-            : `${diagnostic.location.file}:${diagnostic.location.line}: ${diagnostic.message}`
-        )
-        .join('; '),
-    }
-  }
-  return {
-    _tag: 'Tested',
-    tests: events.flatMap((event) =>
-      event._tag === 'TestPassed' || event._tag === 'TestFailed' || event._tag === 'TestSkipped'
-        ? [{ file: event.file, status: STATUSES[event._tag] }]
-        : []
-    ),
-  }
-}
+import { testRunOf } from '../test-run-of/test-run-of.ts'
 
 export const makeGoRunner = (toolchain: GoToolchain): TemplateRunner => {
   const project = makeGoProject(toolchain)

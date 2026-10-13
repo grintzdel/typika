@@ -332,6 +332,13 @@ sur les deux plateformes. Cela impose :
   chercher à l'exécution (`ShippingOption.entries.find { it.label == "pickup-point" }`) plutôt que de nommer la
   constante de la solution.
 - Les surcouches d'exercice vivent hors de `src/` : Gradle ne les voit pas, aucun fichier en plus n'est nécessaire.
+- **Des messages d'échec qui ne dépendent pas de la plateforme.** Typika affiche ceux de `kotlin.test`
+  (`Expected <12.90 EUR>, actual <0.00 EUR>.`) ; Gradle, ceux de JUnit 5 pour `assertEquals`, `assertNotEquals`,
+  `assertNull` et `assertNotNull`. Un tour qui cite un message d'échec cite celui de Typika. Un message qui nomme un
+  type (`assertIs`, `assertFailsWith`) diffère : la JVM écrit `java.lang.String`.
+
+`KOTLIN_COMPILER_URL=http://… pnpm template-check` lance les exercices Kotlin contre ce service ; sans la variable,
+ils ne sont pas lancés et la commande le signale.
 
 ## 9. Licence
 

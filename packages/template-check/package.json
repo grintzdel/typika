@@ -14,12 +14,14 @@
     "@typika/runtime-browser-js": "workspace:*",
     "@typika/runtime-core": "workspace:*",
     "@typika/runtime-go": "workspace:*",
+    "@typika/runtime-kotlin": "workspace:*",
     "effect": "4.0.2",
     "esbuild-wasm": "0.28.2"
   },
   "devDependencies": {
     "@types/node": "26.6.4",
     "@typika/config": "workspace:*",
+    "@typika/kotlin-compiler": "workspace:*",
     "typescript": "7.0.2",
     "vitest": "5.0.3"
   }
