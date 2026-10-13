@@ -90,10 +90,11 @@ describe('service limits', () => {
     expect((await Promise.all(busy)).map((r) => r.status)).toEqual([504, 504])
   })
 
-  it('answers 503 when a compilation runs the compiler out of memory, then recovers', async () => {
+  it('answers 503 with Retry-After when a compilation runs the compiler out of memory, then recovers', async () => {
     const response = await postCompile(url, compileBody(constantBomb(26), { mode: 'run' }))
 
     expect(response.status).toBe(503)
+    expect(response.headers.get('retry-after')).toBe('5')
     expect(await readError(response)).toEqual({ error: 'compiler crashed and is restarting' })
     await waitForReadyWorkers()
     expect((await compile(url, strategy())).body.ok).toBe(true)

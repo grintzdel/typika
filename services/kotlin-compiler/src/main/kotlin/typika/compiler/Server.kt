@@ -47,7 +47,10 @@ class CompileService(private val config: Config, private val pool: WorkerPool) {
                     exchange.reply(200, result.response)
                 }
                 WorkerResult.TimedOut -> exchange.reply(504, error("compilation timed out after ${config.timeoutMs} ms"))
-                WorkerResult.Crashed -> exchange.reply(503, error("compiler crashed and is restarting"))
+                WorkerResult.Crashed -> {
+                    exchange.responseHeaders.add("Retry-After", "5")
+                    exchange.reply(503, error("compiler crashed and is restarting"))
+                }
             }
         } finally {
             log.status = exchange.responseCode

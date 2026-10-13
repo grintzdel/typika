@@ -93,9 +93,25 @@ describe('makeKotlinRelay', () => {
     expect((await relay(compileRequest(init))).status).toBe(status)
   })
 
-  it('answers 503 when the service cannot be reached', async () => {
+  it('answers 503 with Retry-After when the service cannot be reached', async () => {
     const { relay } = relayWith({ fetch: () => Promise.reject(new TypeError('fetch failed')) })
 
-    expect((await relay(compileRequest())).status).toBe(503)
+    const response = await relay(compileRequest())
+
+    expect(response.status).toBe(503)
+    expect(response.headers.get('retry-after')).toBe('5')
+  })
+
+  it('answers 503 with Retry-After when the service does not answer in time', async () => {
+    const { relay } = relayWith({
+      timeoutMs: 10,
+      fetch: (_, init) =>
+        new Promise((_resolve, reject) => init?.signal?.addEventListener('abort', () => reject(init.signal?.reason))),
+    })
+
+    const response = await relay(compileRequest())
+
+    expect(response.status).toBe(503)
+    expect(response.headers.get('retry-after')).toBe('5')
   })
 })

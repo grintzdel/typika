@@ -33,7 +33,8 @@ Trois contraintes pèsent sur ce choix :
   Caddy y ajoute l'adresse qu'il voit. Ne l'activer que derrière un proxy qui réécrit cet en-tête.
 - Le relais refuse aussi ce que le service refuserait de toute façon, avant de le solliciter : une autre route
   (`404`), une autre méthode (`405`), un `Origin` d'un autre site (`403`), un corps de plus de 256 Kio (`413`). Il
-  transmet le statut et le `Retry-After` du service, et répond `503` si le service est injoignable.
+  transmet le statut et le `Retry-After` du service. Il répond `503` avec `Retry-After: 5` si le service est
+  injoignable ou ne répond pas en 25 s.
 - Le service reste joignable seulement par l'app, sur le réseau interne de Compose, sans route Caddy.
 
 ## Conséquences

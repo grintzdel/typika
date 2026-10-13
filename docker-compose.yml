@@ -19,10 +19,39 @@ services:
     image: typika-web
     restart: unless-stopped
     env_file: .env
+    environment:
+      TYPIKA_TRUST_PROXY: 'true'
     expose: ['3000']
+    networks: [default, kotlin]
     read_only: true
     cap_drop: [ALL]
     security_opt: ['no-new-privileges:true']
+
+  kotlin-compiler:
+    profiles: [kotlin]
+    build: services/kotlin-compiler
+    image: typika-kotlin-compiler
+    restart: unless-stopped
+    environment:
+      KOTLIN_COMPILER_CONCURRENCY: ${KOTLIN_COMPILER_CONCURRENCY:-2}
+      KOTLIN_COMPILER_QUEUE_MAX: ${KOTLIN_COMPILER_QUEUE_MAX:-20}
+      KOTLIN_COMPILER_TIMEOUT_MS: ${KOTLIN_COMPILER_TIMEOUT_MS:-15000}
+      KOTLIN_COMPILER_CACHE_MB: ${KOTLIN_COMPILER_CACHE_MB:-32}
+    expose: ['8080']
+    networks: [kotlin]
+    read_only: true
+    tmpfs: ['/tmp:size=64m,mode=1777']
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    mem_limit: ${KOTLIN_COMPILER_MEMORY:-1g}
+    memswap_limit: ${KOTLIN_COMPILER_MEMORY:-1g}
+    cpus: ${KOTLIN_COMPILER_CPUS:-2}
+    pids_limit: 256
+
+networks:
+  default: {}
+  kotlin:
+    internal: true
 
 volumes:
   caddy_data: {}
