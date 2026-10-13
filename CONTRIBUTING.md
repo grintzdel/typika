@@ -35,6 +35,8 @@ Ouvrez une issue avant tout changement important. Pour remettre en cause une dé
   service déjà lancé. La suite de conformité de `runtime-kotlin` compare ses résultats à `gradle test` et `gradle run` : elle
   demande Gradle 9 et un JDK 25 en local. Le service lui-même se compile dans l'image.
   `KOTLIN_COMPILER_URL=http://… pnpm template-check` lance aussi les exercices Kotlin.
+  `KOTLIN_COMPILER_URL=http://127.0.0.1:3080 pnpm --filter @typika/web dev` active Kotlin dans l'app, avec le service
+  lancé par `node apps/web/scripts/serve-kotlin-compiler.ts 3080` ; l'E2E de dev fait les deux tout seul.
 - App : `pnpm --filter @typika/web dev` sert l'app sur `http://localhost:3000` et la runtime frame sur
   `http://127.0.0.1:3001`. Les tests E2E (`pnpm --filter @typika/web test:e2e`) démarrent ce serveur s'il ne tourne
   pas déjà.

@@ -5,6 +5,7 @@ import { serve } from 'srvx'
 
 import { publicConfigFromEnv } from '../src/modules/shared/core/public-config/public-config-from-env.ts'
 import { makeRequestHandler, type AppServer } from './handle-request.ts'
+import { kotlinRelayFromEnv } from './kotlin-relay.ts'
 
 const dist = (path: string) => fileURLToPath(new URL(`../${path}`, import.meta.url))
 
@@ -26,11 +27,19 @@ const loaded: unknown = await import(/* @vite-ignore */ new URL('../server/serve
 const appServer = typeof loaded === 'object' && loaded !== null && 'default' in loaded ? loaded.default : undefined
 if (!isAppServer(appServer)) throw new Error('dist/server/server.js does not export a fetch handler')
 
+const kotlinRelay = kotlinRelayFromEnv(process.env, new URL(config.publicUrl).origin)
+
 const server = serve({
   port: process.env.PORT ?? 3000,
   hostname: process.env.HOST ?? '0.0.0.0',
   silent: true,
-  fetch: await makeRequestHandler({ config, clientDir: dist('client'), runtimeDir: dist('runtime'), appServer }),
+  fetch: await makeRequestHandler({
+    config,
+    clientDir: dist('client'),
+    runtimeDir: dist('runtime'),
+    appServer,
+    ...(kotlinRelay === undefined ? {} : { kotlinRelay }),
+  }),
 })
 
 await server.ready()

@@ -17,17 +17,31 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { proxiedCompilerUrl } from '../../test/kotlin-compiler-proxy.plugin.ts'
 import { exerciseStartFiles, projectPath, strategyKotlinProject } from '../__tests__/template.factory.ts'
-import { makeKotlinRuntime, type KotlinRuntimeOptions } from './kotlin-runtime.ts'
+import { makeKotlinCompilerClient } from '../kotlin-compiler-client/kotlin-compiler-client.ts'
+import { makeMemoryCompileCache } from '../memory-compile-cache/memory-compile-cache.ts'
+import { makeKotlinRuntime } from './kotlin-runtime.ts'
 
 const COMPILER_URL = proxiedCompilerUrl(providedKotlinCompilerUrl())
 const EXPRESS_TEST = 'src/test/kotlin/checkout/ExpressShippingTest.kt'
 
+type SessionOptions = { readonly fetch?: typeof globalThis.fetch; readonly testTimeoutMs?: number }
+
+const runtimeWith = ({ fetch, testTimeoutMs }: SessionOptions = {}, url = COMPILER_URL) =>
+  makeKotlinRuntime({
+    compiler: makeKotlinCompilerClient({
+      url,
+      cache: makeMemoryCompileCache(1e8),
+      ...(fetch === undefined ? {} : { fetch }),
+    }),
+    ...(testTimeoutMs === undefined ? {} : { limits: { testTimeoutMs } }),
+  })
+
 const withSession = <A, E>(
   overrides: Parameters<typeof strategyKotlinProject>[0],
   use: (session: RuntimeSession) => Effect.Effect<A, E>,
-  options: Partial<KotlinRuntimeOptions> = {}
+  options: SessionOptions = {}
 ) => {
-  const runtime = makeKotlinRuntime({ compilerUrl: COMPILER_URL, ...options })
+  const runtime = runtimeWith(options)
   return Effect.runPromise(Effect.scoped(Effect.flatMap(runtime.boot(strategyKotlinProject(overrides)), use)))
 }
 
@@ -102,9 +116,8 @@ class PrintingTest {
 
     const run = await Effect.runPromiseExit(
       Effect.scoped(
-        Effect.flatMap(
-          makeKotlinRuntime({ compilerUrl: COMPILER_URL }).boot(strategyKotlinProject(broken)),
-          (session) => Stream.runCollect(session.run({ command: '', args: [] }))
+        Effect.flatMap(runtimeWith().boot(strategyKotlinProject(broken)), (session) =>
+          Stream.runCollect(session.run({ command: '', args: [] }))
         )
       )
     )
@@ -143,7 +156,7 @@ class EndlessTest {
           const next = yield* Stream.runCollect(session.run({ command: '', args: [] }))
           return { stuck, next }
         }),
-      { limits: { testTimeoutMs: 5_000 } }
+      { testTimeoutMs: 5_000 }
     )
 
     expect(errorOf(exit.stuck)).toEqual(new RuntimeTimeoutError({ limitMs: 5_000 }))
@@ -153,9 +166,8 @@ class EndlessTest {
   it('reports a compiler it cannot reach as unavailable', async () => {
     const exit = await Effect.runPromiseExit(
       Effect.scoped(
-        Effect.flatMap(
-          makeKotlinRuntime({ compilerUrl: 'http://127.0.0.1:9' }).boot(strategyKotlinProject()),
-          (session) => Stream.runCollect(session.test({}))
+        Effect.flatMap(runtimeWith({}, 'http://127.0.0.1:9').boot(strategyKotlinProject()), (session) =>
+          Stream.runCollect(session.test({}))
         )
       )
     )

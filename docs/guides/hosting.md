@@ -34,7 +34,10 @@ valeurs publiques au client via `/config.json`.
 | `TYPIKA_ASSETS_BASE_URL` | non | oui | `https://cdn.jsdelivr.net/npm/@typika/runtime-assets@1.0.0/` | Base des assets de runtime. Pas encore lue : l'image sert ses propres assets ([0027](../decisions/0027-go-assets-delivery.md)) |
 | `TYPIKA_PACKAGE_URL_TEMPLATE` | non | oui | `https://esm.sh/{name}@{version}{path}` | CDN ESM des dépendances npm des templates `browser-js` ; défaut : jsDelivr ([runtimes](../specs/runtimes.md) §6.1) |
 | `TYPIKA_EMBED_ENABLED` | non | oui | `true` | Active `/embed/*` |
-| `KOTLIN_COMPILER_URL` | non | oui | `/api/kotlin` ou `https://kotlin.example.org` | Service de compilation ; absent ⇒ Kotlin désactivé |
+| `KOTLIN_COMPILER_URL` | non | non | `http://kotlin-compiler:8080` | Adresse interne du service de compilation, que l'app relaie sous `/api/kotlin` ([0029](../decisions/0029-kotlin-relay-rate-limit.md)) ; absent ⇒ Kotlin désactivé |
+| `TYPIKA_KOTLIN_RATE_PER_MINUTE` | non | non | `20` | Compilations par minute et par IP ; au-delà, `429` |
+| `TYPIKA_KOTLIN_RATE_BURST` | non | non | `10` | Compilations d'avance qu'une IP peut enchaîner |
+| `TYPIKA_TRUST_PROXY` | non | non | `true` | L'IP du client est le dernier `X-Forwarded-For` ; seulement derrière un proxy qui réécrit cet en-tête (Caddy) |
 | `GITHUB_CLIENT_ID` | non | oui | `Iv1.…` | Application OAuth ; absent ⇒ fonctions GitHub désactivées |
 | `GITHUB_CLIENT_SECRET` | si `GITHUB_CLIENT_ID` | **non** | — | Échange `code` → token, jamais exposé au client |
 | `PORT` | non | non | `3000` | Port d'écoute du service `web` |
@@ -128,9 +131,9 @@ Le conteneur ne lit ni n'écrit rien d'autre que `dist/` : il tourne avec `read_
 `healthy`. `deploy/Caddyfile` déclare les deux domaines (`TYPIKA_APP_DOMAIN`, `TYPIKA_RUNTIME_DOMAIN`), obtient les
 certificats, ajoute HSTS, compresse, retire l'en-tête `Server` et transmet tout à `web:3000` en conservant `Host`.
 
-Le service Kotlin s'ajoutera au M6 dans un profil `kotlin`, sur un réseau interne sans accès sortant, avec
-`/api/kotlin/*` routé par Caddy et un rate limiting à choisir à ce moment-là (module Caddy tiers ou limitation dans le
-service).
+Le service Kotlin s'ajoutera au lot 3 du M6 dans un profil `kotlin`, sur un réseau interne sans accès sortant. `web`
+le relaie sous `/api/kotlin` et limite le débit par IP ([0029](../decisions/0029-kotlin-relay-rate-limit.md)) ; Caddy
+ne le voit pas.
 
 ### 4.4 Démarrage
 
@@ -158,8 +161,9 @@ en production.
   au M1 ; la syntaxe exacte est à vérifier contre `@vercel/config`.
 - `POST /api/github/token` tourne en fonction Vercel (runtime Node par défaut).
 - **Le service Kotlin ne tourne pas sur Vercel** : c'est un conteneur JVM avec une file et des limites réseau. Le
-  déployer sur un VPS ou un service de conteneurs managé, puis renseigner `KOTLIN_COMPILER_URL` (URL absolue) et
-  `KOTLIN_COMPILER_ALLOWED_ORIGIN`.
+  déployer sur un VPS ou un service de conteneurs managé. Le relais `/api/kotlin` et son rate limiting vivent dans le
+  serveur Node de l'app ([0029](../decisions/0029-kotlin-relay-rate-limit.md)) : à porter en fonction Vercel, à
+  faire avec le reste de ce §5.
 - Variables d'env via `vercel env` ; `GITHUB_CLIENT_SECRET` uniquement en environnement serveur.
 
 ## 6. Autres plateformes

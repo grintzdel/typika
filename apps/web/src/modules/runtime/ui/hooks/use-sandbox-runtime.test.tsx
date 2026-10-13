@@ -1,6 +1,8 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
+import { RuntimeUnsupportedError } from '@typika/runtime-core'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
+import * as Stream from 'effect/Stream'
 import { describe, expect, it } from 'vitest'
 
 import { makeRegistryWrapper } from '../../../app/__tests__/registry-wrapper.tsx'
@@ -16,6 +18,7 @@ import {
 } from '../../../project/core/project.test-layer.ts'
 import { LOAD_PROGRESS, LOCATED_DIAGNOSTIC, makeFakeRuntime, projectPath } from '../../__tests__/runtime.factory.ts'
 import type { FileWrite } from '../../core/domain/file-write.domain-model.ts'
+import { RuntimeFramePort } from '../../core/ports/runtime-frame.port.ts'
 import { makeRuntimeTestLayer } from '../../core/runtime.test-layer.ts'
 import { useSandboxRuntime } from './use-sandbox-runtime.ts'
 
@@ -23,13 +26,14 @@ const TEMPLATES = { 'sample-ts': templateFiles() }
 
 const renderSandbox = (
   storage = makeProjectStorageInMemory(),
-  pending: ReadonlyArray<FileWrite> = [[projectPath('src/main.ts'), 'edited']]
+  pending: ReadonlyArray<FileWrite> = [[projectPath('src/main.ts'), 'edited']],
+  runtime?: Layer.Layer<RuntimeFramePort>
 ) => {
   const fake = makeFakeRuntime()
   const wrapper = makeRegistryWrapper(
     Layer.mergeAll(
       makeProjectTestLayer(TEMPLATES, storage),
-      makeRuntimeTestLayer(fake.port),
+      runtime ?? makeRuntimeTestLayer(fake.port),
       makeLanguageServiceInMemory().layer,
       makeExerciseProgressInMemory().layer
     )
@@ -50,6 +54,16 @@ describe('useSandboxRuntime', () => {
     const { result } = renderSandbox()
 
     await waitFor(() => expect(result.current.status).toBe('ready'))
+  })
+
+  it('tells apart a runtime this instance does not provide', async () => {
+    const unsupported = Layer.succeed(RuntimeFramePort, {
+      load: () => Stream.empty,
+      boot: () => Effect.fail(new RuntimeUnsupportedError({ kind: 'kotlin' })),
+    })
+    const { result } = renderSandbox(undefined, undefined, unsupported)
+
+    await waitFor(() => expect(result.current.status).toBe('unsupported'))
   })
 
   it('runs the entry with the pending edits', async () => {

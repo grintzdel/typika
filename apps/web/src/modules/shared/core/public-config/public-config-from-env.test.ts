@@ -57,6 +57,19 @@ describe('publicConfigFromEnv', () => {
     expect(config.runtimeOrigin).toBe('https://run.example.net')
   })
 
+  it('enables Kotlin behind the app relay when a compile service is set, without exposing its address', () => {
+    const config = Effect.runSync(
+      publicConfigFromEnv({ ...ENV, KOTLIN_COMPILER_URL: 'http://kotlin-compiler.internal:8080' })
+    )
+
+    expect(config.kotlinCompilerUrl).toBe('/api/kotlin')
+    expect(JSON.stringify(config)).not.toContain('kotlin-compiler.internal')
+  })
+
+  it('leaves Kotlin disabled without a compile service', () => {
+    expect(Effect.runSync(publicConfigFromEnv(ENV)).kotlinCompilerUrl).toBeUndefined()
+  })
+
   it('never exposes server-only variables', () => {
     const config = Effect.runSync(publicConfigFromEnv({ ...ENV, GITHUB_CLIENT_SECRET: 'secret' }))
 
@@ -70,6 +83,7 @@ describe('publicConfigFromEnv', () => {
     ['the runtime shares the app origin', { ...ENV, TYPIKA_RUNTIME_ORIGIN: 'https://typika.example.org' }],
     ['the registry index is not a URL', { ...ENV, TYPIKA_REGISTRY_INDEX_URL: 'registry/index.json' }],
     ['a template URL is not HTTP', { ...ENV, TYPIKA_TEMPLATE_FILE_URL_TEMPLATE: 'javascript:alert(1)' }],
+    ['the Kotlin compile service is not a URL', { ...ENV, KOTLIN_COMPILER_URL: 'kotlin-compiler:8080' }],
   ])('fails when %s', (_, env) => {
     const exit = Effect.runSyncExit(publicConfigFromEnv(env))
 

@@ -4,7 +4,7 @@ import { Button } from '../../../../ui/Button.tsx'
 import { isDownloading, type RuntimeDownload } from '../../core/domain/runtime-download.domain-model.ts'
 
 export type RunToolbarProps = {
-  readonly status: 'loading' | 'ready' | 'failed'
+  readonly status: 'loading' | 'ready' | 'failed' | 'unsupported'
   readonly bootError: string | undefined
   readonly download: RuntimeDownload | undefined
   readonly isRunning: boolean
@@ -30,7 +30,7 @@ export const RunToolbar = ({
 }: RunToolbarProps) => {
   const { t } = useTranslation('runtime')
   const ready = status === 'ready'
-  const reason = ready ? undefined : t('loading')
+  const reason = ready ? undefined : status === 'unsupported' ? t('unsupported') : t('loading')
   return (
     <div className="flex min-w-0 flex-1 items-center gap-3">
       <div
@@ -57,6 +57,7 @@ export const RunToolbar = ({
         {status === 'failed' ? (
           <span className="text-red-700 dark:text-red-400">{t('bootFailed', { reason: bootError ?? '' })}</span>
         ) : null}
+        {status === 'unsupported' ? <span className="truncate">{t('unsupported')}</span> : null}
       </div>
       {status === 'failed' ? <Button onClick={onRetry}>{t('retry')}</Button> : null}
       {isRunning || isTesting ? (

@@ -17,6 +17,8 @@ export type TestRunOutcome =
   | { readonly _tag: 'Finished'; readonly status: RunStatus; readonly durationMs: number }
   | { readonly _tag: 'TimedOut'; readonly limitMs: number }
   | { readonly _tag: 'Crashed'; readonly message: string }
+  | { readonly _tag: 'CompilerBusy'; readonly retryAfterSeconds: number }
+  | { readonly _tag: 'CompilerUnavailable' }
   | { readonly _tag: 'Interrupted' }
 
 export type TestRunState = {
@@ -56,10 +58,20 @@ const record = (state: TestRunState, result: TestResult): TestRunState => ({
   counts: { ...state.counts, [result.status]: state.counts[result.status] + 1 },
 })
 
-const outcomeOf = (error: RuntimeExecutionError): TestRunOutcome =>
-  error._tag === 'RuntimeTimeoutError'
-    ? { _tag: 'TimedOut', limitMs: error.limitMs }
-    : { _tag: 'Crashed', message: error._tag === 'RuntimeProcessError' ? describeCause(error.cause) : error._tag }
+const outcomeOf = (error: RuntimeExecutionError): TestRunOutcome => {
+  switch (error._tag) {
+    case 'RuntimeTimeoutError':
+      return { _tag: 'TimedOut', limitMs: error.limitMs }
+    case 'RuntimeProcessError':
+      return { _tag: 'Crashed', message: describeCause(error.cause) }
+    case 'KotlinCompilerRateLimitedError':
+      return { _tag: 'CompilerBusy', retryAfterSeconds: error.retryAfterSeconds }
+    case 'KotlinCompilerUnavailableError':
+      return { _tag: 'CompilerUnavailable' }
+    default:
+      return { _tag: 'Crashed', message: error._tag }
+  }
+}
 
 export const reduceTestRun = (state: TestRunState, input: TestRunEvent): TestRunState => {
   if (input._tag === 'Interrupted') return { ...state, outcome: { _tag: 'Interrupted' } }

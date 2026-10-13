@@ -8,6 +8,8 @@ describe('languageOf', () => {
     ['src/app.tsx', 'typescript'],
     ['src/main.js', 'javascript'],
     ['cmd/shop/main.go', 'go'],
+    ['src/main/kotlin/Main.kt', 'kotlin'],
+    ['build.gradle.kts', 'kotlin'],
     ['go.mod', 'text'],
     ['package.json', 'json'],
     ['tour/01-overview.md', 'markdown'],

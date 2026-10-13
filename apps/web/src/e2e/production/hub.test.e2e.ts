@@ -49,6 +49,19 @@ test.describe('without JavaScript', () => {
   })
 })
 
+test('hides Kotlin once the page knows the instance has no compile service', async ({ page }) => {
+  await page.goto(`${APP_URL}/templates`)
+
+  const languages = page.getByRole('group', { name: 'Langage' })
+  await expect(languages.getByRole('checkbox', { name: 'Go' })).toBeVisible()
+  await expect(languages.getByRole('checkbox', { name: 'Kotlin' })).toHaveCount(0)
+  await expect(page.getByRole('list', { name: 'Templates' }).getByRole('link', { name: /Kotlin/ })).toHaveCount(0)
+
+  await page.goto(`${APP_URL}/templates/strategy-ts`)
+  await expect(page.getByRole('link', { name: 'Kotlin', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Go', exact: true }).first()).toBeVisible()
+})
+
 test('restores the filters of a list URL after a reload, within the content security policy', async ({ page }) => {
   const violations: Array<string> = []
   page.on('console', (message) => {

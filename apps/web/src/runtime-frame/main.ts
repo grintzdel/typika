@@ -10,6 +10,7 @@ import {
   FrameHandshakeSchema,
   type FrameHandshake,
 } from '../modules/runtime/core/domain/runtime-frame-protocol.domain-model.ts'
+import { makeHostKotlinCompiler } from '../modules/runtime/core/frame-host/host-kotlin-compiler.ts'
 import { serveRuntimeFrame } from '../modules/runtime/core/frame-host/serve-runtime-frame.ts'
 import { fetchPublicConfig } from '../modules/shared/core/adapters/app-config.fetch.adapter.ts'
 
@@ -17,6 +18,8 @@ const decodeHandshake = Schema.decodeUnknownOption(FrameHandshakeSchema)
 
 const config = await Effect.runPromise(fetchPublicConfig('./config.json'))
 const appOrigin = new URL(config.publicUrl).origin
+
+const kotlinCompiler = makeHostKotlinCompiler()
 
 const registry = makeRuntimeRegistry({
   'browser-js': async () => {
@@ -30,6 +33,14 @@ const registry = makeRuntimeRegistry({
     const { makeGoRuntime } = await import('@typika/runtime-go/browser')
     return makeGoRuntime({ assetsUrl: new URL(goAssets.assetsUrl, location.href).href, manifest: goAssets.manifest })
   },
+  ...(config.kotlinCompilerUrl === undefined
+    ? {}
+    : {
+        kotlin: async () => {
+          const { makeKotlinRuntime } = await import('@typika/runtime-kotlin/browser')
+          return makeKotlinRuntime({ compiler: kotlinCompiler.compiler })
+        },
+      }),
 })
 
 let serving: Fiber.Fiber<never> | undefined
@@ -42,7 +53,7 @@ window.addEventListener('message', (event: MessageEvent<unknown>) => {
   serving = Effect.runFork(
     Effect.andThen(
       previous === undefined ? Effect.void : Fiber.interrupt(previous),
-      Effect.scoped(serveRuntimeFrame(port, registry))
+      Effect.scoped(serveRuntimeFrame(port, registry, kotlinCompiler))
     )
   )
 })

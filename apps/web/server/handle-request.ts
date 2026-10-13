@@ -5,6 +5,8 @@ import { DEFAULT_PACKAGE_URL_TEMPLATE } from '@typika/runtime-browser-js/default
 import { BROTLI_SUFFIX } from '@typika/runtime-go'
 
 import type { PublicConfig } from '../src/modules/shared/core/domain/public-config.domain-model.ts'
+import { KOTLIN_COMPILER_PATH } from '../src/modules/shared/core/public-config/public-config-from-env.ts'
+import type { KotlinRelay } from './kotlin-relay.ts'
 import {
   appContentSecurityPolicy,
   appHeaders,
@@ -20,6 +22,7 @@ export type RequestHandlerOptions = {
   readonly clientDir: string
   readonly runtimeDir: string
   readonly appServer: AppServer
+  readonly kotlinRelay?: KotlinRelay
 }
 
 const RUNTIME_PREFIX = '/runtime/'
@@ -94,7 +97,13 @@ const pageResponse = (html: string, policy: string) =>
     },
   })
 
-export const makeRequestHandler = async ({ config, clientDir, runtimeDir, appServer }: RequestHandlerOptions) => {
+export const makeRequestHandler = async ({
+  config,
+  clientDir,
+  runtimeDir,
+  appServer,
+  kotlinRelay,
+}: RequestHandlerOptions) => {
   const clientRoot = resolve(clientDir)
   const runtimeRoot = resolve(runtimeDir)
   const shell = await readFile(join(clientRoot, SHELL_FILE), 'utf8')
@@ -133,6 +142,7 @@ export const makeRequestHandler = async ({ config, clientDir, runtimeDir, appSer
 
   const serveApp = async (request: Request, pathname: string) => {
     if (pathname.startsWith(RUNTIME_PREFIX)) return notFound()
+    if (kotlinRelay !== undefined && pathname.startsWith(`${KOTLIN_COMPILER_PATH}/`)) return kotlinRelay(request)
     if (isServerRoute(pathname)) return appServer.fetch(request)
     if (request.method !== 'GET' && request.method !== 'HEAD') return notFound()
     const file =

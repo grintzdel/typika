@@ -14,6 +14,8 @@ export type ConsoleOutcome =
   | { readonly _tag: 'CompileFailed' }
   | { readonly _tag: 'TimedOut'; readonly limitMs: number }
   | { readonly _tag: 'Crashed'; readonly message: string }
+  | { readonly _tag: 'CompilerBusy'; readonly retryAfterSeconds: number }
+  | { readonly _tag: 'CompilerUnavailable' }
 
 export type ConsoleState = {
   readonly entries: ReadonlyArray<ConsoleEntry>
@@ -61,10 +63,11 @@ const outcomeOf = (error: RuntimeExecutionError): ConsoleOutcome => {
     case 'RuntimeTimeoutError':
       return { _tag: 'TimedOut', limitMs: error.limitMs }
     case 'RuntimeProcessError':
-    case 'KotlinCompilerUnavailableError':
       return { _tag: 'Crashed', message: describeCause(error.cause) }
+    case 'KotlinCompilerRateLimitedError':
+      return { _tag: 'CompilerBusy', retryAfterSeconds: error.retryAfterSeconds }
     default:
-      return { _tag: 'Crashed', message: error._tag }
+      return { _tag: 'CompilerUnavailable' }
   }
 }
 

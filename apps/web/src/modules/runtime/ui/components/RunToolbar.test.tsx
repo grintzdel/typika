@@ -20,6 +20,14 @@ const renderToolbar = (props: Partial<RunToolbarProps> = {}) => {
 }
 
 describe('RunToolbar', () => {
+  it('explains a runtime this instance does not provide, with nothing to retry', () => {
+    renderToolbar({ status: 'unsupported' })
+
+    expect(screen.getByRole('status').textContent).toContain('Cette instance n’exécute pas ce langage')
+    expect(screen.queryByRole('button', { name: 'Réessayer' })).toBeNull()
+    expect(screen.getByRole('button', { name: /Exécuter/ }).hasAttribute('disabled')).toBe(true)
+  })
+
   it('shows the download of the runtime while it loads', () => {
     renderToolbar({ status: 'loading', download: { loadedBytes: 4_200_000, totalBytes: 79_315_000 } })
 

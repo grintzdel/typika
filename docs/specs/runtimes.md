@@ -455,7 +455,10 @@ Projet (app) ──POST /compile──▶ kotlin-compiler (service) ──▶ mo
 ```
 
 - L'appel au service part de l'**app**, pas de l'origine runtime (voir [security.md](./security.md) : l'origine runtime
-  n'a pas d'accès réseau sortant).
+  n'a pas d'accès réseau sortant). La session Kotlin de la frame demande chaque compilation à l'app par le même
+  `MessagePort` (`CompileKotlin`, réponse `KotlinCompiled` ou `KotlinCompileFailed`) ; l'app compile avec son cache et
+  renvoie la compilation. Elle appelle `/api/kotlin/compile` sur sa propre origine, que son serveur relaie vers le
+  service avec un rate limiting par IP ([0029](../decisions/0029-kotlin-relay-rate-limit.md)).
 - Le service est maison ([ADR 0019](../decisions/0019-kotlin-runtime.md)) : un serveur HTTP minimal autour de
   `kotlin-compiler-embeddable`, avec la stdlib et `kotlin.test` de la même version comme seules bibliothèques. Il ne
   fait que compiler ; aucun endpoint n'exécute de code.
@@ -477,7 +480,8 @@ Projet (app) ──POST /compile──▶ kotlin-compiler (service) ──▶ mo
   `assertNotEquals`, `assertNull` et `assertNotNull` à JUnit 5, qui les formule autrement (`expected: <1> but was:
   <2>` pour `Expected <1>, actual <2>.`) ; les autres assertions et `fail` donnent le même texte. Un message qui nomme
   un type diffère aussi : la JVM écrit `java.lang.String`, JS `String`.
-- **Dans le navigateur** : `@typika/runtime-kotlin/browser`. La session compile depuis l'app, puis exécute l'artefact
+- **Dans le navigateur** : `@typika/runtime-kotlin/browser`. La session reçoit un compilateur (celui de l'app, par la
+  frame), puis exécute l'artefact
   dans un worker neuf par `run` ou `test`, importé depuis une URL `blob:`. Le worker est terminé à la fin, à
   l'interruption ou au watchdog : pas d'état d'une exécution à l'autre. `load` n'a rien à télécharger.
 - **Hors navigateur** : `@typika/runtime-kotlin/node` exécute l'artefact dans un contexte `node:vm` sans `process`,
@@ -525,9 +529,11 @@ l'artefact ne contient pas de commentaire `sourceMappingURL` : la source map arr
 **Cache de compilation**
 
 - Clé : `sha256(protocol + target + kotlinVersion + mode + fichiers triés par chemin)`.
-- **Cache client** : IndexedDB, LRU borné (§8). Relancer les tests sans modification ne rappelle pas le service.
-  Le runtime prend un `CompileCache` ; par défaut, un LRU en mémoire de la même taille pour la session. Un échec de
-  compilation est mis en cache comme un succès ; un projet trop gros, un `429` ou une erreur du service ne le sont pas.
+- **Cache client** : IndexedDB, LRU borné (§8), sur l'origine de l'app. Relancer les tests sans modification, même
+  après un rechargement, ne rappelle pas le service.
+  Le client de compilation prend un `CompileCache` : IndexedDB dans l'app, aucun par défaut hors navigateur. Un échec
+  de compilation est mis en cache comme un succès ; un projet trop gros, un `429` ou une erreur du service ne le sont
+  pas.
 - **Artefacts précompilés** : la CI du registre compile chaque template Kotlin non modifié et publie l'artefact avec
   l'index. Ouvrir un template et lancer ses tests ne coûte aucun appel au service tant que l'utilisateur n'a rien
   modifié.
@@ -535,8 +541,10 @@ l'artefact ne contient pas de commentaire `sourceMappingURL` : la source map arr
 - Compilation **à la demande** (`run` / `test`), jamais à la frappe. Les diagnostics de l'éditeur Kotlin viennent du
   dernier `run` / `test`, pas d'un language server (hors V1).
 
-**Désactivation** : si `KOTLIN_COMPILER_URL` n'est pas configuré, `RuntimeRegistry.get('kotlin')` échoue avec
-`RuntimeUnsupportedError` et le hub masque les templates Kotlin.
+**Désactivation** : si `KOTLIN_COMPILER_URL` n'est pas configuré, la config publique n'a pas de `kotlinCompilerUrl`,
+`RuntimeRegistry.get('kotlin')` échoue avec `RuntimeUnsupportedError` et la sandbox l'explique sans proposer de
+réessayer. Le hub est prérendu au build, avant de connaître la config : il masque les templates, variantes et
+facettes Kotlin une fois hydraté.
 
 ## 7. Erreurs
 
