@@ -18,6 +18,7 @@ export type KotlinRelay = (request: Request) => Promise<Response>
 const COMPILE_PATH = `${KOTLIN_COMPILER_PATH}/compile`
 const DEFAULT_TIMEOUT_MS = RuntimeLimit.KOTLIN_COMPILE_CLIENT_TIMEOUT_MS + 5_000
 const MAX_BODY_BYTES = RuntimeLimit.KOTLIN_COMPILE_REQUEST_BYTES
+const UNAVAILABLE_RETRY_AFTER_SECONDS = '5'
 
 const error = (status: number, message: string, headers: Readonly<Record<string, string>> = {}) =>
   Response.json({ error: message }, { status, headers: { 'Cache-Control': 'no-store', ...headers } })
@@ -67,7 +68,9 @@ export const makeKotlinRelay = ({
       body,
       signal: AbortSignal.timeout(timeoutMs),
     }).catch(() => undefined)
-    if (answer === undefined) return error(503, 'the Kotlin compiler is unreachable')
+    if (answer === undefined) {
+      return error(503, 'the Kotlin compiler is unreachable', { 'Retry-After': UNAVAILABLE_RETRY_AFTER_SECONDS })
+    }
     const retryAfter = answer.headers.get('retry-after')
     return new Response(await answer.arrayBuffer(), {
       status: answer.status,

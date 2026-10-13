@@ -51,6 +51,11 @@ Avec la dernière variante, une compilation seule prend 0,7 s à chaud, et un wo
 
 - Une compilation qui ne finit pas coûte au plus `TIMEOUT_MS` à une place, puis environ 3 s de relance. Le reste du
   service continue de répondre.
+- Avec deux places, deux compilations piégées envoyées en même temps bloquent tout le service pendant environ 18 s :
+  le timeout, puis la relance. Les compilations suivantes attendent dans la file, puis reçoivent `503` quand elle est
+  pleine. Le rate limiting par IP du relais ([0029](0029-kotlin-relay-rate-limit.md)) limite la fréquence à laquelle
+  un même client peut recommencer, sans empêcher l'attaque. Un `503` dû à un processus planté porte, comme celui
+  d'une file pleine, un `Retry-After: 5`.
 - Deux JVM au lieu d'une, mais le débit dépasse celui du spike : le C1 seul compile les méthodes du compilateur plus
   vite que le C2 ne les optimise, sur des compilations d'une seconde. La mémoire tient dans le dimensionnement de
   référence de [0019](0019-kotlin-runtime.md) (2 vCPU, 1 Gio).

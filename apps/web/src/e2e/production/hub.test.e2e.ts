@@ -23,11 +23,21 @@ test.describe('without JavaScript', () => {
     await page.goto(`${APP_URL}/templates`)
 
     const results = page.getByRole('list', { name: 'Templates' })
-    await expect(results.getByRole('listitem')).toHaveCount(29)
+    await expect(results.getByRole('listitem')).toHaveCount(28)
     await expect(results.getByRole('link', { name: /Strategy: shipping options.*Go/ })).toHaveAttribute(
       'href',
       '/templates/strategy-go'
     )
+  })
+
+  test('leaves Kotlin out until the page knows the instance compiles it', async ({ page }) => {
+    await page.goto(`${APP_URL}/`)
+    await expect(
+      page.getByRole('region', { name: 'Design patterns' }).getByRole('link', { name: /^Strategy/ })
+    ).not.toContainText('Kotlin')
+
+    await page.goto(`${APP_URL}/templates`)
+    await expect(page.getByRole('list', { name: 'Templates' }).getByRole('link', { name: /Kotlin/ })).toHaveCount(0)
   })
 
   test('sends a search from the header to the list', async ({ page }) => {
@@ -37,7 +47,7 @@ test.describe('without JavaScript', () => {
     await page.getByRole('searchbox', { name: 'Search templates' }).press('Enter')
 
     await expect(page).toHaveURL(`${APP_URL}/templates?q=switch`)
-    await expect(page.getByRole('list', { name: 'Templates' }).getByRole('listitem')).toHaveCount(29)
+    await expect(page.getByRole('list', { name: 'Templates' }).getByRole('listitem')).toHaveCount(28)
   })
 
   test('reads a template page', async ({ page }) => {

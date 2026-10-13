@@ -450,6 +450,24 @@ absent de l'instance. Sans service, le hub masque Kotlin une fois hydraté. L'E2
 `/play/strategy-kotlin` (Run, tests, erreur de compilation, cache après rechargement, les deux exercices) dans
 Chromium et WebKit.
 
+(b) livré : le profil Compose `kotlin` lance le service sur un réseau `internal`, avec les protections de
+[security §3.3](specs/security.md). `web` est le seul autre membre de ce réseau, et Compose lui fixe
+`TYPIKA_TRUST_PROXY=true`. Un `X-Forwarded-For` forgé ne contourne pas la limite, puisque Caddy le remplace.
+`.env.example` liste les variables Kotlin. Un processus planté répond `503` avec `Retry-After`, comme une file
+pleine, et le relais en fait autant quand le service ne répond pas en 25 s. Le hub ne montre plus Kotlin pour le
+masquer ensuite : il reste masqué tant que la config n'a pas confirmé le service, prérendu compris. Le test de
+charge (`load-test.ts`, [hosting §4.5](guides/hosting.md)) passe derrière Caddy :
+
+- une rafale de 30 requêtes d'un même client reçoit 10 `200` et 20 `429` avec `Retry-After` ;
+- la limite levée, 60 compilations simultanées et deux compilations piégées donnent 10 `200`, 50 `503` avec
+  `Retry-After` et deux `504` ;
+- le pic mémoire atteint 829 Mio sur 1 Gio, sans redémarrage ni arrêt pour mémoire, et le service compile de nouveau
+  après la charge.
+
+Ce test joue le cas de [0028](decisions/0028-kotlin-compilation-workers.md) : les deux places restent bloquées par les
+compilations piégées pendant environ 18 s. La suite E2E Kotlin passe sur le build de production derrière Caddy, dans
+WebKit comme dans Chromium, une fois la limite par IP levée : sinon, la suite seule la dépasse.
+
 ---
 
 ## Après M6 (non planifié)

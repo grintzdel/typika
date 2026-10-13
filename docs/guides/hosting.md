@@ -1,7 +1,7 @@
 # Héberger Typika
 
 Statut : guide · aligné sur les fichiers du dépôt (`Dockerfile`, `docker-compose.yml`, `deploy/Caddyfile`,
-`.env.example`) depuis le M1. Vercel (§5) et le service Kotlin restent à faire.
+`.env.example`) depuis le M1, et sur le profil Compose `kotlin` depuis le lot 3 du M6. Vercel (§5) reste à faire.
 
 Contexte : [architecture.md](../specs/architecture.md) pour les composants, [security.md](../specs/security.md) pour les
 en-têtes et l'isolation.
@@ -37,7 +37,7 @@ valeurs publiques au client via `/config.json`.
 | `KOTLIN_COMPILER_URL` | non | non | `http://kotlin-compiler:8080` | Adresse interne du service de compilation, que l'app relaie sous `/api/kotlin` ([0029](../decisions/0029-kotlin-relay-rate-limit.md)) ; absent ⇒ Kotlin désactivé |
 | `TYPIKA_KOTLIN_RATE_PER_MINUTE` | non | non | `20` | Compilations par minute et par IP ; au-delà, `429` |
 | `TYPIKA_KOTLIN_RATE_BURST` | non | non | `10` | Compilations d'avance qu'une IP peut enchaîner |
-| `TYPIKA_TRUST_PROXY` | non | non | `true` | L'IP du client est le dernier `X-Forwarded-For` ; seulement derrière un proxy qui réécrit cet en-tête (Caddy) |
+| `TYPIKA_TRUST_PROXY` | non | non | `true` | L'IP du client est le dernier `X-Forwarded-For` ; seulement derrière un proxy qui réécrit cet en-tête (Caddy). `docker-compose.yml` le fixe à `true` |
 | `GITHUB_CLIENT_ID` | non | oui | `Iv1.…` | Application OAuth ; absent ⇒ fonctions GitHub désactivées |
 | `GITHUB_CLIENT_SECRET` | si `GITHUB_CLIENT_ID` | **non** | — | Échange `code` → token, jamais exposé au client |
 | `PORT` | non | non | `3000` | Port d'écoute du service `web` |
@@ -54,6 +54,15 @@ Variables du service `kotlin-compiler` :
 | `KOTLIN_COMPILER_QUEUE_MAX` | `20` | Compilations en attente ; au-delà, réponse `503` |
 | `KOTLIN_COMPILER_CACHE_MB` | `32` | Cache mémoire des artefacts (`0` pour désactiver) |
 | `KOTLIN_COMPILER_WORKER_JAVA_OPTS` | voir [0028](../decisions/0028-kotlin-compilation-workers.md) | Options JVM des processus de compilation |
+
+Avec Compose, ces variables se règlent dans `.env`, d'où `docker-compose.yml` reprend `CONCURRENCY`, `QUEUE_MAX`,
+`TIMEOUT_MS` et `CACHE_MB` ; le service ne lit pas le reste de `.env`, qui peut contenir des secrets de `web`.
+`KOTLIN_COMPILER_MEMORY` (`1g`) et `KOTLIN_COMPILER_CPUS` (`2`) plafonnent le conteneur : les monter avec la
+concurrence.
+
+Une file pleine et un processus de compilation planté répondent tous deux `503` avec `Retry-After: 5`, que le relais
+transmet. Le relais répond lui-même `503` avec `Retry-After: 5` quand le service est injoignable ou ne répond pas en
+25 s.
 
 Valeurs alignées sur [runtimes.md](../specs/runtimes.md) §8. Dimensionnement mesuré au lot 1 du M6
 ([0028](../decisions/0028-kotlin-compilation-workers.md)) : avec 2 vCPU et 1 Gio, 2 processus de compilation tiennent
@@ -131,9 +140,12 @@ Le conteneur ne lit ni n'écrit rien d'autre que `dist/` : il tourne avec `read_
 `healthy`. `deploy/Caddyfile` déclare les deux domaines (`TYPIKA_APP_DOMAIN`, `TYPIKA_RUNTIME_DOMAIN`), obtient les
 certificats, ajoute HSTS, compresse, retire l'en-tête `Server` et transmet tout à `web:3000` en conservant `Host`.
 
-Le service Kotlin s'ajoutera au lot 3 du M6 dans un profil `kotlin`, sur un réseau interne sans accès sortant. `web`
-le relaie sous `/api/kotlin` et limite le débit par IP ([0029](../decisions/0029-kotlin-relay-rate-limit.md)) ; Caddy
-ne le voit pas.
+Le service Kotlin est dans le profil Compose `kotlin`. Il n'est branché qu'au réseau `kotlin`, déclaré `internal` :
+aucun accès sortant, et seul `web`, branché aux deux réseaux, le joint. Caddy ne le voit pas. `web` le relaie sous
+`/api/kotlin` et limite le débit par IP ([0029](../decisions/0029-kotlin-relay-rate-limit.md)) ; Compose fixe
+`TYPIKA_TRUST_PROXY=true`, puisque Caddy remplace le `X-Forwarded-For` reçu par l'adresse qu'il voit. Le conteneur du
+service reprend les protections de [security §3.3](../specs/security.md) : FS en lecture seule, `tmpfs` de 64 Mio
+sur `/tmp`, sans capabilities, 1 Gio sans swap, 2 CPU, 256 processus.
 
 ### 4.4 Démarrage
 
@@ -141,6 +153,32 @@ ne le voit pas.
 cp .env.example .env            # renseigner les variables du §2 et les deux domaines
 docker compose up -d --build
 ```
+
+Avec Kotlin, décommenter `KOTLIN_COMPILER_URL=http://kotlin-compiler:8080` dans `.env`, puis :
+
+```sh
+docker compose --profile kotlin up -d --build
+```
+
+Sans le profil, laisser `KOTLIN_COMPILER_URL` commenté : sinon l'app propose Kotlin et chaque compilation répond
+`503`.
+
+### 4.5 Test de charge du service Kotlin
+
+`services/kotlin-compiler/scripts/load-test.ts` mesure le service à travers Caddy et le relais, sur la pile Compose
+lancée avec le profil `kotlin`. Deux scénarios :
+
+```sh
+# limites par défaut : une rafale d'un même client reçoit des 429 avec Retry-After
+pnpm --filter @typika/kotlin-compiler load-test --app http://localhost --scenario rate --requests 30
+# relancer web avec TYPIKA_KOTLIN_RATE_BURST=1000 : 60 compilations simultanées et deux compilations piégées
+pnpm --filter @typika/kotlin-compiler load-test --app http://localhost --scenario saturate --requests 60
+```
+
+Le second scénario échoue si une compilation répond autre chose que `200` ou `503`, si la file pleine ne répond pas
+`503` avec `Retry-After`, si les compilations piégées ne reçoivent pas `504`, si le conteneur dépasse sa limite
+mémoire, est tué pour mémoire ou redémarre, ou si le service ne compile plus après la charge. Pour l'essai en local,
+`TYPIKA_APP_DOMAIN=http://localhost` et `TYPIKA_RUNTIME_DOMAIN=http://127.0.0.1` font servir Caddy en HTTP.
 
 Essai local sans Caddy, deux sites sur le même port :
 
@@ -216,8 +254,8 @@ Les assets de runtime (WASM d'esbuild, toolchain Go) sont dans l'image et servis
 - [ ] `/play/strategy-go` télécharge la toolchain Go en brotli (`Content-Encoding: br` sur `compile.wasm`), ses tests
       passent, et un rechargement ne la retélécharge pas.
 - [ ] `/config.json` ne contient aucun secret.
-- [ ] Avec Kotlin : un template Kotlin compile ; une rafale de requêtes reçoit des `429` ; une connexion sortante
-      depuis le conteneur `kotlin-compiler` échoue.
+- [ ] Avec Kotlin : un template Kotlin compile ; le scénario `rate` du test de charge (§4.5) passe ; une connexion
+      sortante depuis le conteneur `kotlin-compiler` échoue.
 - [ ] Sans Kotlin : aucun template Kotlin n'apparaît dans le hub.
 - [ ] Avec GitHub : connexion, création de gist, puis déconnexion qui vide `sessionStorage`.
 - [ ] La suite E2E de production passe contre l'instance :
