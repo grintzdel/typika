@@ -1,5 +1,6 @@
 export type { CompileCache } from './domain/compile-cache.port.ts'
 export {
+  kotlinCompileRequest,
   KotlinCompilationSchema,
   KotlinSourceFileSchema,
   type KotlinArtifact,

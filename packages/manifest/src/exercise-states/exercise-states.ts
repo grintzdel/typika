@@ -12,7 +12,7 @@ export type ExerciseStates = {
 const EXERCISES_DIR = 'exercises/'
 const REMOVE_LIST = '.typika-remove'
 
-const withoutExercises = (files: TemplateFiles): TemplateFiles =>
+export const withoutExercises = (files: TemplateFiles): TemplateFiles =>
   new Map([...files].filter(([path]) => !path.startsWith(EXERCISES_DIR)))
 
 const overlayOf = (files: TemplateFiles, exercise: string, folder: 'start' | 'solution'): TemplateFiles => {

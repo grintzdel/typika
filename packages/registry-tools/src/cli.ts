@@ -4,6 +4,7 @@ import { argv, cwd, env, exit } from 'node:process'
 import { parseArgs } from 'node:util'
 import { gzipSync } from 'node:zlib'
 
+import { makeKotlinCompilerClient } from '@typika/runtime-kotlin'
 import { formatReport } from '@typika/template-check'
 import * as Effect from 'effect/Effect'
 import * as Schema from 'effect/Schema'
@@ -11,14 +12,17 @@ import { chromium } from 'playwright'
 
 import { INDEX_MAX_GZIP_BYTES } from './build-index/build-index.ts'
 import { buildLocalIndex, MONOREPO_CHECKOUTS } from './build-local-index/build-local-index.ts'
+import { compileKotlinArtifacts } from './compile-kotlin-artifacts/compile-kotlin-artifacts.ts'
 import { RegistryIndexSchema } from './domain/registry-index.domain-model.ts'
 import { indexJsonSchema } from './index-json-schema/index-json-schema.ts'
+import { kotlinArtifactRequests } from './kotlin-artifact-requests/kotlin-artifact-requests.ts'
 import { mirrorTemplates } from './mirror-templates/mirror-templates.ts'
 import { makePlaywrightProbe } from './probe-template/probe-template.playwright.ts'
 import { readAppRuntimes } from './read-app-runtimes/read-app-runtimes.ts'
 import { readHealth, writeHealth } from './read-health/read-health.ts'
 import { makeGitResolver, parseCheckout, type LocalCheckouts } from './resolve-ref/resolve-ref.ts'
 import { runHealth } from './run-health/run-health.ts'
+import { readKotlinArtifactKeys, writeKotlinArtifacts } from './write-kotlin-artifacts/write-kotlin-artifacts.ts'
 
 const { positionals, values } = parseArgs({
   args: argv.slice(2),
@@ -106,10 +110,36 @@ if (command !== 'build') {
   exit(2)
 }
 
-const { checks, index } = await buildLocalIndex(registryDir, checkouts, indexOptions)
+const { checks, index, templates } = await buildLocalIndex(registryDir, checkouts, indexOptions)
 console.log(formatReport(checks))
 if (kotlinCompilerUrl === undefined) console.log(KOTLIN_NOT_RUN)
 if (index === undefined) exit(1)
+
+const root = resolve(registryDir)
+const requests = await kotlinArtifactRequests(templates)
+if (kotlinCompilerUrl === undefined) {
+  const keys = await readKotlinArtifactKeys(root)
+  const missing = [...new Set(requests.filter(({ key }) => !keys.has(key)).map(({ template }) => template))]
+  if (missing.length > 0)
+    console.log(
+      `The Kotlin artifacts of ${missing.join(', ')} are missing or outdated: set KOTLIN_COMPILER_URL to compile them.`
+    )
+} else {
+  const compiled = await Effect.runPromise(
+    Effect.result(compileKotlinArtifacts(requests, makeKotlinCompilerClient({ url: kotlinCompilerUrl })))
+  )
+  if (compiled._tag === 'Failure') {
+    const error = compiled.failure
+    console.error(
+      error._tag === 'KotlinArtifactFailedError'
+        ? `${error.template} does not compile in ${error.mode} mode: ${error.diagnostics.map((diagnostic) => diagnostic.message).join('; ')}`
+        : `The Kotlin compiler failed: ${error._tag}.`
+    )
+    exit(1)
+  }
+  const { written, removed } = await writeKotlinArtifacts(root, compiled.success)
+  console.log(`Kotlin artifacts: ${written} written, ${removed.length} removed.`)
+}
 
 const json = JSON.stringify(index)
 const compressed = gzipSync(json).byteLength

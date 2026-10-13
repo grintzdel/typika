@@ -6,7 +6,7 @@ import { hasErrors, loadTemplateRunners, type TemplateCheck } from '@typika/temp
 import * as Effect from 'effect/Effect'
 
 import { buildIndex } from '../build-index/build-index.ts'
-import { checkRegistry } from '../check-registry/check-registry.ts'
+import { checkRegistry, type RegisteredTemplate } from '../check-registry/check-registry.ts'
 import type { RegistryIndex } from '../domain/registry-index.domain-model.ts'
 import { readHealth } from '../read-health/read-health.ts'
 import { readRegistry } from '../read-registry/read-registry.ts'
@@ -19,6 +19,7 @@ export const MONOREPO_CHECKOUTS: LocalCheckouts = {
 export type LocalIndexBuild = {
   readonly checks: ReadonlyArray<TemplateCheck>
   readonly index: RegistryIndex | undefined
+  readonly templates: ReadonlyArray<RegisteredTemplate>
   readonly deprecated: ReadonlySet<string>
 }
 
@@ -38,10 +39,11 @@ export const buildLocalIndex = async (
   const report = await Effect.runPromise(
     checkRegistry(await readRegistry(root), makeGitResolver(checkouts), await loadTemplateRunners(options))
   )
-  if (hasErrors(report.checks)) return { checks: report.checks, index: undefined, deprecated: new Set() }
+  if (hasErrors(report.checks)) return { checks: report.checks, index: undefined, templates: [], deprecated: new Set() }
   const health = await readHealth(root)
   return {
     checks: report.checks,
+    templates: report.templates,
     deprecated: new Set(
       report.templates
         .filter((template) => template.entry.deprecated === true)

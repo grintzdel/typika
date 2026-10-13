@@ -29,7 +29,7 @@ const load = (plugin: ReturnType<typeof registryIndexPlugin>, consumer: 'client'
 
 describe('registryIndexPlugin', () => {
   it('resolves the index module for the server', async () => {
-    const { plugin, builder } = pluginOf({ checks: [], index: INDEX, deprecated: new Set() })
+    const { plugin, builder } = pluginOf({ checks: [], index: INDEX, templates: [], deprecated: new Set() })
 
     expect(callHook(plugin.resolveId, {}, REGISTRY_INDEX_MODULE)).toBe(`\0${REGISTRY_INDEX_MODULE}`)
     await expect(load(plugin, 'server')).resolves.toBe(`export default ${JSON.stringify(INDEX)}`)
@@ -38,13 +38,13 @@ describe('registryIndexPlugin', () => {
   })
 
   it('keeps the index module out of the client', async () => {
-    const { plugin } = pluginOf({ checks: [], index: INDEX, deprecated: new Set() })
+    const { plugin } = pluginOf({ checks: [], index: INDEX, templates: [], deprecated: new Set() })
 
     await expect(load(plugin, 'client')).rejects.toThrow(/server/)
   })
 
   it('fails when the registry has errors', async () => {
-    const { plugin } = pluginOf({ checks: [], index: undefined, deprecated: new Set() })
+    const { plugin } = pluginOf({ checks: [], index: undefined, templates: [], deprecated: new Set() })
 
     await expect(load(plugin, 'server')).rejects.toThrow(/registry/)
   })

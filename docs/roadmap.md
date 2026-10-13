@@ -475,6 +475,14 @@ Kotlin restent sautés plutôt que `broken`. Sur le build de production relié a
 `strategy-base-kotlin` sont `healthy`. Le run, V9 compris, demande onze compilations au service et tient sous la
 limite par IP ; pour les 16 templates du lot 5, il faudra la lever sur l'instance sondée. Le lot 3 est livré.
 
+Lot 4 en deux PR : (a) la compilation des artefacts dans `registry-tools`, (b) leur usage dans l'app. (a) livré : avec
+`KOTLIN_COMPILER_URL`, `registry-tools build` compile chaque template Kotlin en modes `test` et `run`, tel que la
+sandbox l'ouvre (sans `exercises/`). Il écrit chaque compilation dans `registry/artifacts/kotlin/<clé>.json`, sous la
+clé du cache client ([runtimes §6.4](specs/runtimes.md)), et supprime les artefacts qu'aucun template ne demande plus.
+Un template qui ne compile pas fait échouer le build ; sans service, le build signale les artefacts manquants ou
+périmés. Ceux de `strategy-kotlin` et de sa base sont commités : 100 à 220 Ko chacun, 18 à 37 Ko compressés, et deux
+builds successifs écrivent les mêmes fichiers.
+
 ---
 
 ## Après M6 (non planifié)
