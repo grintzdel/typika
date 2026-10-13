@@ -1,0 +1,55 @@
+schema = 1
+name = "liskov-substitution-kotlin"
+title = "Liskov substitution: shipping products"
+summary = "A subtype must keep every promise of the type it stands in for, or not claim to be one."
+keywords = ["open", "override", "contract"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["principle/liskov-substitution"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-broken-promise.md",
+  "tour/03-contract.md",
+  "tour/04-contract-tests.md",
+  "tour/05-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/liskov-substitution-base/kotlin"
+focus = ["src/main/kotlin/catalog/**", "src/main/kotlin/checkout/**"]
+
+[variants]
+typescript = "github:typika/templates/liskov-substitution/ts"
+
+[[exercises]]
+name = "add-gift-card"
+kind = "refactor"
+title = "Add a gift card"
+from = "base"
+solutionFrom = "self"
+failing = ["src/test/kotlin/checkout/GiftCardTest.kt"]
+
+[[exercises]]
+name = "contract-violation"
+kind = "fix"
+title = "Fix a contract violation"
+failing = ["src/test/kotlin/catalog/ProductBundleTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]

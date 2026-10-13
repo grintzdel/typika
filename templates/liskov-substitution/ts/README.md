@@ -23,3 +23,7 @@ npm test
 - `src/catalog/`: each product claims only the capabilities it has.
 - `src/checkout/checkout.ts`: ships what is `Shippable`, links what is `Downloadable`, names no product.
 - `tests/contracts/shippable.contract.ts`: the promises of `Shippable`, run against every shippable product.
+
+## Variants
+
+- Kotlin: `liskov-substitution-kotlin`, where no class is `open` and the contract tests are an abstract test class.

@@ -35,6 +35,9 @@ steps = [
 template = "github:typika/templates/liskov-substitution-base/ts"
 focus = ["src/catalog/**", "src/checkout/**"]
 
+[variants]
+kotlin = "github:typika/templates/liskov-substitution/kotlin"
+
 [[exercises]]
 name = "add-gift-card"
 kind = "refactor"
