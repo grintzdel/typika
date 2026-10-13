@@ -26,6 +26,7 @@ const run = (probe: ReturnType<typeof probeOf>, options: Partial<Parameters<type
       deprecatedOf: () => false,
       checkedAt: NOW,
       runUrl: null,
+      runtimes: new Set(['browser-js', 'go']),
       ...options,
     })
   )
@@ -82,7 +83,7 @@ describe('runHealth', () => {
     expect(report).toMatchObject({ health: { status: 'deprecated' } })
   })
 
-  it('skips the templates whose runtime the app does not run yet', async () => {
+  it('skips the templates whose runtime the app does not run', async () => {
     const probe = probeOf()
 
     const reports = await run(probe, {
@@ -91,6 +92,18 @@ describe('runHealth', () => {
 
     expect(probe).not.toHaveBeenCalled()
     expect(reports).toEqual([{ name: 'strategy-kotlin', health: undefined, notes: [] }])
+  })
+
+  it('probes the Kotlin templates when the app runs Kotlin', async () => {
+    const probe = probeOf(PASS)
+
+    const [report] = await run(probe, {
+      templates: [indexTemplate('strategy-kotlin', { manifest: { runtime: { kind: 'kotlin' } } })],
+      runtimes: new Set(['browser-js', 'go', 'kotlin']),
+    })
+
+    expect(probe).toHaveBeenCalledOnce()
+    expect(report).toMatchObject({ name: 'strategy-kotlin', health: { status: 'healthy' } })
   })
 
   it('probes the Go templates', async () => {

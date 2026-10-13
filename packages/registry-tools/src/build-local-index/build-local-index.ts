@@ -25,13 +25,18 @@ export type LocalIndexBuild = {
 export const git = (cwd: string, args: ReadonlyArray<string>) =>
   execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8' }).trim()
 
+export type LocalIndexOptions = {
+  readonly kotlinCompilerUrl?: string
+}
+
 export const buildLocalIndex = async (
   registryDir: string,
-  checkouts: LocalCheckouts = MONOREPO_CHECKOUTS
+  checkouts: LocalCheckouts = MONOREPO_CHECKOUTS,
+  options: LocalIndexOptions = {}
 ): Promise<LocalIndexBuild> => {
   const root = resolve(registryDir)
   const report = await Effect.runPromise(
-    checkRegistry(await readRegistry(root), makeGitResolver(checkouts), await loadTemplateRunners())
+    checkRegistry(await readRegistry(root), makeGitResolver(checkouts), await loadTemplateRunners(options))
   )
   if (hasErrors(report.checks)) return { checks: report.checks, index: undefined, deprecated: new Set() }
   const health = await readHealth(root)

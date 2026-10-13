@@ -468,6 +468,13 @@ Ce test joue le cas de [0028](decisions/0028-kotlin-compilation-workers.md) : le
 compilations piégées pendant environ 18 s. La suite E2E Kotlin passe sur le build de production derrière Caddy, dans
 WebKit comme dans Chromium, une fois la limite par IP levée : sinon, la suite seule la dépasse.
 
+(c) livré : `registry-tools build` et `health` lancent les exercices Kotlin (V9) quand `KOTLIN_COMPILER_URL` est
+défini, comme `template-check`. Le build de l'app ne les lance pas, puisqu'il ne dépend pas du service. Le run de santé
+lit `/config.json` de l'instance visée et sonde Kotlin seulement si elle a un compilateur : sinon, les templates
+Kotlin restent sautés plutôt que `broken`. Sur le build de production relié au service, `strategy-kotlin` et
+`strategy-base-kotlin` sont `healthy`. Le run, V9 compris, demande onze compilations au service et tient sous la
+limite par IP ; pour les 16 templates du lot 5, il faudra la lever sur l'instance sondée. Le lot 3 est livré.
+
 ---
 
 ## Après M6 (non planifié)

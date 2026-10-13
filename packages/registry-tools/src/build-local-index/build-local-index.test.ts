@@ -15,5 +15,6 @@ describe('buildLocalIndex', () => {
     expect(index?.templates.map((template) => template.name)).toContain('strategy-ts')
     expect(index?.registryCommit).toMatch(/^[0-9a-f]{12}$/)
     expect(deprecated.size).toBe(0)
+    expect(checks.find((check) => check.name === 'strategy-kotlin')).toMatchObject({ exercisesRun: false })
   })
 })

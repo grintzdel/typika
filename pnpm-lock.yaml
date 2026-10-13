@@ -241,6 +241,9 @@ importers:
       '@typika/config':
         specifier: workspace:*
         version: link:../config
+      '@typika/kotlin-compiler':
+        specifier: workspace:*
+        version: link:../../services/kotlin-compiler
       typescript:
         specifier: 7.0.2
         version: 7.0.2

@@ -1,3 +1,5 @@
+import { basename } from 'node:path'
+
 import type { TestProject } from 'vitest/node'
 
 import {
@@ -17,7 +19,8 @@ export default async function setup(project: TestProject) {
   }
 
   buildKotlinCompilerImage()
-  const service = startKotlinCompiler(`typika-kotlin-compiler-${project.name.replaceAll(/[^\w.-]+/g, '-')}`, {
+  const name = `${basename(project.config.root)}-${project.name}`.replaceAll(/[^\w.-]+/g, '-')
+  const service = startKotlinCompiler(`typika-kotlin-compiler-${name}`, {
     KOTLIN_COMPILER_CONCURRENCY: String(WORKERS),
   })
   await waitForKotlinCompiler(service, WORKERS)

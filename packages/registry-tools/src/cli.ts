@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
-import { argv, cwd, exit } from 'node:process'
+import { argv, cwd, env, exit } from 'node:process'
 import { parseArgs } from 'node:util'
 import { gzipSync } from 'node:zlib'
 
@@ -15,6 +15,7 @@ import { RegistryIndexSchema } from './domain/registry-index.domain-model.ts'
 import { indexJsonSchema } from './index-json-schema/index-json-schema.ts'
 import { mirrorTemplates } from './mirror-templates/mirror-templates.ts'
 import { makePlaywrightProbe } from './probe-template/probe-template.playwright.ts'
+import { readAppRuntimes } from './read-app-runtimes/read-app-runtimes.ts'
 import { readHealth, writeHealth } from './read-health/read-health.ts'
 import { makeGitResolver, parseCheckout, type LocalCheckouts } from './resolve-ref/resolve-ref.ts'
 import { runHealth } from './run-health/run-health.ts'
@@ -35,6 +36,9 @@ const checkouts: LocalCheckouts =
   values.checkout === undefined
     ? MONOREPO_CHECKOUTS
     : values.checkout.reduce<LocalCheckouts>((all, value) => ({ ...all, ...parseCheckout(value, cwd()) }), {})
+const kotlinCompilerUrl = env['KOTLIN_COMPILER_URL'] || undefined
+const indexOptions = kotlinCompilerUrl === undefined ? {} : { kotlinCompilerUrl }
+const KOTLIN_NOT_RUN = 'KOTLIN_COMPILER_URL is not set: the exercises of Kotlin templates were not run.'
 
 const writeJson = async (path: string, value: unknown) => {
   await mkdir(dirname(path), { recursive: true })
@@ -63,11 +67,13 @@ if (command === 'mirror' && values.out !== undefined) {
 
 if (command === 'health' && values.app !== undefined) {
   const root = resolve(registryDir)
-  const { checks, index, deprecated } = await buildLocalIndex(root, checkouts)
+  const { checks, index, deprecated } = await buildLocalIndex(root, checkouts, indexOptions)
   if (index === undefined) {
     console.log(formatReport(checks))
     exit(1)
   }
+  if (kotlinCompilerUrl === undefined) console.log(KOTLIN_NOT_RUN)
+  const runtimes = await Effect.runPromise(readAppRuntimes(values.app))
   const only = values.only === undefined ? undefined : new Set(values.only.split(','))
   const previous = await readHealth(root)
   const browser = await chromium.launch()
@@ -79,13 +85,14 @@ if (command === 'health' && values.app !== undefined) {
       deprecatedOf: (name) => deprecated.has(name),
       checkedAt: new Date().toISOString(),
       runUrl: values['run-url'] ?? null,
+      runtimes,
     })
   ).finally(() => browser.close())
   await Promise.all(
     reports.flatMap(({ name, health }) => (health === undefined ? [] : [writeHealth(root, name, health)]))
   )
   for (const { name, health, notes } of reports) {
-    console.log(`${name}: ${health?.status ?? 'skipped, its runtime is not in the app yet'}`)
+    console.log(`${name}: ${health?.status ?? 'skipped, the app does not run its runtime'}`)
     for (const note of notes) console.log(`  ${note}`)
   }
   const failing = reports.filter(({ health }) => health?.status === 'broken' || health?.status === 'deprecated')
@@ -99,8 +106,9 @@ if (command !== 'build') {
   exit(2)
 }
 
-const { checks, index } = await buildLocalIndex(registryDir, checkouts)
+const { checks, index } = await buildLocalIndex(registryDir, checkouts, indexOptions)
 console.log(formatReport(checks))
+if (kotlinCompilerUrl === undefined) console.log(KOTLIN_NOT_RUN)
 if (index === undefined) exit(1)
 
 const json = JSON.stringify(index)
