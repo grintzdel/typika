@@ -38,6 +38,7 @@ focus = ["src/checkout/**", "src/infrastructure/**", "src/open-shop.ts"]
 
 [variants]
 go = "github:typika/templates/dependency-inversion/go"
+kotlin = "github:typika/templates/dependency-inversion/kotlin"
 
 [[exercises]]
 name = "test-without-smtp"
