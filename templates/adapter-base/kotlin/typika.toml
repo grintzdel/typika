@@ -1,0 +1,24 @@
+schema = 1
+name = "adapter-base-kotlin"
+title = "Adapter base: taking payments"
+summary = "The checkout calls a payment SDK directly, with its units and codes, before the Adapter pattern."
+license = "MIT-0"
+authors = ["github:maoudin"]
+role = "base"
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["design-pattern/structural/adapter"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]

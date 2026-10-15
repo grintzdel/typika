@@ -38,6 +38,7 @@ focus = ["src/checkout/**", "src/payments/**"]
 
 [variants]
 go = "github:typika/templates/adapter/go"
+kotlin = "github:typika/templates/adapter/kotlin"
 
 [[exercises]]
 name = "switch-provider"

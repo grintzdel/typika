@@ -26,3 +26,4 @@ go test ./...
 ## Variants
 
 - TypeScript: `adapter-ts`, with a class that `implements` the gateway.
+- Kotlin: `adapter-kotlin`, with a sealed result type and extension functions as the lighter alternative.
