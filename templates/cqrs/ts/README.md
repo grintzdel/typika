@@ -24,3 +24,8 @@ npm test
 - `src/orders/read/`: the read models and the projections that build them.
 - `src/orders/orders-handler.ts`: commands for `POST`, read models only for `GET`.
 - `src/open-shop.ts`: the projections the write side feeds.
+
+## Variants
+
+- Go: `cqrs-go`, with handlers as functions and read models in maps.
+- Kotlin: `cqrs-kotlin`, with sealed commands and events that every `when` must handle.

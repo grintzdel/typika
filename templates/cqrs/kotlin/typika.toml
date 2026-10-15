@@ -1,0 +1,58 @@
+schema = 1
+name = "cqrs-kotlin"
+title = "CQRS: the customer order history"
+summary = "Change orders through commands, and answer reads from read models that projections keep up to date."
+keywords = ["commands", "projection", "sealed"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["architecture/cqrs"]
+level = "advanced"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-write-model.md",
+  "tour/03-read-model.md",
+  "tour/04-projection.md",
+  "tour/05-consistency.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/kotlin"
+focus = ["src/main/kotlin/orders/**", "src/main/kotlin/app/**"]
+
+[variants]
+typescript = "github:typika/templates/cqrs/ts"
+go = "github:typika/templates/cqrs/go"
+
+[[exercises]]
+name = "add-revenue-dashboard"
+kind = "refactor"
+title = "Add a daily revenue dashboard"
+from = "base"
+solutionFrom = "self"
+failing = ["src/test/kotlin/app/DailyRevenueTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "project-cancellation"
+kind = "fix"
+title = "Project cancellations into the customer history"
+failing = ["src/test/kotlin/app/CustomerHistoryTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]
