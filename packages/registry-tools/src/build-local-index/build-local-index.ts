@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { join, relative, resolve } from 'node:path'
+import { basename, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { hasErrors, loadTemplateRunners, type TemplateCheck } from '@typika/template-check'
@@ -28,6 +28,7 @@ export const git = (cwd: string, args: ReadonlyArray<string>) =>
 
 export type LocalIndexOptions = {
   readonly kotlinCompilerUrl?: string
+  readonly only?: ReadonlySet<string>
 }
 
 export const buildLocalIndex = async (
@@ -36,8 +37,12 @@ export const buildLocalIndex = async (
   options: LocalIndexOptions = {}
 ): Promise<LocalIndexBuild> => {
   const root = resolve(registryDir)
+  const { only } = options
+  const source = await readRegistry(root)
+  const entries =
+    only === undefined ? source.entries : source.entries.filter(({ file }) => only.has(basename(file, '.toml')))
   const report = await Effect.runPromise(
-    checkRegistry(await readRegistry(root), makeGitResolver(checkouts), await loadTemplateRunners(options))
+    checkRegistry({ ...source, entries }, makeGitResolver(checkouts), await loadTemplateRunners(options))
   )
   if (hasErrors(report.checks)) return { checks: report.checks, index: undefined, templates: [], deprecated: new Set() }
   const health = await readHealth(root)
