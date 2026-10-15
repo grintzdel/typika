@@ -26,3 +26,4 @@ npm test
 ## Variants
 
 - JavaScript: `observer-js`, where `EventTarget` is the subject.
+- Kotlin: `observer-kotlin`, where each subscriber is a lambda behind a `fun interface`.
