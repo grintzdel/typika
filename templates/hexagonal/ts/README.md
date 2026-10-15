@@ -24,3 +24,8 @@ npm test
 - `src/orders/order-service.ts`: the use cases, written against ports only.
 - `src/orders/adapters/`: HTTP in front, storage, payments, email and the broker behind.
 - `src/open-shop.ts`: the one place that wires adapters to ports.
+
+## Variants
+
+- Go: `hexagonal-go`, where ports are implicit interfaces declared by their consumer.
+- Kotlin: `hexagonal-kotlin`, with `fun interface` ports and a sealed hierarchy of domain exceptions.

@@ -1,0 +1,58 @@
+schema = 1
+name = "hexagonal-kotlin"
+title = "Hexagonal architecture: the orders module"
+summary = "Keep the business rules in a core that declares ports, and plug HTTP, storage and providers in as adapters."
+keywords = ["ports", "adapters", "sealed"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["architecture/hexagonal", "principle/dependency-inversion"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-domain.md",
+  "tour/03-ports.md",
+  "tour/04-adapters.md",
+  "tour/05-wiring.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/kotlin"
+focus = ["src/main/kotlin/orders/**", "src/main/kotlin/app/**"]
+
+[variants]
+typescript = "github:typika/templates/hexagonal/ts"
+go = "github:typika/templates/hexagonal/go"
+
+[[exercises]]
+name = "add-csv-import"
+kind = "refactor"
+title = "Import orders from a CSV file"
+from = "base"
+solutionFrom = "self"
+failing = ["src/test/kotlin/app/CsvImportTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "add-email-adapter"
+kind = "fix"
+title = "Write the email adapter"
+failing = ["src/test/kotlin/app/NotificationsTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]

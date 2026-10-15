@@ -38,6 +38,7 @@ focus = ["src/orders/**", "src/open-shop.ts"]
 
 [variants]
 go = "github:typika/templates/hexagonal/go"
+kotlin = "github:typika/templates/hexagonal/kotlin"
 
 [[exercises]]
 name = "add-csv-import"
