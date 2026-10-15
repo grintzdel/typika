@@ -37,6 +37,7 @@ focus = ["src/payments/**", "src/open-shop.ts"]
 
 [variants]
 go = "github:typika/templates/interface-segregation/go"
+kotlin = "github:typika/templates/interface-segregation/kotlin"
 
 [[exercises]]
 name = "add-gift-card-payment"
