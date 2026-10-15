@@ -38,6 +38,7 @@ focus = ["src/orders/**", "src/open-shop.ts"]
 
 [variants]
 javascript = "github:typika/templates/observer/js"
+kotlin = "github:typika/templates/observer/kotlin"
 
 [[exercises]]
 name = "add-loyalty-points"

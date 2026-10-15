@@ -1,0 +1,56 @@
+schema = 1
+name = "observer-kotlin"
+title = "Observer: reacting to an order"
+summary = "Announce that something happened and let any number of subscribers react, without knowing them."
+keywords = ["events", "listeners", "lambda"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop", "functional"]
+topic = ["design-pattern/behavioral/observer"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-direct-calls.md",
+  "tour/03-subject.md",
+  "tour/04-subscribers.md",
+  "tour/05-failure-isolation.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/observer-base/kotlin"
+focus = ["src/main/kotlin/orders/**", "src/main/kotlin/app/**"]
+
+[variants]
+typescript = "github:typika/templates/observer/ts"
+
+[[exercises]]
+name = "add-loyalty-points"
+kind = "refactor"
+title = "Add loyalty points"
+from = "base"
+solutionFrom = "self"
+failing = ["src/test/kotlin/app/LoyaltyPointsTest.kt"]
+
+[[exercises]]
+name = "isolate-failing-subscriber"
+kind = "fix"
+title = "Isolate a failing subscriber"
+failing = ["src/test/kotlin/orders/OrderEventsTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]
