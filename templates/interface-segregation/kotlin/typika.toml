@@ -1,0 +1,48 @@
+schema = 1
+name = "interface-segregation-kotlin"
+title = "Interface segregation: payment methods"
+summary = "Give each client an interface with only the methods it calls, so no implementation has to fake the rest."
+keywords = ["interface", "lambda", "roles"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["principle/interface-segregation"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-fat-interface.md",
+  "tour/03-split-by-client.md",
+  "tour/04-compose.md",
+  "tour/05-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/interface-segregation-base/kotlin"
+focus = ["src/main/kotlin/payments/**", "src/main/kotlin/app/**"]
+
+[variants]
+typescript = "github:typika/templates/interface-segregation/ts"
+
+[[exercises]]
+name = "add-gift-card-payment"
+kind = "refactor"
+title = "Add gift card payments"
+from = "base"
+solutionFrom = "self"
+failing = ["src/test/kotlin/app/GiftCardPaymentTest.kt"]

@@ -27,3 +27,4 @@ npm test
 ## Variants
 
 - Go: `interface-segregation-go`, where each client declares its interface and gateways satisfy it implicitly.
+- Kotlin: `interface-segregation-kotlin`, where each role is a `fun interface` and a test fake is a lambda.
