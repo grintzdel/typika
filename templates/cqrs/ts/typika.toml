@@ -38,6 +38,7 @@ focus = ["src/orders/**", "src/open-shop.ts"]
 
 [variants]
 go = "github:typika/templates/cqrs/go"
+kotlin = "github:typika/templates/cqrs/kotlin"
 
 [[exercises]]
 name = "add-revenue-dashboard"

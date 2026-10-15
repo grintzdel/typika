@@ -27,3 +27,4 @@ go test ./...
 ## Variants
 
 - TypeScript: `cqrs-ts`, with a union of commands that one `execute` method dispatches.
+- Kotlin: `cqrs-kotlin`, with sealed commands and events that every `when` must handle.
