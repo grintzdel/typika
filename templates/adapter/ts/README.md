@@ -26,3 +26,4 @@ npm test
 ## Variants
 
 - Go: `adapter-go`, where the adapter satisfies the gateway implicitly and SwiftPay reports Go errors.
+- Kotlin: `adapter-kotlin`, with a sealed result type and extension functions as the lighter alternative.

@@ -1,0 +1,57 @@
+schema = 1
+name = "adapter-kotlin"
+title = "Adapter: taking payments"
+summary = "Wrap a foreign interface in one class that speaks the interface your code expects."
+keywords = ["interface", "sealed", "extension"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["design-pattern/structural/adapter"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-foreign-interface.md",
+  "tour/03-target-interface.md",
+  "tour/04-translation.md",
+  "tour/05-error-mapping.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/adapter-base/kotlin"
+focus = ["src/main/kotlin/checkout/**", "src/main/kotlin/payments/**"]
+
+[variants]
+typescript = "github:typika/templates/adapter/ts"
+go = "github:typika/templates/adapter/go"
+
+[[exercises]]
+name = "switch-provider"
+kind = "refactor"
+title = "Switch to another payment provider"
+from = "base"
+solutionFrom = "self"
+failing = ["src/test/kotlin/checkout/SwiftPayTest.kt"]
+
+[[exercises]]
+name = "map-declined-code"
+kind = "fix"
+title = "Decline the codes the adapter does not know"
+failing = ["src/test/kotlin/checkout/CheckoutTest.kt", "src/test/kotlin/payments/LegacyPayAdapterTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]

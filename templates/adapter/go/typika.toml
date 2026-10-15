@@ -39,6 +39,7 @@ focus = ["internal/checkout/**", "internal/payments/**"]
 
 [variants]
 typescript = "github:typika/templates/adapter/ts"
+kotlin = "github:typika/templates/adapter/kotlin"
 
 [[exercises]]
 name = "switch-provider"
