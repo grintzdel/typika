@@ -36,6 +36,9 @@ steps = [
 template = "github:typika/templates/factory-method-base/ts"
 focus = ["src/shipping/**"]
 
+[variants]
+kotlin = "github:typika/templates/factory-method/kotlin"
+
 [[exercises]]
 name = "add-locker-carrier"
 kind = "refactor"

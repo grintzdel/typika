@@ -23,3 +23,7 @@ npm test
 - `src/shipping/carriers/`: one concrete creator per carrier.
 - `src/shipping/parcels/`: the products, one parcel class per carrier.
 - `src/shipping/shipping-desk.ts`: where a carrier is picked by name.
+
+## Variants
+
+- Kotlin: `factory-method-kotlin`, where `ship` is final by default and each parcel is an `object`.

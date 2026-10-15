@@ -1,0 +1,49 @@
+schema = 1
+name = "factory-method-kotlin"
+title = "Factory Method: shipping parcels"
+summary = "Let subclasses decide which object to create, inside an algorithm the base class keeps."
+keywords = ["abstract", "override", "creation"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["design-pattern/creational/factory-method"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-switch-on-type.md",
+  "tour/03-creator.md",
+  "tour/04-factory-method.md",
+  "tour/05-concrete-creators.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/factory-method-base/kotlin"
+focus = ["src/main/kotlin/shipping/**"]
+
+[variants]
+typescript = "github:typika/templates/factory-method/ts"
+
+[[exercises]]
+name = "add-locker-carrier"
+kind = "refactor"
+title = "Add a parcel locker carrier"
+from = "base"
+solutionFrom = "self"
+failing = ["src/test/kotlin/shipping/LockerShippingTest.kt"]
