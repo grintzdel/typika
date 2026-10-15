@@ -141,6 +141,8 @@ describe('checkRegistry', () => {
       [
         officialEntry('factory-method-ts', 'factory-method/ts'),
         officialEntry('factory-method-base-ts', 'factory-method-base/ts'),
+        officialEntry('factory-method-kotlin', 'factory-method/kotlin'),
+        officialEntry('factory-method-base-kotlin', 'factory-method-base/kotlin'),
       ],
       withFile('factory-method/ts', 'typika.toml', (toml) => toml.replace('kind = "refactor"', 'kind = "fix"'))
     )
