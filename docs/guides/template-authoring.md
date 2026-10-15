@@ -336,6 +336,10 @@ sur les deux plateformes. Cela impose :
   avec ce membre en `TODO()`, et recopie les fichiers qui ne compilent plus (`Main.kt` quand le constructeur gagne un
   paramètre). Une exception reste dans son test : seuls les tests de l'exigence sont rouges.
 - Les surcouches d'exercice vivent hors de `src/` : Gradle ne les voit pas, aucun fichier en plus n'est nécessaire.
+- **Des tests de contrat en classe abstraite.** Les tests qu'un sous-type doit passer vivent dans une
+  `abstract class` avec ses `@Test` et une fonction abstraite qui fabrique l'objet (`ShippableContract` dans
+  `liskov-substitution-kotlin`). La classe de test de chaque sous-type en hérite et la redéfinit. La JVM comme Typika
+  lancent les tests hérités, et Typika les range sous le fichier de la sous-classe : un exercice peut viser ce fichier.
 - **Des messages d'échec qui ne dépendent pas de la plateforme.** Typika affiche ceux de `kotlin.test`
   (`Expected <12.90 EUR>, actual <0.00 EUR>.`) ; Gradle, ceux de JUnit 5 pour `assertEquals`, `assertNotEquals`,
   `assertNull` et `assertNotNull`. Un tour qui cite un message d'échec cite celui de Typika. Un message qui nomme un

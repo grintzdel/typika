@@ -491,6 +491,17 @@ avec un `404` pour un artefact absent. L'E2E de dev ouvre `strategy-kotlin`, lan
 ne font aucun appel. Les exercices ne sont pas précompilés : leur état de départ passe par le service. Le lot 4 est
 livré.
 
+État (2026-10-15) : lot 5, vague (a) livrée. `composition-over-inheritance-kotlin`, `single-responsibility-kotlin`,
+`open-closed-kotlin`, `liskov-substitution-kotlin`, `interface-segregation-kotlin` et `dependency-inversion-kotlin`
+sont au registre avec leurs bases, `healthy` (#67 à #72), avec leurs 24 artefacts précompilés. Les six variantes TS
+listent Kotlin et sont réépinglées. Chaque paire TS / Kotlin a les mêmes `id` d'étapes dans le même ordre, et la
+comparaison s'aligne étape par étape dans le navigateur. Aucun outil n'émet encore `W_TOUR_ORDER_DIVERGES` : le code est
+déclaré dans `@typika/manifest` sans être calculé, et la vérification de cette vague a comparé les `id` à la main.
+Les tours s'appuient sur ce que Kotlin rend explicite : `open` pour hériter, `by` pour déléguer, des fonctions de
+premier niveau sans état, des `fun interface` dont un faux de test est une lambda, et un constructeur primaire qui
+injecte en une ligne. Le LSP écrit ses tests de contrat comme une classe de test abstraite dont hérite la classe de
+test de chaque sous-type. Le hub en dev liste 35 templates ; en production sans service, Kotlin reste masqué.
+
 ---
 
 ## Après M6 (non planifié)

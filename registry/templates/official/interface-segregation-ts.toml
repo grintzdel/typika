@@ -1,4 +1,4 @@
-ref = "github:typika/templates/interface-segregation/ts@b5c1dc70b1b0"
+ref = "github:typika/templates/interface-segregation/ts@8a33c091e750"
 maintainers = ["github:maoudin"]
 category = "official"
 added = 2026-10-11
