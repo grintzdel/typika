@@ -51,7 +51,7 @@ describe('buildIndex on the local registry', () => {
 
   it('produces an index that matches its schema, under the size limit', () => {
     expect(Schema.decodeUnknownExit(RegistryIndexSchema)(index)._tag).toBe('Success')
-    expect(index.templates).toHaveLength(64)
+    expect(index.templates).toHaveLength(72)
     expect(gzipSync(JSON.stringify(index)).byteLength).toBeLessThan(INDEX_MAX_GZIP_BYTES)
   })
 

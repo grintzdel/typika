@@ -1,0 +1,4 @@
+ref = "github:typika/templates/factory-method/kotlin@eadadbc0d99d"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-15
