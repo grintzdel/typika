@@ -1,0 +1,62 @@
+schema = 1
+name = "outbox-kotlin"
+title = "Transactional outbox: publishing order events"
+summary = "Save each event in the same transaction as the order, and let a relay publish it to the broker."
+keywords = ["outbox", "transaction", "idempotent"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["architecture/outbox"]
+level = "advanced"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-dual-write.md",
+  "tour/03-same-transaction.md",
+  "tour/04-relay.md",
+  "tour/05-idempotent-consumer.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/kotlin"
+focus = [
+  "src/main/kotlin/orders/**",
+  "src/main/kotlin/loyalty/**",
+  "src/main/kotlin/infrastructure/InMemoryDatabase.kt",
+  "src/main/kotlin/app/**",
+]
+
+[variants]
+typescript = "github:typika/templates/outbox/ts"
+go = "github:typika/templates/outbox/go"
+
+[[exercises]]
+name = "survive-broker-outage"
+kind = "refactor"
+title = "Survive a broker outage"
+from = "base"
+failing = ["src/test/kotlin/app/BrokerOutageTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "deduplicate-deliveries"
+kind = "fix"
+title = "Deduplicate deliveries"
+failing = ["src/test/kotlin/loyalty/LoyaltyPointsTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]

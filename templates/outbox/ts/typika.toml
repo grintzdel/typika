@@ -38,6 +38,7 @@ focus = ["src/orders/**", "src/loyalty/**", "src/infrastructure/in-memory-databa
 
 [variants]
 go = "github:typika/templates/outbox/go"
+kotlin = "github:typika/templates/outbox/kotlin"
 
 [[exercises]]
 name = "survive-broker-outage"
