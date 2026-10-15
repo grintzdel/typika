@@ -495,8 +495,9 @@ livré.
 `open-closed-kotlin`, `liskov-substitution-kotlin`, `interface-segregation-kotlin` et `dependency-inversion-kotlin`
 sont au registre avec leurs bases, `healthy` (#67 à #72), avec leurs 24 artefacts précompilés. Les six variantes TS
 listent Kotlin et sont réépinglées. Chaque paire TS / Kotlin a les mêmes `id` d'étapes dans le même ordre, et la
-comparaison s'aligne étape par étape dans le navigateur. Aucun outil n'émet encore `W_TOUR_ORDER_DIVERGES` : le code est
-déclaré dans `@typika/manifest` sans être calculé, et la vérification de cette vague a comparé les `id` à la main.
+comparaison s'aligne étape par étape dans le navigateur. Depuis, `template-check` et `registry-tools` émettent
+`W_TOUR_ORDER_DIVERGES` ([manifest §5.3](specs/manifest.md)) : une variante qui ne présente pas les étapes partagées
+avec sa référence TypeScript dans le même ordre est signalée, et aucun template du registre ne l'est.
 Les tours s'appuient sur ce que Kotlin rend explicite : `open` pour hériter, `by` pour déléguer, des fonctions de
 premier niveau sans état, des `fun interface` dont un faux de test est une lambda, et un constructeur primaire qui
 injecte en une ligne. Le LSP écrit ses tests de contrat comme une classe de test abstraite dont hérite la classe de

@@ -11,6 +11,7 @@ import * as Effect from 'effect/Effect'
 
 import { checkExercises, type RunTests } from '../check-exercises/check-exercises.ts'
 import { checkRefs } from '../check-refs/check-refs.ts'
+import { checkTourOrder } from '../check-tour-order/check-tour-order.ts'
 
 export type TemplateSet = ReadonlyMap<string, TemplateFiles>
 
@@ -43,12 +44,22 @@ const officialLayout: TemplateLayout = {
 }
 
 type Validated =
-  | { readonly _tag: 'Valid'; readonly manifest: Manifest; readonly warnings: ReadonlyArray<ManifestIssue> }
+  | {
+      readonly _tag: 'Valid'
+      readonly manifest: Manifest
+      readonly tourIds: ReadonlyArray<string>
+      readonly warnings: ReadonlyArray<ManifestIssue>
+    }
   | { readonly _tag: 'Invalid'; readonly issues: ReadonlyArray<ManifestIssue> }
 
 const validate = (files: TemplateFiles): Effect.Effect<Validated> =>
   validateTemplate(files).pipe(
-    Effect.map((valid): Validated => ({ _tag: 'Valid', manifest: valid.manifest, warnings: valid.warnings })),
+    Effect.map((valid): Validated => ({
+      _tag: 'Valid',
+      manifest: valid.manifest,
+      tourIds: valid.tourSteps.map((step) => step.id),
+      warnings: valid.warnings,
+    })),
     Effect.catch((error) =>
       Effect.succeed<Validated>({
         _tag: 'Invalid',
@@ -74,11 +85,13 @@ export const checkTemplates = (
     const validated = new Map<string, Validated>()
     for (const [dir, files] of templates) validated.set(dir, yield* validate(files))
 
-    const manifestAt = (ref: string) => {
+    const validAt = (ref: string) => {
       const dir = dirOf(ref)
       const result = dir === undefined ? undefined : validated.get(dir)
-      return result?._tag === 'Valid' ? result.manifest : undefined
+      return result?._tag === 'Valid' ? result : undefined
     }
+    const manifestAt = (ref: string) => validAt(ref)?.manifest
+    const tourIdsAt = (ref: string) => validAt(ref)?.tourIds
 
     return yield* Effect.forEach(
       [...validated].toSorted(([a], [b]) => a.localeCompare(b)),
@@ -105,6 +118,7 @@ export const checkTemplates = (
               ...result.warnings,
               ...duplicateNames(validated, dir, manifest.name),
               ...checkRefs(manifest, refOf(dir), manifestAt),
+              ...checkTourOrder(manifest, result.tourIds, tourIdsAt),
               ...(runner?.checkFiles?.(files) ?? []),
               ...exerciseIssues,
             ],
