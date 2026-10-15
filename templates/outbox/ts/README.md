@@ -24,3 +24,8 @@ npm test
 - `src/orders/orders-handler.ts`: each write saves the order and its event together.
 - `src/orders/outbox-relay.ts`: publishes pending entries in order, then marks them.
 - `src/loyalty/loyalty-points.ts`: a consumer that ignores duplicate deliveries.
+
+## Variants
+
+- Go: `outbox-go`, with a relay running in a goroutine that a `context` stops.
+- Kotlin: `outbox-kotlin`, with a synchronous relay that the tests drive, since coroutines are not in the stdlib.

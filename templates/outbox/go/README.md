@@ -27,3 +27,4 @@ go test ./...
 ## Variants
 
 - TypeScript: `outbox-ts`, where the relay runs only after each request.
+- Kotlin: `outbox-kotlin`, with a synchronous relay that the tests drive, since coroutines are not in the stdlib.
