@@ -26,3 +26,5 @@ npm test
 ## Variants
 
 - Go: `dependency-inversion-go`, where the checkout declares its interfaces and the mailer fits them implicitly.
+- Kotlin: `dependency-inversion-kotlin`, where the checkout receives its dependencies in its primary constructor and
+  a test fake is a lambda.

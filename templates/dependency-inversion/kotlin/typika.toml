@@ -1,0 +1,49 @@
+schema = 1
+name = "dependency-inversion-kotlin"
+title = "Dependency inversion: confirming an order"
+summary = "Make the business code own the interfaces it needs, and let the infrastructure plug into them."
+keywords = ["injection", "constructor", "testing"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["principle/dependency-inversion"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-concrete-dependencies.md",
+  "tour/03-own-the-abstraction.md",
+  "tour/04-inject.md",
+  "tour/05-composition-root.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/dependency-inversion-base/kotlin"
+focus = ["src/main/kotlin/checkout/**", "src/main/kotlin/infrastructure/**", "src/main/kotlin/app/**"]
+
+[variants]
+typescript = "github:typika/templates/dependency-inversion/ts"
+
+[[exercises]]
+name = "test-without-smtp"
+kind = "refactor"
+title = "Test the confirmation without SMTP"
+from = "base"
+failing = ["src/test/kotlin/checkout/OrderConfirmationTest.kt"]
+hints = ["hint-1.md"]
