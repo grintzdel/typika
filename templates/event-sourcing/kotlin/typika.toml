@@ -1,0 +1,57 @@
+schema = 1
+name = "event-sourcing-kotlin"
+title = "Event sourcing: the life of an order"
+summary = "Store what happened to an order as events, and rebuild its current state by replaying them."
+keywords = ["events", "fold", "sealed"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["functional"]
+topic = ["architecture/event-sourcing"]
+level = "advanced"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-events.md",
+  "tour/03-decide-evolve.md",
+  "tour/04-event-store.md",
+  "tour/05-rehydration.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/kotlin"
+focus = ["src/main/kotlin/orders/**", "src/main/kotlin/app/**"]
+
+[variants]
+typescript = "github:typika/templates/event-sourcing/ts"
+
+[[exercises]]
+name = "order-timeline"
+kind = "refactor"
+title = "Show the timeline of an order"
+from = "base"
+solutionFrom = "self"
+failing = ["src/test/kotlin/app/OrderTimelineTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "optimistic-concurrency"
+kind = "fix"
+title = "Refuse concurrent writes"
+failing = ["src/test/kotlin/orders/EventStoreTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]

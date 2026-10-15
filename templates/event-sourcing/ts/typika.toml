@@ -36,6 +36,9 @@ steps = [
 template = "github:typika/templates/naive-crud/ts"
 focus = ["src/orders/**", "src/open-shop.ts"]
 
+[variants]
+kotlin = "github:typika/templates/event-sourcing/kotlin"
+
 [[exercises]]
 name = "order-timeline"
 kind = "refactor"

@@ -24,3 +24,7 @@ npm test
 - `src/orders/event-store.ts`: the append-only store and its optimistic concurrency check.
 - `src/orders/orders-handler.ts`: load, rehydrate, decide, append.
 - `src/orders/customer-history.ts`: a projection fed by the store.
+
+## Variants
+
+- Kotlin: `event-sourcing-kotlin`, with sealed events and commands, and `fold` for the rehydration.
