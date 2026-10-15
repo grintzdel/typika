@@ -24,8 +24,15 @@ const strategyText = (path: string): string => {
   return content
 }
 
-const withStrategyFiles = (overrides: Readonly<Record<string, string>>): TemplateSet =>
-  new Map([...templates, [STRATEGY, new Map([...(templates.get(STRATEGY) ?? []), ...Object.entries(overrides)])]])
+const withFiles = (dir: string, overrides: Readonly<Record<string, string>>): TemplateSet =>
+  new Map([...templates, [dir, new Map([...(templates.get(dir) ?? []), ...Object.entries(overrides)])]])
+
+const withStrategyFiles = (overrides: Readonly<Record<string, string>>): TemplateSet => withFiles(STRATEGY, overrides)
+
+const issuesOf = async (set: TemplateSet, dir: string) => {
+  const checks = await Effect.runPromise(checkTemplates(set, {}))
+  return checks.find((check) => check.dir === dir)?.issues ?? []
+}
 
 const strategyIssues = async (set: TemplateSet) => {
   const checks = await Effect.runPromise(checkTemplates(set, inProcessRunners))
@@ -62,5 +69,26 @@ describe('checkTemplates on the templates of the repository', { timeout: 30_000 
       message:
         'Exercise "add-pickup-point-option": starting state is wrong ("tests/pickup-point.test.ts" has no failing test).',
     })
+  })
+
+  it('warns when a variant shows the shared tour steps in another order than its TypeScript reference', async () => {
+    const manifest = templates.get('strategy/go')?.get('typika.toml')
+    if (typeof manifest !== 'string') throw new Error('No manifest for strategy/go')
+    const swapped = manifest.replace(
+      '"tour/03-strategy-interface.md",\n  "tour/04-context.md",',
+      '"tour/04-context.md",\n  "tour/03-strategy-interface.md",'
+    )
+
+    expect(await issuesOf(withFiles('strategy/go', { 'typika.toml': swapped }), 'strategy/go')).toContainEqual(
+      expect.objectContaining({ code: 'W_TOUR_ORDER_DIVERGES', path: 'tour.steps' })
+    )
+  })
+
+  it('finds no variant whose tour diverges from its TypeScript reference', async () => {
+    const checks = await Effect.runPromise(checkTemplates(templates, {}))
+
+    expect(
+      checks.filter((check) => check.issues.some((issue) => issue.code === 'W_TOUR_ORDER_DIVERGES')).map((c) => c.dir)
+    ).toEqual([])
   })
 })
