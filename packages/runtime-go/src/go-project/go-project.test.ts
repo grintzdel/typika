@@ -46,6 +46,34 @@ describe('makeGoProject', () => {
     expect(output).toEqual(['stdout:Hello, Ada\n', 'stderr:done\n'])
   })
 
+  it('leaves no timer behind when a program exits after a file read while a goroutine sleeps', async () => {
+    const project = makeGoProject(toolchain)
+    project.sync(
+      new Map([
+        ['go.mod', 'module example.com/sleeper\n\ngo 1.24\n'],
+        [
+          'main.go',
+          'package main\n\nimport (\n\t"os"\n\t"time"\n)\n\nfunc main() {\n\tgo time.Sleep(200 * time.Millisecond)\n\tif _, err := os.ReadFile("go.mod"); err != nil {\n\t\tpanic(err)\n\t}\n}\n',
+        ],
+      ])
+    )
+    const uncaught: Array<unknown> = []
+    const record = (error: unknown) => uncaught.push(error)
+    process.on('uncaughtException', record)
+
+    try {
+      expect(await project.run({ entry: 'main.go', onOutput: () => undefined })).toEqual({
+        _tag: 'Exited',
+        exitCode: 0,
+      })
+      await new Promise((resolve) => setTimeout(resolve, 400))
+    } finally {
+      process.off('uncaughtException', record)
+    }
+
+    expect(uncaught).toEqual([])
+  })
+
   it('refuses to run a package that is not main', async () => {
     const project = makeGoProject(toolchain)
     project.sync(files)

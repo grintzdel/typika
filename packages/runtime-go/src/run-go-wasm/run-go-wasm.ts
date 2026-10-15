@@ -30,6 +30,8 @@ export const runGoWasm = (fs: MemoryFs, process: GoProcess): Promise<GoProcessRe
     go.env = { ...BASE_ENV, ...process.env }
     go.exit = (code) => {
       exitCode = code
+      for (const timeout of go._scheduledTimeouts.values()) clearTimeout(timeout)
+      go._scheduledTimeouts.clear()
     }
     const previousFs: unknown = Reflect.get(globalThis, 'fs')
     const previousCwd = fs.cwd()

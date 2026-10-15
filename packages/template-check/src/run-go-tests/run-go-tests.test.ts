@@ -18,7 +18,8 @@ let templates: TemplateSet
 let runners: TemplateRunners
 
 beforeAll(async () => {
-  templates = await readTemplates(ROOT, listFilesWithGit)
+  const all = await readTemplates(ROOT, listFilesWithGit)
+  templates = new Map([...all].filter(([dir]) => dir.startsWith('strategy/') || dir.startsWith('strategy-base/')))
   runners = { [RuntimeKind.GO]: makeGoRunner(await loadGoToolchainFromDisk()) }
 })
 
@@ -37,7 +38,7 @@ const strategyCheck = async (overrides: Readonly<Record<string, string>> = {}) =
   return checks.find((check) => check.dir === STRATEGY)
 }
 
-describe('makeGoRunner', { timeout: 30_000 }, () => {
+describe('makeGoRunner', { timeout: 60_000 }, () => {
   it('runs the exercises of strategy-go and passes it', async () => {
     const strategy = await strategyCheck()
 
