@@ -1,4 +1,4 @@
-ref = "github:typika/templates/dependency-inversion/ts@b5c1dc70b1b0"
+ref = "github:typika/templates/dependency-inversion/ts@8a33c091e750"
 maintainers = ["github:maoudin"]
 category = "official"
 added = 2026-10-11
