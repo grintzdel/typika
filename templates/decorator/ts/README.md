@@ -28,3 +28,4 @@ npm test
 
 - Go: `decorator-go`, where each decorator embeds the notifier it wraps, like HTTP middleware.
 - JavaScript: `decorator-js`, where each decorator is a function that wraps `notify`.
+- Kotlin: `decorator-kotlin`, where `by` delegation forwards what a decorator does not override.
