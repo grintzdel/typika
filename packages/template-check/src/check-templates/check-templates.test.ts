@@ -35,7 +35,10 @@ const issuesOf = async (set: TemplateSet, dir: string) => {
 }
 
 const strategyIssues = async (set: TemplateSet) => {
-  const checks = await Effect.runPromise(checkTemplates(set, inProcessRunners))
+  const strategyOnly = new Map(
+    [...set].filter(([dir]) => dir.startsWith('strategy/') || dir.startsWith('strategy-base/'))
+  )
+  const checks = await Effect.runPromise(checkTemplates(strategyOnly, inProcessRunners))
   return checks.find((check) => check.dir === STRATEGY)
 }
 

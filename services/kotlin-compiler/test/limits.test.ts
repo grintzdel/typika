@@ -47,9 +47,9 @@ describe('service limits', () => {
     const { value: response, ms } = await elapsed(postCompile(url, compileBody(typeBomb(24))))
 
     expect(response.status).toBe(504)
-    expect(await readError(response)).toEqual({ error: 'compilation timed out after 4000 ms' })
-    expect(ms).toBeGreaterThanOrEqual(4000)
-    expect(ms).toBeLessThan(8000)
+    expect(await readError(response)).toEqual({ error: 'compilation timed out after 10000 ms' })
+    expect(ms).toBeGreaterThanOrEqual(10_000)
+    expect(ms).toBeLessThan(14_000)
   })
 
   it('removes the working files of a killed compilation', async () => {
