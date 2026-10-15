@@ -1,0 +1,30 @@
+schema = 1
+name = "naive-crud-kotlin"
+title = "Naive CRUD: the orders module"
+summary = "An orders module where one HTTP handler validates, saves, charges, publishes and emails, before any architecture."
+license = "MIT-0"
+authors = ["github:maoudin"]
+role = "base"
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = [
+  "architecture/hexagonal",
+  "architecture/cqrs",
+  "architecture/event-sourcing",
+  "architecture/outbox",
+  "architecture/state-machine",
+]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]

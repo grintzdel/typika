@@ -27,3 +27,4 @@ go test ./...
 ## Variants
 
 - TypeScript: `hexagonal-ts`, where the core also declares its driving port as an interface.
+- Kotlin: `hexagonal-kotlin`, with `fun interface` ports and a sealed hierarchy of domain exceptions.

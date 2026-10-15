@@ -344,6 +344,10 @@ sur les deux plateformes. Cela impose :
   (`Expected <12.90 EUR>, actual <0.00 EUR>.`) ; Gradle, ceux de JUnit 5 pour `assertEquals`, `assertNotEquals`,
   `assertNull` et `assertNotNull`. Un tour qui cite un message d'échec cite celui de Typika. Un message qui nomme un
   type (`assertIs`, `assertFailsWith`) diffère : la JVM écrit `java.lang.String`.
+- **Des nombres vérifiés par leur valeur.** En JavaScript, tous les nombres sont des `Number` : `0.5 as? Int`
+  réussit, là où la JVM renvoie `null`. Pour exiger un entier dans un corps de requête (des `Map<String, Any?>` dans
+  `naive-crud-kotlin`), lire un `Number` et comparer `toInt()` à la valeur, comme `wholeNumber`. `template-check` ne
+  lance pas les tests d'une base : ouvrir la base dans le navigateur pour les voir passer en JavaScript.
 
 `KOTLIN_COMPILER_URL=http://… pnpm template-check` lance les exercices Kotlin contre ce service ; sans la variable,
 ils ne sont pas lancés et la commande le signale.
