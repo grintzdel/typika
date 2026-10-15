@@ -39,6 +39,7 @@ focus = ["src/notifications/**"]
 [variants]
 go = "github:typika/templates/decorator/go"
 javascript = "github:typika/templates/decorator/js"
+kotlin = "github:typika/templates/decorator/kotlin"
 
 [[exercises]]
 name = "add-sms-with-retry"

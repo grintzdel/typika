@@ -1,0 +1,56 @@
+schema = 1
+name = "decorator-kotlin"
+title = "Decorator: sending notifications"
+summary = "Add behaviour to an object by wrapping it in another object with the same interface."
+keywords = ["delegation", "wrapper", "retry"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["design-pattern/structural/decorator", "principle/open-closed"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-flag-soup.md",
+  "tour/03-same-interface.md",
+  "tour/04-wrapping.md",
+  "tour/05-stacking-order.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/decorator-base/kotlin"
+focus = ["src/main/kotlin/notifications/**"]
+
+[variants]
+typescript = "github:typika/templates/decorator/ts"
+
+[[exercises]]
+name = "add-sms-with-retry"
+kind = "refactor"
+title = "Send text messages with retry"
+from = "base"
+solutionFrom = "self"
+failing = ["src/test/kotlin/notifications/SmsNotifierTest.kt"]
+
+[[exercises]]
+name = "stacking-order"
+kind = "fix"
+title = "Log each notification once"
+failing = ["src/test/kotlin/notifications/EmailNotifierTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]

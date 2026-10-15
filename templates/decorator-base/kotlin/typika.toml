@@ -1,0 +1,24 @@
+schema = 1
+name = "decorator-base-kotlin"
+title = "Decorator base: sending notifications"
+summary = "One email notifier with an option for each extra behaviour, before the Decorator pattern."
+license = "MIT-0"
+authors = ["github:maoudin"]
+role = "base"
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["design-pattern/structural/decorator"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
