@@ -503,6 +503,17 @@ premier niveau sans état, des `fun interface` dont un faux de test est une lamb
 injecte en une ligne. Le LSP écrit ses tests de contrat comme une classe de test abstraite dont hérite la classe de
 test de chaque sous-type. Le hub en dev liste 35 templates ; en production sans service, Kotlin reste masqué.
 
+État (2026-10-15) : lot 5, vague (b) livrée. `observer-kotlin`, `decorator-kotlin`, `factory-method-kotlin` et
+`adapter-kotlin` sont au registre avec leurs bases, `healthy` (#76 à #79), avec leurs 16 artefacts précompilés.
+`observer-ts`, `decorator-ts`, `factory-method-ts`, `adapter-ts` et `adapter-go` listent Kotlin et sont réépinglés.
+Aucun template n'émet `W_TOUR_ORDER_DIVERGES`. Les abonnés de l'Observer sont des lambdas derrière une
+`fun interface`, et `subscribe` rend une fonction de désabonnement. Les décorateurs délèguent avec `: Notifier by
+inner` et n'écrivent que la méthode qu'ils changent. Le créateur du Factory Method garde un `ship` final par défaut,
+avec un `object` par colis. L'Adapter traduit des codes `Int` ouverts en un résultat `sealed`, et son tour explique
+pourquoi une extension function ne remplace pas la classe. Sans bibliothèque de mock, les SDK simulés exposent une
+recherche (`findPayment`, `findCharge`) pour que les tests vérifient ce qui a été envoyé. Le hub en dev liste 39
+templates.
+
 ---
 
 ## Après M6 (non planifié)

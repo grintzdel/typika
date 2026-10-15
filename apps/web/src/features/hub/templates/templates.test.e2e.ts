@@ -8,7 +8,7 @@ test.describe('templates list', () => {
   test('lists every template, without the bases', async ({ page }) => {
     await page.goto('/templates')
 
-    await expect(results(page).getByRole('listitem')).toHaveCount(35)
+    await expect(results(page).getByRole('listitem')).toHaveCount(39)
     await expect(results(page).getByRole('link', { name: /Strategy: shipping options.*Kotlin/ })).toHaveAttribute(
       'href',
       '/templates/strategy-kotlin'
@@ -18,7 +18,7 @@ test.describe('templates list', () => {
 
   test('keeps its filters in the query string, across a reload and the back button', async ({ page }) => {
     await page.goto('/templates')
-    await expect(results(page).getByRole('listitem')).toHaveCount(35)
+    await expect(results(page).getByRole('listitem')).toHaveCount(39)
 
     await facet(page, 'Langage').getByRole('checkbox', { name: 'Go' }).check()
 
@@ -29,7 +29,7 @@ test.describe('templates list', () => {
     await expect(results(page).getByRole('link', { name: /Strategy: shipping options.*Go/ })).toBeVisible()
     await expect(results(page).getByRole('listitem')).toHaveCount(9)
     await page.goBack()
-    await expect(results(page).getByRole('listitem')).toHaveCount(35)
+    await expect(results(page).getByRole('listitem')).toHaveCount(39)
   })
 
   test('filters by a branch of the topic tree', async ({ page }) => {
@@ -52,12 +52,12 @@ test.describe('templates list', () => {
     await page.goto('/templates?language=javascript&level=advanced')
     await page.getByRole('button', { name: 'Réinitialiser' }).click()
     await expect(page).toHaveURL('/templates')
-    await expect(results(page).getByRole('listitem')).toHaveCount(35)
+    await expect(results(page).getByRole('listitem')).toHaveCount(39)
   })
 
   test('finds strategy-ts by its symptom, combined with a language', async ({ page }) => {
     await page.goto('/templates')
-    await expect(results(page).getByRole('listitem')).toHaveCount(35)
+    await expect(results(page).getByRole('listitem')).toHaveCount(39)
 
     await searchbox(page).pressSequentially('switch')
     await expect(page).toHaveURL('/templates?q=switch')
@@ -84,7 +84,7 @@ test.describe('templates list', () => {
 
     await expect(page).toHaveURL('/templates?q=observer')
     await expect(searchbox(page)).toHaveValue('observer')
-    await expect(results(page).getByRole('listitem')).toHaveCount(2)
+    await expect(results(page).getByRole('listitem')).toHaveCount(3)
   })
 
   test('removes the search and the filters of an empty result one by one', async ({ page }) => {
