@@ -95,7 +95,7 @@ const sendWebResponse = async (response: Response, target: ServerResponse) => {
 export const kotlinCompilerRelay = (): Plugin => ({
   name: 'typika:kotlin-compiler-relay',
   configureServer: (server) => {
-    const origin = DEV_ENV.TYPIKA_PUBLIC_URL
+    const origin = process.env.TYPIKA_PUBLIC_URL ?? DEV_ENV.TYPIKA_PUBLIC_URL
     const relay = kotlinRelayFromEnv(process.env, origin)
     if (relay === undefined) return
     server.middlewares.use((request, response, next) => {
