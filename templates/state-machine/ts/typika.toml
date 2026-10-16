@@ -36,6 +36,9 @@ steps = [
 template = "github:typika/templates/naive-crud/ts"
 focus = ["src/orders/**", "src/infrastructure/in-memory-database.ts"]
 
+[variants]
+kotlin = "github:typika/templates/state-machine/kotlin"
+
 [[exercises]]
 name = "add-returns"
 kind = "refactor"

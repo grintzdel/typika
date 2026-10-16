@@ -1,0 +1,57 @@
+schema = 1
+name = "state-machine-kotlin"
+title = "State machine: the order lifecycle"
+summary = "Replace status booleans with explicit states and one table of allowed transitions."
+keywords = ["states", "transitions", "sealed"]
+license = "MIT-0"
+authors = ["github:maoudin"]
+
+[facets]
+language = "kotlin"
+paradigm = ["oop"]
+topic = ["architecture/state-machine"]
+level = "intermediate"
+useCase = ["backend"]
+
+[runtime]
+kind = "kotlin"
+entry = "src/main/kotlin/Main.kt"
+
+[commands]
+test = "kotlin.test"
+
+[tests]
+include = ["src/test/kotlin/**/*.kt"]
+
+[tour]
+steps = [
+  "tour/01-overview.md",
+  "tour/02-impossible-states.md",
+  "tour/03-states.md",
+  "tour/04-transitions.md",
+  "tour/05-guards.md",
+  "tour/06-trade-offs.md",
+]
+
+[base]
+template = "github:typika/templates/naive-crud/kotlin"
+focus = ["src/main/kotlin/orders/**", "src/main/kotlin/infrastructure/InMemoryDatabase.kt"]
+
+[variants]
+typescript = "github:typika/templates/state-machine/ts"
+
+[[exercises]]
+name = "add-returns"
+kind = "refactor"
+title = "Accept returns"
+from = "base"
+solutionFrom = "self"
+failing = ["src/test/kotlin/app/ReturnsTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]
+
+[[exercises]]
+name = "forbid-cancel-after-shipping"
+kind = "fix"
+title = "Forbid cancelling a shipped order"
+failing = ["src/test/kotlin/app/OrderLifecycleTest.kt"]
+hints = ["hint-1.md", "hint-2.md"]
