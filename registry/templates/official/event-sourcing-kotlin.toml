@@ -1,0 +1,4 @@
+ref = "github:typika/templates/event-sourcing/kotlin@c6506c948f45"
+maintainers = ["github:maoudin"]
+category = "official"
+added = 2026-10-16

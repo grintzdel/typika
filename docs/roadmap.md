@@ -514,6 +514,16 @@ pourquoi une extension function ne remplace pas la classe. Sans bibliothèque de
 recherche (`findPayment`, `findCharge`) pour que les tests vérifient ce qui a été envoyé. Le hub en dev liste 39
 templates.
 
+État (2026-10-16) : lot 5, vague (c) livrée. `naive-crud-kotlin`, la base commune, `hexagonal-kotlin`, `cqrs-kotlin`,
+`event-sourcing-kotlin`, `outbox-kotlin` et `state-machine-kotlin` sont au registre, `healthy` (#82 à #86), avec leurs
+12 artefacts précompilés. `hexagonal-ts`, `hexagonal-go`, `cqrs-ts`, `cqrs-go`, `event-sourcing-ts`, `outbox-ts`,
+`outbox-go` et `state-machine-ts` listent Kotlin et sont réépinglés. Les corps HTTP sont des `Map<String, Any?>` ; sur
+Kotlin/JS, `0.5 as? Int` réussit, d'où `wholeNumber` pour lire un entier. Les commandes, les changements et les
+événements sont des hiérarchies `sealed`, que `decide` et `evolve` parcourent avec des `when` exhaustifs ; la
+réhydratation est un `fold`. Le relais de l'outbox est synchrone et piloté par les tests. La machine à états est une
+`sealed class` dont la table de transitions est un `when` exhaustif : un état oublié ne compile pas. Le hub en dev liste
+44 templates.
+
 ---
 
 ## Après M6 (non planifié)
