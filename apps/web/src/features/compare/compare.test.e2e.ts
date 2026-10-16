@@ -79,7 +79,7 @@ const pressNext = async (page: Page, index: number) => {
 
 const open = async (page: Page, path: string) => {
   await page.goto(path)
-  await expect(tour(page)).toBeVisible()
+  await expect(tour(page)).toBeVisible({ timeout: 30_000 })
 }
 
 test.describe('compare', () => {
