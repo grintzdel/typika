@@ -62,6 +62,8 @@ describe('service limits', () => {
   })
 
   it('keeps compiling other projects while a compilation runs into the timeout', async () => {
+    // A worker restarted by the previous test compiles cold, which takes over the 10 s timeout on a loaded Docker VM.
+    await Promise.all([compile(url, strategy()), compile(url, strategy())])
     const bomb = elapsed(postCompile(url, compileBody(typeBomb(24))))
     await new Promise((resolve) => setTimeout(resolve, 300))
     const project = elapsed(compile(url, strategy()))
