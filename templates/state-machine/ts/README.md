@@ -22,3 +22,7 @@ npm test
 - `src/orders/order-state.ts`: the states, the transition table and `transition`.
 - `src/infrastructure/in-memory-database.ts`: the row stores one `state` instead of four booleans.
 - `src/orders/orders-handler.ts`: routes that ask for a transition, and the payment guard.
+
+## Variants
+
+- Kotlin: `state-machine-kotlin`, with a sealed class of states and exhaustive `when` over them.
