@@ -12,3 +12,6 @@ apps/web/playwright-report/
 apps/web/dist/
 registry/dist/
 packages/runtime-go/assets/
+templates/**/gradlew
+templates/**/gradlew.bat
+templates/**/gradle/wrapper/
