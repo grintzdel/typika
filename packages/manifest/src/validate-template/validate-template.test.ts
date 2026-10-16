@@ -23,8 +23,13 @@ const loadTemplate = (directory: string): TemplateFiles =>
       .map((path) => [path, readFileSync(join(directory, path), 'utf8')] as const)
   )
 
-const officialTemplates = readdirSync(TEMPLATES_ROOT).flatMap((concept) =>
-  readdirSync(join(TEMPLATES_ROOT, concept)).map((language) => join(concept, language))
+const subdirectories = (directory: string): string[] =>
+  readdirSync(directory, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+
+const officialTemplates = subdirectories(TEMPLATES_ROOT).flatMap((concept) =>
+  subdirectories(join(TEMPLATES_ROOT, concept)).map((language) => join(concept, language))
 )
 
 describe('validateTemplate', () => {
@@ -52,7 +57,10 @@ describe('validateTemplate', () => {
   })
 
   it.each(officialTemplates)('accepts the official template %s', async (template) => {
-    const result = await valueOf(validateTemplate(loadTemplate(join(TEMPLATES_ROOT, template))))
+    const files = loadTemplate(join(TEMPLATES_ROOT, template))
+    expect(files.size, `templates/${template} has no file in the git index: stage it with git add`).toBeGreaterThan(0)
+
+    const result = await valueOf(validateTemplate(files))
 
     expect(result.warnings).toEqual([])
   })
