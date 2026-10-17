@@ -14,10 +14,14 @@ export const readKotlinArtifactKeys = async (root: string): Promise<ReadonlySet<
       .map((file) => file.slice(0, -SUFFIX.length))
   )
 
-export const writeKotlinArtifacts = async (root: string, artifacts: ReadonlyArray<KotlinArtifactFile>) => {
+export const writeKotlinArtifacts = async (
+  root: string,
+  keys: Iterable<string>,
+  artifacts: ReadonlyArray<KotlinArtifactFile>
+) => {
   const dir = join(root, KOTLIN_ARTIFACTS_DIR)
-  const keys = new Set(artifacts.map((artifact) => artifact.key))
-  const removed = [...(await readKotlinArtifactKeys(root))].filter((key) => !keys.has(key)).toSorted()
+  const wanted = new Set(keys)
+  const removed = [...(await readKotlinArtifactKeys(root))].filter((key) => !wanted.has(key)).toSorted()
   await mkdir(dir, { recursive: true })
   await Promise.all([
     ...removed.map((key) => rm(join(dir, `${key}${SUFFIX}`))),
