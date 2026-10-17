@@ -79,7 +79,8 @@ brotli, sans la JVM.
 - Le principe [0001](0001-browser-first.md) garde une seule exception : la compilation Kotlin. Le code compilé ne
   s'exécute que dans le navigateur.
 - Un service à maintenir, mais petit : le compilateur est une dépendance, le reste tient en un fichier. Monter de
-  version de Kotlin, c'est reconstruire l'image et recompiler les artefacts précompilés du registre.
+  version de Kotlin, c'est reconstruire l'image et recompiler les artefacts précompilés du registre
+  (`pnpm registry:build --force`).
 - La première compilation après démarrage coûte 5 à 11 s (JIT de la JVM). La compilation de chauffe la fait avant la
   première requête.
 - Un « Run » ou un test modifié coûte environ 1 s sur l'instance de référence, 2 à 4 s sous charge. Le cache par hash

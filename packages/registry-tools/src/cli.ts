@@ -33,6 +33,7 @@ const { positionals, values } = parseArgs({
     only: { type: 'string' },
     'run-url': { type: 'string' },
     checkout: { type: 'string', multiple: true },
+    force: { type: 'boolean', default: false },
   },
 })
 const [command, registryDir = 'registry'] = positionals
@@ -105,7 +106,7 @@ if (command === 'health' && values.app !== undefined) {
 
 if (command !== 'build') {
   console.error(
-    'Usage: registry-tools build <registry> [--out <index.json>] | health <registry> --app <url> [--only <names>] [--run-url <url>] | mirror <index.json> --out <dir> | schema [--out <index.schema.json>]\nbuild, health and mirror read typika/templates in this monorepo, or in the clones given by --checkout owner/repo=<dir>.'
+    'Usage: registry-tools build <registry> [--out <index.json>] [--force] | health <registry> --app <url> [--only <names>] [--run-url <url>] | mirror <index.json> --out <dir> | schema [--out <index.schema.json>]\nbuild, health and mirror read typika/templates in this monorepo, or in the clones given by --checkout owner/repo=<dir>.'
   )
   exit(2)
 }
@@ -117,16 +118,18 @@ if (index === undefined) exit(1)
 
 const root = resolve(registryDir)
 const requests = await kotlinArtifactRequests(templates)
+const existing = await readKotlinArtifactKeys(root)
+const absent = requests.filter(({ key }) => !existing.has(key))
+const pending = values.force ? requests : absent
 if (kotlinCompilerUrl === undefined) {
-  const keys = await readKotlinArtifactKeys(root)
-  const missing = [...new Set(requests.filter(({ key }) => !keys.has(key)).map(({ template }) => template))]
+  const missing = [...new Set(absent.map(({ template }) => template))]
   if (missing.length > 0)
     console.log(
       `The Kotlin artifacts of ${missing.join(', ')} are missing or outdated: set KOTLIN_COMPILER_URL to compile them.`
     )
 } else {
   const compiled = await Effect.runPromise(
-    Effect.result(compileKotlinArtifacts(requests, makeKotlinCompilerClient({ url: kotlinCompilerUrl })))
+    Effect.result(compileKotlinArtifacts(pending, makeKotlinCompilerClient({ url: kotlinCompilerUrl })))
   )
   if (compiled._tag === 'Failure') {
     const error = compiled.failure
@@ -137,8 +140,12 @@ if (kotlinCompilerUrl === undefined) {
     )
     exit(1)
   }
-  const { written, removed } = await writeKotlinArtifacts(root, compiled.success)
-  console.log(`Kotlin artifacts: ${written} written, ${removed.length} removed.`)
+  const { written, removed } = await writeKotlinArtifacts(
+    root,
+    requests.map(({ key }) => key),
+    compiled.success
+  )
+  console.log(`Kotlin artifacts: ${written} written, ${requests.length - written} kept, ${removed.length} removed.`)
 }
 
 const json = JSON.stringify(index)
