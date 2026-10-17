@@ -1,4 +1,4 @@
-import type { TemplateFiles } from '@typika/manifest'
+import { exerciseStates, type TemplateFiles } from '@typika/manifest'
 import {
   compileCacheKey,
   KotlinCompileMode,
@@ -28,7 +28,7 @@ const COMPILED: KotlinCompilation = {
 
 const idleExecutor: KotlinExecutor = { tests: () => Effect.void, program: () => Effect.void }
 
-const sandboxKeysOf = async (template: RegisteredTemplate) => {
+const sandboxKeysOf = async (template: RegisteredTemplate, files: TemplateFiles = template.files) => {
   const requested: Array<Promise<string>> = []
   const compiler: KotlinCompilerClient = {
     compile: (mode, files) => {
@@ -37,11 +37,11 @@ const sandboxKeysOf = async (template: RegisteredTemplate) => {
     },
   }
   const project = makeKotlinProject(compiler, idleExecutor)
-  const files = [...template.files].filter(([path]) => !path.startsWith('exercises/'))
+  const sources = [...files].filter(([path]) => !path.startsWith('exercises/'))
   const testGlobs = template.manifest.tests?.include
   const options = testGlobs === undefined ? {} : { testGlobs }
-  await Effect.runPromise(Effect.scoped(project.test(files, { runId: 'sandbox', ...options }, () => {})))
-  await Effect.runPromise(Effect.scoped(project.run(files, options, () => {})))
+  await Effect.runPromise(Effect.scoped(project.test(sources, { runId: 'sandbox', ...options }, () => {})))
+  await Effect.runPromise(Effect.scoped(project.run(sources, options, () => {})))
   const [test, run] = await Promise.all(requested)
   return { test, run }
 }
@@ -59,7 +59,7 @@ beforeAll(async () => {
 })
 
 describe('kotlinArtifactRequests', () => {
-  it('asks for a test and a run compilation of each Kotlin template only', async () => {
+  it('asks for a test and a run compilation of each Kotlin template, then of each exercise start', async () => {
     const requests = await kotlinArtifactRequests([kotlin, ts, base])
 
     expect(requests.map(({ template, request }) => [template, request.mode])).toEqual([
@@ -67,7 +67,33 @@ describe('kotlinArtifactRequests', () => {
       ['strategy-kotlin', KotlinCompileMode.RUN],
       ['strategy-base-kotlin', KotlinCompileMode.TEST],
       ['strategy-base-kotlin', KotlinCompileMode.RUN],
+      ['strategy-kotlin/add-pickup-point-option', KotlinCompileMode.TEST],
+      ['strategy-kotlin/implement-express', KotlinCompileMode.TEST],
+      ['strategy-kotlin/implement-express', KotlinCompileMode.RUN],
     ])
+  })
+
+  it('asks once for a compilation that a template and an exercise start share', async () => {
+    const keys = (await kotlinArtifactRequests([kotlin, base])).map(({ key }) => key)
+
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('keys an exercise start as the sandbox does for the opened exercise', async () => {
+    const requests = await kotlinArtifactRequests([kotlin, base])
+    const exercise = kotlin.manifest.exercises.find(({ name }) => name === 'add-pickup-point-option')
+    if (exercise === undefined) throw new Error('add-pickup-point-option is missing')
+    const { start } = await Effect.runPromise(exerciseStates({ template: kotlin.files, base: base.files, exercise }))
+
+    const { test } = await sandboxKeysOf(kotlin, start)
+
+    expect(requests.find(({ template }) => template === 'strategy-kotlin/add-pickup-point-option')?.key).toBe(test)
+  })
+
+  it('leaves out the exercises whose base is not registered', async () => {
+    const requests = await kotlinArtifactRequests([kotlin])
+
+    expect(requests.map(({ template }) => template)).not.toContain('strategy-kotlin/add-pickup-point-option')
   })
 
   it('keys each compilation as the sandbox does for the opened template', async () => {

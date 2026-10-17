@@ -20,7 +20,7 @@ registry/
 ├── vocabulary.toml            # topics connus et leur libellé
 ├── health/                    # état calculé, écrit uniquement par la CI
 │   └── <name>.json
-├── artifacts/kotlin/          # compilations des templates Kotlin, écrites par la CI
+├── artifacts/kotlin/          # compilations des templates Kotlin et de leurs exercices, écrites par la CI
 │   └── <clé>.json
 ├── schema/
 │   └── index.schema.json      # schéma JSON de index.json
@@ -123,7 +123,8 @@ dossier `templates/` du monorepo, à ce commit. `--checkout <owner>/<repo>=<doss
 un clone local, depuis sa racine : c'est ainsi que la CI de `typika/registry` lira `typika/templates`. V8 dépend du run de santé (§4), que `registry-tools health` mène. Comme `template-check`, `registry-tools` exécute
 les exercices Go et applique V11. Il exécute les exercices Kotlin (V9) quand `KOTLIN_COMPILER_URL` désigne un service
 de compilation, et signale sinon qu'il ne l'a pas fait ; le build de l'app s'en passe. Avec ce service,
-`registry-tools build` écrit aussi les artefacts précompilés des templates Kotlin dans `artifacts/kotlin/`
+`registry-tools build` écrit aussi les artefacts précompilés des templates Kotlin et de l'état de départ de leurs
+exercices dans `artifacts/kotlin/`
 ([runtimes §6.4](./runtimes.md)) ; sans lui, il signale ceux qui manquent ou sont périmés. `registry-tools health` lit
 `/config.json` de l'instance visée et ne sonde Kotlin que si elle a un compilateur. `registry-tools mirror <index.json> --out <dossier>` écrit les fichiers de chaque entrée à sa ref
 épinglée, au format de jsDelivr ([0022](../decisions/0022-template-files-source.md)) : c'est la source des fichiers
