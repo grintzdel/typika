@@ -37,7 +37,7 @@ describe('compileKotlinArtifacts with the compile service', () => {
       )
     )
 
-    expect(artifacts).toHaveLength(2)
+    expect(artifacts).toHaveLength(4)
     expect(fetch).not.toHaveBeenCalled()
     expect(events.at(-1)).toMatchObject({ _tag: 'RunFinished', status: 'passed', failed: 0 })
   })

@@ -36,7 +36,7 @@ Ouvrez une issue avant tout changement important. Pour remettre en cause une dé
   demande Gradle 9 et un JDK 25 en local. Le service lui-même se compile dans l'image.
   `KOTLIN_COMPILER_URL=http://… pnpm template-check` lance aussi les exercices Kotlin, comme `pnpm registry:build` et
   `pnpm registry:health`. Avec le service, `pnpm registry:build` compile aussi les artefacts des templates Kotlin
-  dans `registry/artifacts/kotlin/` : relancez-le et commitez-les quand une entrée Kotlin change d'épinglage. Il ne
+  et de leurs exercices dans `registry/artifacts/kotlin/` : relancez-le et commitez-les quand une entrée Kotlin change d'épinglage. Il ne
   compile que les clés absentes, car la sortie de Kotlin/JS varie d'un run à l'autre (#91) ; après une montée de
   version de Kotlin, `pnpm registry:build --force` les recompile toutes. Le run
   de santé ne sonde Kotlin que sur une app lancée avec `KOTLIN_COMPILER_URL` ; au-delà de quelques templates, levez sa

@@ -79,6 +79,23 @@ test.describe('Kotlin sandbox', () => {
     expect(compilations).toHaveLength(1)
   })
 
+  for (const exercise of ['implement-express', 'add-pickup-point-option']) {
+    test(`opens the ${exercise} exercise from its precompiled artifacts`, async ({ page }) => {
+      const compilations: Array<string> = []
+      page.on('request', (request) => {
+        if (COMPILE.test(request.url())) compilations.push(request.url())
+      })
+      await open(page, `/play/strategy-kotlin?exercise=${exercise}`)
+
+      await page.getByRole('button', { name: 'Tests', exact: true }).click()
+      await expect(exercisePanel(page).getByText(/tests cibles verts$/)).toBeVisible({ timeout: TIMEOUT })
+      await page.getByRole('button', { name: 'Exécuter' }).click()
+      await expect(consoleRegion(page).getByText('Terminé avec le code 0')).toBeVisible({ timeout: TIMEOUT })
+
+      expect(compilations).toEqual([])
+    })
+  }
+
   test('does not compile the same sources again after a reload', async ({ page }) => {
     await open(page)
     await modifyMain(page)
