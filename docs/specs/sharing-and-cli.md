@@ -136,8 +136,10 @@ par le navigateur.
 
 - Depuis la sandbox et `/projects`, sans connexion.
 - Contenu : les fichiers du projet, dont `typika.toml` (avec `parent` si remix) et `tour/`.
-- Option « sans les fichiers Typika » : même règle que `typika create` sans `--keep-tour` (§6.4).
-- Nom : `<nom-du-projet>.zip`.
+- Option « sans les fichiers Typika » : même règle que `typika create` sans `--keep-tour` (§6.4). Elle vit dans
+  `@typika/manifest` (`withoutTypikaFiles`), que le CLI reprend.
+- Avec les fichiers Typika, `typika.toml` reçoit `parent` (la ref épinglée du template) s'il n'en déclare pas déjà un.
+- Nom : `<nom-du-projet>.zip`, sans les caractères qu'un nom de fichier ne peut pas porter.
 
 ## 5. Push vers GitHub
 

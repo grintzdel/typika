@@ -62,7 +62,9 @@ test('opens a shared link at the pinned template, in another browser', async ({ 
   await page.keyboard.insertText('// shared in production\n')
   await expect(page.getByRole('status', { name: 'État du projet' })).toHaveText('Modifié')
   await page.getByRole('button', { name: 'Partager' }).click()
-  const link = page.getByRole('dialog', { name: 'Partager le projet' }).getByRole('textbox', { name: 'Lien de partage' })
+  const link = page
+    .getByRole('dialog', { name: 'Partager le projet' })
+    .getByRole('textbox', { name: 'Lien de partage' })
   await expect(link).toHaveValue(new RegExp(`^${APP_URL}/s#1\\.`))
 
   const context = await browser.newContext()

@@ -18,7 +18,7 @@ const item = (overrides: Partial<ProjectListItem> = {}): ProjectListItem => ({
   ...overrides,
 })
 
-const handlers = () => ({ onRename: vi.fn(), onDuplicate: vi.fn(), onDelete: vi.fn() })
+const handlers = () => ({ onRename: vi.fn(), onDuplicate: vi.fn(), onDelete: vi.fn(), onExport: vi.fn() })
 
 describe('ProjectList', () => {
   it('lists each project with its template, language, exercise and last change', () => {
@@ -102,5 +102,16 @@ describe('ProjectList', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Supprimer' }))
 
     expect(props.onDelete).toHaveBeenCalledWith('project-1')
+  })
+
+  it('exports a project from its row', async () => {
+    const props = handlers()
+    render(<ProjectList now={NOW} projects={[item()]} {...props} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Exporter' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Exporter le projet' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Télécharger le zip' }))
+
+    expect(props.onExport).toHaveBeenCalledWith('project-1', true)
   })
 })

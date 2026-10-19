@@ -5,6 +5,7 @@ import { Button } from '../../../../ui/Button.tsx'
 import { ConfirmButton } from '../../../../ui/ConfirmButton.tsx'
 import { languageNameOf } from '../../../shared/core/domain/language-name.domain-model.ts'
 import type { ProjectListItem } from '../../core/domain/project.domain-model.ts'
+import { ExportDialog } from './ExportDialog.tsx'
 import { relativeTime } from './relative-time.ts'
 
 export type ProjectListProps = {
@@ -13,6 +14,7 @@ export type ProjectListProps = {
   readonly onRename: (id: string, name: string) => void
   readonly onDuplicate: (id: string, name: string) => void
   readonly onDelete: (id: string) => void
+  readonly onExport: (id: string, includeTypikaFiles: boolean) => void
 }
 
 type ProjectRowProps = Omit<ProjectListProps, 'projects'> & { readonly project: ProjectListItem }
@@ -54,7 +56,7 @@ const RenameForm = ({
   )
 }
 
-const ProjectRow = ({ project, now, onRename, onDuplicate, onDelete }: ProjectRowProps) => {
+const ProjectRow = ({ project, now, onRename, onDuplicate, onDelete, onExport }: ProjectRowProps) => {
   const { t, i18n } = useTranslation('project')
   const [isRenaming, setRenaming] = useState(false)
   const details = [
@@ -88,6 +90,7 @@ const ProjectRow = ({ project, now, onRename, onDuplicate, onDelete }: ProjectRo
           <Button onClick={() => onDuplicate(project.id, t('list.copyName', { name: project.name }))}>
             {t('list.duplicate')}
           </Button>
+          <ExportDialog onExport={(includeTypikaFiles) => onExport(project.id, includeTypikaFiles)} />
           <ConfirmButton
             title={t('list.deleteTitle', { name: project.name })}
             description={t('list.deleteDescription')}
