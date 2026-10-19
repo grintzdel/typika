@@ -37,3 +37,4 @@ Statuts : `Proposée` (en attente d'un spike), `Acceptée`, `Remplacée par NNNN
 | [0028](0028-kotlin-compilation-workers.md) | Compilation Kotlin : des processus qu'on tue au timeout | Acceptée |
 | [0029](0029-kotlin-relay-rate-limit.md) | Compilation Kotlin : relayée et limitée par le serveur de l'app | Acceptée |
 | [0030](0030-kotlin-exercise-artifacts.md) | Exercices Kotlin : leur état de départ est précompilé | Acceptée |
+| [0031](0031-embed-runtimes.md) | Runtimes en embed : les trois, dans un contexte sécurisé | Acceptée |
