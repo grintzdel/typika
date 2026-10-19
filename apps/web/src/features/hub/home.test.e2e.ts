@@ -55,6 +55,6 @@ test.describe('home', () => {
     await page.goto('/')
 
     const resume = page.getByRole('region', { name: 'Reprendre' })
-    await expect(resume.getByRole('link', { name: /strategy-ts/ })).toHaveAttribute('href', '/play/strategy-ts')
+    await expect(resume.getByRole('link', { name: /strategy-ts/ })).toHaveAttribute('href', /^\/p\/[0-9a-f-]{36}$/)
   })
 })

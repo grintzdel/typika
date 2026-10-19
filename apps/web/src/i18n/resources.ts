@@ -5,7 +5,7 @@ export const resources = {
     },
     hub: {
       brand: 'Typika',
-      nav: { label: 'Main', templates: 'Templates' },
+      nav: { label: 'Main', templates: 'Templates', projects: 'My projects' },
       search: { label: 'Search templates', placeholder: 'Search' },
       hero: { title: 'Learn architecture by running code.', browse: 'Browse the templates' },
       seeAll: 'See all',
@@ -113,6 +113,7 @@ export const resources = {
         exerciseNotFound: '“{{name}}” has no exercise called “{{exercise}}”.',
         filesUnavailable: 'The files of “{{name}}” could not be downloaded. Check your connection.',
         unknown: 'Something went wrong while opening the template.',
+        projectNotFound: 'This project does not exist in this browser.',
       },
       indexFailed: {
         title: 'Cannot load the templates',
@@ -123,6 +124,26 @@ export const resources = {
       loading: 'Loading the template…',
       retry: 'Retry',
       recent: { title: 'Resume', modified: 'modified {{time}}' },
+      projects: { title: 'My projects', loadFailed: 'The local projects could not be read.' },
+      list: {
+        label: 'Projects',
+        empty: 'No project yet. Your projects stay in this browser: clearing its site data deletes them.',
+        browse: 'Browse the templates',
+        exercise: 'Exercise: {{name}}',
+        rename: 'Rename',
+        nameLabel: 'Project name',
+        save: 'Save',
+        cancel: 'Cancel',
+        duplicate: 'Duplicate',
+        copyName: '{{name}} (copy)',
+        delete: 'Delete',
+        deleteTitle: 'Delete “{{name}}”?',
+        deleteDescription: 'This project and its files will be erased from this browser.',
+      },
+      storage: {
+        used: 'Space used: {{usage}} of {{quota}}',
+        nearlyFull: 'This browser’s storage is nearly full. Delete projects to free some space.',
+      },
     },
     editor: {
       label: 'Editor',
@@ -263,7 +284,7 @@ export const resources = {
     },
     hub: {
       brand: 'Typika',
-      nav: { label: 'Principale', templates: 'Templates' },
+      nav: { label: 'Principale', templates: 'Templates', projects: 'Mes projets' },
       search: { label: 'Rechercher des templates', placeholder: 'Rechercher' },
       hero: { title: "Apprenez l'architecture en exécutant du code.", browse: 'Parcourir les templates' },
       seeAll: 'Tout voir',
@@ -371,6 +392,7 @@ export const resources = {
         exerciseNotFound: '« {{name}} » n’a pas d’exercice « {{exercise}} ».',
         filesUnavailable: 'Les fichiers de « {{name}} » n’ont pas pu être téléchargés. Vérifiez votre connexion.',
         unknown: 'Une erreur est survenue à l’ouverture du template.',
+        projectNotFound: 'Ce projet n’existe pas dans ce navigateur.',
       },
       indexFailed: {
         title: 'Impossible de charger les templates',
@@ -381,6 +403,27 @@ export const resources = {
       loading: 'Chargement du template…',
       retry: 'Réessayer',
       recent: { title: 'Reprendre', modified: 'modifié {{time}}' },
+      projects: { title: 'Mes projets', loadFailed: 'Les projets locaux n’ont pas pu être lus.' },
+      list: {
+        label: 'Projets',
+        empty:
+          'Aucun projet pour l’instant. Vos projets restent dans ce navigateur : effacer ses données de site les supprime.',
+        browse: 'Parcourir les templates',
+        exercise: 'Exercice : {{name}}',
+        rename: 'Renommer',
+        nameLabel: 'Nom du projet',
+        save: 'Enregistrer',
+        cancel: 'Annuler',
+        duplicate: 'Dupliquer',
+        copyName: '{{name}} (copie)',
+        delete: 'Supprimer',
+        deleteTitle: 'Supprimer « {{name}} » ?',
+        deleteDescription: 'Ce projet et ses fichiers seront effacés de ce navigateur.',
+      },
+      storage: {
+        used: 'Espace utilisé : {{usage}} sur {{quota}}',
+        nearlyFull: 'Le stockage de ce navigateur est presque plein. Supprimez des projets pour libérer de l’espace.',
+      },
     },
     editor: {
       label: 'Éditeur',

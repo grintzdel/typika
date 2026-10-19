@@ -9,19 +9,28 @@ export type SaveTemplateEdits = {
   readonly project: ProjectRecord
   readonly templateFiles: ProjectFiles
   readonly edits: ProjectFiles
+  readonly match?: 'origin' | 'id'
 }
 
 export class ProjectStoragePort extends Context.Service<
   ProjectStoragePort,
   {
-    readonly listRecent: (limit: number) => Effect.Effect<ReadonlyArray<ProjectRecord>, ProjectStorageError>
+    readonly list: Effect.Effect<ReadonlyArray<ProjectRecord>, ProjectStorageError>
+    readonly findById: (id: string) => Effect.Effect<Option.Option<StoredProject>, ProjectStorageError>
     readonly findByOrigin: (origin: ProjectOrigin) => Effect.Effect<Option.Option<StoredProject>, ProjectStorageError>
-    // Creates `project` from `templateFiles` when its origin has none yet, atomically with the edits.
+    // Creates `project` from `templateFiles` when no project matches it yet, atomically with the edits. `match`
+    // defaults to the latest project of the same origin.
     readonly saveTemplateEdits: (input: SaveTemplateEdits) => Effect.Effect<StoredProject, ProjectStorageError>
     readonly replaceFiles: (
       projectId: string,
       files: ProjectFiles,
       updatedAt: number
     ) => Effect.Effect<void, ProjectStorageError>
+    readonly duplicate: (
+      sourceId: string,
+      copy: ProjectRecord
+    ) => Effect.Effect<Option.Option<StoredProject>, ProjectStorageError>
+    readonly rename: (id: string, name: string) => Effect.Effect<void, ProjectStorageError>
+    readonly remove: (id: string) => Effect.Effect<void, ProjectStorageError>
   }
 >()('@typika/web/ProjectStoragePort') {}

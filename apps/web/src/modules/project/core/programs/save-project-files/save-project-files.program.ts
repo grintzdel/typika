@@ -14,7 +14,7 @@ export const saveProjectFilesProgram = ({
   Effect.gen(function* () {
     const storage = yield* ProjectStoragePort
     const now = yield* Clock.currentTimeMillis
-    const id = yield* Effect.sync(() => crypto.randomUUID())
+    const id = project.projectId ?? (yield* Effect.sync(() => crypto.randomUUID()))
     const saved = yield* storage.saveTemplateEdits({
       project: {
         id,
@@ -26,6 +26,7 @@ export const saveProjectFilesProgram = ({
       },
       templateFiles: project.templateFiles,
       edits: new Map(edits),
+      match: project.projectId === undefined ? 'origin' : 'id',
     })
     return modifiedPathsOf(project.templateFiles, saved.files)
   })

@@ -25,4 +25,11 @@ describe('TemplateLoadError', () => {
     expect(screen.getByRole('alert').textContent).toContain('« missing-ts »')
     expect(screen.queryByRole('button')).toBeNull()
   })
+
+  it('says when a project does not exist in this browser', () => {
+    render(<TemplateLoadError failure={{ _tag: 'ProjectNotFound', id: 'missing' }} onRetry={vi.fn()} />)
+
+    expect(screen.getByRole('alert').textContent).toContain('Ce projet n’existe pas dans ce navigateur.')
+    expect(screen.queryByRole('button')).toBeNull()
+  })
 })

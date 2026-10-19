@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 import { projectFiles, projectRecord } from '../../../__tests__/project.factory.ts'
 import { templateFiles, templateToml } from '../../../__tests__/template.factory.ts'
+import { storedProjectKeyOf } from '../../domain/project.domain-model.ts'
 import type { TemplateEntry } from '../../domain/template-entry.domain-model.ts'
 import { TemplateFilesPort } from '../../ports/template-files.port.ts'
 import { TemplateIndexPort } from '../../ports/template-index.port.ts'
@@ -214,5 +215,44 @@ describe('openTemplateProgram', () => {
     const exit = await open('sample-ts', { 'sample-ts': files })
 
     expect(failureOf(exit)).toMatchObject({ error: { _tag: 'ProjectTemplateInvalidError', name: 'sample-ts' } })
+  })
+
+  it('opens a stored project by its id, apart from a newer project of its template', async () => {
+    const opened = storedProject()
+    const newer = { ...storedProject(), record: projectRecord({ updatedAt: 5_000 }), files: projectFiles({}) }
+
+    const exit = await open(
+      storedProjectKeyOf(opened.record.id),
+      undefined,
+      makeProjectStorageInMemory([opened, newer])
+    )
+
+    expect(Exit.isSuccess(exit) && exit.value.projectId).toBe(opened.record.id)
+    expect(Exit.isSuccess(exit) && exit.value.templateName).toBe('sample-ts')
+    expect(Exit.isSuccess(exit) && exit.value.modifiedPaths).toEqual(['src/main.ts'])
+  })
+
+  it('opens a stored exercise project on its exercise', async () => {
+    const stored = {
+      ...storedProject(),
+      record: projectRecord({ origin: { kind: 'exercise', name: 'sample-ts', exercise: 'fix-it' } }),
+    }
+
+    const exit = await open(storedProjectKeyOf(stored.record.id), undefined, makeProjectStorageInMemory([stored]))
+
+    expect(Exit.isSuccess(exit) && exit.value.exercise?.name).toBe('fix-it')
+    expect(Exit.isSuccess(exit) && new Map<string, unknown>(exit.value.files).get('src/main.ts')).toBe('edited')
+  })
+
+  it('opens a template by its name without a project id', async () => {
+    const exit = await open('sample-ts', undefined, makeProjectStorageInMemory([storedProject()]))
+
+    expect(Exit.isSuccess(exit) && exit.value.projectId).toBeUndefined()
+  })
+
+  it('fails for a project id this browser does not have', async () => {
+    expect(failureOf(await open(storedProjectKeyOf('missing')))).toMatchObject({
+      error: { _tag: 'ProjectNotFoundError', id: 'missing' },
+    })
   })
 })

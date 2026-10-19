@@ -10,20 +10,20 @@ export const applySolutionProgram = (project: TemplateProject) =>
     if (project.exercise === undefined) return
     const storage = yield* ProjectStoragePort
     const now = yield* Clock.currentTimeMillis
-    const stored = yield* storage.findByOrigin(project.origin)
-    const id = Option.isSome(stored)
-      ? stored.value.record.id
-      : (yield* storage.saveTemplateEdits({
-          project: {
-            id: yield* Effect.sync(() => crypto.randomUUID()),
-            name: project.templateName,
-            origin: project.origin,
-            ref: project.ref,
-            createdAt: now,
-            updatedAt: now,
-          },
-          templateFiles: project.templateFiles,
-          edits: new Map(),
-        })).record.id
+    const id =
+      project.projectId ??
+      Option.getOrUndefined(Option.map(yield* storage.findByOrigin(project.origin), (stored) => stored.record.id)) ??
+      (yield* storage.saveTemplateEdits({
+        project: {
+          id: yield* Effect.sync(() => crypto.randomUUID()),
+          name: project.templateName,
+          origin: project.origin,
+          ref: project.ref,
+          createdAt: now,
+          updatedAt: now,
+        },
+        templateFiles: project.templateFiles,
+        edits: new Map(),
+      })).record.id
     yield* storage.replaceFiles(id, project.exercise.solutionFiles, now)
   })

@@ -138,7 +138,7 @@ describe('makeProjectStorageIndexedDb', () => {
     expect(filesOf(reopened)).toEqual({ 'src/a.ts': 'A', 'src/b.ts': 'b' })
   })
 
-  it('lists the most recently edited projects first', async () => {
+  it('lists every project, most recently edited first', async () => {
     const storage = makeProjectStorageIndexedDb(new IDBFactory())
     const projects = [
       projectRecord({ name: 'a-ts', origin: { kind: 'template', name: 'a-ts' }, updatedAt: 3_000 }),
@@ -151,9 +151,96 @@ describe('makeProjectStorageIndexedDb', () => {
       )
     )
 
-    const recent = await run(storage.listRecent(2))
+    const listed = await run(storage.list)
 
-    expect(recent.map((record) => record.name)).toEqual(['a-ts', 'c-ts'])
+    expect(listed.map((record) => record.name)).toEqual(['a-ts', 'c-ts', 'b-ts'])
+  })
+
+  it('finds a project by its id', async () => {
+    const storage = makeProjectStorageIndexedDb(new IDBFactory())
+    const record = projectRecord()
+    await run(
+      storage.saveTemplateEdits({ project: record, templateFiles: TEMPLATE, edits: projectFiles({ 'src/a.ts': 'A' }) })
+    )
+
+    const found = Option.getOrThrow(await run(storage.findById(record.id)))
+
+    expect(found.record).toEqual(record)
+    expect(Object.fromEntries(found.files)).toEqual({ 'src/a.ts': 'A', 'src/b.ts': 'b' })
+    expect(Option.isNone(await run(storage.findById('missing')))).toBe(true)
+  })
+
+  it('saves the edits of a project matched by id, even when another one of its template is newer', async () => {
+    const storage = makeProjectStorageIndexedDb(new IDBFactory())
+    const older = projectRecord({ updatedAt: 1_000 })
+    await run(storage.saveTemplateEdits({ project: older, templateFiles: TEMPLATE, edits: new Map() }))
+    const newer = Option.getOrThrow(
+      await run(storage.duplicate(older.id, projectRecord({ name: 'copy', createdAt: 2_000, updatedAt: 2_000 })))
+    )
+
+    await run(
+      storage.saveTemplateEdits({
+        project: { ...older, updatedAt: 3_000 },
+        templateFiles: TEMPLATE,
+        edits: projectFiles({ 'src/a.ts': 'older' }),
+        match: 'id',
+      })
+    )
+
+    expect(filesOf(await run(storage.findById(older.id)))).toEqual({ 'src/a.ts': 'older', 'src/b.ts': 'b' })
+    expect(filesOf(await run(storage.findById(newer.record.id)))).toEqual({ 'src/a.ts': 'a', 'src/b.ts': 'b' })
+  })
+
+  it('duplicates a project with its files under a new record', async () => {
+    const storage = makeProjectStorageIndexedDb(new IDBFactory())
+    const source = projectRecord()
+    await run(
+      storage.saveTemplateEdits({ project: source, templateFiles: TEMPLATE, edits: projectFiles({ 'src/a.ts': 'A' }) })
+    )
+    const copy = projectRecord({ name: 'sample-ts (copy)', createdAt: 2_000, updatedAt: 2_000 })
+
+    const duplicated = Option.getOrThrow(await run(storage.duplicate(source.id, copy)))
+
+    expect(duplicated.record).toEqual(copy)
+    expect(filesOf(await run(storage.findById(copy.id)))).toEqual({ 'src/a.ts': 'A', 'src/b.ts': 'b' })
+    expect(filesOf(await run(storage.findByOrigin(SAMPLE)))).toEqual({ 'src/a.ts': 'A', 'src/b.ts': 'b' })
+    expect(Option.isNone(await run(storage.duplicate('missing', projectRecord())))).toBe(true)
+  })
+
+  it('renames a project', async () => {
+    const storage = makeProjectStorageIndexedDb(new IDBFactory())
+    const record = projectRecord()
+    await run(storage.saveTemplateEdits({ project: record, templateFiles: TEMPLATE, edits: new Map() }))
+
+    await run(storage.rename(record.id, 'My pricing'))
+
+    expect(Option.getOrThrow(await run(storage.findById(record.id))).record).toEqual({ ...record, name: 'My pricing' })
+  })
+
+  it('removes a project and its files', async () => {
+    const factory = new IDBFactory()
+    const storage = makeProjectStorageIndexedDb(factory)
+    const removed = projectRecord()
+    const kept = projectRecord({ origin: { kind: 'template', name: 'other-ts' } })
+    await run(storage.saveTemplateEdits({ project: removed, templateFiles: TEMPLATE, edits: new Map() }))
+    await run(storage.saveTemplateEdits({ project: kept, templateFiles: TEMPLATE, edits: new Map() }))
+
+    await run(storage.remove(removed.id))
+
+    expect(Option.isNone(await run(storage.findById(removed.id)))).toBe(true)
+    expect((await run(storage.list)).map((record) => record.id)).toEqual([kept.id])
+    const files = await new Promise<number>((resolve, reject) => {
+      const request = factory.open('typika')
+      request.addEventListener('success', () => {
+        const count = request.result.transaction('files').objectStore('files').count()
+        count.addEventListener('success', () => {
+          request.result.close()
+          resolve(count.result)
+        })
+        count.addEventListener('error', () => reject(count.error))
+      })
+    })
+    expect(files).toBe(TEMPLATE.size)
   })
 
   it('fails with a storage error on a record it cannot read', async () => {

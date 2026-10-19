@@ -14,6 +14,7 @@ import {
 import { ProjectExerciseNotFoundError } from '../../core/domain/errors/project-exercise-not-found.error.ts'
 import { ProjectFilesUnavailableError } from '../../core/domain/errors/project-files-unavailable.error.ts'
 import { ProjectIndexUnavailableError } from '../../core/domain/errors/project-index-unavailable.error.ts'
+import { ProjectNotFoundError } from '../../core/domain/errors/project-not-found.error.ts'
 import { ProjectTemplateInvalidError } from '../../core/domain/errors/project-template-invalid.error.ts'
 import { ProjectTemplateNotFoundError } from '../../core/domain/errors/project-template-not-found.error.ts'
 import { buildFileTree } from '../../core/domain/file-tree.domain-model.ts'
@@ -25,6 +26,7 @@ export type OpenTemplateFailure =
   | { readonly _tag: 'ExerciseNotFound'; readonly name: string; readonly exercise: string }
   | { readonly _tag: 'IndexUnavailable'; readonly failure: RegistryIndexFailure }
   | { readonly _tag: 'FilesUnavailable'; readonly name: string }
+  | { readonly _tag: 'ProjectNotFound'; readonly id: string }
   | { readonly _tag: 'Unknown'; readonly name: string }
 
 export const openTemplateFailureOf = <A, E>(
@@ -38,6 +40,7 @@ export const openTemplateFailureOf = <A, E>(
   if (error instanceof ProjectExerciseNotFoundError)
     return { _tag: 'ExerciseNotFound', name: error.name, exercise: error.exercise }
   if (error instanceof ProjectIndexUnavailableError) return { _tag: 'IndexUnavailable', failure: error.failure }
+  if (error instanceof ProjectNotFoundError) return { _tag: 'ProjectNotFound', id: error.id }
   if (error instanceof ProjectFilesUnavailableError) return { _tag: 'FilesUnavailable', name: templateName }
   return { _tag: 'Unknown', name: templateName }
 }

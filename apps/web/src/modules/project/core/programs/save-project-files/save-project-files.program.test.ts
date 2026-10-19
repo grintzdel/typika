@@ -2,8 +2,9 @@ import * as Effect from 'effect/Effect'
 import * as Exit from 'effect/Exit'
 import { describe, expect, it } from 'vitest'
 
-import { projectPath } from '../../../__tests__/project.factory.ts'
+import { projectFiles, projectPath, projectRecord } from '../../../__tests__/project.factory.ts'
 import { templateFiles } from '../../../__tests__/template.factory.ts'
+import { storedProjectKeyOf } from '../../domain/project.domain-model.ts'
 import {
   failingProjectStorage,
   makeProjectStorageInMemory,
@@ -65,5 +66,23 @@ describe('saveProjectFilesProgram', () => {
     const exit = await save([['src/main.ts', 'edited']], failingProjectStorage)
 
     expect(Exit.isFailure(exit) && exit.cause.reasons[0]).toMatchObject({ error: { _tag: 'ProjectStorageError' } })
+  })
+
+  it('saves the edits of a project opened by id into that project', async () => {
+    const opened = { record: projectRecord({ updatedAt: 1_000 }), files: projectFiles({ 'src/main.ts': 'opened' }) }
+    const newer = { record: projectRecord({ updatedAt: 2_000 }), files: projectFiles({ 'src/main.ts': 'newer' }) }
+    const storage = makeProjectStorageInMemory([opened, newer])
+
+    await Effect.runPromise(
+      openTemplateProgram(storedProjectKeyOf(opened.record.id)).pipe(
+        Effect.flatMap((project) =>
+          saveProjectFilesProgram({ project, edits: [[projectPath('src/main.ts'), 'edited']] })
+        ),
+        Effect.provide(makeProjectTestLayer(TEMPLATES, storage))
+      )
+    )
+
+    expect(storage.projects.get(opened.record.id)?.files.get(projectPath('src/main.ts'))).toBe('edited')
+    expect(storage.projects.get(newer.record.id)?.files.get(projectPath('src/main.ts'))).toBe('newer')
   })
 })

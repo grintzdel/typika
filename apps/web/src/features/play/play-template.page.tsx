@@ -29,7 +29,6 @@ import { ExercisePanel } from '../../modules/exercise/ui/components/ExercisePane
 import { useExercise } from '../../modules/exercise/ui/hooks/use-exercise.ts'
 import { HealthBanner } from '../../modules/hub/ui/components/HealthBanner.tsx'
 import { isTypikaFile } from '../../modules/project/core/domain/file-tree.domain-model.ts'
-import { projectKeyOf } from '../../modules/project/core/domain/project.domain-model.ts'
 import { FileTree } from '../../modules/project/ui/components/FileTree.tsx'
 import { ProjectStatus } from '../../modules/project/ui/components/ProjectStatus.tsx'
 import { ResetProjectDialog } from '../../modules/project/ui/components/ResetProjectDialog.tsx'
@@ -67,15 +66,13 @@ const DIFF_SOURCES: Readonly<Partial<Record<EditorTab['kind'], DiffSource>>> = {
 }
 
 export type PlayTemplatePageProps = {
-  readonly templateName: string
-  readonly exercise: string | undefined
+  readonly projectKey: string
   readonly initialPanel: 'diff' | undefined
 }
 
-export const PlayTemplatePage = ({ templateName, exercise, initialPanel }: PlayTemplatePageProps) => {
+export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageProps) => {
   const { t } = useTranslation(['editor', 'tour', 'diff', 'exercise'])
   const languageMenu = useLanguageMenu()
-  const projectKey = projectKeyOf(templateName, exercise)
   const project = useTemplateProject(projectKey)
   const edits = useEditFiles({ onPersist: project.handleSave, onSync: useWriteProjectFiles(projectKey) })
   const runtime = useSandboxRuntime(projectKey, edits.commitPending)
@@ -92,7 +89,7 @@ export const PlayTemplatePage = ({ templateName, exercise, initialPanel }: PlayT
     solutionFiles: isSolutionShown ? template?.exercise?.solutionFiles : undefined,
   })
   const exerciseProgress = useExercise({
-    templateName,
+    templateName: template?.name ?? '',
     exercise: template?.exercise,
     exercises: template?.exercises ?? [],
     testRun: runtime.testRun,
