@@ -7,7 +7,7 @@ import type { ProjectFiles, ProjectOrigin, ProjectRecord, StoredProject } from '
 
 export type SaveTemplateEdits = {
   readonly project: ProjectRecord
-  readonly templateFiles: ProjectFiles
+  readonly initialFiles: ProjectFiles
   readonly edits: ProjectFiles
   readonly match?: 'origin' | 'id'
 }
@@ -18,7 +18,7 @@ export class ProjectStoragePort extends Context.Service<
     readonly list: Effect.Effect<ReadonlyArray<ProjectRecord>, ProjectStorageError>
     readonly findById: (id: string) => Effect.Effect<Option.Option<StoredProject>, ProjectStorageError>
     readonly findByOrigin: (origin: ProjectOrigin) => Effect.Effect<Option.Option<StoredProject>, ProjectStorageError>
-    // Creates `project` from `templateFiles` when no project matches it yet, atomically with the edits. `match`
+    // Creates `project` from `initialFiles` when no project matches it yet, atomically with the edits. `match`
     // defaults to the latest project of the same origin.
     readonly saveTemplateEdits: (input: SaveTemplateEdits) => Effect.Effect<StoredProject, ProjectStorageError>
     readonly replaceFiles: (

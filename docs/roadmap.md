@@ -415,6 +415,15 @@ et permet de les ouvrir, de les renommer, de les dupliquer et de les supprimer a
 l'espace utilisé, et avertit au-delà de 80 % du quota. « Reprendre », sur l'accueil, ouvre maintenant `/p/<id>`. Le
 schéma IndexedDB n'a pas changé : la migration passe au lot 2, avec l'origine `share-url`.
 
+Lot 2 livré : le bouton Partager de la sandbox crée un lien `/s#1.<payload>`, qui porte la ref épinglée du template
+et le delta des fichiers, compressé en `deflate-raw`, ou explique qu'un projet est trop volumineux au-delà de 8 000
+caractères. Le lien s'ouvre dans une sandbox éphémère, avec un bandeau qui renvoie au template. Le projet est
+enregistré à la première modification ou sur demande, sous un id dérivé du payload : rouvrir le lien rouvre la copie
+enregistrée. Un lien d'exercice porte le nom de l'exercice (`x`, ajouté au format). Un payload invalide, plus récent ou
+dont le template est introuvable a son message et un retour aux templates. L'origine `share-url` n'a pas demandé de
+migration, puisque les enregistrements IndexedDB ne sont pas typés par la base. Un lien sans origine (`f` seul) n'est
+pas encore ouvert : il attend les projets `blank` ([sharing-and-cli §2](specs/sharing-and-cli.md)).
+
 ## M6 — Kotlin
 
 **Objectif** : le langage POO de référence du catalogue.

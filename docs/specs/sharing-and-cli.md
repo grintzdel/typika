@@ -28,13 +28,18 @@ le reset relit le template intégré. La ref épinglée et `templateCache` arriv
 
 ```ts
 type ProjectOrigin =
-  | { kind: 'template'; name: string; ref: string }   // ref épinglée sur un SHA
-  | { kind: 'share-url'; parent?: string }
+  | { kind: 'template'; name: string }
+  | { kind: 'exercise'; name: string; exercise: string }
+  | { kind: 'share-url'; name: string; exercise?: string }
   | { kind: 'gist'; gistId: string; parent?: string }
   | { kind: 'blank'; runtime: 'browser-js' | 'node' | 'go' | 'kotlin' }
 ```
 
-`parent` d'un remix = `origin.ref` du template d'origine ; il est conservé à l'export (§4, §5).
+La ref épinglée du template est à côté de l'origine, dans `projects.ref`. C'est le `parent` d'un remix, conservé à
+l'export (§4, §5). `gist` et `blank` ne sont pas encore implémentés.
+
+Un template peut avoir plusieurs projets : `/p/<projectId>` ouvre l'un d'eux, et `/play/<name>` rouvre le plus récent
+de son origine.
 
 Fichiers stockés en texte UTF-8. Les binaires sont refusés à l'import (limites dans [security](security.md)).
 
@@ -81,6 +86,7 @@ par le navigateur.
   "n": "strategy-ts (remix)",            // nom
   "o": "github:typika/templates/strategy/ts@3f2c9a1e7b4d", // origine, optionnelle
   "r": "browser-js",                     // runtime
+  "x": "implement-express",              // exercice, optionnel : le delta part de son état de départ
   "f": { "src/main.ts": "…" },           // fichiers complets si pas d'origine
   "d": { "src/pricing/strategy.ts": "…", "src/old.ts": null } // ou delta vs origine : contenu complet ou null = supprimé
 }
@@ -89,6 +95,18 @@ par le navigateur.
 - Si `o` est présent et résoluble, seuls les fichiers modifiés sont encodés (`d`) ; c'est le cas courant et cela
   réduit fortement la taille.
 - Si `o` est absent ou introuvable à l'ouverture, `f` est requis ; sinon erreur explicite.
+- V1 : Typika émet toujours `o` et `d`, et n'ouvre un lien que si `o` désigne un template de l'index. `f` est lu à la
+  place de `d` quand il est présent. Un lien sans origine attend les projets `blank`.
+- `deflate-raw` via `CompressionStream` est retenu, sans repli : les navigateurs visés l'ont tous.
+
+### 2.4 Ouverture
+
+- Le lien s'ouvre dans une sandbox éphémère. Le projet local est créé à la première modification, ou sur « Enregistrer
+  dans mes projets », avec l'origine `share-url` et la ref de `o`.
+- Son id est dérivé du payload (SHA-256, au format UUID) : rouvrir le même lien dans le même navigateur rouvre la copie
+  enregistrée, au lieu d'en créer une autre.
+- Reset ramène aux fichiers du template d'origine (ou de l'état de départ de l'exercice), comme pour un projet de
+  template.
 
 ### 2.2 Seuil
 

@@ -4,6 +4,7 @@ import * as Atom from 'effect/reactivity/Atom'
 import { appRuntime } from '../../../app/core/app.runtime.ts'
 import type { ProjectFileEdit, TemplateProject } from '../domain/project.domain-model.ts'
 import { applySolutionProgram } from '../programs/apply-solution/apply-solution.program.ts'
+import { createShareLinkProgram } from '../programs/create-share-link/create-share-link.program.ts'
 import { deleteProjectProgram } from '../programs/delete-project/delete-project.program.ts'
 import { duplicateProjectProgram } from '../programs/duplicate-project/duplicate-project.program.ts'
 import { estimateStorageProgram } from '../programs/estimate-storage/estimate-storage.program.ts'
@@ -89,5 +90,11 @@ export const applySolutionAtom = Atom.family((name: string) =>
       get.set(saveProjectFilesAtom(name), Atom.Reset)
       get.set(generationAtom(name), project.generation + 1)
     })
+  )
+)
+
+export const createShareLinkAtom = Atom.family((name: string) =>
+  appRuntime.fn((input: { readonly files: ReadonlyMap<string, string>; readonly origin: string }, get) =>
+    Effect.flatMap(get.result(templateProjectAtom(name)), (project) => createShareLinkProgram({ project, ...input }))
   )
 )

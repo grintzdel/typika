@@ -6,16 +6,25 @@ import { ProjectExerciseNotFoundError } from '../../domain/errors/project-exerci
 import { ProjectNotFoundError } from '../../domain/errors/project-not-found.error.ts'
 import { ProjectTemplateInvalidError } from '../../domain/errors/project-template-invalid.error.ts'
 import { ProjectTemplateNotFoundError } from '../../domain/errors/project-template-not-found.error.ts'
+import { ShareLinkInvalidError } from '../../domain/errors/share-link-invalid.error.ts'
 import {
+  exerciseOf,
   modifiedPathsOf,
   originOfKey,
   projectFilesOf,
   projectIdOfKey,
+  sharedPayloadOfKey,
   textOf,
   type ProjectExercise,
   type ProjectFiles,
   type TemplateProject,
 } from '../../domain/project.domain-model.ts'
+import {
+  applyShareDelta,
+  decodeSharePayload,
+  filesOfShare,
+  shareProjectIdOf,
+} from '../../domain/share-link.domain-model.ts'
 import { entryForRef, entryNamed, type TemplateEntry } from '../../domain/template-entry.domain-model.ts'
 import { ProjectStoragePort } from '../../ports/project-storage.port.ts'
 import { TemplateFilesPort } from '../../ports/template-files.port.ts'
@@ -76,18 +85,14 @@ const storedProjectOf = (key: string, projectId: string | undefined) =>
     return found
   })
 
-export const openTemplateProgram = (key: string) =>
+const loadTemplate = (
+  name: string,
+  ref: string,
+  exerciseName: string | undefined,
+  entries: ReadonlyArray<TemplateEntry>
+) =>
   Effect.gen(function* () {
-    const index = yield* TemplateIndexPort
     const source = yield* TemplateFilesPort
-    const projectId = projectIdOfKey(key)
-    const stored = yield* storedProjectOf(key, projectId)
-    const origin = Option.match(stored, { onNone: () => originOfKey(key), onSome: (project) => project.record.origin })
-    const { name } = origin
-    const entries = yield* index.entries
-    const entry = entryNamed(entries, name)
-    if (entry === undefined) return yield* new ProjectTemplateNotFoundError({ name })
-    const ref = Option.match(stored, { onNone: () => entry.ref, onSome: (project) => project.record.ref ?? entry.ref })
     const files = yield* source.load(ref)
     const { manifest, tourSteps } = yield* validateTemplate(files).pipe(
       Effect.mapError(
@@ -96,22 +101,71 @@ export const openTemplateProgram = (key: string) =>
       )
     )
     const opened: { readonly start: ProjectFiles; readonly exercise: ProjectExercise | undefined } =
-      origin.kind === 'exercise'
-        ? yield* openExercise(name, manifest, files, origin.exercise, entries)
-        : { start: projectFilesOf(files), exercise: undefined }
-    const templateFiles = opened.start
-    const projectFiles = Option.match(stored, { onNone: () => templateFiles, onSome: (project) => project.files })
+      exerciseName === undefined
+        ? { start: projectFilesOf(files), exercise: undefined }
+        : yield* openExercise(name, manifest, files, exerciseName, entries)
+    return { manifest, tourSteps, templateFiles: opened.start, exercise: opened.exercise }
+  })
+
+const openSharedProject = (encoded: string) =>
+  Effect.gen(function* () {
+    const index = yield* TemplateIndexPort
+    const storage = yield* ProjectStoragePort
+    const payload = yield* decodeSharePayload(encoded)
+    const projectId = yield* shareProjectIdOf(encoded)
+    const stored = yield* storage.findById(projectId).pipe(Effect.orElseSucceed(() => Option.none()))
+    const entries = yield* index.entries
+    const entry = payload.o === undefined ? undefined : entryForRef(entries, payload.o)
+    if (payload.o === undefined || entry === undefined) return yield* new ShareLinkInvalidError({ reason: 'origin' })
+    const ref = payload.o
+    const loaded = yield* loadTemplate(entry.name, ref, payload.x, entries)
+    const sharedFiles =
+      payload.f === undefined ? applyShareDelta(loaded.templateFiles, payload.d ?? {}) : filesOfShare(payload.f)
+    const files = Option.match(stored, { onNone: () => sharedFiles, onSome: (project) => project.files })
     return {
+      ...loaded,
       projectId,
+      name: Option.match(stored, { onNone: () => payload.n, onSome: (project) => project.record.name }),
+      templateName: entry.name,
+      ref,
+      origin:
+        payload.x === undefined
+          ? { kind: 'share-url', name: entry.name }
+          : { kind: 'share-url', name: entry.name, exercise: payload.x },
+      isShared: true,
+      isSaved: Option.isSome(stored),
+      files,
+      modifiedPaths: modifiedPathsOf(loaded.templateFiles, files),
+      health: entry.health,
+    } satisfies TemplateProject
+  })
+
+export const openTemplateProgram = (key: string) =>
+  Effect.gen(function* () {
+    const encoded = sharedPayloadOfKey(key)
+    if (encoded !== undefined) return yield* openSharedProject(encoded)
+    const index = yield* TemplateIndexPort
+    const projectId = projectIdOfKey(key)
+    const stored = yield* storedProjectOf(key, projectId)
+    const origin = Option.match(stored, { onNone: () => originOfKey(key), onSome: (project) => project.record.origin })
+    const { name } = origin
+    const entries = yield* index.entries
+    const entry = entryNamed(entries, name)
+    if (entry === undefined) return yield* new ProjectTemplateNotFoundError({ name })
+    const ref = Option.match(stored, { onNone: () => entry.ref, onSome: (project) => project.record.ref ?? entry.ref })
+    const loaded = yield* loadTemplate(name, ref, exerciseOf(origin), entries)
+    const files = Option.match(stored, { onNone: () => loaded.templateFiles, onSome: (project) => project.files })
+    return {
+      ...loaded,
+      projectId,
+      name: Option.match(stored, { onNone: () => name, onSome: (project) => project.record.name }),
       templateName: name,
       ref,
       origin,
-      exercise: opened.exercise,
-      manifest,
-      tourSteps,
-      files: projectFiles,
-      templateFiles,
-      modifiedPaths: modifiedPathsOf(templateFiles, projectFiles),
+      isShared: origin.kind === 'share-url',
+      isSaved: Option.isSome(stored),
+      files,
+      modifiedPaths: modifiedPathsOf(loaded.templateFiles, files),
       health: entry.health,
     } satisfies TemplateProject
   })

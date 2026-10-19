@@ -32,4 +32,16 @@ describe('TemplateLoadError', () => {
     expect(screen.getByRole('alert').textContent).toContain('Ce projet n’existe pas dans ce navigateur.')
     expect(screen.queryByRole('button')).toBeNull()
   })
+
+  it.each([
+    ['invalid', 'Ce lien de partage est invalide.'],
+    ['newer', 'Ce lien a été créé avec une version plus récente de Typika.'],
+    ['origin', 'Le template de ce lien de partage est introuvable.'],
+  ] as const)('explains a share link that cannot be opened (%s), with a way back', (reason, message) => {
+    render(<TemplateLoadError failure={{ _tag: 'ShareInvalid', reason }} onRetry={vi.fn()} />)
+
+    expect(screen.getByRole('alert').textContent).toContain(message)
+    expect(screen.getByRole('link', { name: 'Retour aux templates' }).getAttribute('href')).toBe('/templates')
+    expect(screen.queryByRole('button')).toBeNull()
+  })
 })

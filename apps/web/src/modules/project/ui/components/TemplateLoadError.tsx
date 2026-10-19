@@ -24,9 +24,15 @@ export const TemplateLoadError = ({ failure, onRetry }: TemplateLoadErrorProps) 
         {failure._tag === 'IndexUnavailable' ? t(`indexFailed.${failure.failure}`) : null}
         {failure._tag === 'FilesUnavailable' ? t('loadFailed.filesUnavailable', { name: failure.name }) : null}
         {failure._tag === 'ProjectNotFound' ? t('loadFailed.projectNotFound') : null}
+        {failure._tag === 'ShareInvalid' ? t(`shareFailed.${failure.reason}`) : null}
         {failure._tag === 'Unknown' ? t('loadFailed.unknown') : null}
       </p>
       {RETRYABLE.has(failure._tag) ? <Button onClick={onRetry}>{t('retry')}</Button> : null}
+      {failure._tag === 'ShareInvalid' ? (
+        <a href="/templates" className="text-sm text-sky-700 hover:underline">
+          {t('shareFailed.back')}
+        </a>
+      ) : null}
     </ErrorState>
   )
 }

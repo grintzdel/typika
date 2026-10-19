@@ -1,4 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
+import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 import { describe, expect, it } from 'vitest'
 
@@ -9,11 +10,14 @@ import { makeFakeRuntime } from '../../../runtime/__tests__/runtime.factory.ts'
 import { makeRuntimeTestLayer } from '../../../runtime/core/runtime.test-layer.ts'
 import { projectPath } from '../../__tests__/project.factory.ts'
 import { templateFiles } from '../../__tests__/template.factory.ts'
+import { sharedProjectKeyOf } from '../../core/domain/project.domain-model.ts'
+import { encodeSharePayload } from '../../core/domain/share-link.domain-model.ts'
 import {
   failingProjectStorage,
   makeProjectStorageInMemory,
   makeProjectTestLayer,
   type ProjectStorage,
+  testRefOf,
 } from '../../core/project.test-layer.ts'
 import { useTemplateProject } from './use-template-project.ts'
 
@@ -117,5 +121,26 @@ describe('useTemplateProject', () => {
     await waitFor(() => expect(result.current.template?.generation).not.toBe(generation))
     expect(result.current.modifiedPaths).toEqual([])
     expect(result.current.template?.contentOf('src/main.ts')).toBe("console.log('hello')\n")
+  })
+
+  it('tells a shared project apart, and saves it on request', async () => {
+    const storage = makeProjectStorageInMemory()
+    const encoded = await Effect.runPromise(
+      encodeSharePayload({ n: 'shared', o: testRefOf('sample-ts'), r: 'browser-js', d: { 'src/main.ts': 'shared' } })
+    )
+    const { result } = renderProject(sharedProjectKeyOf(encoded), storage)
+
+    await waitFor(() => expect(result.current.template?.isShared).toBe(true))
+    expect(result.current.isSaved).toBe(false)
+    act(() => result.current.handleSaveShared())
+
+    await waitFor(() => expect(result.current.isSaved).toBe(true))
+    expect(storage.projects.size).toBe(1)
+  })
+
+  it('maps a broken share link to its failure', async () => {
+    const { result } = renderProject(sharedProjectKeyOf('1.broken'))
+
+    await waitFor(() => expect(result.current.failure).toEqual({ _tag: 'ShareInvalid', reason: 'invalid' }))
   })
 })

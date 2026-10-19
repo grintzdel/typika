@@ -32,12 +32,12 @@ export const makeProjectStorageInMemory = (initial: ReadonlyArray<StoredProject>
     ),
     findById: (id) => Effect.sync(() => Option.fromNullishOr(projects.get(id))),
     findByOrigin: (origin) => Effect.sync(() => Option.fromNullishOr(latest(origin))),
-    saveTemplateEdits: ({ project, templateFiles, edits, match = 'origin' }) =>
+    saveTemplateEdits: ({ project, initialFiles, edits, match = 'origin' }) =>
       Effect.sync(() => {
         const existing = match === 'id' ? projects.get(project.id) : latest(project.origin)
         const saved = {
           record: existing === undefined ? project : { ...existing.record, updatedAt: project.updatedAt },
-          files: new Map([...(existing?.files ?? templateFiles), ...edits]),
+          files: new Map([...(existing?.files ?? initialFiles), ...edits]),
         }
         projects.set(saved.record.id, saved)
         return saved

@@ -8,10 +8,25 @@ import { ProjectStoragePort } from '../../ports/project-storage.port.ts'
 export const resetProjectProgram = (project: TemplateProject) =>
   Effect.gen(function* () {
     const storage = yield* ProjectStoragePort
-    const stored = yield* project.projectId === undefined
-      ? storage.findByOrigin(project.origin)
-      : storage.findById(project.projectId)
-    if (Option.isNone(stored)) return
     const now = yield* Clock.currentTimeMillis
-    yield* storage.replaceFiles(stored.value.record.id, project.templateFiles, now)
+    const { projectId } = project
+    if (projectId === undefined) {
+      const stored = yield* storage.findByOrigin(project.origin)
+      if (Option.isSome(stored)) yield* storage.replaceFiles(stored.value.record.id, project.templateFiles, now)
+      return
+    }
+    yield* storage.saveTemplateEdits({
+      project: {
+        id: projectId,
+        name: project.name,
+        origin: project.origin,
+        ref: project.ref,
+        createdAt: now,
+        updatedAt: now,
+      },
+      initialFiles: project.templateFiles,
+      edits: new Map(),
+      match: 'id',
+    })
+    yield* storage.replaceFiles(projectId, project.templateFiles, now)
   })
