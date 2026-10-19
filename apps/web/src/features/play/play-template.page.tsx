@@ -32,9 +32,12 @@ import { isTypikaFile } from '../../modules/project/core/domain/file-tree.domain
 import { FileTree } from '../../modules/project/ui/components/FileTree.tsx'
 import { ProjectStatus } from '../../modules/project/ui/components/ProjectStatus.tsx'
 import { ResetProjectDialog } from '../../modules/project/ui/components/ResetProjectDialog.tsx'
+import { ShareDialog } from '../../modules/project/ui/components/ShareDialog.tsx'
+import { SharedProjectBanner } from '../../modules/project/ui/components/SharedProjectBanner.tsx'
 import { TemplateLoadError } from '../../modules/project/ui/components/TemplateLoadError.tsx'
 import { WorkbenchSkeleton } from '../../modules/project/ui/components/WorkbenchSkeleton.tsx'
 import { useBaseTemplate } from '../../modules/project/ui/hooks/use-base-template.ts'
+import { useShareLink } from '../../modules/project/ui/hooks/use-share-link.ts'
 import { useTemplateProject } from '../../modules/project/ui/hooks/use-template-project.ts'
 import { OutputPanels, type OutputPanel } from '../../modules/runtime/ui/components/OutputPanels.tsx'
 import { RunToolbar } from '../../modules/runtime/ui/components/RunToolbar.tsx'
@@ -82,9 +85,11 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
   const [isSolutionShown, setSolutionShown] = useState(false)
   const { template, failure } = project
   const base = useBaseTemplate(projectKey)
+  const share = useShareLink(projectKey)
+  const currentFiles = new Map([...(template?.files ?? NO_FILES), ...edits.editedFiles])
   const diff = useDiff({
     templateFiles: template?.templateFiles ?? NO_FILES,
-    currentFiles: new Map([...(template?.files ?? NO_FILES), ...edits.editedFiles]),
+    currentFiles,
     base: base.base,
     solutionFiles: isSolutionShown ? template?.exercise?.solutionFiles : undefined,
   })
@@ -121,6 +126,14 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
       toolbar={
         <>
           <HealthBanner health={template.health} alternatives={`/templates/${template.name}`} />
+          {template.isShared ? (
+            <SharedProjectBanner
+              templateName={template.name}
+              templateTitle={template.title}
+              isSaved={project.isSaved}
+              onSave={project.handleSaveShared}
+            />
+          ) : null}
           <Toolbar>
             <ProjectStatus
               title={template.title}
@@ -151,6 +164,12 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
                 edits.discardPending()
                 project.handleReset()
               }}
+            />
+            <ShareDialog
+              link={share.link}
+              isCopied={share.isCopied}
+              onOpen={() => share.handleCreate(currentFiles)}
+              onCopy={share.handleCopy}
             />
             <LanguageMenu {...languageMenu} />
           </Toolbar>

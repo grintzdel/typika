@@ -1,7 +1,12 @@
 import * as Clock from 'effect/Clock'
 import * as Effect from 'effect/Effect'
 
-import { modifiedPathsOf, type ProjectFileEdit, type TemplateProject } from '../../domain/project.domain-model.ts'
+import {
+  modifiedPathsOf,
+  textFilesOf,
+  type ProjectFileEdit,
+  type TemplateProject,
+} from '../../domain/project.domain-model.ts'
 import { ProjectStoragePort } from '../../ports/project-storage.port.ts'
 
 export const saveProjectFilesProgram = ({
@@ -18,13 +23,13 @@ export const saveProjectFilesProgram = ({
     const saved = yield* storage.saveTemplateEdits({
       project: {
         id,
-        name: project.templateName,
+        name: project.name,
         origin: project.origin,
         ref: project.ref,
         createdAt: now,
         updatedAt: now,
       },
-      templateFiles: project.templateFiles,
+      initialFiles: textFilesOf(project.files),
       edits: new Map(edits),
       match: project.projectId === undefined ? 'origin' : 'id',
     })

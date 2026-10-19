@@ -17,6 +17,7 @@ import { ProjectIndexUnavailableError } from '../../core/domain/errors/project-i
 import { ProjectNotFoundError } from '../../core/domain/errors/project-not-found.error.ts'
 import { ProjectTemplateInvalidError } from '../../core/domain/errors/project-template-invalid.error.ts'
 import { ProjectTemplateNotFoundError } from '../../core/domain/errors/project-template-not-found.error.ts'
+import { ShareLinkInvalidError } from '../../core/domain/errors/share-link-invalid.error.ts'
 import { buildFileTree } from '../../core/domain/file-tree.domain-model.ts'
 import { textOf, type ProjectFileEdit } from '../../core/domain/project.domain-model.ts'
 
@@ -27,6 +28,7 @@ export type OpenTemplateFailure =
   | { readonly _tag: 'IndexUnavailable'; readonly failure: RegistryIndexFailure }
   | { readonly _tag: 'FilesUnavailable'; readonly name: string }
   | { readonly _tag: 'ProjectNotFound'; readonly id: string }
+  | { readonly _tag: 'ShareInvalid'; readonly reason: ShareLinkInvalidError['reason'] }
   | { readonly _tag: 'Unknown'; readonly name: string }
 
 export const openTemplateFailureOf = <A, E>(
@@ -40,6 +42,7 @@ export const openTemplateFailureOf = <A, E>(
   if (error instanceof ProjectExerciseNotFoundError)
     return { _tag: 'ExerciseNotFound', name: error.name, exercise: error.exercise }
   if (error instanceof ProjectIndexUnavailableError) return { _tag: 'IndexUnavailable', failure: error.failure }
+  if (error instanceof ShareLinkInvalidError) return { _tag: 'ShareInvalid', reason: error.reason }
   if (error instanceof ProjectNotFoundError) return { _tag: 'ProjectNotFound', id: error.id }
   if (error instanceof ProjectFilesUnavailableError) return { _tag: 'FilesUnavailable', name: templateName }
   return { _tag: 'Unknown', name: templateName }
@@ -68,6 +71,7 @@ export const useTemplateProject = (templateName: string) => {
           name: opened.templateName,
           title: opened.manifest.title,
           exercise: opened.exercise,
+          isShared: opened.isShared,
           health: opened.health,
           exercises: opened.manifest.exercises.map(({ name, title, kind }) => ({ name, title, kind })),
           entry: opened.manifest.runtime.entry,
@@ -90,7 +94,9 @@ export const useTemplateProject = (templateName: string) => {
     isLoading: template === undefined && failure === undefined,
     modifiedPaths: Option.getOrElse(AsyncResult.value(saveResult), () => opened?.modifiedPaths ?? []),
     saveFailed: AsyncResult.isFailure(saveResult),
+    isSaved: opened?.isSaved === true || AsyncResult.isSuccess(saveResult),
     handleSave: (edits: ReadonlyArray<ProjectFileEdit>) => save(edits),
+    handleSaveShared: () => save([]),
     handleReset: () => reset(),
     handleApplySolution: () => applySolution(),
     handleRetry: () => refresh(),

@@ -16,13 +16,13 @@ export const applySolutionProgram = (project: TemplateProject) =>
       (yield* storage.saveTemplateEdits({
         project: {
           id: yield* Effect.sync(() => crypto.randomUUID()),
-          name: project.templateName,
+          name: project.name,
           origin: project.origin,
           ref: project.ref,
           createdAt: now,
           updatedAt: now,
         },
-        templateFiles: project.templateFiles,
+        initialFiles: project.templateFiles,
         edits: new Map(),
       })).record.id
     yield* storage.replaceFiles(id, project.exercise.solutionFiles, now)

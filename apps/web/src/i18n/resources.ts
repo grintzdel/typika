@@ -115,6 +115,30 @@ export const resources = {
         unknown: 'Something went wrong while opening the template.',
         projectNotFound: 'This project does not exist in this browser.',
       },
+      shareFailed: {
+        invalid: 'This share link is invalid.',
+        newer: 'This link was made with a newer version of Typika.',
+        origin: 'The template of this share link cannot be found.',
+        back: 'Back to the templates',
+      },
+      share: {
+        trigger: 'Share',
+        title: 'Share the project',
+        creating: 'Creating the link…',
+        description: 'The project is in the link itself: it does not leave your browser until you send the link.',
+        linkLabel: 'Share link',
+        copy: 'Copy the link',
+        copied: 'Link copied',
+        close: 'Close',
+        tooLong:
+          'This project is too large for a link ({{length}} characters, {{max}} at most). Sharing through a gist will come later.',
+      },
+      shared: {
+        label: 'Shared project',
+        basedOn: 'Shared project, based on',
+        save: 'Save in my projects',
+        saved: 'Saved in your projects',
+      },
       indexFailed: {
         title: 'Cannot load the templates',
         network: 'The template index could not be downloaded. Check your connection.',
@@ -393,6 +417,31 @@ export const resources = {
         filesUnavailable: 'Les fichiers de « {{name}} » n’ont pas pu être téléchargés. Vérifiez votre connexion.',
         unknown: 'Une erreur est survenue à l’ouverture du template.',
         projectNotFound: 'Ce projet n’existe pas dans ce navigateur.',
+      },
+      shareFailed: {
+        invalid: 'Ce lien de partage est invalide.',
+        newer: 'Ce lien a été créé avec une version plus récente de Typika.',
+        origin: 'Le template de ce lien de partage est introuvable.',
+        back: 'Retour aux templates',
+      },
+      share: {
+        trigger: 'Partager',
+        title: 'Partager le projet',
+        creating: 'Création du lien…',
+        description:
+          'Le projet est dans le lien lui-même : il ne quitte pas votre navigateur tant que vous n’envoyez pas le lien.',
+        linkLabel: 'Lien de partage',
+        copy: 'Copier le lien',
+        copied: 'Lien copié',
+        close: 'Fermer',
+        tooLong:
+          'Ce projet est trop volumineux pour un lien ({{length}} caractères, {{max}} au plus). Le partage par gist arrivera plus tard.',
+      },
+      shared: {
+        label: 'Projet partagé',
+        basedOn: 'Projet partagé, basé sur',
+        save: 'Enregistrer dans mes projets',
+        saved: 'Enregistré dans vos projets',
       },
       indexFailed: {
         title: 'Impossible de charger les templates',

@@ -7,11 +7,17 @@ import type { TemplateEntryHealth } from './template-entry.domain-model.ts'
 export const ProjectOriginSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal('template'), name: Schema.String }),
   Schema.Struct({ kind: Schema.Literal('exercise'), name: Schema.String, exercise: Schema.String }),
+  Schema.Struct({
+    kind: Schema.Literal('share-url'),
+    name: Schema.String,
+    exercise: Schema.optionalKey(Schema.String),
+  }),
 ])
 export type ProjectOrigin = Schema.Schema.Type<typeof ProjectOriginSchema>
 
 const KEY_SEPARATOR = '#'
 const STORED_KEY_PREFIX = 'project:'
+const SHARED_KEY_PREFIX = 'share:'
 
 export const projectKeyOf = (templateName: string, exercise: string | undefined): string =>
   exercise === undefined ? templateName : `${templateName}${KEY_SEPARATOR}${exercise}`
@@ -21,6 +27,14 @@ export const storedProjectKeyOf = (id: string): string => `${STORED_KEY_PREFIX}$
 export const projectIdOfKey = (key: string): string | undefined =>
   key.startsWith(STORED_KEY_PREFIX) ? key.slice(STORED_KEY_PREFIX.length) : undefined
 
+export const sharedProjectKeyOf = (encoded: string): string => `${SHARED_KEY_PREFIX}${encoded}`
+
+export const sharedPayloadOfKey = (key: string): string | undefined =>
+  key.startsWith(SHARED_KEY_PREFIX) ? key.slice(SHARED_KEY_PREFIX.length) : undefined
+
+export const exerciseOf = (origin: ProjectOrigin): string | undefined =>
+  origin.kind === 'template' ? undefined : origin.exercise
+
 export const projectPathOf = (id: string): string => `/p/${id}`
 
 export const originOfKey = (key: string): ProjectOrigin => {
@@ -29,9 +43,11 @@ export const originOfKey = (key: string): ProjectOrigin => {
 }
 
 export const sameOrigin = (a: ProjectOrigin, b: ProjectOrigin): boolean =>
-  a.kind === 'exercise'
-    ? b.kind === 'exercise' && a.name === b.name && a.exercise === b.exercise
-    : b.kind === 'template' && a.name === b.name
+  a.kind === 'share-url' || b.kind === 'share-url'
+    ? false
+    : a.kind === 'exercise'
+      ? b.kind === 'exercise' && a.name === b.name && a.exercise === b.exercise
+      : b.kind === 'template' && a.name === b.name
 
 export type ProjectListItem = {
   readonly id: string
@@ -89,6 +105,9 @@ export type ProjectExercise = {
 
 export type TemplateProject = ProjectSnapshot & {
   readonly projectId: string | undefined
+  readonly name: string
+  readonly isShared: boolean
+  readonly isSaved: boolean
   readonly templateName: string
   readonly ref: string
   readonly origin: ProjectOrigin
@@ -101,6 +120,9 @@ export type TemplateProject = ProjectSnapshot & {
 
 export const textOf = (content: FileContent): string =>
   typeof content === 'string' ? content : new TextDecoder().decode(content)
+
+export const textFilesOf = (files: ReadonlyMap<ProjectPath, FileContent>): ProjectFiles =>
+  new Map([...files].map(([path, content]) => [path, textOf(content)]))
 
 const toProjectPath = Schema.decodeUnknownSync(ProjectPathSchema)
 

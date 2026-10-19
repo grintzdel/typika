@@ -27,7 +27,7 @@ describe('makeProjectStorageIndexedDb', () => {
     const record = projectRecord()
 
     const saved = await run(
-      storage.saveTemplateEdits({ project: record, templateFiles: TEMPLATE, edits: projectFiles({ 'src/a.ts': 'A' }) })
+      storage.saveTemplateEdits({ project: record, initialFiles: TEMPLATE, edits: projectFiles({ 'src/a.ts': 'A' }) })
     )
 
     expect(saved.record).toEqual(record)
@@ -39,13 +39,13 @@ describe('makeProjectStorageIndexedDb', () => {
     const storage = makeProjectStorageIndexedDb(new IDBFactory())
     const first = projectRecord()
     await run(
-      storage.saveTemplateEdits({ project: first, templateFiles: TEMPLATE, edits: projectFiles({ 'src/a.ts': 'A' }) })
+      storage.saveTemplateEdits({ project: first, initialFiles: TEMPLATE, edits: projectFiles({ 'src/a.ts': 'A' }) })
     )
 
     const saved = await run(
       storage.saveTemplateEdits({
         project: projectRecord({ updatedAt: 2_000 }),
-        templateFiles: TEMPLATE,
+        initialFiles: TEMPLATE,
         edits: projectFiles({ 'src/b.ts': 'B' }),
       })
     )
@@ -61,14 +61,14 @@ describe('makeProjectStorageIndexedDb', () => {
       run(
         storage.saveTemplateEdits({
           project: projectRecord(),
-          templateFiles: TEMPLATE,
+          initialFiles: TEMPLATE,
           edits: projectFiles({ 'src/a.ts': 'A' }),
         })
       ),
       run(
         storage.saveTemplateEdits({
           project: projectRecord(),
-          templateFiles: TEMPLATE,
+          initialFiles: TEMPLATE,
           edits: projectFiles({ 'src/b.ts': 'B' }),
         })
       ),
@@ -82,7 +82,7 @@ describe('makeProjectStorageIndexedDb', () => {
     await run(
       storage.saveTemplateEdits({
         project: projectRecord({ origin: { kind: 'template', name: 'other-ts' } }),
-        templateFiles: TEMPLATE,
+        initialFiles: TEMPLATE,
         edits: projectFiles({ 'src/a.ts': 'other' }),
       })
     )
@@ -96,7 +96,7 @@ describe('makeProjectStorageIndexedDb', () => {
     await run(
       storage.saveTemplateEdits({
         project: projectRecord({ origin: exercise }),
-        templateFiles: TEMPLATE,
+        initialFiles: TEMPLATE,
         edits: projectFiles({ 'src/a.ts': 'exercise' }),
       })
     )
@@ -111,7 +111,7 @@ describe('makeProjectStorageIndexedDb', () => {
     await run(
       storage.saveTemplateEdits({
         project: record,
-        templateFiles: TEMPLATE,
+        initialFiles: TEMPLATE,
         edits: projectFiles({ 'src/extra.ts': 'x' }),
       })
     )
@@ -128,7 +128,7 @@ describe('makeProjectStorageIndexedDb', () => {
     await run(
       makeProjectStorageIndexedDb(factory).saveTemplateEdits({
         project: projectRecord(),
-        templateFiles: TEMPLATE,
+        initialFiles: TEMPLATE,
         edits: projectFiles({ 'src/a.ts': 'A' }),
       })
     )
@@ -147,7 +147,7 @@ describe('makeProjectStorageIndexedDb', () => {
     ]
     await Promise.all(
       projects.map((project) =>
-        run(storage.saveTemplateEdits({ project, templateFiles: TEMPLATE, edits: projectFiles({}) }))
+        run(storage.saveTemplateEdits({ project, initialFiles: TEMPLATE, edits: projectFiles({}) }))
       )
     )
 
@@ -160,7 +160,7 @@ describe('makeProjectStorageIndexedDb', () => {
     const storage = makeProjectStorageIndexedDb(new IDBFactory())
     const record = projectRecord()
     await run(
-      storage.saveTemplateEdits({ project: record, templateFiles: TEMPLATE, edits: projectFiles({ 'src/a.ts': 'A' }) })
+      storage.saveTemplateEdits({ project: record, initialFiles: TEMPLATE, edits: projectFiles({ 'src/a.ts': 'A' }) })
     )
 
     const found = Option.getOrThrow(await run(storage.findById(record.id)))
@@ -173,7 +173,7 @@ describe('makeProjectStorageIndexedDb', () => {
   it('saves the edits of a project matched by id, even when another one of its template is newer', async () => {
     const storage = makeProjectStorageIndexedDb(new IDBFactory())
     const older = projectRecord({ updatedAt: 1_000 })
-    await run(storage.saveTemplateEdits({ project: older, templateFiles: TEMPLATE, edits: new Map() }))
+    await run(storage.saveTemplateEdits({ project: older, initialFiles: TEMPLATE, edits: new Map() }))
     const newer = Option.getOrThrow(
       await run(storage.duplicate(older.id, projectRecord({ name: 'copy', createdAt: 2_000, updatedAt: 2_000 })))
     )
@@ -181,7 +181,7 @@ describe('makeProjectStorageIndexedDb', () => {
     await run(
       storage.saveTemplateEdits({
         project: { ...older, updatedAt: 3_000 },
-        templateFiles: TEMPLATE,
+        initialFiles: TEMPLATE,
         edits: projectFiles({ 'src/a.ts': 'older' }),
         match: 'id',
       })
@@ -195,7 +195,7 @@ describe('makeProjectStorageIndexedDb', () => {
     const storage = makeProjectStorageIndexedDb(new IDBFactory())
     const source = projectRecord()
     await run(
-      storage.saveTemplateEdits({ project: source, templateFiles: TEMPLATE, edits: projectFiles({ 'src/a.ts': 'A' }) })
+      storage.saveTemplateEdits({ project: source, initialFiles: TEMPLATE, edits: projectFiles({ 'src/a.ts': 'A' }) })
     )
     const copy = projectRecord({ name: 'sample-ts (copy)', createdAt: 2_000, updatedAt: 2_000 })
 
@@ -210,7 +210,7 @@ describe('makeProjectStorageIndexedDb', () => {
   it('renames a project', async () => {
     const storage = makeProjectStorageIndexedDb(new IDBFactory())
     const record = projectRecord()
-    await run(storage.saveTemplateEdits({ project: record, templateFiles: TEMPLATE, edits: new Map() }))
+    await run(storage.saveTemplateEdits({ project: record, initialFiles: TEMPLATE, edits: new Map() }))
 
     await run(storage.rename(record.id, 'My pricing'))
 
@@ -222,8 +222,8 @@ describe('makeProjectStorageIndexedDb', () => {
     const storage = makeProjectStorageIndexedDb(factory)
     const removed = projectRecord()
     const kept = projectRecord({ origin: { kind: 'template', name: 'other-ts' } })
-    await run(storage.saveTemplateEdits({ project: removed, templateFiles: TEMPLATE, edits: new Map() }))
-    await run(storage.saveTemplateEdits({ project: kept, templateFiles: TEMPLATE, edits: new Map() }))
+    await run(storage.saveTemplateEdits({ project: removed, initialFiles: TEMPLATE, edits: new Map() }))
+    await run(storage.saveTemplateEdits({ project: kept, initialFiles: TEMPLATE, edits: new Map() }))
 
     await run(storage.remove(removed.id))
 
@@ -246,7 +246,7 @@ describe('makeProjectStorageIndexedDb', () => {
   it('fails with a storage error on a record it cannot read', async () => {
     const factory = new IDBFactory()
     const storage = makeProjectStorageIndexedDb(factory)
-    await run(storage.saveTemplateEdits({ project: projectRecord(), templateFiles: TEMPLATE, edits: new Map() }))
+    await run(storage.saveTemplateEdits({ project: projectRecord(), initialFiles: TEMPLATE, edits: new Map() }))
     await new Promise<void>((resolve, reject) => {
       const request = factory.open('typika')
       request.addEventListener('success', () => {

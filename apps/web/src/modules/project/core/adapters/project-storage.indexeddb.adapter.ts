@@ -141,13 +141,13 @@ export const makeProjectStorageIndexedDb = (factory: IDBFactory): Context.Servic
         return record === undefined ? Option.none() : Option.some({ record, files: await filesOf(files, record.id) })
       }),
 
-    saveTemplateEdits: ({ project, templateFiles, edits, match = 'origin' }) =>
+    saveTemplateEdits: ({ project, initialFiles, edits, match = 'origin' }) =>
       transact('readwrite', async ({ projects, files }) => {
         const existing =
           match === 'id' ? await findRecord(projects, project.id) : await latestProjectOf(projects, project.origin)
         const record = existing === undefined ? project : { ...existing, updatedAt: project.updatedAt }
         if (existing === undefined) {
-          putFiles(files, record.id, templateFiles, record.createdAt)
+          putFiles(files, record.id, initialFiles, record.createdAt)
           requestPersistence()
         }
         projects.put(record)

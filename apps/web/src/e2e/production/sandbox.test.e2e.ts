@@ -54,3 +54,23 @@ test('runs a Go template from brotli assets under the production policies', asyn
   expect(encodings).toEqual(['br'])
   expect(violations).toEqual([])
 })
+
+test('opens a shared link at the pinned template, in another browser', async ({ page, browser }) => {
+  await page.goto(`${APP_URL}/play/strategy-ts`)
+  await page.getByRole('treeitem', { name: /standard\.ts/ }).click()
+  await page.getByRole('textbox', { name: 'Éditeur' }).click()
+  await page.keyboard.insertText('// shared in production\n')
+  await expect(page.getByRole('status', { name: 'État du projet' })).toHaveText('Modifié')
+  await page.getByRole('button', { name: 'Partager' }).click()
+  const link = page.getByRole('dialog', { name: 'Partager le projet' }).getByRole('textbox', { name: 'Lien de partage' })
+  await expect(link).toHaveValue(new RegExp(`^${APP_URL}/s#1\\.`))
+
+  const context = await browser.newContext()
+  const other = await context.newPage()
+  await other.goto(await link.inputValue())
+  await expect(other.getByRole('treeitem', { name: 'standard.ts, modifié' })).toBeVisible()
+  await other.getByRole('button', { name: 'Tests', exact: true }).click()
+  const results = other.getByRole('region', { name: 'Résultats des tests' })
+  await expect(results.getByText(/^\d+ réussis$/)).toBeVisible({ timeout: 30_000 })
+  await context.close()
+})

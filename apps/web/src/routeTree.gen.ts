@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ConfigDotjsonRouteImport } from './routes/config[.]json'
 import { Route as ProjectsRouteImport } from './routes/projects'
+import { Route as SRouteImport } from './routes/s'
 import { Route as CompareNameRouteImport } from './routes/compare/$name'
 import { Route as PProjectIdRouteImport } from './routes/p/$projectId'
 import { Route as PlayTemplateNameRouteImport } from './routes/play/$templateName'
@@ -31,6 +32,11 @@ const ConfigDotjsonRoute = ConfigDotjsonRouteImport.update({
 const ProjectsRoute = ProjectsRouteImport.update({
   id: '/projects',
   path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SRoute = SRouteImport.update({
+  id: '/s',
+  path: '/s',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompareNameRoute = CompareNameRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/config.json': typeof ConfigDotjsonRoute
   '/projects': typeof ProjectsRoute
+  '/s': typeof SRoute
   '/compare/$name': typeof CompareNameRoute
   '/p/$projectId': typeof PProjectIdRoute
   '/play/$templateName': typeof PlayTemplateNameRoute
@@ -73,6 +80,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/config.json': typeof ConfigDotjsonRoute
   '/projects': typeof ProjectsRoute
+  '/s': typeof SRoute
   '/compare/$name': typeof CompareNameRoute
   '/p/$projectId': typeof PProjectIdRoute
   '/play/$templateName': typeof PlayTemplateNameRoute
@@ -84,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/config.json': typeof ConfigDotjsonRoute
   '/projects': typeof ProjectsRoute
+  '/s': typeof SRoute
   '/compare/$name': typeof CompareNameRoute
   '/p/$projectId': typeof PProjectIdRoute
   '/play/$templateName': typeof PlayTemplateNameRoute
@@ -96,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/config.json'
     | '/projects'
+    | '/s'
     | '/compare/$name'
     | '/p/$projectId'
     | '/play/$templateName'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/config.json'
     | '/projects'
+    | '/s'
     | '/compare/$name'
     | '/p/$projectId'
     | '/play/$templateName'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/config.json'
     | '/projects'
+    | '/s'
     | '/compare/$name'
     | '/p/$projectId'
     | '/play/$templateName'
@@ -127,6 +139,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConfigDotjsonRoute: typeof ConfigDotjsonRoute
   ProjectsRoute: typeof ProjectsRoute
+  SRoute: typeof SRoute
   CompareNameRoute: typeof CompareNameRoute
   PProjectIdRoute: typeof PProjectIdRoute
   PlayTemplateNameRoute: typeof PlayTemplateNameRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/projects'
       fullPath: '/projects'
       preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/s': {
+      id: '/s'
+      path: '/s'
+      fullPath: '/s'
+      preLoaderRoute: typeof SRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compare/$name': {
@@ -199,6 +219,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConfigDotjsonRoute: ConfigDotjsonRoute,
   ProjectsRoute: ProjectsRoute,
+  SRoute: SRoute,
   CompareNameRoute: CompareNameRoute,
   PProjectIdRoute: PProjectIdRoute,
   PlayTemplateNameRoute: PlayTemplateNameRoute,
