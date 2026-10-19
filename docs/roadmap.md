@@ -524,6 +524,23 @@ réhydratation est un `fold`. Le relais de l'outbox est synchrone et piloté par
 `sealed class` dont la table de transitions est un `when` exhaustif : un état oublié ne compile pas. Le hub en dev liste
 44 templates.
 
+Revue (2026-10-19) : le M6 est livré. Les 16 concepts du catalogue ont leur variante Kotlin au registre, et se
+comparent étape par étape à leur variante TS sans `W_TOUR_ORDER_DIVERGES`. L'index compte 78 entrées, dont 28 Kotlin,
+toutes `healthy`. Le service de compilation a tenu son test de charge au lot 3. Les suites de la revue sont fermées
+(#88 à #98) : `registry:build` ne compile plus que les artefacts manquants, et l'état de départ des exercices Kotlin
+est précompilé lui aussi ([0030](decisions/0030-kotlin-exercise-artifacts.md)). Ouvrir un exercice puis lancer ses
+tests ou son programme n'appelle plus le service. `registry/artifacts/kotlin/` compte 101 artefacts, pour 25 Mo. Le
+contrôle complet est vert, avec 88 E2E en dev. On passe au M5, en commençant par ce qui se construit sans déploiement
+public : partage par URL, export zip, `/embed/<name>` et `typika validate`. Ce qui reste ouvert :
+
+- Firefox sort du périmètre (#97) : le Firefox de Playwright ne démarre toujours pas sous macOS 27. R2, R7 et R8 sont
+  vérifiés dans Chromium et WebKit, et R2 et R7 aussi à la main dans Safari.
+- Le M3 reste ouvert : la publication attend la recherche de marques (R6), l'organisation `typika` et `typika.dev`
+  (#92). Le gist, le push GitHub, `npx typika create` et l'embed dans une page tierce du M5 en dépendent aussi.
+- Le serveur de dev s'est arrêté une fois sur un abort de V8 en envoyant un module de 25 Mo (#104). Il ne s'est pas
+  reproduit.
+- La configuration Vercel, `SECURITY.md` et la CI GitHub sont toujours en attente.
+
 ---
 
 ## Après M6 (non planifié)
@@ -542,11 +559,11 @@ Pistes, à prioriser le moment venu :
 | # | Risque | Traitement |
 |---|---|---|
 | R1 | Licence WebContainers | Levé : pas de runtime `node` en V1 ([0017](decisions/0017-node-runtime.md)) |
-| R2 | COOP/COEP casse l'embed | Levé pour `browser-js` ([0016](decisions/0016-isolation-and-embed.md)) ; Safari vérifié, Firefox à vérifier |
+| R2 | COOP/COEP casse l'embed | Levé pour `browser-js` ([0016](decisions/0016-isolation-and-embed.md)) ; Safari vérifié, Firefox hors périmètre |
 | R3 | Poids des runtimes | Lazy-load, Cache Storage ([0027](decisions/0027-go-assets-delivery.md)), CDN plus tard — M1 / M4 |
 | R4 | IntelliSense TS dans CodeMirror 6 | Levé : CodeMirror 6 confirmé ([0015](decisions/0015-editor.md)) |
 | R5 | Pourrissement des templates | CI de santé + Renovate — M3 |
 | R6 | Nom du projet | Typika retenu ([0014](decisions/0014-name-typika.md)) ; recherche de marques au M0 |
-| R7 | Go dans le navigateur | Levé : toolchain Go en WASM ([0018](decisions/0018-go-runtime.md)) ; Safari vérifié, Firefox à vérifier |
-| R8 | Service de compilation Kotlin | Levé : service maison, cible JS ([0019](decisions/0019-kotlin-runtime.md)) ; Firefox à vérifier |
-| R9 | Abus du service de compilation | Limites et isolation — M6 |
+| R7 | Go dans le navigateur | Levé : toolchain Go en WASM ([0018](decisions/0018-go-runtime.md)) ; Safari vérifié, Firefox hors périmètre |
+| R8 | Service de compilation Kotlin | Levé : service maison, cible JS ([0019](decisions/0019-kotlin-runtime.md)) ; WebKit vérifié, Firefox hors périmètre |
+| R9 | Abus du service de compilation | Levé : limites, isolation et rate limiting par IP ([0028](decisions/0028-kotlin-compilation-workers.md), [0029](decisions/0029-kotlin-relay-rate-limit.md)), test de charge au M6 |
