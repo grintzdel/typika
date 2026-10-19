@@ -233,7 +233,7 @@ pour afficher la santé à jour.
 | `/compare/$name` (`?a=<langage>&b=<langage>`) | `compare/compare.page.tsx` | SPA | oui |
 | `/projects` | `projects/projects.page.tsx` | SPA | non |
 | `/s` (état dans le fragment `#…`) | `share/open-shared.page.tsx` | SPA | oui |
-| `/embed/$templateId` | `embed/embed.page.tsx` | SPA | non ([0016](../decisions/0016-isolation-and-embed.md)) |
+| `/embed/$templateName` | `embed/embed.page.tsx` | SPA | non ([0016](../decisions/0016-isolation-and-embed.md)) |
 | `/auth/github/callback` | `github/callback.page.tsx` | SPA | non |
 | `/api/github/token` | server route | — | — |
 | `/config.json` | server route | — | — |

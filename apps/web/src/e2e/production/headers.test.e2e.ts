@@ -44,6 +44,18 @@ test.describe('app origin', () => {
       expectAppHeaders(response.headers())
     })
 
+  test('lets any page frame the embed, without isolating it', async ({ request }) => {
+    const response = await request.get(`${APP_URL}/embed/strategy-ts`)
+    const headers = response.headers()
+
+    expect(response.status()).toBe(200)
+    expect(headers['cross-origin-opener-policy']).toBeUndefined()
+    expect(headers['cross-origin-embedder-policy']).toBeUndefined()
+    expect(headers['cross-origin-resource-policy']).toBe('same-origin')
+    expect(headers['content-security-policy']).toContain('frame-ancestors *;')
+    expect(headers['content-security-policy']).toContain(`frame-src ${new URL(RUNTIME_URL).origin}`)
+  })
+
   test('serves the public configuration and nothing else', async ({ request }) => {
     const response = await request.get(`${APP_URL}/config.json`)
 

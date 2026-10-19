@@ -130,8 +130,8 @@ Objectif : amener l'apprenant vers un concept en deux clics.
 - Livré au lot 3 du M3 : le fil d'Ariane, le sélecteur de langage (liens, utilisables sans JavaScript), le tour, la
   base avec « Voir le diff », les exercices, les topics, les variantes, les mainteneurs, la licence et la ref. La
   comparaison est livrée au lot 3 du M4 : un lien « Comparer avec <langage> » par variante présente dans l'index, qui
-  garde le template courant à gauche. Restent à venir : la commande CLI, l'embed, les templates liés et le diff avec
-  le parent. Le badge et
+  garde le template courant à gauche. La copie du snippet d'embed est livrée au lot 4 du M5. Restent à venir : la
+  commande CLI, les templates liés et le diff avec le parent. Le badge et
   les bandeaux de santé sont livrés au lot 6 (§2).
 
 ## 6. Sandbox — `/play/<name>`, `/p/<projectId>`, `/s#…`, `/g/<gistId>`

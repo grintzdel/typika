@@ -86,6 +86,9 @@ export const resources = {
         contentInEnglish: 'Template content is in English.',
         notFound: 'No template is called “{{name}}”.',
         allTemplates: 'See all the templates',
+        embed: 'Embed',
+        copyEmbed: 'Copy the embed snippet',
+        embedCopied: 'Snippet copied',
       },
       indexFailed: {
         title: 'Cannot load the templates',
@@ -274,6 +277,7 @@ export const resources = {
       },
       bootFailed: 'The runtime could not start: {{reason}}',
       unsupported: 'This instance does not run this language: the code and the tour stay readable.',
+      insecure: 'The code runs only in a page served over HTTPS: open it in Typika to run it.',
       retry: 'Retry',
       stop: 'Stop',
       panels: { console: 'Console', tests: 'Tests' },
@@ -308,6 +312,11 @@ export const resources = {
         compilerUnavailable: 'The Kotlin compiler is unavailable: try again later',
         status: { passed: 'Passed', failed: 'Failed', skipped: 'Skipped' },
       },
+    },
+    embed: {
+      openInTypika: 'Open in Typika',
+      file: 'File',
+      tourStep: 'Tour step',
     },
   },
   fr: {
@@ -397,6 +406,9 @@ export const resources = {
         contentInEnglish: 'Le contenu des templates est en anglais.',
         notFound: 'Aucun template ne s’appelle « {{name}} ».',
         allTemplates: 'Voir tous les templates',
+        embed: 'Embed',
+        copyEmbed: 'Copier le snippet d’embed',
+        embedCopied: 'Snippet copié',
       },
       indexFailed: {
         title: 'Impossible de charger les templates',
@@ -589,6 +601,7 @@ export const resources = {
       },
       bootFailed: 'Le runtime n’a pas pu démarrer : {{reason}}',
       unsupported: 'Cette instance n’exécute pas ce langage : le code et le tour restent lisibles.',
+      insecure: 'Le code ne s’exécute que dans une page servie en HTTPS : ouvrez-le dans Typika pour l’exécuter.',
       retry: 'Réessayer',
       stop: 'Arrêter',
       panels: { console: 'Console', tests: 'Tests' },
@@ -623,6 +636,11 @@ export const resources = {
         compilerUnavailable: 'Le compilateur Kotlin est indisponible : réessayez plus tard',
         status: { passed: 'Réussi', failed: 'Échoué', skipped: 'Ignoré' },
       },
+    },
+    embed: {
+      openInTypika: 'Ouvrir dans Typika',
+      file: 'Fichier',
+      tourStep: 'Étape du tour',
     },
   },
 } as const

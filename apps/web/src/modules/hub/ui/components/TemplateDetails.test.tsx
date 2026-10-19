@@ -33,6 +33,12 @@ describe('TemplateDetails', () => {
     expect(within(about).getByText('12 octobre 2026').getAttribute('datetime')).toBe('2026-10-12')
   })
 
+  it('gives the embed its own section', () => {
+    render(<TemplateDetails page={templatePage()} embed={<button type="button">Copier</button>} />)
+
+    expect(within(screen.getByRole('region', { name: 'Embed' })).getByRole('button', { name: 'Copier' })).toBeDefined()
+  })
+
   it('leaves out the base when the template has none', () => {
     render(<TemplateDetails page={templatePage({ base: undefined, languages: [] })} />)
 

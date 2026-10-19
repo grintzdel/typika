@@ -40,10 +40,12 @@ export const appContentSecurityPolicy = ({
   runtimeOrigin,
   scriptHashes,
   connectOrigins = [],
+  frameAncestors = ["'none'"],
 }: {
   readonly runtimeOrigin: string
   readonly scriptHashes: ReadonlyArray<string>
   readonly connectOrigins?: ReadonlyArray<string>
+  readonly frameAncestors?: ReadonlyArray<string>
 }) =>
   policy({
     'default-src': ["'self'"],
@@ -56,7 +58,7 @@ export const appContentSecurityPolicy = ({
     'object-src': ["'none'"],
     'base-uri': ["'none'"],
     'form-action': ["'self'"],
-    'frame-ancestors': ["'none'"],
+    'frame-ancestors': frameAncestors,
   })
 
 export const runtimeContentSecurityPolicy = ({ packageOrigin }: { readonly packageOrigin: string }) =>

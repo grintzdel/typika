@@ -28,6 +28,25 @@ describe('RunToolbar', () => {
     expect(screen.getByRole('button', { name: /Exécuter/ }).hasAttribute('disabled')).toBe(true)
   })
 
+  it('lets a runtime that has not started yet start on the first click', () => {
+    const { onRun, onTest } = renderToolbar({ status: 'idle' })
+
+    fireEvent.click(screen.getByRole('button', { name: /Exécuter/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Tests/ }))
+
+    expect(onRun).toHaveBeenCalledOnce()
+    expect(onTest).toHaveBeenCalledOnce()
+    expect(screen.getByRole('status').textContent).toBe('')
+  })
+
+  it('offers no run under a page that is not served over HTTPS, and says why', () => {
+    renderToolbar({ status: 'insecure' })
+
+    expect(screen.getByRole('status').textContent).toContain('HTTPS')
+    expect(screen.queryByRole('button', { name: /Exécuter/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Tests/ })).toBeNull()
+  })
+
   it('shows the download of the runtime while it loads', () => {
     renderToolbar({ status: 'loading', download: { loadedBytes: 4_200_000, totalBytes: 79_315_000 } })
 

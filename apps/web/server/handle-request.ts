@@ -4,6 +4,7 @@ import { extname, join, resolve, sep } from 'node:path'
 import { DEFAULT_PACKAGE_URL_TEMPLATE } from '@typika/runtime-browser-js/default-package-url-template'
 import { BROTLI_SUFFIX } from '@typika/runtime-go'
 
+import { isEmbedPath } from '../src/modules/embed/core/domain/embed.domain-model.ts'
 import type { PublicConfig } from '../src/modules/shared/core/domain/public-config.domain-model.ts'
 import { KOTLIN_COMPILER_PATH } from '../src/modules/shared/core/public-config/public-config-from-env.ts'
 import type { KotlinRelay } from './kotlin-relay.ts'
@@ -114,13 +115,15 @@ export const makeRequestHandler = async ({
     config.templateFileUrlTemplate,
     config.templateListingUrlTemplate,
   ].flatMap(originOf)
-  const policyOf = (html: string) =>
+  const policyOf = (html: string, frameAncestors?: ReadonlyArray<string>) =>
     appContentSecurityPolicy({
       runtimeOrigin: config.runtimeOrigin,
       scriptHashes: inlineScriptHashes(html),
       connectOrigins,
+      ...(frameAncestors === undefined ? {} : { frameAncestors }),
     })
   const appPolicy = policyOf(shell)
+  const embedPolicy = policyOf(shell, ['*'])
 
   const servePrerendered = async (pathname: string) => {
     const path = extname(pathname) === '' ? pathWithin(clientRoot, pathname, PAGE_FILE) : undefined
@@ -152,7 +155,7 @@ export const makeRequestHandler = async ({
         : ((await serveFile(clientRoot, pathname, request)) ?? (await servePrerendered(pathname)))
     if (file !== undefined) return file
     if (STATIC_ONLY_PATHS.some((prefix) => pathname.startsWith(prefix))) return notFound()
-    return pageResponse(shell, appPolicy)
+    return pageResponse(shell, isEmbedPath(pathname) ? embedPolicy : appPolicy)
   }
 
   return async (request: Request): Promise<Response> => {

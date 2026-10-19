@@ -18,6 +18,7 @@ export type ProjectOrigin = Schema.Schema.Type<typeof ProjectOriginSchema>
 const KEY_SEPARATOR = '#'
 const STORED_KEY_PREFIX = 'project:'
 const SHARED_KEY_PREFIX = 'share:'
+const EMBED_KEY_PREFIX = 'embed:'
 
 export const projectKeyOf = (templateName: string, exercise: string | undefined): string =>
   exercise === undefined ? templateName : `${templateName}${KEY_SEPARATOR}${exercise}`
@@ -31,6 +32,11 @@ export const sharedProjectKeyOf = (encoded: string): string => `${SHARED_KEY_PRE
 
 export const sharedPayloadOfKey = (key: string): string | undefined =>
   key.startsWith(SHARED_KEY_PREFIX) ? key.slice(SHARED_KEY_PREFIX.length) : undefined
+
+export const embedProjectKeyOf = (templateName: string): string => `${EMBED_KEY_PREFIX}${templateName}`
+
+export const embedTemplateOfKey = (key: string): string | undefined =>
+  key.startsWith(EMBED_KEY_PREFIX) ? key.slice(EMBED_KEY_PREFIX.length) : undefined
 
 export const exerciseOf = (origin: ProjectOrigin): string | undefined =>
   origin.kind === 'template' ? undefined : origin.exercise

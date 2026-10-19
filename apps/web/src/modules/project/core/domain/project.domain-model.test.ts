@@ -3,6 +3,8 @@ import * as Schema from 'effect/Schema'
 import { describe, expect, it } from 'vitest'
 
 import {
+  embedProjectKeyOf,
+  embedTemplateOfKey,
   modifiedPathsOf,
   originOfKey,
   projectIdOfKey,
@@ -62,6 +64,15 @@ describe('project keys', () => {
     expect(sameOrigin(template, exercise)).toBe(false)
     expect(sameOrigin(exercise, template)).toBe(false)
     expect(sameOrigin(exercise, originOfKey('strategy-ts#other'))).toBe(false)
+  })
+
+  it('names the project of an embed apart from the project of its template', () => {
+    const key = embedProjectKeyOf('strategy-ts')
+
+    expect(key).not.toBe(projectKeyOf('strategy-ts', undefined))
+    expect(embedTemplateOfKey(key)).toBe('strategy-ts')
+    expect(embedTemplateOfKey('strategy-ts')).toBeUndefined()
+    expect(projectIdOfKey(key)).toBeUndefined()
   })
 
   it('names a stored project by its id, apart from the template keys', () => {

@@ -8,6 +8,7 @@ import { ProjectTemplateInvalidError } from '../../domain/errors/project-templat
 import { ProjectTemplateNotFoundError } from '../../domain/errors/project-template-not-found.error.ts'
 import { ShareLinkInvalidError } from '../../domain/errors/share-link-invalid.error.ts'
 import {
+  embedTemplateOfKey,
   exerciseOf,
   modifiedPathsOf,
   originOfKey,
@@ -146,8 +147,12 @@ export const openTemplateProgram = (key: string) =>
     if (encoded !== undefined) return yield* openSharedProject(encoded)
     const index = yield* TemplateIndexPort
     const projectId = projectIdOfKey(key)
-    const stored = yield* storedProjectOf(key, projectId)
-    const origin = Option.match(stored, { onNone: () => originOfKey(key), onSome: (project) => project.record.origin })
+    const embedded = embedTemplateOfKey(key)
+    const stored = embedded === undefined ? yield* storedProjectOf(key, projectId) : Option.none()
+    const origin = Option.match(stored, {
+      onNone: () => originOfKey(embedded ?? key),
+      onSome: (project) => project.record.origin,
+    })
     const { name } = origin
     const entries = yield* index.entries
     const entry = entryNamed(entries, name)

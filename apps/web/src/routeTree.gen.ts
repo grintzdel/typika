@@ -14,6 +14,7 @@ import { Route as ConfigDotjsonRouteImport } from './routes/config[.]json'
 import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as SRouteImport } from './routes/s'
 import { Route as CompareNameRouteImport } from './routes/compare/$name'
+import { Route as EmbedTemplateNameRouteImport } from './routes/embed/$templateName'
 import { Route as PProjectIdRouteImport } from './routes/p/$projectId'
 import { Route as PlayTemplateNameRouteImport } from './routes/play/$templateName'
 import { Route as TemplatesIndexRouteImport } from './routes/templates/index'
@@ -44,6 +45,11 @@ const CompareNameRoute = CompareNameRouteImport.update({
   path: '/compare/$name',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmbedTemplateNameRoute = EmbedTemplateNameRouteImport.update({
+  id: '/embed/$templateName',
+  path: '/embed/$templateName',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PProjectIdRoute = PProjectIdRouteImport.update({
   id: '/p/$projectId',
   path: '/p/$projectId',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/projects': typeof ProjectsRoute
   '/s': typeof SRoute
   '/compare/$name': typeof CompareNameRoute
+  '/embed/$templateName': typeof EmbedTemplateNameRoute
   '/p/$projectId': typeof PProjectIdRoute
   '/play/$templateName': typeof PlayTemplateNameRoute
   '/templates/$name': typeof TemplatesNameRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/projects': typeof ProjectsRoute
   '/s': typeof SRoute
   '/compare/$name': typeof CompareNameRoute
+  '/embed/$templateName': typeof EmbedTemplateNameRoute
   '/p/$projectId': typeof PProjectIdRoute
   '/play/$templateName': typeof PlayTemplateNameRoute
   '/templates/$name': typeof TemplatesNameRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/projects': typeof ProjectsRoute
   '/s': typeof SRoute
   '/compare/$name': typeof CompareNameRoute
+  '/embed/$templateName': typeof EmbedTemplateNameRoute
   '/p/$projectId': typeof PProjectIdRoute
   '/play/$templateName': typeof PlayTemplateNameRoute
   '/templates/$name': typeof TemplatesNameRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/s'
     | '/compare/$name'
+    | '/embed/$templateName'
     | '/p/$projectId'
     | '/play/$templateName'
     | '/templates/$name'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/s'
     | '/compare/$name'
+    | '/embed/$templateName'
     | '/p/$projectId'
     | '/play/$templateName'
     | '/templates/$name'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/projects'
     | '/s'
     | '/compare/$name'
+    | '/embed/$templateName'
     | '/p/$projectId'
     | '/play/$templateName'
     | '/templates/$name'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   ProjectsRoute: typeof ProjectsRoute
   SRoute: typeof SRoute
   CompareNameRoute: typeof CompareNameRoute
+  EmbedTemplateNameRoute: typeof EmbedTemplateNameRoute
   PProjectIdRoute: typeof PProjectIdRoute
   PlayTemplateNameRoute: typeof PlayTemplateNameRoute
   TemplatesNameRoute: typeof TemplatesNameRoute
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompareNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/embed/$templateName': {
+      id: '/embed/$templateName'
+      path: '/embed/$templateName'
+      fullPath: '/embed/$templateName'
+      preLoaderRoute: typeof EmbedTemplateNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$projectId': {
       id: '/p/$projectId'
       path: '/p/$projectId'
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProjectsRoute: ProjectsRoute,
   SRoute: SRoute,
   CompareNameRoute: CompareNameRoute,
+  EmbedTemplateNameRoute: EmbedTemplateNameRoute,
   PProjectIdRoute: PProjectIdRoute,
   PlayTemplateNameRoute: PlayTemplateNameRoute,
   TemplatesNameRoute: TemplatesNameRoute,

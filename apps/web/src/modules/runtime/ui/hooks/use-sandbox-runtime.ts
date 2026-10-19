@@ -18,7 +18,9 @@ import type { FileWrite } from '../../core/domain/file-write.domain-model.ts'
 import { describeCause } from '../../core/domain/runtime-error-data.ts'
 import { EMPTY_TEST_RUN, type TestRunState } from '../../core/domain/test-run.domain-model.ts'
 
-export type SandboxRuntimeStatus = 'loading' | 'ready' | 'failed' | 'unsupported'
+export type SandboxRuntimeStatus = 'idle' | 'loading' | 'ready' | 'failed' | 'unsupported'
+
+const idleAtom = Atom.make(AsyncResult.initial())
 
 const reasonOf = <A, E>(result: AsyncResult.AsyncResult<A, E>) =>
   Option.match(AsyncResult.error(result), { onNone: () => 'unknown', onSome: describeCause })
@@ -37,24 +39,32 @@ const latest = <A extends { readonly outcome: unknown }, E>(
   return AsyncResult.isFailure(result) ? { ...empty, outcome: onFailure(reasonOf(result)) } : undefined
 }
 
-export const useSandboxRuntime = (templateName: string, takePending: () => ReadonlyArray<FileWrite>) => {
-  const session = useAtomValue(runtimeSessionAtom(templateName))
+export const useSandboxRuntime = (
+  templateName: string,
+  takePending: () => ReadonlyArray<FileWrite>,
+  { isStarted = true }: { readonly isStarted?: boolean } = {}
+) => {
+  const session = useAtomValue(isStarted ? runtimeSessionAtom(templateName) : idleAtom)
   const retry = useAtomRefresh(templateProjectAtom(templateName))
   const [runResult, run] = useAtom(runProjectAtom(templateName))
   const [testResult, test] = useAtom(testProjectAtom(templateName))
-  const download = Option.getOrUndefined(AsyncResult.value(useAtomValue(runtimeDownloadAtom(templateName))))
+  const download = Option.getOrUndefined(
+    AsyncResult.value(useAtomValue(isStarted ? runtimeDownloadAtom(templateName) : idleAtom))
+  )
   const [lastAction, setLastAction] = useState<'run' | 'test'>('run')
 
   const isUnsupported =
     AsyncResult.isFailure(session) &&
     Option.getOrUndefined(Cause.findErrorOption(session.cause))?._tag === 'RuntimeUnsupportedError'
-  const status: SandboxRuntimeStatus = AsyncResult.isSuccess(session)
-    ? 'ready'
-    : isUnsupported
-      ? 'unsupported'
-      : AsyncResult.isFailure(session)
-        ? 'failed'
-        : 'loading'
+  const status: SandboxRuntimeStatus = !isStarted
+    ? 'idle'
+    : AsyncResult.isSuccess(session)
+      ? 'ready'
+      : isUnsupported
+        ? 'unsupported'
+        : AsyncResult.isFailure(session)
+          ? 'failed'
+          : 'loading'
 
   const consoleState = latest<ConsoleState, unknown>(runResult, EMPTY_CONSOLE, (message) => ({
     _tag: 'Crashed',

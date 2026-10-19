@@ -105,6 +105,30 @@ describe('makeRequestHandler on the app origin', () => {
     expect(response.headers.get('cross-origin-embedder-policy')).toBe('require-corp')
   })
 
+  it('lets any page frame the embed, without isolating it', async () => {
+    const response = await get(`${APP}/embed/strategy-ts`)
+
+    expect(await response.text()).toBe(SHELL)
+    const policy = response.headers.get('content-security-policy')
+    expect(policy).toContain('frame-ancestors *;')
+    expect(policy).toContain("script-src 'self' 'sha256-MeZS89WlF0u+o0hCvHTBt4q1WHU+U+sJKgbdRUc36mY=';")
+    expect(response.headers.get('cross-origin-opener-policy')).toBeNull()
+    expect(response.headers.get('cross-origin-embedder-policy')).toBeNull()
+    expect(response.headers.get('cross-origin-resource-policy')).toBe('same-origin')
+  })
+
+  it('keeps every other page from being framed', async () => {
+    const responses = await Promise.all(
+      ['/projects', '/play/strategy-ts', '/embed', '/embedded/strategy-ts', '/templates'].map((path) =>
+        get(`${APP}${path}`)
+      )
+    )
+
+    for (const response of responses) {
+      expect(response.headers.get('content-security-policy')).toContain("frame-ancestors 'none'")
+    }
+  })
+
   it('serves the hashed assets as immutable', async () => {
     const response = await get(`${APP}/assets/index-abc.js`)
 
