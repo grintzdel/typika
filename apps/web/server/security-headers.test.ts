@@ -16,6 +16,10 @@ describe('isIsolatedPath', () => {
   it('leaves the other routes alone, even with a matching prefix', () => {
     expect(['/', '/projects', '/plays', '/templates', '/config.json'].some(isIsolatedPath)).toBe(false)
   })
+
+  it('does not isolate the embed, which a third-party page cannot isolate', () => {
+    expect(isIsolatedPath('/embed/strategy-ts')).toBe(false)
+  })
 })
 
 describe('appHeaders', () => {
@@ -57,6 +61,17 @@ describe('appContentSecurityPolicy', () => {
         connectOrigins: ['https://cdn.jsdelivr.net', 'https://data.jsdelivr.com', 'https://cdn.jsdelivr.net'],
       })
     ).toContain("connect-src 'self' https://cdn.jsdelivr.net https://data.jsdelivr.com;")
+  })
+
+  it('lets any page frame the embed', () => {
+    const embed = appContentSecurityPolicy({
+      runtimeOrigin: 'https://run.example.net',
+      scriptHashes: [],
+      frameAncestors: ['*'],
+    })
+
+    expect(embed).toContain('frame-ancestors *;')
+    expect(embed).not.toContain("frame-ancestors 'none'")
   })
 
   it('allows the inline scripts of the shell by hash, not every inline script', () => {

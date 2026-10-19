@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 import { projectFiles, projectRecord } from '../../../__tests__/project.factory.ts'
 import { templateFiles, templateToml } from '../../../__tests__/template.factory.ts'
-import { storedProjectKeyOf } from '../../domain/project.domain-model.ts'
+import { embedProjectKeyOf, storedProjectKeyOf } from '../../domain/project.domain-model.ts'
 import type { TemplateEntry } from '../../domain/template-entry.domain-model.ts'
 import { TemplateFilesPort } from '../../ports/template-files.port.ts'
 import { TemplateIndexPort } from '../../ports/template-index.port.ts'
@@ -128,6 +128,17 @@ describe('openTemplateProgram', () => {
     expect(Exit.isSuccess(exit) && new Map<string, unknown>(exit.value.files).get('src/main.ts')).toBe(
       "console.log('hello')\n"
     )
+  })
+
+  it('opens an embedded template on its own files, apart from the local projects', async () => {
+    const exit = await open(embedProjectKeyOf('sample-ts'), undefined, makeProjectStorageInMemory([storedProject()]))
+
+    expect(Exit.isSuccess(exit) && exit.value.templateName).toBe('sample-ts')
+    expect(Exit.isSuccess(exit) && new Map<string, unknown>(exit.value.files).get('src/main.ts')).toBe(
+      "console.log('hello')\n"
+    )
+    expect(Exit.isSuccess(exit) && exit.value.isSaved).toBe(false)
+    expect(Exit.isSuccess(exit) && exit.value.isShared).toBe(false)
   })
 
   it('opens the tour steps of the template', async () => {

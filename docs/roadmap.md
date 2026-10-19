@@ -431,6 +431,19 @@ téléchargés depuis l'app et extraits, passent leurs tests avec `npm test`, `g
 fichiers Typika. Cette vérification est faite à la main : le contrôle local n'a pas toutes les toolchains, et l'E2E
 vérifie le contenu des zips.
 
+Lot 4 livré : `/embed/<name>` affiche l'éditeur, la sortie et une barre réduite (fichier, Exécuter, Tests, « Ouvrir
+dans Typika »). L'[ADR 0031](decisions/0031-embed-runtimes.md) y fait tourner les trois runtimes. Le runtime ne
+démarre qu'au premier clic, ou au chargement avec `run=auto`, sauf pour Go. Le language service ne démarre qu'au premier
+focus dans l'éditeur. Sous une page hôte qui n'est pas un contexte sécurisé, l'embed n'exécute rien et dit pourquoi.
+Les paramètres `file`, `lines`, `tour-step`, `panel`, `readonly`, `run`, `theme` et `lang` sont lus ; `panel=preview`
+retombe sur la console, faute de preview en V1. L'embed n'ouvre ni n'écrit aucun projet local, et le cache des
+compilations Kotlin y reste en mémoire. Les messages `typika:ready`, `typika:resize` et `typika:test-result` partent
+vers la page hôte, et `typika:goto-step` et `typika:set-theme` sont validés par schéma ; tout autre message est ignoré.
+« Ouvrir dans Typika » porte l'état courant par un lien `/s#…` du lot 2, ou ouvre `/play/<name>` au-delà du seuil. Le
+thème suit `data-theme` sur la racine, et `prefers-color-scheme` sans lui. Seul `/embed/*` a `frame-ancestors *`. La
+page template copie le snippet d'embed. L'E2E de production embarque `strategy-ts` dans une page d'un autre site, lance
+les tests et reçoit `typika:test-result` ; en dev, Go et Kotlin tournent aussi en embed.
+
 ## M6 — Kotlin
 
 **Objectif** : le langage POO de référence du catalogue.

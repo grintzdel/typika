@@ -75,6 +75,7 @@ export const useTemplateProject = (templateName: string) => {
           health: opened.health,
           exercises: opened.manifest.exercises.map(({ name, title, kind }) => ({ name, title, kind })),
           entry: opened.manifest.runtime.entry,
+          runtime: opened.manifest.runtime.kind,
           generation: opened.generation,
           tourSteps: opened.tourSteps,
           tree: buildFileTree(opened.files.keys()),

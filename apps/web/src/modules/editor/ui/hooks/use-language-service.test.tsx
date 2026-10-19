@@ -25,8 +25,13 @@ const TEMPLATES = {
   }),
 }
 
-const renderLanguageService = (languageService: Layer.Layer<LanguageServicePort>, name = 'sample-ts') =>
-  renderHook(() => useLanguageService(name), {
+const renderLanguageService = (
+  languageService: Layer.Layer<LanguageServicePort>,
+  name = 'sample-ts',
+  isStarted = true
+) =>
+  renderHook((props: { readonly isStarted: boolean }) => useLanguageService(name, props), {
+    initialProps: { isStarted },
     wrapper: makeRegistryWrapper(
       Layer.mergeAll(
         makeProjectTestLayer(TEMPLATES),
@@ -38,6 +43,19 @@ const renderLanguageService = (languageService: Layer.Layer<LanguageServicePort>
   })
 
 describe('useLanguageService', () => {
+  it('starts nothing until it is told to', async () => {
+    const languageService = makeLanguageServiceInMemory()
+    const { result, rerender } = renderLanguageService(languageService.layer, 'sample-ts', false)
+    await new Promise((resolve) => setTimeout(resolve, 50))
+
+    expect(result.current.status).toBe('off')
+    expect(languageService.started).toHaveLength(0)
+
+    rerender({ isStarted: true })
+
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+  })
+
   it('starts the language service on the files of the project', async () => {
     const languageService = makeLanguageServiceInMemory()
     const { result } = renderLanguageService(languageService.layer)

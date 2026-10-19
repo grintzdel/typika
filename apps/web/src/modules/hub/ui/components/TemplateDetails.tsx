@@ -6,6 +6,7 @@ import { useHubLabels } from '../hooks/use-hub-labels.ts'
 
 export type TemplateDetailsProps = {
   readonly page: TemplatePage
+  readonly embed?: ReactNode
 }
 
 const Section = ({
@@ -25,7 +26,7 @@ const Section = ({
   </section>
 )
 
-export const TemplateDetails = ({ page }: TemplateDetailsProps) => {
+export const TemplateDetails = ({ page, embed }: TemplateDetailsProps) => {
   const { t } = useTranslation('hub')
   const labels = useHubLabels()
   const variants = page.languages.filter(({ name }) => name !== page.name)
@@ -93,6 +94,11 @@ export const TemplateDetails = ({ page }: TemplateDetailsProps) => {
                 </li>
               ))}
             </ul>
+          </Section>
+        )}
+        {embed === undefined ? null : (
+          <Section id="template-embed" title={t('template.embed')}>
+            {embed}
           </Section>
         )}
         <Section id="template-about" title={t('template.about')}>

@@ -2,6 +2,7 @@ import { RuntimeLimit } from '@typika/runtime-core'
 import {
   makeIndexedDbCompileCache,
   makeKotlinCompilerClient,
+  makeMemoryCompileCache,
   makePrecompiledCompileCache,
   type KotlinCompilerClient,
 } from '@typika/runtime-kotlin'
@@ -13,6 +14,7 @@ import * as Option from 'effect/Option'
 import * as Schema from 'effect/Schema'
 import * as Stream from 'effect/Stream'
 
+import { isEmbedPath } from '../../../embed/core/domain/embed.domain-model.ts'
 import { AppConfig } from '../../../shared/core/ports/app-config.port.ts'
 import { RuntimeFrameUnavailableError } from '../domain/errors/runtime-frame-unavailable.error.ts'
 import { FrameHandshakeSchema, type FrameHandshake } from '../domain/runtime-frame-protocol.domain-model.ts'
@@ -90,7 +92,9 @@ const kotlinCompilerOf = (url: string, registryIndexUrl: string): KotlinCompiler
     url,
     cache: makePrecompiledCompileCache({
       artifactsUrl: new URL(KOTLIN_ARTIFACTS_PATH, new URL(registryIndexUrl, window.location.href)).href,
-      cache: makeIndexedDbCompileCache({ maxBytes: RuntimeLimit.COMPILE_CACHE_BYTES }),
+      cache: isEmbedPath(window.location.pathname)
+        ? makeMemoryCompileCache(RuntimeLimit.COMPILE_CACHE_BYTES)
+        : makeIndexedDbCompileCache({ maxBytes: RuntimeLimit.COMPILE_CACHE_BYTES }),
     }),
   })
 

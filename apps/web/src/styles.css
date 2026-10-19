@@ -1,5 +1,16 @@
 @import 'tailwindcss';
 
+@custom-variant dark {
+  &:where([data-theme='dark'], [data-theme='dark'] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:not([data-theme='light'], [data-theme='light'] *)) {
+      @slot;
+    }
+  }
+}
+
 @theme {
   --font-sans: ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
@@ -7,6 +18,14 @@
 
 :root {
   color-scheme: light dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 html,
@@ -39,8 +58,8 @@ body {
   --code-diff-deleted-text: #ffcecb;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+:root {
+  @variant dark {
     --code-text: #e6edf3;
     --code-gutter: #8b949e;
     --code-active-line: #161b22;

@@ -50,6 +50,32 @@ const saveMain = (storage: InMemoryProjectStorage, content: string) =>
   )
 
 describe('useSandboxRuntime', () => {
+  it('starts no session until it is told to, then boots one', async () => {
+    const fake = makeFakeRuntime()
+    const wrapper = makeRegistryWrapper(
+      Layer.mergeAll(
+        makeProjectTestLayer(TEMPLATES, makeProjectStorageInMemory()),
+        makeRuntimeTestLayer(fake.port),
+        makeLanguageServiceInMemory().layer,
+        makeExerciseProgressInMemory().layer
+      )
+    )
+    const { result, rerender } = renderHook(
+      ({ isStarted }) => useSandboxRuntime('sample-ts', () => [], { isStarted }),
+      { wrapper, initialProps: { isStarted: false } }
+    )
+
+    expect(result.current.status).toBe('idle')
+    expect(result.current.download).toBeUndefined()
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(fake.journal).not.toContain('booted')
+
+    rerender({ isStarted: true })
+
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+    expect(fake.journal).toContain('booted')
+  })
+
   it('is ready once the session booted', async () => {
     const { result } = renderSandbox()
 

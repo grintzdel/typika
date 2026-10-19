@@ -4,7 +4,7 @@ import { Button } from '../../../../ui/Button.tsx'
 import { isDownloading, type RuntimeDownload } from '../../core/domain/runtime-download.domain-model.ts'
 
 export type RunToolbarProps = {
-  readonly status: 'loading' | 'ready' | 'failed' | 'unsupported'
+  readonly status: 'idle' | 'loading' | 'ready' | 'failed' | 'unsupported' | 'insecure'
   readonly bootError: string | undefined
   readonly download: RuntimeDownload | undefined
   readonly isRunning: boolean
@@ -29,7 +29,7 @@ export const RunToolbar = ({
   onRetry,
 }: RunToolbarProps) => {
   const { t } = useTranslation('runtime')
-  const ready = status === 'ready'
+  const ready = status === 'ready' || status === 'idle'
   const reason = ready ? undefined : status === 'unsupported' ? t('unsupported') : t('loading')
   return (
     <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -58,6 +58,7 @@ export const RunToolbar = ({
           <span className="text-red-700 dark:text-red-400">{t('bootFailed', { reason: bootError ?? '' })}</span>
         ) : null}
         {status === 'unsupported' ? <span className="truncate">{t('unsupported')}</span> : null}
+        {status === 'insecure' ? <span className="truncate">{t('insecure')}</span> : null}
       </div>
       {status === 'failed' ? <Button onClick={onRetry}>{t('retry')}</Button> : null}
       {isRunning || isTesting ? (
@@ -66,14 +67,18 @@ export const RunToolbar = ({
           {t('stop')}
         </Button>
       ) : null}
-      <Button variant="primary" disabled={!ready} title={reason} aria-busy={isRunning} onClick={onRun}>
-        <span aria-hidden="true">▶</span>
-        {t('run')}
-      </Button>
-      <Button disabled={!ready} title={reason} aria-busy={isTesting} onClick={onTest}>
-        <span aria-hidden="true">✓</span>
-        {t('test')}
-      </Button>
+      {status === 'insecure' ? null : (
+        <>
+          <Button variant="primary" disabled={!ready} title={reason} aria-busy={isRunning} onClick={onRun}>
+            <span aria-hidden="true">▶</span>
+            {t('run')}
+          </Button>
+          <Button disabled={!ready} title={reason} aria-busy={isTesting} onClick={onTest}>
+            <span aria-hidden="true">✓</span>
+            {t('test')}
+          </Button>
+        </>
+      )}
     </div>
   )
 }
