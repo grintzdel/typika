@@ -266,11 +266,15 @@ UI réduite : éditeur + sortie (Console ou Tests), barre minimale avec Run, Tes
 | `height` | — | non supporté : la hauteur est celle de l'iframe |
 
 - Le runtime ne démarre qu'à la première interaction (ou `run=auto`), pour ne pas charger des Mo dans une page de
-  blog à l'ouverture.
+  blog à l'ouverture. `run=auto` est ignoré pour un template Go, qui télécharge 12 Mo au premier run
+  ([0031](../decisions/0031-embed-runtimes.md)).
 - L'éditeur s'ouvre sans language service TypeScript ; l'IntelliSense se charge à la demande
   ([0015](../decisions/0015-editor.md)).
 - Un runtime qui exige l'isolation cross-origin (`SharedArrayBuffer`) ne démarre pas en embed : la barre propose
-  « Ouvrir dans Typika » à la place de Run et Tests ([0016](../decisions/0016-isolation-and-embed.md)).
+  « Ouvrir dans Typika » à la place de Run et Tests ([0016](../decisions/0016-isolation-and-embed.md)). Aucun runtime
+  de la V1 n'est dans ce cas.
+- Sous une page hôte qui n'est pas un contexte sécurisé (`http`), aucun runtime ne démarre : la barre propose
+  « Ouvrir dans Typika » et en donne la raison ([0031](../decisions/0031-embed-runtimes.md)).
 - Aucune persistance locale dans l'embed ; « Ouvrir dans Typika » transfère l'état courant via un partage URL.
 
 ### postMessage
