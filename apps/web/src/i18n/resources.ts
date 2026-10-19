@@ -121,6 +121,14 @@ export const resources = {
         origin: 'The template of this share link cannot be found.',
         back: 'Back to the templates',
       },
+      export: {
+        trigger: 'Export',
+        title: 'Export the project',
+        description: 'Download the files of the project as a zip, to run them with the usual tools of the language.',
+        includeTypikaFiles: 'Include the Typika files (typika.toml, tour/)',
+        download: 'Download the zip',
+        cancel: 'Cancel',
+      },
       share: {
         trigger: 'Share',
         title: 'Share the project',
@@ -423,6 +431,15 @@ export const resources = {
         newer: 'Ce lien a été créé avec une version plus récente de Typika.',
         origin: 'Le template de ce lien de partage est introuvable.',
         back: 'Retour aux templates',
+      },
+      export: {
+        trigger: 'Exporter',
+        title: 'Exporter le projet',
+        description:
+          'Téléchargez les fichiers du projet dans un zip, pour les lancer avec les outils habituels du langage.',
+        includeTypikaFiles: 'Inclure les fichiers Typika (typika.toml, tour/)',
+        download: 'Télécharger le zip',
+        cancel: 'Annuler',
       },
       share: {
         trigger: 'Partager',

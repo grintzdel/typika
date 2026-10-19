@@ -2,12 +2,14 @@ import * as Effect from 'effect/Effect'
 import * as Atom from 'effect/reactivity/Atom'
 
 import { appRuntime } from '../../../app/core/app.runtime.ts'
+import { projectArchiveOf } from '../domain/project-archive.domain-model.ts'
 import type { ProjectFileEdit, TemplateProject } from '../domain/project.domain-model.ts'
 import { applySolutionProgram } from '../programs/apply-solution/apply-solution.program.ts'
 import { createShareLinkProgram } from '../programs/create-share-link/create-share-link.program.ts'
 import { deleteProjectProgram } from '../programs/delete-project/delete-project.program.ts'
 import { duplicateProjectProgram } from '../programs/duplicate-project/duplicate-project.program.ts'
 import { estimateStorageProgram } from '../programs/estimate-storage/estimate-storage.program.ts'
+import { exportStoredProjectProgram } from '../programs/export-project/export-project.program.ts'
 import { listProjectsProgram } from '../programs/list-projects/list-projects.program.ts'
 import { listRecentProjectsProgram } from '../programs/list-recent-projects/list-recent-projects.program.ts'
 import { listTemplatesProgram } from '../programs/list-templates/list-templates.program.ts'
@@ -97,4 +99,16 @@ export const createShareLinkAtom = Atom.family((name: string) =>
   appRuntime.fn((input: { readonly files: ReadonlyMap<string, string>; readonly origin: string }, get) =>
     Effect.flatMap(get.result(templateProjectAtom(name)), (project) => createShareLinkProgram({ project, ...input }))
   )
+)
+
+export const exportProjectAtom = Atom.family((name: string) =>
+  appRuntime.fn((input: { readonly files: ReadonlyMap<string, string>; readonly includeTypikaFiles: boolean }, get) =>
+    Effect.map(get.result(templateProjectAtom(name)), (project) =>
+      projectArchiveOf({ name: project.name, ref: project.ref, ...input })
+    )
+  )
+)
+
+export const exportStoredProjectAtom = appRuntime.fn(
+  (input: { readonly id: string; readonly includeTypikaFiles: boolean }) => exportStoredProjectProgram(input)
 )

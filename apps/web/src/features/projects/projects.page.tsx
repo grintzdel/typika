@@ -30,6 +30,7 @@ export const ProjectsPage = () => {
             onRename={projects.handleRename}
             onDuplicate={projects.handleDuplicate}
             onDelete={projects.handleDelete}
+            onExport={projects.handleExport}
           />
         )}
       </main>

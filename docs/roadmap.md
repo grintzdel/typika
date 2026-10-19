@@ -424,6 +424,13 @@ dont le template est introuvable a son message et un retour aux templates. L'ori
 migration, puisque les enregistrements IndexedDB ne sont pas typés par la base. Un lien sans origine (`f` seul) n'est
 pas encore ouvert : il attend les projets `blank` ([sharing-and-cli §2](specs/sharing-and-cli.md)).
 
+Lot 3 livré : Exporter, dans la sandbox et dans `/projects`, télécharge le projet en zip, avec ou sans les fichiers
+Typika (`typika.toml`, `tour/`). Avec eux, `typika.toml` reçoit `parent`, la ref épinglée du template. La règle de
+retrait est `withoutTypikaFiles` de `@typika/manifest`. Les zips de `strategy-ts`, `strategy-go` et `strategy-kotlin`,
+téléchargés depuis l'app et extraits, passent leurs tests avec `npm test`, `go test` et `gradle test`, avec et sans les
+fichiers Typika. Cette vérification est faite à la main : le contrôle local n'a pas toutes les toolchains, et l'E2E
+vérifie le contenu des zips.
+
 ## M6 — Kotlin
 
 **Objectif** : le langage POO de référence du catalogue.
