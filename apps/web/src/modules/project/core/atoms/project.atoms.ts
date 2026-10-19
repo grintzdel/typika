@@ -4,10 +4,15 @@ import * as Atom from 'effect/reactivity/Atom'
 import { appRuntime } from '../../../app/core/app.runtime.ts'
 import type { ProjectFileEdit, TemplateProject } from '../domain/project.domain-model.ts'
 import { applySolutionProgram } from '../programs/apply-solution/apply-solution.program.ts'
+import { deleteProjectProgram } from '../programs/delete-project/delete-project.program.ts'
+import { duplicateProjectProgram } from '../programs/duplicate-project/duplicate-project.program.ts'
+import { estimateStorageProgram } from '../programs/estimate-storage/estimate-storage.program.ts'
+import { listProjectsProgram } from '../programs/list-projects/list-projects.program.ts'
 import { listRecentProjectsProgram } from '../programs/list-recent-projects/list-recent-projects.program.ts'
 import { listTemplatesProgram } from '../programs/list-templates/list-templates.program.ts'
 import { openBaseProgram } from '../programs/open-base/open-base.program.ts'
 import { openTemplateProgram } from '../programs/open-template/open-template.program.ts'
+import { renameProjectProgram } from '../programs/rename-project/rename-project.program.ts'
 import { resetProjectProgram } from '../programs/reset-project/reset-project.program.ts'
 import { saveProjectFilesProgram } from '../programs/save-project-files/save-project-files.program.ts'
 
@@ -16,6 +21,29 @@ export type OpenedProject = TemplateProject & { readonly generation: number }
 export const embeddedTemplatesAtom = appRuntime.atom(listTemplatesProgram)
 
 export const recentProjectsAtom = appRuntime.atom(listRecentProjectsProgram)
+
+export const projectsAtom = appRuntime.atom(listProjectsProgram)
+
+export const storageUsageAtom = appRuntime.atom(estimateStorageProgram)
+
+const refreshingProjects = <A, E, R>(effect: Effect.Effect<A, E, R>, get: Atom.FnContext) =>
+  Effect.tap(effect, () =>
+    Effect.sync(() => {
+      get.refresh(projectsAtom)
+      get.refresh(recentProjectsAtom)
+      get.refresh(storageUsageAtom)
+    })
+  )
+
+export const renameProjectAtom = appRuntime.fn((input: { readonly id: string; readonly name: string }, get) =>
+  refreshingProjects(renameProjectProgram(input), get)
+)
+
+export const duplicateProjectAtom = appRuntime.fn((input: { readonly id: string; readonly name: string }, get) =>
+  refreshingProjects(duplicateProjectProgram(input), get)
+)
+
+export const deleteProjectAtom = appRuntime.fn((id: string, get) => refreshingProjects(deleteProjectProgram(id), get))
 
 const generationAtom = Atom.family((_name: string) => Atom.make(0))
 

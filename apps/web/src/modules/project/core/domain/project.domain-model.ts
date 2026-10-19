@@ -1,4 +1,4 @@
-import { withoutExercises, type ExerciseKind, type TemplateFiles, type TourStep } from '@typika/manifest'
+import { withoutExercises, type ExerciseKind, type Language, type TemplateFiles, type TourStep } from '@typika/manifest'
 import { ProjectPathSchema, type FileContent, type ProjectPath, type ProjectSnapshot } from '@typika/runtime-core'
 import * as Schema from 'effect/Schema'
 
@@ -11,9 +11,17 @@ export const ProjectOriginSchema = Schema.Union([
 export type ProjectOrigin = Schema.Schema.Type<typeof ProjectOriginSchema>
 
 const KEY_SEPARATOR = '#'
+const STORED_KEY_PREFIX = 'project:'
 
 export const projectKeyOf = (templateName: string, exercise: string | undefined): string =>
   exercise === undefined ? templateName : `${templateName}${KEY_SEPARATOR}${exercise}`
+
+export const storedProjectKeyOf = (id: string): string => `${STORED_KEY_PREFIX}${id}`
+
+export const projectIdOfKey = (key: string): string | undefined =>
+  key.startsWith(STORED_KEY_PREFIX) ? key.slice(STORED_KEY_PREFIX.length) : undefined
+
+export const projectPathOf = (id: string): string => `/p/${id}`
 
 export const originOfKey = (key: string): ProjectOrigin => {
   const [name = key, exercise] = key.split(KEY_SEPARATOR)
@@ -25,10 +33,16 @@ export const sameOrigin = (a: ProjectOrigin, b: ProjectOrigin): boolean =>
     ? b.kind === 'exercise' && a.name === b.name && a.exercise === b.exercise
     : b.kind === 'template' && a.name === b.name
 
-export const playPathOf = (origin: ProjectOrigin): string =>
-  origin.kind === 'exercise'
-    ? `/play/${origin.name}?exercise=${encodeURIComponent(origin.exercise)}`
-    : `/play/${origin.name}`
+export type ProjectListItem = {
+  readonly id: string
+  readonly name: string
+  readonly path: string
+  readonly templateName: string
+  readonly templateTitle: string | undefined
+  readonly language: Language | undefined
+  readonly exercise: string | undefined
+  readonly updatedAt: number
+}
 
 export type RecentProject = {
   readonly name: string
@@ -74,6 +88,7 @@ export type ProjectExercise = {
 }
 
 export type TemplateProject = ProjectSnapshot & {
+  readonly projectId: string | undefined
   readonly templateName: string
   readonly ref: string
   readonly origin: ProjectOrigin

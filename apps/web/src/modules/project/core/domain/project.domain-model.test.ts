@@ -2,7 +2,14 @@ import { ProjectPathSchema } from '@typika/runtime-core'
 import * as Schema from 'effect/Schema'
 import { describe, expect, it } from 'vitest'
 
-import { modifiedPathsOf, originOfKey, projectKeyOf, sameOrigin } from './project.domain-model.ts'
+import {
+  modifiedPathsOf,
+  originOfKey,
+  projectIdOfKey,
+  projectKeyOf,
+  sameOrigin,
+  storedProjectKeyOf,
+} from './project.domain-model.ts'
 
 const path = Schema.decodeUnknownSync(ProjectPathSchema)
 const files = (entries: Readonly<Record<string, string>>) =>
@@ -55,5 +62,13 @@ describe('project keys', () => {
     expect(sameOrigin(template, exercise)).toBe(false)
     expect(sameOrigin(exercise, template)).toBe(false)
     expect(sameOrigin(exercise, originOfKey('strategy-ts#other'))).toBe(false)
+  })
+
+  it('names a stored project by its id, apart from the template keys', () => {
+    const key = storedProjectKeyOf('0b6d7c1e-5f0a-4d2b-9c3e-8a1f2e3d4c5b')
+
+    expect(projectIdOfKey(key)).toBe('0b6d7c1e-5f0a-4d2b-9c3e-8a1f2e3d4c5b')
+    expect(projectIdOfKey('strategy-ts')).toBeUndefined()
+    expect(projectIdOfKey('strategy-ts#implement-express')).toBeUndefined()
   })
 })

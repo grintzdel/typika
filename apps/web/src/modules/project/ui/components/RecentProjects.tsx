@@ -1,22 +1,11 @@
 import { useTranslation } from 'react-i18next'
 
 import type { RecentProject } from '../../core/domain/project.domain-model.ts'
+import { relativeTime } from './relative-time.ts'
 
 export type RecentProjectsProps = {
   readonly projects: ReadonlyArray<RecentProject>
   readonly now: number
-}
-
-const UNITS: ReadonlyArray<readonly [Intl.RelativeTimeFormatUnit, number]> = [
-  ['day', 86_400_000],
-  ['hour', 3_600_000],
-  ['minute', 60_000],
-  ['second', 1_000],
-]
-
-const relativeTime = (language: string, elapsed: number) => {
-  const [unit, size] = UNITS.find(([, length]) => elapsed >= length) ?? ['second', 1_000]
-  return new Intl.RelativeTimeFormat(language, { numeric: 'auto' }).format(-Math.round(elapsed / size), unit)
 }
 
 export const RecentProjects = ({ projects, now }: RecentProjectsProps) => {

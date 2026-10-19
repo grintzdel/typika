@@ -10,6 +10,7 @@ import { ProjectStorageError } from './domain/errors/project-storage.error.ts'
 import { sameOrigin, textOf, type ProjectOrigin, type StoredProject } from './domain/project.domain-model.ts'
 import { entryOfManifest } from './domain/template-entry.domain-model.ts'
 import { ProjectStoragePort } from './ports/project-storage.port.ts'
+import { StorageQuotaPort } from './ports/storage-quota.port.ts'
 import { TemplateFilesPort } from './ports/template-files.port.ts'
 import { TemplateIndexPort } from './ports/template-index.port.ts'
 
@@ -26,17 +27,14 @@ export const makeProjectStorageInMemory = (initial: ReadonlyArray<StoredProject>
       .toSorted((a, b) => b.record.updatedAt - a.record.updatedAt)[0]
 
   const storage: ProjectStorage = {
-    listRecent: (limit) =>
-      Effect.sync(() =>
-        [...projects.values()]
-          .map((project) => project.record)
-          .toSorted((a, b) => b.updatedAt - a.updatedAt)
-          .slice(0, limit)
-      ),
+    list: Effect.sync(() =>
+      [...projects.values()].map((project) => project.record).toSorted((a, b) => b.updatedAt - a.updatedAt)
+    ),
+    findById: (id) => Effect.sync(() => Option.fromNullishOr(projects.get(id))),
     findByOrigin: (origin) => Effect.sync(() => Option.fromNullishOr(latest(origin))),
-    saveTemplateEdits: ({ project, templateFiles, edits }) =>
+    saveTemplateEdits: ({ project, templateFiles, edits, match = 'origin' }) =>
       Effect.sync(() => {
-        const existing = latest(project.origin)
+        const existing = match === 'id' ? projects.get(project.id) : latest(project.origin)
         const saved = {
           record: existing === undefined ? project : { ...existing.record, updatedAt: project.updatedAt },
           files: new Map([...(existing?.files ?? templateFiles), ...edits]),
@@ -50,6 +48,23 @@ export const makeProjectStorageInMemory = (initial: ReadonlyArray<StoredProject>
         if (existing !== undefined)
           projects.set(projectId, { record: { ...existing.record, updatedAt }, files: new Map(files) })
       }),
+    duplicate: (sourceId, copy) =>
+      Effect.sync(() => {
+        const source = projects.get(sourceId)
+        if (source === undefined) return Option.none()
+        const duplicated = { record: copy, files: new Map(source.files) }
+        projects.set(copy.id, duplicated)
+        return Option.some(duplicated)
+      }),
+    rename: (id, name) =>
+      Effect.sync(() => {
+        const existing = projects.get(id)
+        if (existing !== undefined) projects.set(id, { ...existing, record: { ...existing.record, name } })
+      }),
+    remove: (id) =>
+      Effect.sync(() => {
+        projects.delete(id)
+      }),
   }
 
   return { ...storage, projects }
@@ -58,10 +73,14 @@ export const makeProjectStorageInMemory = (initial: ReadonlyArray<StoredProject>
 const quotaExceeded = () => Effect.fail(new ProjectStorageError({ cause: new Error('QuotaExceededError') }))
 
 export const failingProjectStorage: ProjectStorage = {
-  listRecent: quotaExceeded,
+  list: quotaExceeded(),
+  findById: quotaExceeded,
   findByOrigin: quotaExceeded,
   saveTemplateEdits: quotaExceeded,
   replaceFiles: quotaExceeded,
+  duplicate: quotaExceeded,
+  rename: quotaExceeded,
+  remove: quotaExceeded,
 }
 
 export const testRefOf = (name: string, commit = '0123456789ab') => {
@@ -93,6 +112,7 @@ export const makeProjectTestLayer = (
           : Effect.succeed(files)
       },
     }),
-    Layer.succeed(ProjectStoragePort, storage)
+    Layer.succeed(ProjectStoragePort, storage),
+    Layer.succeed(StorageQuotaPort, { estimate: Effect.succeed(Option.none()) })
   )
 }

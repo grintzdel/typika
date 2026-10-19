@@ -21,6 +21,9 @@ export const HubHeader = ({ languageMenu, searchRef, search }: HubHeaderProps) =
           <a href="/templates" className="text-sm text-neutral-600 hover:text-sky-700 dark:text-neutral-400">
             {t('nav.templates')}
           </a>
+          <a href="/projects" className="text-sm text-neutral-600 hover:text-sky-700 dark:text-neutral-400">
+            {t('nav.projects')}
+          </a>
         </nav>
         <form
           role="search"

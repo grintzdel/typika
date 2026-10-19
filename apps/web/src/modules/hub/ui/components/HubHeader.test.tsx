@@ -31,4 +31,10 @@ describe('HubHeader', () => {
 
     expect(screen.getByRole<HTMLSelectElement>('combobox', { name: 'Langue' }).value).toBe('fr')
   })
+
+  it('links to the local projects', () => {
+    render(<HubHeader languageMenu={languageMenu} />)
+
+    expect(screen.getByRole('link', { name: 'Mes projets' }).getAttribute('href')).toBe('/projects')
+  })
 })

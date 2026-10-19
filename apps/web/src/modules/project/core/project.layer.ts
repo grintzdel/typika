@@ -3,6 +3,7 @@ import * as Layer from 'effect/Layer'
 
 import { SharedLayer } from '../../shared/core/shared.layer.ts'
 import { ProjectStorageIndexedDbLayer } from './adapters/project-storage.indexeddb.adapter.ts'
+import { StorageQuotaNavigatorLayer } from './adapters/storage-quota.navigator.adapter.ts'
 import { TemplateFilesFetchLayer } from './adapters/template-files.fetch.adapter.ts'
 import { TemplateIndexFetchLayer } from './adapters/template-index.fetch.adapter.ts'
 
@@ -15,4 +16,8 @@ const TemplateSourceLayer = import.meta.env.DEV
     )
   : Layer.mergeAll(TemplateIndexFetchLayer, TemplateFilesFetchLayer).pipe(Layer.provide(SharedLayer))
 
-export const ProjectLayer = Layer.mergeAll(TemplateSourceLayer, ProjectStorageIndexedDbLayer)
+export const ProjectLayer = Layer.mergeAll(
+  TemplateSourceLayer,
+  ProjectStorageIndexedDbLayer,
+  StorageQuotaNavigatorLayer
+)

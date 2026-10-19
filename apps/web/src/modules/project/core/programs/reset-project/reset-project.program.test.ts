@@ -1,8 +1,9 @@
 import * as Effect from 'effect/Effect'
 import { describe, expect, it } from 'vitest'
 
-import { projectPath } from '../../../__tests__/project.factory.ts'
+import { projectFiles, projectPath, projectRecord } from '../../../__tests__/project.factory.ts'
 import { templateFiles } from '../../../__tests__/template.factory.ts'
+import { storedProjectKeyOf } from '../../domain/project.domain-model.ts'
 import { makeProjectStorageInMemory, makeProjectTestLayer } from '../../project.test-layer.ts'
 import { openTemplateProgram } from '../open-template/open-template.program.ts'
 import { saveProjectFilesProgram } from '../save-project-files/save-project-files.program.ts'
@@ -38,5 +39,21 @@ describe('resetProjectProgram', () => {
     await reopenAfter([], storage)
 
     expect(storage.projects.size).toBe(0)
+  })
+
+  it('resets only the project opened by id', async () => {
+    const opened = { record: projectRecord({ updatedAt: 1_000 }), files: projectFiles({ 'src/main.ts': 'opened' }) }
+    const newer = { record: projectRecord({ updatedAt: 2_000 }), files: projectFiles({ 'src/main.ts': 'newer' }) }
+    const storage = makeProjectStorageInMemory([opened, newer])
+
+    await Effect.runPromise(
+      openTemplateProgram(storedProjectKeyOf(opened.record.id)).pipe(
+        Effect.flatMap(resetProjectProgram),
+        Effect.provide(makeProjectTestLayer(TEMPLATES, storage))
+      )
+    )
+
+    expect(storage.projects.get(opened.record.id)?.files.get(projectPath('src/main.ts'))).toBe("console.log('hello')\n")
+    expect(storage.projects.get(newer.record.id)?.files.get(projectPath('src/main.ts'))).toBe('newer')
   })
 })

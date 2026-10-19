@@ -3,12 +3,14 @@ import * as Effect from 'effect/Effect'
 import * as Option from 'effect/Option'
 
 import { ProjectExerciseNotFoundError } from '../../domain/errors/project-exercise-not-found.error.ts'
+import { ProjectNotFoundError } from '../../domain/errors/project-not-found.error.ts'
 import { ProjectTemplateInvalidError } from '../../domain/errors/project-template-invalid.error.ts'
 import { ProjectTemplateNotFoundError } from '../../domain/errors/project-template-not-found.error.ts'
 import {
   modifiedPathsOf,
   originOfKey,
   projectFilesOf,
+  projectIdOfKey,
   textOf,
   type ProjectExercise,
   type ProjectFiles,
@@ -64,17 +66,27 @@ const openExercise = (
     }
   })
 
+const storedProjectOf = (key: string, projectId: string | undefined) =>
+  Effect.gen(function* () {
+    const storage = yield* ProjectStoragePort
+    if (projectId === undefined)
+      return yield* storage.findByOrigin(originOfKey(key)).pipe(Effect.orElseSucceed(() => Option.none()))
+    const found = yield* storage.findById(projectId)
+    if (Option.isNone(found)) return yield* new ProjectNotFoundError({ id: projectId })
+    return found
+  })
+
 export const openTemplateProgram = (key: string) =>
   Effect.gen(function* () {
     const index = yield* TemplateIndexPort
     const source = yield* TemplateFilesPort
-    const storage = yield* ProjectStoragePort
-    const origin = originOfKey(key)
+    const projectId = projectIdOfKey(key)
+    const stored = yield* storedProjectOf(key, projectId)
+    const origin = Option.match(stored, { onNone: () => originOfKey(key), onSome: (project) => project.record.origin })
     const { name } = origin
     const entries = yield* index.entries
     const entry = entryNamed(entries, name)
     if (entry === undefined) return yield* new ProjectTemplateNotFoundError({ name })
-    const stored = yield* storage.findByOrigin(origin).pipe(Effect.orElseSucceed(() => Option.none()))
     const ref = Option.match(stored, { onNone: () => entry.ref, onSome: (project) => project.record.ref ?? entry.ref })
     const files = yield* source.load(ref)
     const { manifest, tourSteps } = yield* validateTemplate(files).pipe(
@@ -90,6 +102,7 @@ export const openTemplateProgram = (key: string) =>
     const templateFiles = opened.start
     const projectFiles = Option.match(stored, { onNone: () => templateFiles, onSome: (project) => project.files })
     return {
+      projectId,
       templateName: name,
       ref,
       origin,

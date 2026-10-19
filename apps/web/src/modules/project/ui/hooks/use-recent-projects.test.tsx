@@ -15,14 +15,13 @@ const hydration = vi.hoisted(() => ({ isHydrated: true }))
 
 vi.mock('@tanstack/react-router', () => ({ useHydrated: () => hydration.isHydrated }))
 
+const RECORD = projectRecord({ name: 'sample-ts' })
+
 const renderRecent = () =>
   renderHook(() => useRecentProjects(), {
     wrapper: makeRegistryWrapper(
       Layer.mergeAll(
-        makeProjectTestLayer(
-          {},
-          makeProjectStorageInMemory([{ record: projectRecord({ name: 'sample-ts' }), files: projectFiles({}) }])
-        ),
+        makeProjectTestLayer({}, makeProjectStorageInMemory([{ record: RECORD, files: projectFiles({}) }])),
         makeRuntimeTestLayer(makeFakeRuntime().port),
         makeLanguageServiceInMemory().layer,
         makeExerciseProgressInMemory().layer
@@ -35,7 +34,7 @@ describe('useRecentProjects', () => {
     hydration.isHydrated = true
     const { result } = renderRecent()
 
-    await waitFor(() => expect(result.current.projects.map((project) => project.path)).toEqual(['/play/sample-ts']))
+    await waitFor(() => expect(result.current.projects.map((project) => project.path)).toEqual([`/p/${RECORD.id}`]))
   })
 
   it('reads nothing while the page hydrates', () => {

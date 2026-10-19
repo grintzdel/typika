@@ -8,7 +8,9 @@ import { ProjectStoragePort } from '../../ports/project-storage.port.ts'
 export const resetProjectProgram = (project: TemplateProject) =>
   Effect.gen(function* () {
     const storage = yield* ProjectStoragePort
-    const stored = yield* storage.findByOrigin(project.origin)
+    const stored = yield* project.projectId === undefined
+      ? storage.findByOrigin(project.origin)
+      : storage.findById(project.projectId)
     if (Option.isNone(stored)) return
     const now = yield* Clock.currentTimeMillis
     yield* storage.replaceFiles(stored.value.record.id, project.templateFiles, now)

@@ -15,22 +15,19 @@ const stored = (name: string, updatedAt: number, exercise?: string) => ({
 })
 
 describe('listRecentProjectsProgram', () => {
-  it('lists the three latest projects with the path that reopens them', async () => {
-    const storage = makeProjectStorageInMemory([
-      stored('a-ts', 1),
-      stored('b-ts', 4, 'fix-it'),
-      stored('c-ts', 3),
-      stored('d-ts', 2),
-    ])
+  it('lists the three latest projects with the path that reopens each of them', async () => {
+    const projects = [stored('a-ts', 1), stored('b-ts', 4, 'fix-it'), stored('c-ts', 3), stored('d-ts', 2)]
+    const storage = makeProjectStorageInMemory(projects)
+    const pathOf = (index: number) => `/p/${projects[index]?.record.id}`
 
     const recent = await Effect.runPromise(
       listRecentProjectsProgram.pipe(Effect.provide(makeProjectTestLayer({}, storage)))
     )
 
     expect(recent).toEqual([
-      { name: 'b-ts', exercise: 'fix-it', path: '/play/b-ts?exercise=fix-it', updatedAt: 4 },
-      { name: 'c-ts', exercise: undefined, path: '/play/c-ts', updatedAt: 3 },
-      { name: 'd-ts', exercise: undefined, path: '/play/d-ts', updatedAt: 2 },
+      { name: 'b-ts', exercise: 'fix-it', path: pathOf(1), updatedAt: 4 },
+      { name: 'c-ts', exercise: undefined, path: pathOf(2), updatedAt: 3 },
+      { name: 'd-ts', exercise: undefined, path: pathOf(3), updatedAt: 2 },
     ])
   })
 })

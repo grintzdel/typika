@@ -87,6 +87,11 @@ const latestProjectOf = async (projects: IDBObjectStore, origin: ProjectOrigin) 
       undefined
     )
 
+const findRecord = async (projects: IDBObjectStore, id: string) => {
+  const found: unknown = await settled(projects.get(id))
+  return found === undefined ? undefined : decodeRecord(found)
+}
+
 const filesOf = async (files: IDBObjectStore, projectId: string): Promise<ProjectFiles> =>
   new Map(
     decodeFiles(await settled(files.index(BY_PROJECT).getAll(projectId))).map((file) => [file.path, file.content])
@@ -120,12 +125,15 @@ export const makeProjectStorageIndexedDb = (factory: IDBFactory): Context.Servic
     })
 
   return {
-    listRecent: (limit) =>
-      transact('readonly', async ({ projects }) =>
-        decodeRecords(await settled(projects.getAll()))
-          .toSorted((a, b) => b.updatedAt - a.updatedAt)
-          .slice(0, limit)
-      ),
+    list: transact('readonly', async ({ projects }) =>
+      decodeRecords(await settled(projects.getAll())).toSorted((a, b) => b.updatedAt - a.updatedAt)
+    ),
+
+    findById: (id) =>
+      transact('readonly', async ({ projects, files }) => {
+        const record = await findRecord(projects, id)
+        return record === undefined ? Option.none() : Option.some({ record, files: await filesOf(files, record.id) })
+      }),
 
     findByOrigin: (origin) =>
       transact('readonly', async ({ projects, files }) => {
@@ -133,9 +141,10 @@ export const makeProjectStorageIndexedDb = (factory: IDBFactory): Context.Servic
         return record === undefined ? Option.none() : Option.some({ record, files: await filesOf(files, record.id) })
       }),
 
-    saveTemplateEdits: ({ project, templateFiles, edits }) =>
+    saveTemplateEdits: ({ project, templateFiles, edits, match = 'origin' }) =>
       transact('readwrite', async ({ projects, files }) => {
-        const existing = await latestProjectOf(projects, project.origin)
+        const existing =
+          match === 'id' ? await findRecord(projects, project.id) : await latestProjectOf(projects, project.origin)
         const record = existing === undefined ? project : { ...existing, updatedAt: project.updatedAt }
         if (existing === undefined) {
           putFiles(files, record.id, templateFiles, record.createdAt)
@@ -148,10 +157,32 @@ export const makeProjectStorageIndexedDb = (factory: IDBFactory): Context.Servic
 
     replaceFiles: (projectId, contents, updatedAt) =>
       transact('readwrite', async ({ projects, files }) => {
-        const found: unknown = await settled(projects.get(projectId))
+        const found = await findRecord(projects, projectId)
         for (const key of await settled(files.index(BY_PROJECT).getAllKeys(projectId))) files.delete(key)
         putFiles(files, projectId, contents, updatedAt)
-        if (found !== undefined) projects.put({ ...decodeRecord(found), updatedAt })
+        if (found !== undefined) projects.put({ ...found, updatedAt })
+      }),
+
+    duplicate: (sourceId, copy) =>
+      transact('readwrite', async ({ projects, files }) => {
+        if ((await findRecord(projects, sourceId)) === undefined) return Option.none()
+        const copied = await filesOf(files, sourceId)
+        projects.put(copy)
+        putFiles(files, copy.id, copied, copy.updatedAt)
+        requestPersistence()
+        return Option.some({ record: copy, files: copied })
+      }),
+
+    rename: (id, name) =>
+      transact('readwrite', async ({ projects }) => {
+        const found = await findRecord(projects, id)
+        if (found !== undefined) projects.put({ ...found, name })
+      }),
+
+    remove: (id) =>
+      transact('readwrite', async ({ projects, files }) => {
+        for (const key of await settled(files.index(BY_PROJECT).getAllKeys(id))) files.delete(key)
+        projects.delete(id)
       }),
   }
 }
