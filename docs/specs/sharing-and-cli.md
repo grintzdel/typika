@@ -175,6 +175,7 @@ typika --version | --help
 | `--keep-tour` | Garder `typika.toml` et `tour/`. |
 | `--no-install` | Ne pas installer les dépendances. Par défaut, l'installation n'est pas lancée non plus en V1 ; la commande est affichée. |
 | `--registry <url>` | URL d'un `index.json` alternatif (instance auto-hébergée). |
+| `--archive-url <gabarit>` | Gabarit d'URL des archives (`{owner}`, `{repo}`, `{ref}`). Défaut : `https://codeload.github.com/{owner}/{repo}/tar.gz/{ref}` ([0032](../decisions/0032-cli-archives-and-validate.md)). |
 | `--force` | Autoriser un dossier non vide. |
 | `--json` | Sortie machine (une ligne JSON finale). |
 
@@ -191,7 +192,8 @@ typika --version | --help
 ### 6.4 Sortie
 
 - Par défaut, retire : `typika.toml`, `tour/`, la définition des exercices et leurs solutions.
-- Avec `--keep-tour` : garde `typika.toml` et `tour/`.
+- Avec `--keep-tour` : garde `typika.toml`, `tour/` et `exercises/`, et ajoute `parent` à `typika.toml`, comme l'export
+  zip avec les fichiers Typika (§4). Avec `--exercise`, `exercises/` est retiré.
 - Avec `--exercise` : garde l'énoncé de l'exercice dans `EXERCISE.md`, retire indices et solution.
 - Ajoute un `README.md` s'il n'existe pas, avec titre, résumé, lien vers la page du template.
 - Affiche les prochaines étapes : `cd <dir>`, commande d'installation et de test selon le langage.
@@ -225,9 +227,10 @@ typika validate [dir] [--run] [--json]
 | Fichiers référencés présents, ancres de tour dans les bornes | ✓ | ✓ |
 | Ids d'étapes uniques ; alignement avec la variante TS de référence si elle est accessible | ✓ | ✓ |
 | Taille et types de fichiers dans les limites | ✓ | ✓ |
-| Boot, tests, exercices (V8, V9) dans un navigateur headless | — | ✓ |
+| Tests du template et exercices (V9), avec les runners de `template-check` dans Node | — | ✓ |
 
-- `--run` télécharge un navigateur headless au premier usage ; Kotlin nécessite l'URL d'un service de compilation
-  (`--kotlin-compiler <url>`, défaut : celui de l'instance publique).
-- Sortie : liste des erreurs et avertissements avec fichier et ligne ; code `0` si aucune erreur, `5` sinon.
+- `--run` n'exécute pas l'entrée : le boot reste au run de santé (V8). Kotlin nécessite l'URL d'un service de
+  compilation (`--kotlin-compiler <url>`), sans valeur par défaut : le relais de l'instance publique n'accepte que l'app
+  ([0032](../decisions/0032-cli-archives-and-validate.md)).
+- Sortie : liste des erreurs et avertissements avec le fichier ou le champ concerné ; code `0` si aucune erreur, `5` sinon.
 - Les topics connus sont lus depuis l'index du registre (même option `--registry`).
