@@ -412,6 +412,7 @@ Les erreurs bloquent ; les avertissements (`W_`) n'empêchent pas l'ouverture da
 | `E_LICENSE_NOT_OSI` | registre | `License "{license}" is not OSI-approved.` |
 | `E_EXERCISE_START_STATE` | registre | `Exercise "{name}": starting state is wrong ({reason}).` |
 | `E_EXERCISE_SOLUTION_FAILS` | registre | `Exercise "{name}": reference solution does not pass all tests.` |
+| `E_TESTS_FAIL` | registre | `The tests of the template do not pass ({reason}).` |
 | `E_REF_NOT_PINNED` | registre | `Ref "{ref}" must be pinned to a commit SHA.` |
 | `E_ENTRY_NAME_MISMATCH` | registre | `Entry file "{file}" must be named after its template "{name}".` |
 | `E_CATEGORY_MISMATCH` | registre | `An official template must live under github:typika/.` |

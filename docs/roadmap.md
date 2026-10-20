@@ -444,6 +444,17 @@ thème suit `data-theme` sur la racine, et `prefers-color-scheme` sans lui. Seul
 page template copie le snippet d'embed. L'E2E de production embarque `strategy-ts` dans une page d'un autre site, lance
 les tests et reçoit `typika:test-result` ; en dev, Go et Kotlin tournent aussi en embed.
 
+Lot 5 livré : `packages/cli` contient le package `typika`, qui n'est pas publié. `typika create` résout un nom dans
+l'index ou une ref `github:`, puis télécharge l'archive de la ref épinglée et l'extrait
+([0032](decisions/0032-cli-archives-and-validate.md)). Il valide le manifeste et écrit le projet sans les fichiers
+Typika, puis affiche les prochaines étapes. Il gère `--variant`, `--exercise` (état initial, énoncé dans
+`EXERCISE.md`), `--keep-tour`, `--force`, `--json`, `--registry` et `--archive-url`, ainsi que les codes de sortie de
+0 à 7. `typika validate` applique les contrôles du manifeste et du workspace, avec les topics de l'index, et compare
+l'ordre du tour à la variante TypeScript. Avec `--run`, il fait tourner les tests et les exercices dans les runners de
+`template-check`, et sort avec `5` dès qu'il trouve une erreur. Les tests du package passent par un registre local
+qui sert l'index et des archives `git archive`. Les projets `strategy-ts`, `strategy-go` et `strategy-kotlin`, créés
+par le CLI, passent leurs tests avec `npm test`, `go test` et `gradle test`. Cette vérification est faite à la main.
+
 ## M6 — Kotlin
 
 **Objectif** : le langage POO de référence du catalogue.
