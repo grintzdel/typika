@@ -1,0 +1,31 @@
+{
+  "name": "typika",
+  "version": "0.0.0",
+  "private": true,
+  "bin": {
+    "typika": "./src/cli.ts"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@typika/manifest": "workspace:*",
+    "@typika/registry-tools": "workspace:*",
+    "@typika/template-check": "workspace:*",
+    "effect": "4.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "@typika/config": "workspace:*",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

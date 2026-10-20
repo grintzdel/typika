@@ -9,6 +9,7 @@ export {
 } from './check-templates/check-templates.ts'
 export { checkExercises, type RunTests, type TestRun } from './check-exercises/check-exercises.ts'
 export { checkRefs } from './check-refs/check-refs.ts'
+export { checkTourOrder } from './check-tour-order/check-tour-order.ts'
 export { formatReport, hasErrors } from './format-report/format-report.ts'
 export {
   contentOf,
