@@ -38,3 +38,4 @@ Statuts : `Proposée` (en attente d'un spike), `Acceptée`, `Remplacée par NNNN
 | [0029](0029-kotlin-relay-rate-limit.md) | Compilation Kotlin : relayée et limitée par le serveur de l'app | Acceptée |
 | [0030](0030-kotlin-exercise-artifacts.md) | Exercices Kotlin : leur état de départ est précompilé | Acceptée |
 | [0031](0031-embed-runtimes.md) | Runtimes en embed : les trois, dans un contexte sécurisé | Acceptée |
+| [0032](0032-cli-archives-and-validate.md) | CLI : archives GitHub et `validate --run` dans Node | Acceptée |
