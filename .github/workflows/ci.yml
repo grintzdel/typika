@@ -1,0 +1,68 @@
+name: ci
+
+on:
+  pull_request:
+    paths-ignore: ['docs/**', '*.md']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+        with:
+          kotlin: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 9.8.1
+      - run: pnpm --filter @typika/web exec playwright install --with-deps chromium webkit
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm turbo run typecheck test
+      - run: pnpm template-check
+      - run: pnpm registry:build
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - run: pnpm --filter @typika/web exec playwright install --with-deps chromium webkit
+      - run: pnpm --filter @typika/web test:e2e
+      - run: pnpm --filter @typika/web test:e2e:production
+      - name: Build the image and start it
+        run: |
+          docker build --quiet --tag typika-web .
+          docker run --detach --name typika-web --publish 127.0.0.1:3100:3000 \
+            --env TYPIKA_PUBLIC_URL=http://localhost:3100 --env TYPIKA_RUNTIME_ORIGIN=http://127.0.0.1:3100 typika-web
+          timeout 60 sh -c 'until curl -sf http://localhost:3100/ > /dev/null; do sleep 1; done'
+      - name: Run the production E2E that need no test registry against the image
+        working-directory: apps/web
+        env:
+          TYPIKA_E2E_APP_URL: http://localhost:3100
+          TYPIKA_E2E_RUNTIME_URL: http://127.0.0.1:3100
+        run: pnpm exec playwright test --config playwright.production.config.ts headers sandbox hub compare embed
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: apps/web/test-results
+          retention-days: 7
