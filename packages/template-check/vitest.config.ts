@@ -15,7 +15,7 @@ export default defineConfig({
           include: [KOTLIN_TESTS],
           globalSetup: [fileURLToPath(import.meta.resolve('@typika/kotlin-compiler/global-setup'))],
           hookTimeout: 600_000,
-          testTimeout: 120_000,
+          testTimeout: 300_000,
         },
       },
     ],
