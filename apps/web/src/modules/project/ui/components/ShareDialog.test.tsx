@@ -54,4 +54,54 @@ describe('ShareDialog', () => {
 
     expect((await screen.findByRole('dialog')).textContent).toContain('Création du lien…')
   })
+
+  it('offers a gist under the link when the instance is connected to GitHub', async () => {
+    const onShare = vi.fn()
+    render(
+      <ShareDialog
+        link={{ _tag: 'TooLong', length: 12_345, max: 8_000 }}
+        isCopied={false}
+        onOpen={vi.fn()}
+        onCopy={vi.fn()}
+        gist={{
+          isConnected: true,
+          isSharing: false,
+          link: undefined,
+          failure: undefined,
+          revokeUrl: undefined,
+          onConnect: vi.fn(),
+          onShare,
+          onSignOut: vi.fn(),
+        }}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Partager' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Partager le projet' })
+
+    expect(dialog.textContent).toContain('Partagez-le plutôt par un gist.')
+    fireEvent.click(screen.getByRole('button', { name: 'Créer le gist' }))
+    expect(onShare).toHaveBeenCalledWith(false)
+  })
+
+  it('has no gist section on an instance without GitHub', async () => {
+    render(<ShareDialog link={{ _tag: 'Ready', url: URL }} isCopied={false} onOpen={vi.fn()} onCopy={vi.fn()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Partager' }))
+    await screen.findByRole('dialog', { name: 'Partager le projet' })
+
+    expect(screen.queryByRole('region', { name: 'Gist GitHub' })).toBeNull()
+  })
+
+  it('opens by itself after a sign-in, and creates the link once', async () => {
+    const onOpen = vi.fn()
+    const { rerender } = render(
+      <ShareDialog link={undefined} isCopied={false} onOpen={onOpen} onCopy={vi.fn()} defaultOpen />
+    )
+
+    await screen.findByRole('dialog', { name: 'Partager le projet' })
+    rerender(<ShareDialog link={undefined} isCopied={false} onOpen={onOpen} onCopy={vi.fn()} defaultOpen />)
+
+    expect(onOpen).toHaveBeenCalledOnce()
+  })
 })

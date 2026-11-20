@@ -200,9 +200,10 @@ avec les en-têtes d'isolation de [hosting](../guides/hosting.md).
 
 ### 3.5 Serveur
 
-Un seul handler serveur, `POST /api/github/token`, en server route TanStack Start
-(`src/routes/api/github/token.ts`). Il lit le body, appelle `exchangeGitHubCodeProgram` (`modules/github/core/programs/`)
-et renvoie le résultat. Aucune logique dans la route.
+`POST /api/github/token` échange le `code` OAuth contre un jeton. Il vit dans le serveur Node de l'app
+(`server/github-token.ts`), à côté du relais Kotlin, et dans le même middleware en dev : il a besoin du limiteur de
+débit et de l'IP du client ([0034](../decisions/0034-github-oauth-and-gists.md)). `/config.json` reste une server
+route TanStack Start.
 
 Le service Kotlin est hors de `apps/web` (`services/kotlin-compiler`).
 
@@ -233,9 +234,10 @@ pour afficher la santé à jour.
 | `/compare/$name` (`?a=<langage>&b=<langage>`) | `compare/compare.page.tsx` | SPA | oui |
 | `/projects` | `projects/projects.page.tsx` | SPA | non |
 | `/s` (état dans le fragment `#…`) | `share/open-shared.page.tsx` | SPA | oui |
+| `/g/$gistId` | `play/play-template.page.tsx` | SPA | oui |
 | `/embed/$templateName` | `embed/embed.page.tsx` | SPA | non ([0016](../decisions/0016-isolation-and-embed.md)) |
-| `/auth/github/callback` | `github/callback.page.tsx` | SPA | non |
-| `/api/github/token` | server route | — | — |
+| `/auth/github/callback` | `auth/github-callback.page.tsx` | SPA | non |
+| `/api/github/token` | serveur Node (`server/github-token.ts`) | — | — |
 | `/config.json` | server route | — | — |
 | `/runtime/frame.html` (origine runtime) | hors router | statique | oui |
 

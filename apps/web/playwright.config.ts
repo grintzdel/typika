@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
+import { FAKE_GITHUB_ENV, FAKE_GITHUB_URL } from './src/e2e/fixtures/fake-github.fixture.ts'
+
 const KOTLIN_COMPILER_URL = 'http://127.0.0.1:3080'
 
 export default defineConfig({
@@ -35,9 +37,14 @@ export default defineConfig({
       gracefulShutdown: { signal: 'SIGTERM', timeout: 10_000 },
     },
     {
+      command: 'node scripts/serve-fake-github.ts 3090',
+      url: `${FAKE_GITHUB_URL}/health`,
+      reuseExistingServer: process.env.CI === undefined,
+    },
+    {
       command: 'pnpm dev',
       url: 'http://localhost:3000',
-      env: { KOTLIN_COMPILER_URL },
+      env: { KOTLIN_COMPILER_URL, ...FAKE_GITHUB_ENV },
       reuseExistingServer: process.env.CI === undefined,
       timeout: 120_000,
     },

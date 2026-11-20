@@ -71,9 +71,44 @@ describe('publicConfigFromEnv', () => {
   })
 
   it('never exposes server-only variables', () => {
-    const config = Effect.runSync(publicConfigFromEnv({ ...ENV, GITHUB_CLIENT_SECRET: 'secret' }))
+    const config = Effect.runSync(
+      publicConfigFromEnv({ ...ENV, GITHUB_CLIENT_ID: 'client-id', GITHUB_CLIENT_SECRET: 'secret' })
+    )
 
     expect(JSON.stringify(config)).not.toContain('secret')
+  })
+
+  it('enables GitHub on github.com when an OAuth application is set', () => {
+    const config = Effect.runSync(
+      publicConfigFromEnv({ ...ENV, GITHUB_CLIENT_ID: 'client-id', GITHUB_CLIENT_SECRET: 'secret' })
+    )
+
+    expect(config.github).toEqual({
+      clientId: 'client-id',
+      url: 'https://github.com',
+      apiUrl: 'https://api.github.com',
+    })
+  })
+
+  it('points GitHub at another instance when its URLs are set', () => {
+    const config = Effect.runSync(
+      publicConfigFromEnv({
+        ...ENV,
+        GITHUB_CLIENT_ID: 'client-id',
+        GITHUB_CLIENT_SECRET: 'secret',
+        TYPIKA_GITHUB_URL: 'https://github.example.com/',
+        TYPIKA_GITHUB_API_URL: 'https://github.example.com/api/v3',
+      })
+    )
+
+    expect(config.github).toMatchObject({
+      url: 'https://github.example.com',
+      apiUrl: 'https://github.example.com/api/v3',
+    })
+  })
+
+  it('leaves GitHub disabled without an OAuth application', () => {
+    expect(Effect.runSync(publicConfigFromEnv(ENV)).github).toBeUndefined()
   })
 
   it.each([
@@ -84,6 +119,11 @@ describe('publicConfigFromEnv', () => {
     ['the registry index is not a URL', { ...ENV, TYPIKA_REGISTRY_INDEX_URL: 'registry/index.json' }],
     ['a template URL is not HTTP', { ...ENV, TYPIKA_TEMPLATE_FILE_URL_TEMPLATE: 'javascript:alert(1)' }],
     ['the Kotlin compile service is not a URL', { ...ENV, KOTLIN_COMPILER_URL: 'kotlin-compiler:8080' }],
+    ['the OAuth application has no secret', { ...ENV, GITHUB_CLIENT_ID: 'client-id' }],
+    [
+      'the GitHub URL is not HTTP',
+      { ...ENV, GITHUB_CLIENT_ID: 'client-id', GITHUB_CLIENT_SECRET: 'secret', TYPIKA_GITHUB_URL: 'ftp://github' },
+    ],
   ])('fails when %s', (_, env) => {
     const exit = Effect.runSyncExit(publicConfigFromEnv(env))
 

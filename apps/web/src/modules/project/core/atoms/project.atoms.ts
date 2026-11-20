@@ -2,6 +2,7 @@ import * as Effect from 'effect/Effect'
 import * as Atom from 'effect/reactivity/Atom'
 
 import { appRuntime } from '../../../app/core/app.runtime.ts'
+import { gitHubStatusAtom } from '../../../github/core/atoms/github.atoms.ts'
 import { projectArchiveOf } from '../domain/project-archive.domain-model.ts'
 import type { ProjectFileEdit, TemplateProject } from '../domain/project.domain-model.ts'
 import { applySolutionProgram } from '../programs/apply-solution/apply-solution.program.ts'
@@ -18,6 +19,7 @@ import { openTemplateProgram } from '../programs/open-template/open-template.pro
 import { renameProjectProgram } from '../programs/rename-project/rename-project.program.ts'
 import { resetProjectProgram } from '../programs/reset-project/reset-project.program.ts'
 import { saveProjectFilesProgram } from '../programs/save-project-files/save-project-files.program.ts'
+import { shareGistProgram } from '../programs/share-gist/share-gist.program.ts'
 
 export type OpenedProject = TemplateProject & { readonly generation: number }
 
@@ -98,6 +100,18 @@ export const applySolutionAtom = Atom.family((name: string) =>
 export const createShareLinkAtom = Atom.family((name: string) =>
   appRuntime.fn((input: { readonly files: ReadonlyMap<string, string>; readonly origin: string }, get) =>
     Effect.flatMap(get.result(templateProjectAtom(name)), (project) => createShareLinkProgram({ project, ...input }))
+  )
+)
+
+export const shareGistAtom = Atom.family((name: string) =>
+  appRuntime.fn(
+    (
+      input: { readonly files: ReadonlyMap<string, string>; readonly isPublic: boolean; readonly appOrigin: string },
+      get
+    ) =>
+      Effect.flatMap(get.result(templateProjectAtom(name)), (project) => shareGistProgram({ project, ...input })).pipe(
+        Effect.tapError(() => Effect.sync(() => get.refresh(gitHubStatusAtom)))
+      )
   )
 )
 

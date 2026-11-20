@@ -2,10 +2,13 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { fileURLToPath } from 'node:url'
 
 import * as Effect from 'effect/Effect'
+import * as Option from 'effect/Option'
 import { createServer, type Plugin, type ViteDevServer } from 'vite'
 
+import { gitHubTokenExchangeFromEnv } from '../server/github-token.ts'
 import { kotlinRelayFromEnv } from '../server/kotlin-relay.ts'
 import { appHeaders as headersOfAppPath, RUNTIME_HEADERS } from '../server/security-headers.ts'
+import { GITHUB_TOKEN_PATH } from '../src/modules/github/core/domain/github-oauth.domain-model.ts'
 import {
   KOTLIN_COMPILER_PATH,
   publicConfigFromEnv,
@@ -102,6 +105,24 @@ export const kotlinCompilerRelay = (): Plugin => ({
       if (!(request.url ?? '').startsWith(`${KOTLIN_COMPILER_PATH}/`)) return next()
       void toWebRequest(request, origin)
         .then(relay)
+        .then((answer) => sendWebResponse(answer, response))
+    })
+  },
+})
+
+export const gitHubTokenEndpoint = (): Plugin => ({
+  name: 'typika:github-token',
+  configureServer: (server) => {
+    const origin = process.env.TYPIKA_PUBLIC_URL ?? DEV_ENV.TYPIKA_PUBLIC_URL
+    const github = Effect.runSync(Effect.option(publicConfigFromEnv({ ...DEV_ENV, ...process.env }))).pipe(
+      Option.flatMapNullishOr((config) => config.github)
+    )
+    const exchange = gitHubTokenExchangeFromEnv(process.env, origin, Option.getOrUndefined(github)?.url)
+    if (exchange === undefined) return
+    server.middlewares.use((request, response, next) => {
+      if (new URL(request.url ?? '/', origin).pathname !== GITHUB_TOKEN_PATH) return next()
+      void toWebRequest(request, origin)
+        .then(exchange)
         .then((answer) => sendWebResponse(answer, response))
     })
   },

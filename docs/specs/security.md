@@ -108,8 +108,9 @@ Le fragment (`#…`) n'est jamais envoyé au serveur : l'instance ne voit pas le
 | Token stocké côté serveur | Fuite massive | L'endpoint échange `code` → token et le renvoie ; aucun stockage, aucun log du token ni du `code` |
 | Vol du token côté client | Accès au compte | Mémoire + `sessionStorage` (disparaît à la fermeture de l'onglet), jamais `localStorage` ; CSP stricte sur l'origine app ; lien de révocation dans l'UI |
 
-Choix entre OAuth App et GitHub App (granularité des permissions, PKCE) : à trancher au M5, avec une préférence pour
-la permission la plus fine disponible.
+Tranché au lot 6 du M5 ([0034](../decisions/0034-github-oauth-and-gists.md)) : OAuth App, `state` et PKCE, échange
+sur le serveur de l'app, push limité aux dépôts publics. Une GitHub App aurait des permissions plus fines, mais créer
+un dépôt y demande d'installer l'app avec l'administration des dépôts.
 
 ### 3.6 Embed
 

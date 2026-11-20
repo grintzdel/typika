@@ -7,11 +7,17 @@ import type { OpenTemplateFailure } from '../hooks/use-template-project.ts'
 export type TemplateLoadErrorProps = {
   readonly failure: OpenTemplateFailure
   readonly onRetry: () => void
+  readonly onConnect?: (() => void) | undefined
 }
 
 const RETRYABLE: ReadonlySet<OpenTemplateFailure['_tag']> = new Set(['IndexUnavailable', 'FilesUnavailable', 'Unknown'])
 
-export const TemplateLoadError = ({ failure, onRetry }: TemplateLoadErrorProps) => {
+const isRetryable = (failure: OpenTemplateFailure) =>
+  failure._tag === 'GistUnavailable'
+    ? failure.reason === 'unavailable' || failure.reason === 'rate-limited'
+    : RETRYABLE.has(failure._tag)
+
+export const TemplateLoadError = ({ failure, onRetry, onConnect }: TemplateLoadErrorProps) => {
   const { t } = useTranslation('project')
   return (
     <ErrorState title={t('loadFailed.title')}>
@@ -25,10 +31,14 @@ export const TemplateLoadError = ({ failure, onRetry }: TemplateLoadErrorProps) 
         {failure._tag === 'FilesUnavailable' ? t('loadFailed.filesUnavailable', { name: failure.name }) : null}
         {failure._tag === 'ProjectNotFound' ? t('loadFailed.projectNotFound') : null}
         {failure._tag === 'ShareInvalid' ? t(`shareFailed.${failure.reason}`) : null}
+        {failure._tag === 'GistUnavailable' ? t(`gistFailed.${failure.reason}`) : null}
         {failure._tag === 'Unknown' ? t('loadFailed.unknown') : null}
       </p>
-      {RETRYABLE.has(failure._tag) ? <Button onClick={onRetry}>{t('retry')}</Button> : null}
-      {failure._tag === 'ShareInvalid' ? (
+      {isRetryable(failure) ? <Button onClick={onRetry}>{t('retry')}</Button> : null}
+      {failure._tag === 'GistUnavailable' && failure.reason === 'rate-limited' && onConnect !== undefined ? (
+        <Button onClick={onConnect}>{t('gistFailed.connect')}</Button>
+      ) : null}
+      {failure._tag === 'ShareInvalid' || failure._tag === 'GistUnavailable' ? (
         <a href="/templates" className="text-sm text-sky-700 hover:underline">
           {t('shareFailed.back')}
         </a>

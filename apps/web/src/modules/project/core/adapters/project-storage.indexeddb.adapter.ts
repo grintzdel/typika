@@ -179,6 +179,12 @@ export const makeProjectStorageIndexedDb = (factory: IDBFactory): Context.Servic
         if (found !== undefined) projects.put({ ...found, name })
       }),
 
+    setGistId: (id, gistId) =>
+      transact('readwrite', async ({ projects }) => {
+        const found = await findRecord(projects, id)
+        if (found !== undefined) projects.put({ ...found, gistId })
+      }),
+
     remove: (id) =>
       transact('readwrite', async ({ projects, files }) => {
         for (const key of await settled(files.index(BY_PROJECT).getAllKeys(id))) files.delete(key)

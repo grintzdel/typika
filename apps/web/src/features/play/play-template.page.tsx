@@ -39,6 +39,7 @@ import { TemplateLoadError } from '../../modules/project/ui/components/TemplateL
 import { WorkbenchSkeleton } from '../../modules/project/ui/components/WorkbenchSkeleton.tsx'
 import { useBaseTemplate } from '../../modules/project/ui/hooks/use-base-template.ts'
 import { useExportProject } from '../../modules/project/ui/hooks/use-export-project.ts'
+import { useGistShare } from '../../modules/project/ui/hooks/use-gist-share.ts'
 import { useShareLink } from '../../modules/project/ui/hooks/use-share-link.ts'
 import { useTemplateProject } from '../../modules/project/ui/hooks/use-template-project.ts'
 import { OutputPanels, type OutputPanel } from '../../modules/runtime/ui/components/OutputPanels.tsx'
@@ -88,6 +89,7 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
   const { template, failure } = project
   const base = useBaseTemplate(projectKey)
   const share = useShareLink(projectKey)
+  const gist = useGistShare(projectKey)
   const exporting = useExportProject(projectKey)
   const currentFiles = new Map([...(template?.files ?? NO_FILES), ...edits.editedFiles])
   const latestFiles = () => new Map([...currentFiles, ...edits.commitPending()])
@@ -116,7 +118,14 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
       tabs.handleOpenTabs(filesOfStep(step).map(fileTab), anchor._tag === 'Highlighted' ? anchor.range : undefined),
   })
 
-  if (failure !== undefined) return <TemplateLoadError failure={failure} onRetry={project.handleRetry} />
+  if (failure !== undefined)
+    return (
+      <TemplateLoadError
+        failure={failure}
+        onRetry={project.handleRetry}
+        onConnect={gist.isEnabled && !gist.isConnected ? gist.handleConnect : undefined}
+      />
+    )
   if (template === undefined) return <WorkbenchSkeleton />
 
   const active = tabs.activeTab
@@ -172,8 +181,26 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
             <ShareDialog
               link={share.link}
               isCopied={share.isCopied}
-              onOpen={() => share.handleCreate(latestFiles())}
+              defaultOpen={gist.shouldResume}
+              onOpen={() => {
+                gist.handleResumed()
+                share.handleCreate(latestFiles())
+              }}
               onCopy={share.handleCopy}
+              gist={
+                gist.isEnabled
+                  ? {
+                      isConnected: gist.isConnected,
+                      isSharing: gist.isSharing,
+                      link: gist.link,
+                      failure: gist.failure,
+                      revokeUrl: gist.revokeUrl,
+                      onConnect: gist.handleConnect,
+                      onShare: (isPublic) => gist.handleShare(latestFiles(), isPublic),
+                      onSignOut: gist.handleSignOut,
+                    }
+                  : undefined
+              }
             />
             <ExportDialog
               onExport={(includeTypikaFiles) => exporting.handleExport(latestFiles(), includeTypikaFiles)}

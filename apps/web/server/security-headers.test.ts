@@ -10,11 +10,13 @@ import {
 
 describe('isIsolatedPath', () => {
   it('isolates the sandbox routes and their children', () => {
-    expect(['/play/strategy-ts', '/p/1', '/compare', '/s', '/s/x'].every(isIsolatedPath)).toBe(true)
+    expect(['/play/strategy-ts', '/p/1', '/compare', '/s', '/s/x', '/g/abc123'].every(isIsolatedPath)).toBe(true)
   })
 
   it('leaves the other routes alone, even with a matching prefix', () => {
-    expect(['/', '/projects', '/plays', '/templates', '/config.json'].some(isIsolatedPath)).toBe(false)
+    expect(
+      ['/', '/projects', '/plays', '/templates', '/config.json', '/auth/github/callback'].some(isIsolatedPath)
+    ).toBe(false)
   })
 
   it('does not isolate the embed, which a third-party page cannot isolate', () => {

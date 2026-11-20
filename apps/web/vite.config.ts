@@ -4,7 +4,7 @@ import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-import { appHeaders, kotlinCompilerRelay, runtimeFrameDevServer } from './vite/dev-servers.ts'
+import { appHeaders, gitHubTokenEndpoint, kotlinCompilerRelay, runtimeFrameDevServer } from './vite/dev-servers.ts'
 import { registryIndexPlugin } from './vite/registry-index.ts'
 import { typescriptLibraries } from './vite/typescript-libraries.ts'
 
@@ -18,6 +18,7 @@ export default defineConfig(({ command }) => ({
   plugins: [
     appHeaders(),
     kotlinCompilerRelay(),
+    gitHubTokenEndpoint(),
     runtimeFrameDevServer(),
     typescriptLibraries(),
     registryIndexPlugin(),

@@ -9,6 +9,8 @@ export const DEFAULT_REGISTRY_INDEX_URL = '/registry/index.json'
 export const DEFAULT_TEMPLATE_FILE_URL_TEMPLATE = '/registry/gh/{owner}/{repo}@{ref}/{path}'
 export const DEFAULT_TEMPLATE_LISTING_URL_TEMPLATE = '/registry/listing/gh/{owner}/{repo}@{ref}.json'
 export const KOTLIN_COMPILER_PATH = '/api/kotlin'
+export const DEFAULT_GITHUB_URL = 'https://github.com'
+export const DEFAULT_GITHUB_API_URL = 'https://api.github.com'
 
 const parseUrl = (name: string, value: string | undefined) =>
   Effect.suspend(() => {
@@ -27,6 +29,28 @@ const parseLocation = (name: string, value: string | undefined, fallback: string
     return isPath || isHttp
       ? Effect.succeed(value)
       : Effect.fail(new AppConfigInvalidError({ reason: `${name} is neither a URL nor an absolute path: ${value}` }))
+  })
+
+const isSet = (value: string | undefined): value is string => value !== undefined && value !== ''
+
+const parseHttpUrl = (name: string, value: string | undefined, fallback: string) =>
+  Effect.gen(function* () {
+    const url = yield* parseUrl(name, isSet(value) ? value : fallback)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:')
+      return yield* new AppConfigInvalidError({ reason: `${name} is not an HTTP URL: ${url.href}` })
+    return url.href.replace(/\/$/, '')
+  })
+
+const githubFromEnv = (env: Env) =>
+  Effect.gen(function* () {
+    if (!isSet(env.GITHUB_CLIENT_ID)) return undefined
+    if (!isSet(env.GITHUB_CLIENT_SECRET))
+      return yield* new AppConfigInvalidError({ reason: 'GITHUB_CLIENT_SECRET is missing' })
+    return {
+      clientId: env.GITHUB_CLIENT_ID,
+      url: yield* parseHttpUrl('TYPIKA_GITHUB_URL', env.TYPIKA_GITHUB_URL, DEFAULT_GITHUB_URL),
+      apiUrl: yield* parseHttpUrl('TYPIKA_GITHUB_API_URL', env.TYPIKA_GITHUB_API_URL, DEFAULT_GITHUB_API_URL),
+    }
   })
 
 export const publicConfigFromEnv = (env: Env): Effect.Effect<PublicConfig, AppConfigInvalidError> =>
@@ -57,6 +81,7 @@ export const publicConfigFromEnv = (env: Env): Effect.Effect<PublicConfig, AppCo
       if (protocol !== 'http:' && protocol !== 'https:')
         return yield* new AppConfigInvalidError({ reason: `KOTLIN_COMPILER_URL is not an HTTP URL: ${kotlinCompiler}` })
     }
+    const github = yield* githubFromEnv(env)
     return {
       publicUrl: publicUrl.href.replace(/\/$/, ''),
       runtimeOrigin: runtimeUrl.origin,
@@ -65,5 +90,6 @@ export const publicConfigFromEnv = (env: Env): Effect.Effect<PublicConfig, AppCo
       templateFileUrlTemplate,
       templateListingUrlTemplate,
       ...(kotlinCompiler === undefined || kotlinCompiler === '' ? {} : { kotlinCompilerUrl: KOTLIN_COMPILER_PATH }),
+      ...(github === undefined ? {} : { github }),
     }
   })

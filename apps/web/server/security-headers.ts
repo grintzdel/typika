@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 
 type Headers = Readonly<Record<string, string>>
 
-const ISOLATED_PATHS = ['/play', '/p', '/compare', '/s']
+const ISOLATED_PATHS = ['/play', '/p', '/compare', '/s', '/g']
 
 export const isIsolatedPath = (pathname: string) =>
   ISOLATED_PATHS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))

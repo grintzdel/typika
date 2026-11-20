@@ -11,6 +11,7 @@ import {
   saveProjectFilesAtom,
   templateProjectAtom,
 } from '../../core/atoms/project.atoms.ts'
+import { GistUnavailableError } from '../../core/domain/errors/gist-unavailable.error.ts'
 import { ProjectExerciseNotFoundError } from '../../core/domain/errors/project-exercise-not-found.error.ts'
 import { ProjectFilesUnavailableError } from '../../core/domain/errors/project-files-unavailable.error.ts'
 import { ProjectIndexUnavailableError } from '../../core/domain/errors/project-index-unavailable.error.ts'
@@ -29,6 +30,7 @@ export type OpenTemplateFailure =
   | { readonly _tag: 'FilesUnavailable'; readonly name: string }
   | { readonly _tag: 'ProjectNotFound'; readonly id: string }
   | { readonly _tag: 'ShareInvalid'; readonly reason: ShareLinkInvalidError['reason'] }
+  | { readonly _tag: 'GistUnavailable'; readonly reason: GistUnavailableError['reason'] }
   | { readonly _tag: 'Unknown'; readonly name: string }
 
 export const openTemplateFailureOf = <A, E>(
@@ -43,6 +45,7 @@ export const openTemplateFailureOf = <A, E>(
     return { _tag: 'ExerciseNotFound', name: error.name, exercise: error.exercise }
   if (error instanceof ProjectIndexUnavailableError) return { _tag: 'IndexUnavailable', failure: error.failure }
   if (error instanceof ShareLinkInvalidError) return { _tag: 'ShareInvalid', reason: error.reason }
+  if (error instanceof GistUnavailableError) return { _tag: 'GistUnavailable', reason: error.reason }
   if (error instanceof ProjectNotFoundError) return { _tag: 'ProjectNotFound', id: error.id }
   if (error instanceof ProjectFilesUnavailableError) return { _tag: 'FilesUnavailable', name: templateName }
   return { _tag: 'Unknown', name: templateName }

@@ -5,8 +5,13 @@ import { DEFAULT_PACKAGE_URL_TEMPLATE } from '@typika/runtime-browser-js/default
 import { BROTLI_SUFFIX } from '@typika/runtime-go'
 
 import { isEmbedPath } from '../src/modules/embed/core/domain/embed.domain-model.ts'
+import { GITHUB_TOKEN_PATH } from '../src/modules/github/core/domain/github-oauth.domain-model.ts'
 import type { PublicConfig } from '../src/modules/shared/core/domain/public-config.domain-model.ts'
-import { KOTLIN_COMPILER_PATH } from '../src/modules/shared/core/public-config/public-config-from-env.ts'
+import {
+  DEFAULT_GITHUB_API_URL,
+  KOTLIN_COMPILER_PATH,
+} from '../src/modules/shared/core/public-config/public-config-from-env.ts'
+import type { GitHubTokenExchange } from './github-token.ts'
 import type { KotlinRelay } from './kotlin-relay.ts'
 import {
   appContentSecurityPolicy,
@@ -24,6 +29,7 @@ export type RequestHandlerOptions = {
   readonly runtimeDir: string
   readonly appServer: AppServer
   readonly kotlinRelay?: KotlinRelay
+  readonly gitHubTokenExchange?: GitHubTokenExchange
 }
 
 const RUNTIME_PREFIX = '/runtime/'
@@ -105,6 +111,7 @@ export const makeRequestHandler = async ({
   runtimeDir,
   appServer,
   kotlinRelay,
+  gitHubTokenExchange,
 }: RequestHandlerOptions) => {
   const clientRoot = resolve(clientDir)
   const runtimeRoot = resolve(runtimeDir)
@@ -114,6 +121,7 @@ export const makeRequestHandler = async ({
     config.registryIndexUrl,
     config.templateFileUrlTemplate,
     config.templateListingUrlTemplate,
+    config.github?.apiUrl ?? DEFAULT_GITHUB_API_URL,
   ].flatMap(originOf)
   const policyOf = (html: string, frameAncestors?: ReadonlyArray<string>) =>
     appContentSecurityPolicy({
@@ -147,6 +155,7 @@ export const makeRequestHandler = async ({
   const serveApp = async (request: Request, pathname: string) => {
     if (pathname.startsWith(RUNTIME_PREFIX)) return notFound()
     if (kotlinRelay !== undefined && pathname.startsWith(`${KOTLIN_COMPILER_PATH}/`)) return kotlinRelay(request)
+    if (gitHubTokenExchange !== undefined && pathname === GITHUB_TOKEN_PATH) return gitHubTokenExchange(request)
     if (isServerRoute(pathname)) return appServer.fetch(request)
     if (request.method !== 'GET' && request.method !== 'HEAD') return notFound()
     const file =

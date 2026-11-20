@@ -31,6 +31,7 @@ export class ProjectStoragePort extends Context.Service<
       copy: ProjectRecord
     ) => Effect.Effect<Option.Option<StoredProject>, ProjectStorageError>
     readonly rename: (id: string, name: string) => Effect.Effect<void, ProjectStorageError>
+    readonly setGistId: (id: string, gistId: string) => Effect.Effect<void, ProjectStorageError>
     readonly remove: (id: string) => Effect.Effect<void, ProjectStorageError>
   }
 >()('@typika/web/ProjectStoragePort') {}

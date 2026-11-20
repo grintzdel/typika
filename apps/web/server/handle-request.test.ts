@@ -164,7 +164,7 @@ describe('makeRequestHandler on the app origin', () => {
 
   it('lets the app reach a registry served from another origin', async () => {
     expect((await get(`${APP}/`)).headers.get('content-security-policy')).toContain(
-      "connect-src 'self' https://cdn.example.com;"
+      "connect-src 'self' https://cdn.example.com https://api.github.com;"
     )
   })
 
@@ -202,6 +202,59 @@ describe('makeRequestHandler for Kotlin', () => {
 
     expect(response.status).toBe(404)
     expect(kotlinRelay).not.toHaveBeenCalled()
+  })
+})
+
+describe('makeRequestHandler for GitHub', () => {
+  const gitHubTokenExchange = vi.fn(async () => Response.json({ accessToken: 'gho_token', scopes: ['gist'] }))
+  let handleWithGitHub: (request: Request) => Promise<Response>
+
+  beforeAll(async () => {
+    const dist = await mkdtemp(join(tmpdir(), 'typika-dist-'))
+    await writeTree(dist, { 'client/_shell.html': SHELL })
+    handleWithGitHub = await makeRequestHandler({
+      config: {
+        publicUrl: APP,
+        runtimeOrigin: RUNTIME,
+        registryIndexUrl: '/registry/index.json',
+        templateFileUrlTemplate: '/registry/gh/{owner}/{repo}@{ref}/{path}',
+        templateListingUrlTemplate: '/registry/listing/gh/{owner}/{repo}@{ref}.json',
+        github: {
+          clientId: 'client-id',
+          url: 'https://github.example.com',
+          apiUrl: 'https://github.example.com/api/v3',
+        },
+      },
+      clientDir: join(dist, 'client'),
+      runtimeDir: join(dist, 'runtime'),
+      appServer,
+      gitHubTokenExchange,
+    })
+  })
+
+  it('hands the token route to the exchange, and not to the app server', async () => {
+    appServer.fetch.mockClear()
+
+    const response = await handleWithGitHub(new Request(`${APP}/api/github/token`, { method: 'POST', body: '{}' }))
+
+    expect(await response.json()).toEqual({ accessToken: 'gho_token', scopes: ['gist'] })
+    expect(appServer.fetch).not.toHaveBeenCalled()
+  })
+
+  it('lets the app reach the API of the configured GitHub', async () => {
+    const response = await handleWithGitHub(new Request(`${APP}/g/abc123`))
+
+    expect(response.headers.get('content-security-policy')).toContain("connect-src 'self' https://github.example.com;")
+    expect(response.headers.get('cross-origin-opener-policy')).toBe('same-origin')
+  })
+
+  it('does not exchange from the runtime origin', async () => {
+    gitHubTokenExchange.mockClear()
+
+    const response = await handleWithGitHub(new Request(`${RUNTIME}/api/github/token`, { method: 'POST', body: '{}' }))
+
+    expect(response.status).toBe(404)
+    expect(gitHubTokenExchange).not.toHaveBeenCalled()
   })
 })
 

@@ -2,6 +2,18 @@ export const resources = {
   en: {
     app: {
       language: { label: 'Language', names: { en: 'English', fr: 'Français' } },
+      github: {
+        connecting: 'Signing in to GitHub…',
+        title: 'Cannot sign in to GitHub',
+        failed: {
+          state: 'This sign-in did not start in this tab, or it has expired. Start again from the Share dialog.',
+          denied: 'GitHub did not grant the access.',
+          exchange: 'GitHub refused the sign-in. Start again from the Share dialog.',
+          disabled: 'This instance of Typika is not connected to GitHub.',
+          required: 'Sign in to GitHub from the Share dialog.',
+        },
+        back: 'Back to the templates',
+      },
     },
     hub: {
       brand: 'Typika',
@@ -141,8 +153,40 @@ export const resources = {
         copy: 'Copy the link',
         copied: 'Link copied',
         close: 'Close',
-        tooLong:
-          'This project is too large for a link ({{length}} characters, {{max}} at most). Sharing through a gist will come later.',
+        tooLong: 'This project is too large for a link ({{length}} characters, {{max}} at most).',
+        useGist: 'Share it through a gist instead.',
+      },
+      gist: {
+        label: 'GitHub gist',
+        connectDescription:
+          'A gist holds the whole project on your GitHub account. Typika asks GitHub for the right to create gists, nothing else. You will leave this page and come back to it.',
+        connect: 'Sign in to GitHub',
+        description:
+          'The project is copied to a gist on your GitHub account. Anyone with the link can read a secret gist.',
+        public: 'Public gist',
+        create: 'Create the gist',
+        update: 'Update the gist',
+        sharing: 'Sending to GitHub…',
+        signOut: 'Sign out',
+        revoke: 'Revoke the access on GitHub',
+        linkLabel: 'Gist link',
+        copy: 'Copy the gist link',
+        view: 'View on GitHub',
+        failed: {
+          required: 'Sign in to GitHub to create a gist.',
+          unauthorized: 'GitHub no longer accepts this session. Sign in again.',
+          'rate-limited': 'GitHub is limiting requests for now. Try again in a few minutes.',
+          unavailable: 'GitHub could not be reached. Check your connection and try again.',
+        },
+      },
+      gistFailed: {
+        'not-found': 'This gist does not exist, or was deleted.',
+        'rate-limited': 'GitHub is limiting anonymous requests for now. Sign in to GitHub, or try again later.',
+        unavailable: 'GitHub could not be reached. Check your connection.',
+        invalid: 'This gist is not a Typika project.',
+        newer: 'This gist was made with a newer version of Typika.',
+        origin: 'The template of this gist cannot be found.',
+        connect: 'Sign in to GitHub',
       },
       shared: {
         label: 'Shared project',
@@ -322,6 +366,19 @@ export const resources = {
   fr: {
     app: {
       language: { label: 'Langue', names: { en: 'English', fr: 'Français' } },
+      github: {
+        connecting: 'Connexion à GitHub…',
+        title: 'Connexion à GitHub impossible',
+        failed: {
+          state:
+            'Cette connexion n’a pas commencé dans cet onglet, ou elle a expiré. Recommencez depuis le dialogue Partager.',
+          denied: 'GitHub n’a pas accordé l’accès.',
+          exchange: 'GitHub a refusé la connexion. Recommencez depuis le dialogue Partager.',
+          disabled: 'Cette instance de Typika n’est pas reliée à GitHub.',
+          required: 'Connectez-vous à GitHub depuis le dialogue Partager.',
+        },
+        back: 'Retour aux templates',
+      },
     },
     hub: {
       brand: 'Typika',
@@ -463,8 +520,41 @@ export const resources = {
         copy: 'Copier le lien',
         copied: 'Lien copié',
         close: 'Fermer',
-        tooLong:
-          'Ce projet est trop volumineux pour un lien ({{length}} caractères, {{max}} au plus). Le partage par gist arrivera plus tard.',
+        tooLong: 'Ce projet est trop volumineux pour un lien ({{length}} caractères, {{max}} au plus).',
+        useGist: 'Partagez-le plutôt par un gist.',
+      },
+      gist: {
+        label: 'Gist GitHub',
+        connectDescription:
+          'Un gist porte tout le projet sur votre compte GitHub. Typika demande à GitHub le droit de créer des gists, rien d’autre. Vous quitterez cette page, puis vous y reviendrez.',
+        connect: 'Se connecter à GitHub',
+        description:
+          'Le projet est copié dans un gist de votre compte GitHub. Un gist secret reste lisible par quiconque a le lien.',
+        public: 'Gist public',
+        create: 'Créer le gist',
+        update: 'Mettre à jour le gist',
+        sharing: 'Envoi à GitHub…',
+        signOut: 'Se déconnecter',
+        revoke: 'Révoquer l’accès sur GitHub',
+        linkLabel: 'Lien du gist',
+        copy: 'Copier le lien du gist',
+        view: 'Voir sur GitHub',
+        failed: {
+          required: 'Connectez-vous à GitHub pour créer un gist.',
+          unauthorized: 'GitHub n’accepte plus cette session. Reconnectez-vous.',
+          'rate-limited': 'GitHub limite les requêtes pour l’instant. Réessayez dans quelques minutes.',
+          unavailable: 'GitHub est injoignable. Vérifiez votre connexion, puis réessayez.',
+        },
+      },
+      gistFailed: {
+        'not-found': 'Ce gist n’existe pas, ou a été supprimé.',
+        'rate-limited':
+          'GitHub limite les requêtes anonymes pour l’instant. Connectez-vous à GitHub, ou réessayez plus tard.',
+        unavailable: 'GitHub est injoignable. Vérifiez votre connexion.',
+        invalid: 'Ce gist n’est pas un projet Typika.',
+        newer: 'Ce gist a été créé avec une version plus récente de Typika.',
+        origin: 'Le template de ce gist est introuvable.',
+        connect: 'Se connecter à GitHub',
       },
       shared: {
         label: 'Projet partagé',

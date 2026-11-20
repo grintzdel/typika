@@ -31,12 +31,13 @@ type ProjectOrigin =
   | { kind: 'template'; name: string }
   | { kind: 'exercise'; name: string; exercise: string }
   | { kind: 'share-url'; name: string; exercise?: string }
-  | { kind: 'gist'; gistId: string; parent?: string }
+  | { kind: 'gist'; name: string; gistId: string; exercise?: string }
   | { kind: 'blank'; runtime: 'browser-js' | 'node' | 'go' | 'kotlin' }
 ```
 
 La ref épinglée du template est à côté de l'origine, dans `projects.ref`. C'est le `parent` d'un remix, conservé à
-l'export (§4, §5). `gist` et `blank` ne sont pas encore implémentés.
+l'export (§4, §5). `projects.gistId` garde le gist vers lequel le projet a été partagé (§3). `blank` n'est pas encore
+implémenté.
 
 Un template peut avoir plusieurs projets : `/p/<projectId>` ouvre l'un d'eux, et `/play/<name>` rouvre le plus récent
 de son origine.
@@ -123,11 +124,18 @@ par le navigateur.
 ## 3. Partage par gist — `/g/<gistId>`
 
 - Nécessite une connexion GitHub OAuth (scope `gist` uniquement). Le jeton est obtenu via l'endpoint d'échange de
-  l'instance, conservé en mémoire de session (`sessionStorage`), jamais côté serveur.
-- Création : un gist **secret** par défaut (option public), un fichier par fichier du projet. Les chemins avec `/` sont
-  encodés car un gist est plat : séparateur `__` ou équivalent, et un fichier `typika.share.json` qui porte la table
-  des chemins, l'origine et le runtime.
-- Re-partager un projet déjà partagé met à jour le même gist (l'id est gardé dans `projects.origin` ou `ui`).
+  l'instance, conservé en mémoire de session (`sessionStorage`), jamais côté serveur. La connexion est une redirection
+  pleine page, avec `state` et PKCE ([0034](../decisions/0034-github-oauth-and-gists.md)) ; au retour, le dialogue de
+  partage se rouvre.
+- Création : un gist **secret** par défaut (option public), un fichier par fichier du projet. Un gist est plat : `/`
+  devient `__` dans le nom du fichier, avec un suffixe `~2` en cas de collision.
+- `typika.share.json` décrit le projet : `v` (version, `1`), `n` (nom), `o` (ref d'origine), `r` (runtime), `x`
+  (exercice, optionnel), `files` (nom dans le gist → chemin) et `blank` (chemin → contenu des fichiers vides ou
+  blancs, que l'API des gists refuse). Les fichiers du gist absents de `files` sont ignorés.
+- Re-partager un projet déjà partagé met à jour le même gist : son id est gardé dans `projects.gistId`. Un projet
+  jamais enregistré, ou ouvert depuis le gist de quelqu'un d'autre, crée un nouveau gist.
+- V1 : comme pour un lien, `o` doit désigner un template de l'index. Un gist dont l'API a tronqué un fichier (plus de
+  1 Mo) n'est pas ouvert.
 - Ouverture de `/g/<gistId>` : lecture via l'API publique GitHub, sans connexion. Les limites de débit de l'API pour
   les requêtes anonymes s'appliquent ; en cas de dépassement, message et proposition de se connecter.
 - Un gist secret reste accessible à quiconque a le lien : l'UI le dit au moment du partage.
@@ -143,9 +151,9 @@ par le navigateur.
 
 ## 5. Push vers GitHub
 
-- Connexion OAuth avec le scope nécessaire à la création de dépôt (`public_repo`, ou `repo` si l'utilisateur choisit
-  privé) ; le scope n'est demandé qu'au moment du push.
-- Formulaire : nom du dépôt, visibilité, description, inclure les fichiers Typika (oui par défaut).
+- Connexion OAuth avec le scope `public_repo`, demandé au moment du push seulement. V1 ne crée que des dépôts
+  publics : `repo` n'est jamais demandé ([0034](../decisions/0034-github-oauth-and-gists.md)).
+- Formulaire : nom du dépôt, description, inclure les fichiers Typika (oui par défaut).
 - Crée le dépôt, puis un commit initial unique sur la branche par défaut. Pas de push vers un dépôt existant en V1.
 - Le `typika.toml` poussé conserve `parent` ; un README minimal est ajouté s'il n'existe pas, avec un lien vers le
   template d'origine.

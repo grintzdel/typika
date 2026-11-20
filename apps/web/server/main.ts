@@ -4,6 +4,7 @@ import * as Effect from 'effect/Effect'
 import { serve } from 'srvx'
 
 import { publicConfigFromEnv } from '../src/modules/shared/core/public-config/public-config-from-env.ts'
+import { gitHubTokenExchangeFromEnv } from './github-token.ts'
 import { makeRequestHandler, type AppServer } from './handle-request.ts'
 import { kotlinRelayFromEnv } from './kotlin-relay.ts'
 
@@ -27,7 +28,9 @@ const loaded: unknown = await import(/* @vite-ignore */ new URL('../server/serve
 const appServer = typeof loaded === 'object' && loaded !== null && 'default' in loaded ? loaded.default : undefined
 if (!isAppServer(appServer)) throw new Error('dist/server/server.js does not export a fetch handler')
 
-const kotlinRelay = kotlinRelayFromEnv(process.env, new URL(config.publicUrl).origin)
+const appOrigin = new URL(config.publicUrl).origin
+const kotlinRelay = kotlinRelayFromEnv(process.env, appOrigin)
+const gitHubTokenExchange = gitHubTokenExchangeFromEnv(process.env, appOrigin, config.github?.url)
 
 const server = serve({
   port: process.env.PORT ?? 3000,
@@ -39,6 +42,7 @@ const server = serve({
     runtimeDir: dist('runtime'),
     appServer,
     ...(kotlinRelay === undefined ? {} : { kotlinRelay }),
+    ...(gitHubTokenExchange === undefined ? {} : { gitHubTokenExchange }),
   }),
 })
 
