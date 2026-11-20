@@ -33,7 +33,7 @@ jobs:
       - run: pnpm --filter @typika/web exec playwright install --with-deps chromium webkit
       - run: pnpm lint
       - run: pnpm format:check
-      - run: pnpm turbo run typecheck test --concurrency=3
+      - run: pnpm turbo run typecheck test --concurrency=1 --continue
       - run: pnpm template-check
       - run: pnpm registry:build
 
