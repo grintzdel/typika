@@ -10,6 +10,7 @@ const GLOBAL_SETUP = [fileURLToPath(import.meta.resolve('@typika/kotlin-compiler
 
 export default defineConfig({
   server: { hmr: false },
+  optimizeDeps: { include: ['@jridgewell/trace-mapping'] },
   test: {
     projects: [
       {
