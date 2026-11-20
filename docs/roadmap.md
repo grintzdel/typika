@@ -14,13 +14,14 @@ une revue qui décide du suivant. L'ordre ci-dessous est le plan actuel, pas un 
 | **M4** | Go & comparaison | Variantes Go et mode comparaison TS / Go. |
 | **M5** | Partage | Embed, partage par URL et gist, export, CLI. |
 | **M6** | Kotlin | Variantes Kotlin via le service de compilation. |
+| **M7** | Publication | Les dépôts, l'instance et le package `typika` sont publics. |
 
 ```
-M0 ──► M1 ──► M2 ──► M3 ──┬──► M4 ──► M6
-                          └──► M5
+M0 ──► M1 ──► M2 ──► M3 ──┬──► M4 ──► M6 ──┬──► M7
+                          └──► M5 ─────────┘
 ```
 
-M4 et M5 sont indépendants ; M6 dépend de M4 (mode comparaison).
+M4 et M5 sont indépendants ; M6 dépend de M4 (mode comparaison). M7 publie ce que les autres ont livré.
 
 ---
 
@@ -479,6 +480,32 @@ d'API ou un envoi incomplet ont leur message, et le formulaire reste rempli. L'�
 Il reste à le jouer contre le vrai GitHub, à la main, et à lier la suggestion « proposer au registre » quand le
 registre sera public (#92).
 
+Revue (2026-11-20) : les six lots du M5 sont livrés. Un projet se partage par lien `/s#…` ou par gist, s'exporte en
+zip ou vers un nouveau dépôt GitHub, et s'embarque par `/embed/<name>` ; `typika create` et `typika validate`
+existent dans `packages/cli`. Le lot 6 a été joué contre le vrai GitHub le 2026-11-20, avec une OAuth App de
+développement : le gist se rouvre par `/g/<id>` et le push crée le dépôt. Le serveur de dev lit depuis
+`apps/web/.env.local` (#118). Au dernier contrôle complet (#117) : 24 tâches Turbo sur 24, 44 E2E en production, et
+124 E2E sur 125 en dev, le dernier étant un timeout Kotlin sous charge qui passe seul. Les E2E n'ont pas été relancés
+après #118. Le critère de fin est joué en local : l'embed tourne dans une page d'un autre site sur le build de
+production, et `typika create`, contre un registre local, produit des projets TS, Go et Kotlin qui passent leurs tests
+natifs. Sa moitié publique (`npx typika create`, une vraie page tierce) attend la publication : le M5 reste ouvert
+jusque-là, comme le M3. On passe au M7, qui prépare cette publication. Ce qui reste ouvert :
+
+- La publication attend toujours la recherche de marques (R6) et la réservation de `typika.dev` et de `@typika`
+  (#92). L'OAuth App de production, sous `typika-app`, se crée à ce moment-là.
+- Les projets `blank` n'existent pas. Un lien sans origine (`f` seul) ne s'ouvre donc pas, et un gist doit pointer sur
+  un template de l'index ([sharing-and-cli §1 à §3](specs/sharing-and-cli.md)).
+- Le push ne crée que des dépôts publics, et l'échange OAuth est un handler du serveur Node plutôt qu'une route
+  TanStack ([0034](decisions/0034-github-oauth-and-gists.md)). « Proposer au registre » est une phrase sans lien.
+- `typika validate --run` n'a pas de service de compilation Kotlin par défaut
+  ([0032](decisions/0032-cli-archives-and-validate.md)).
+- L'E2E de l'embed ne tourne que dans Chromium ; WebKit a été vérifié au spike de
+  l'[ADR 0031](decisions/0031-embed-runtimes.md). `panel=preview` retombe sur la console.
+- Les tests natifs des zips exportés et des projets créés par le CLI sont vérifiés à la main.
+- Deux E2E de dev sont instables sous charge (#116, et le timeout Kotlin ci-dessus), et l'abort de V8 du serveur de
+  dev ne s'est pas reproduit (#104).
+- La configuration Vercel, `SECURITY.md` et la CI GitHub sont toujours en attente : le M7 les prend.
+
 ## M6 — Kotlin
 
 **Objectif** : le langage POO de référence du catalogue.
@@ -632,12 +659,41 @@ public : partage par URL, export zip, `/embed/<name>` et `typika validate`. Ce q
   reproduit.
 - La configuration Vercel, `SECURITY.md` et la CI GitHub sont toujours en attente.
 
+## M7 — Publication
+
+**Objectif** : le jour où #92 se débloque, publier ne demande plus que de pousser.
+
+Livrables :
+
+- La bascule vers `typika-app/templates` et `typika-app/registry`, prête sur le `main` courant.
+- La CI GitHub de l'app, `SECURITY.md` et la chaîne d'approvisionnement de [security §5](specs/security.md).
+- Une cible d'hébergement choisie et sa configuration ([hosting](guides/hosting.md)).
+- Les dépôts, l'instance et le package `typika` publics.
+
+Terminé quand : les critères de fin du M3 et du M5 sont joués sur l'instance publique. Une PR au registre ajoute un
+template sans toucher à l'app, un template tourne dans une page tierce, et `npx typika create strategy-ts` produit un
+projet qui passe ses tests.
+
+### Découpage
+
+Un lot = une branche `m7/<lot>` et une PR. Les lots 1 à 3 se font sans rien publier. Le lot 4 demande une décision du
+mainteneur, et le lot 5 attend #92.
+
+| # | Lot | Contenu | Terminé quand |
+|---|---|---|---|
+| 1 | `cutover` | La bascule du lot 7 du M3, préparée en octobre pour 38 entrées sous `typika/…`, est reprise sur le `main` courant : extraction de `templates/` et `registry/` vers `typika-app/…`, 78 entrées réépinglées, artefacts Kotlin publiés à côté de l'index, workflows `validate-pr`, `build-index` et `health` avec Go et Kotlin, branche des sous-modules rebasée. | L'extraction se termine par un `registry-tools build` vert sur les 78 entrées, et la branche des sous-modules passe le contrôle complet. |
+| 2 | `ci` | Le workflow GitHub Actions de l'app ([architecture §9](specs/architecture.md)) : lint, format, types, tests, build, E2E, puis `docker build` et E2E des en-têtes sur l'image. Le lot dit ce qui reste local si les minutes d'un dépôt privé ne suffisent pas. | Une PR affiche un contrôle GitHub vert, et un test cassé exprès le fait échouer. |
+| 3 | `security-policy` | `SECURITY.md` ([security §6](specs/security.md)) et les points de [security §5](specs/security.md) qui ne demandent pas de publication : image de base épinglée par digest, Renovate avec délai d'adoption. | Chaque point de §5 est fait ou rattaché au lot 5. |
+| 4 | `hosting` | Choix de la cible de l'instance publique, dans une ADR : Docker derrière Caddy, la cible principale, ou Vercel avec le service Kotlin à part ([hosting §4 à §6](guides/hosting.md)). Puis sa configuration. | La checklist de [hosting §9](guides/hosting.md) passe sur une instance non publique de la cible retenue. |
+| 5 | `publish` | Après #92 : transfert du dépôt, création des deux dépôts, Pages et Renovate, OAuth App de production, publication du package `typika` avec provenance, instance publique, lien « proposer au registre ». | Le critère de fin du M7. |
+
 ---
 
-## Après M6 (non planifié)
+## Après M7 (non planifié)
 
 Pistes, à prioriser le moment venu :
 
+- Projets `blank`, sans template d'origine : ils ouvrent les liens sans origine et les gists libres.
 - Vagues suivantes de design patterns (GoF restants, puis Repository, Unit of Work, Specification, Null Object,
   Result / Either) — voir [catalogue](specs/catalogue.md).
 - Plus de fondamentaux POO si le premier template trouve son public.
@@ -654,7 +710,7 @@ Pistes, à prioriser le moment venu :
 | R3 | Poids des runtimes | Lazy-load, Cache Storage ([0027](decisions/0027-go-assets-delivery.md)), CDN plus tard — M1 / M4 |
 | R4 | IntelliSense TS dans CodeMirror 6 | Levé : CodeMirror 6 confirmé ([0015](decisions/0015-editor.md)) |
 | R5 | Pourrissement des templates | CI de santé + Renovate — M3 |
-| R6 | Nom du projet | Typika retenu ([0014](decisions/0014-name-typika.md)) ; recherche de marques au M0 |
+| R6 | Nom du projet | Typika retenu ([0014](decisions/0014-name-typika.md)) ; recherche de marques avant la publication (#92) |
 | R7 | Go dans le navigateur | Levé : toolchain Go en WASM ([0018](decisions/0018-go-runtime.md)) ; Safari vérifié, Firefox hors périmètre |
 | R8 | Service de compilation Kotlin | Levé : service maison, cible JS ([0019](decisions/0019-kotlin-runtime.md)) ; WebKit vérifié, Firefox hors périmètre |
 | R9 | Abus du service de compilation | Levé : limites, isolation et rate limiting par IP ([0028](decisions/0028-kotlin-compilation-workers.md), [0029](decisions/0029-kotlin-relay-rate-limit.md)), test de charge au M6 |

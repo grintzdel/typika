@@ -38,7 +38,7 @@ valeurs publiques au client via `/config.json`.
 | `TYPIKA_KOTLIN_RATE_PER_MINUTE` | non | non | `20` | Compilations par minute et par IP ; au-delà, `429` |
 | `TYPIKA_KOTLIN_RATE_BURST` | non | non | `10` | Compilations d'avance qu'une IP peut enchaîner |
 | `TYPIKA_TRUST_PROXY` | non | non | `true` | L'IP du client est le dernier `X-Forwarded-For` ; seulement derrière un proxy qui réécrit cet en-tête (Caddy). `docker-compose.yml` le fixe à `true` |
-| `GITHUB_CLIENT_ID` | non | oui | `Iv1.…` | Application OAuth ; absent ⇒ fonctions GitHub désactivées |
+| `GITHUB_CLIENT_ID` | non | oui | `Ov23li…` | Application OAuth ; absent ⇒ fonctions GitHub désactivées |
 | `GITHUB_CLIENT_SECRET` | si `GITHUB_CLIENT_ID` | **non** | — | Échange `code` → token, jamais exposé au client |
 | `TYPIKA_GITHUB_URL` | non | oui | `https://github.example.com` | Remplace `https://github.com` : GitHub Enterprise, ou le faux GitHub des E2E ([0034](../decisions/0034-github-oauth-and-gists.md)) |
 | `TYPIKA_GITHUB_RATE_PER_MINUTE` | non | non | `10` | Échanges `code` → token par minute et par IP ; au-delà, `429` |
