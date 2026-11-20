@@ -1,4 +1,4 @@
-ref = "github:typika-app/templates/adapter-base/kotlin@eadadbc0d99d"
+ref = "github:typika-app/templates/adapter-base/kotlin@df0fc9164336"
 maintainers = ["github:maoudin"]
 category = "official"
 added = 2026-10-15

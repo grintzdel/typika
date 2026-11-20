@@ -1,4 +1,4 @@
-ref = "github:typika-app/templates/outbox/go@c6506c948f45"
+ref = "github:typika-app/templates/outbox/go@df0fc9164336"
 maintainers = ["github:maoudin"]
 category = "official"
 added = 2026-10-12

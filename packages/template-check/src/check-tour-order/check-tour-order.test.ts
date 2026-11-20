@@ -10,7 +10,7 @@ const kotlin = manifestOf({
   name: 'strategy-kotlin',
   language: 'kotlin',
   kind: 'kotlin',
-  extra: `\n[variants]\ntypescript = "${TS}@8a33c091e750"\n`,
+  extra: `\n[variants]\ntypescript = "${TS}@df0fc9164336"\n`,
 })
 
 const tourIdsAt = (ref: string) => (ref.replace(/@.*$/, '') === TS ? REFERENCE : undefined)

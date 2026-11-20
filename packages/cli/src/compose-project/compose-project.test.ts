@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { exerciseFixture, manifestFixture } from '../__tests__/manifest.factory.ts'
 import { composeProject, PUBLIC_APP_URL } from './compose-project.ts'
 
-const REF = 'github:typika-app/templates/strategy/ts@1318eae7665d'
+const REF = 'github:typika-app/templates/strategy/ts@df0fc9164336'
 
 const templateFiles = (): TemplateFiles =>
   new Map([

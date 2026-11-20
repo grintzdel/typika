@@ -1,4 +1,4 @@
-ref = "github:typika-app/templates/observer-base/ts@2e654a0a7e0f"
+ref = "github:typika-app/templates/observer-base/ts@df0fc9164336"
 maintainers = ["github:maoudin"]
 category = "official"
 added = 2026-10-11

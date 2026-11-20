@@ -1,4 +1,4 @@
-ref = "github:typika-app/templates/strategy-base/go@50910ed8d846"
+ref = "github:typika-app/templates/strategy-base/go@df0fc9164336"
 maintainers = ["github:maoudin"]
 category = "official"
 added = 2026-10-08

@@ -8,7 +8,7 @@ import { manifestToml } from '../__tests__/manifest.factory.ts'
 import { makeFakeSource } from '../__tests__/template-source.fake.ts'
 import { validateProject, type ValidateOptions } from './validate-project.ts'
 
-const TS_REF = 'github:typika-app/templates/strategy/ts@1318eae7665d'
+const TS_REF = 'github:typika-app/templates/strategy/ts@df0fc9164336'
 
 const tour = (...ids: ReadonlyArray<string>) =>
   ids.map(

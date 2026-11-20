@@ -44,7 +44,7 @@ export const hubIndex = (): RegistryIndex =>
         manifest: {
           title: 'Strategy',
           summary: 'Replace a growing switch.',
-          base: 'github:typika-app/templates/strategy-base-ts@a17e93a7af3e',
+          base: 'github:typika-app/templates/strategy-base-ts@df0fc9164336',
           variants: { go: 'strategy-go' },
           facets: { topic: [STRATEGY, 'principle/open-closed'] },
           tour: { steps: [{ id: 'switch', title: 'The growing switch' }] },
@@ -61,7 +61,7 @@ export const templatePage = (overrides: Partial<TemplatePage> = {}): TemplatePag
   language: 'typescript',
   level: 'intermediate',
   license: 'MIT-0',
-  ref: 'github:typika-app/templates/strategy/ts@a17e93a7af3e',
+  ref: 'github:typika-app/templates/strategy/ts@df0fc9164336',
   updatedAt: '2026-10-12',
   category: 'official',
   maintainers: ['github:maoudin'],

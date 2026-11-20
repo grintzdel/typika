@@ -1,4 +1,4 @@
-ref = "github:typika-app/templates/adapter-base/go@720148b8d4e9"
+ref = "github:typika-app/templates/adapter-base/go@df0fc9164336"
 maintainers = ["github:maoudin"]
 category = "official"
 added = 2026-10-12

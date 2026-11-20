@@ -7,8 +7,8 @@ import { manifestToml } from '../__tests__/manifest.factory.ts'
 import { makeFakeSource } from '../__tests__/template-source.fake.ts'
 import { createProject, type CreateOptions } from './create-project.ts'
 
-const TS_REF = 'github:typika-app/templates/strategy/ts@1318eae7665d'
-const GO_REF = 'github:typika-app/templates/strategy/go@8203d3dae8a4'
+const TS_REF = 'github:typika-app/templates/strategy/ts@df0fc9164336'
+const GO_REF = 'github:typika-app/templates/strategy/go@df0fc9164336'
 const BASE_REF = 'github:typika-app/templates/strategy-base/ts@0a0b218aaaaa'
 
 const project = (manifest: string, extra: ReadonlyArray<readonly [string, string]> = []): TemplateFiles =>
