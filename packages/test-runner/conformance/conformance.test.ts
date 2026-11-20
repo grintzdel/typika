@@ -23,7 +23,7 @@ const fixtureFiles = async () =>
 
 const runWithVitest = async (): Promise<ReadonlyArray<TestEvent>> => {
   const output = join(await mkdtemp(join(tmpdir(), 'typika-conformance-')), 'events.jsonl')
-  await promisify(execFile)(VITEST_BIN, ['run', '--config', 'vitest.config.ts'], {
+  await promisify(execFile)(VITEST_BIN, ['run', '--config', 'vitest.config.ts', '--allowOnly'], {
     cwd: CONFORMANCE_DIR,
     env: { ...process.env, FORCE_COLOR: '0', NO_COLOR: '1', TYPIKA_EVENTS_FILE: output },
   }).catch(() => undefined)
