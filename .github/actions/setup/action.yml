@@ -1,0 +1,53 @@
+name: setup
+description: >-
+  Installs what the checks of this repository need: pnpm, Node, the pinned Go with its WASM assets and, on request,
+  the Kotlin compile service.
+
+inputs:
+  directory:
+    description: Where this repository is checked out
+    default: .
+  kotlin:
+    description: Start the Kotlin compile service and export KOTLIN_COMPILER_URL
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+      with:
+        package_json_file: ${{ inputs.directory }}/package.json
+    - uses: actions/setup-node@v5
+      with:
+        node-version: 24
+        cache: pnpm
+        cache-dependency-path: ${{ inputs.directory }}/pnpm-lock.yaml
+    - uses: actions/setup-go@v5
+      with:
+        go-version: 1.24.5
+        cache: false
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+    - uses: actions/cache@v4
+      with:
+        path: ${{ inputs.directory }}/packages/runtime-go/assets
+        key: >-
+          go-assets-${{ hashFiles(
+            format('{0}/packages/runtime-go/scripts/build-assets.ts', inputs.directory),
+            format('{0}/packages/runtime-go/src/domain/constants/*.ts', inputs.directory)
+          ) }}
+    - run: pnpm --filter @typika/runtime-go build:assets
+      shell: bash
+      working-directory: ${{ inputs.directory }}
+      env:
+        GOTOOLCHAIN: local
+    - name: Start the Kotlin compile service
+      if: inputs.kotlin == 'true'
+      shell: bash
+      working-directory: ${{ inputs.directory }}/apps/web
+      run: |
+        nohup node scripts/serve-kotlin-compiler.ts 3080 > "$RUNNER_TEMP/kotlin-compiler.log" 2>&1 &
+        timeout 900 sh -c 'until curl -sf http://127.0.0.1:3080/health > /dev/null; do sleep 2; done' ||
+          { cat "$RUNNER_TEMP/kotlin-compiler.log"; exit 1; }
+        echo "KOTLIN_COMPILER_URL=http://127.0.0.1:3080" >> "$GITHUB_ENV"
