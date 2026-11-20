@@ -1,0 +1,8 @@
+export const FAKE_GITHUB_URL = 'http://127.0.0.1:3090'
+
+export const FAKE_GITHUB_ENV = {
+  GITHUB_CLIENT_ID: 'e2e-client',
+  GITHUB_CLIENT_SECRET: 'e2e-secret',
+  TYPIKA_GITHUB_URL: FAKE_GITHUB_URL,
+  TYPIKA_GITHUB_API_URL: `${FAKE_GITHUB_URL}/api`,
+}

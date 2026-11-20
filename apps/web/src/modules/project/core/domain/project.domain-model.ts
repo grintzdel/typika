@@ -12,6 +12,12 @@ export const ProjectOriginSchema = Schema.Union([
     name: Schema.String,
     exercise: Schema.optionalKey(Schema.String),
   }),
+  Schema.Struct({
+    kind: Schema.Literal('gist'),
+    name: Schema.String,
+    gistId: Schema.String,
+    exercise: Schema.optionalKey(Schema.String),
+  }),
 ])
 export type ProjectOrigin = Schema.Schema.Type<typeof ProjectOriginSchema>
 
@@ -19,6 +25,7 @@ const KEY_SEPARATOR = '#'
 const STORED_KEY_PREFIX = 'project:'
 const SHARED_KEY_PREFIX = 'share:'
 const EMBED_KEY_PREFIX = 'embed:'
+const GIST_KEY_PREFIX = 'gist:'
 
 export const projectKeyOf = (templateName: string, exercise: string | undefined): string =>
   exercise === undefined ? templateName : `${templateName}${KEY_SEPARATOR}${exercise}`
@@ -32,6 +39,11 @@ export const sharedProjectKeyOf = (encoded: string): string => `${SHARED_KEY_PRE
 
 export const sharedPayloadOfKey = (key: string): string | undefined =>
   key.startsWith(SHARED_KEY_PREFIX) ? key.slice(SHARED_KEY_PREFIX.length) : undefined
+
+export const gistProjectKeyOf = (gistId: string): string => `${GIST_KEY_PREFIX}${gistId}`
+
+export const gistIdOfKey = (key: string): string | undefined =>
+  key.startsWith(GIST_KEY_PREFIX) ? key.slice(GIST_KEY_PREFIX.length) : undefined
 
 export const embedProjectKeyOf = (templateName: string): string => `${EMBED_KEY_PREFIX}${templateName}`
 
@@ -48,8 +60,10 @@ export const originOfKey = (key: string): ProjectOrigin => {
   return exercise === undefined ? { kind: 'template', name } : { kind: 'exercise', name, exercise }
 }
 
+const isSharedOrigin = (origin: ProjectOrigin) => origin.kind === 'share-url' || origin.kind === 'gist'
+
 export const sameOrigin = (a: ProjectOrigin, b: ProjectOrigin): boolean =>
-  a.kind === 'share-url' || b.kind === 'share-url'
+  isSharedOrigin(a) || isSharedOrigin(b)
     ? false
     : a.kind === 'exercise'
       ? b.kind === 'exercise' && a.name === b.name && a.exercise === b.exercise
@@ -78,6 +92,7 @@ export const ProjectRecordSchema = Schema.Struct({
   name: Schema.String,
   origin: ProjectOriginSchema,
   ref: Schema.optionalKey(Schema.String),
+  gistId: Schema.optionalKey(Schema.String),
   createdAt: Schema.Number,
   updatedAt: Schema.Number,
 })

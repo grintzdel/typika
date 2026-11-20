@@ -5,6 +5,7 @@ import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 import * as Option from 'effect/Option'
 
+import { makeGitHubTestLayer } from '../../github/core/github.test-layer.ts'
 import { ProjectFilesUnavailableError } from './domain/errors/project-files-unavailable.error.ts'
 import { ProjectStorageError } from './domain/errors/project-storage.error.ts'
 import { sameOrigin, textOf, type ProjectOrigin, type StoredProject } from './domain/project.domain-model.ts'
@@ -61,6 +62,11 @@ export const makeProjectStorageInMemory = (initial: ReadonlyArray<StoredProject>
         const existing = projects.get(id)
         if (existing !== undefined) projects.set(id, { ...existing, record: { ...existing.record, name } })
       }),
+    setGistId: (id, gistId) =>
+      Effect.sync(() => {
+        const existing = projects.get(id)
+        if (existing !== undefined) projects.set(id, { ...existing, record: { ...existing.record, gistId } })
+      }),
     remove: (id) =>
       Effect.sync(() => {
         projects.delete(id)
@@ -80,6 +86,7 @@ export const failingProjectStorage: ProjectStorage = {
   replaceFiles: quotaExceeded,
   duplicate: quotaExceeded,
   rename: quotaExceeded,
+  setGistId: quotaExceeded,
   remove: quotaExceeded,
 }
 
@@ -92,7 +99,8 @@ const pathOfRef = (ref: string) => ref.replace(/@.*$/, '')
 
 export const makeProjectTestLayer = (
   templates: Readonly<Record<string, TemplateFiles>>,
-  storage: ProjectStorage = makeProjectStorageInMemory()
+  storage: ProjectStorage = makeProjectStorageInMemory(),
+  github: ReturnType<typeof makeGitHubTestLayer> = makeGitHubTestLayer()
 ) => {
   const byPath = new Map(Object.entries(templates).map(([name, files]) => [pathOfRef(testRefOf(name)), files]))
   return Layer.mergeAll(
@@ -113,6 +121,7 @@ export const makeProjectTestLayer = (
       },
     }),
     Layer.succeed(ProjectStoragePort, storage),
-    Layer.succeed(StorageQuotaPort, { estimate: Effect.succeed(Option.none()) })
+    Layer.succeed(StorageQuotaPort, { estimate: Effect.succeed(Option.none()) }),
+    github
   )
 }

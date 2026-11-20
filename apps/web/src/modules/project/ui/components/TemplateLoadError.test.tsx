@@ -44,4 +44,30 @@ describe('TemplateLoadError', () => {
     expect(screen.getByRole('link', { name: 'Retour aux templates' }).getAttribute('href')).toBe('/templates')
     expect(screen.queryByRole('button')).toBeNull()
   })
+
+  it('explains a gist that does not exist, with a way back and no retry', () => {
+    render(<TemplateLoadError failure={{ _tag: 'GistUnavailable', reason: 'not-found' }} onRetry={vi.fn()} />)
+
+    expect(screen.getByRole('alert').textContent).toContain('Ce gist n’existe pas')
+    expect(screen.getByRole('link', { name: 'Retour aux templates' }).getAttribute('href')).toBe('/templates')
+    expect(screen.queryByRole('button')).toBeNull()
+  })
+
+  it('offers to sign in or retry when GitHub limits anonymous requests', () => {
+    const onRetry = vi.fn()
+    const onConnect = vi.fn()
+    render(
+      <TemplateLoadError
+        failure={{ _tag: 'GistUnavailable', reason: 'rate-limited' }}
+        onRetry={onRetry}
+        onConnect={onConnect}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Se connecter à GitHub' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }))
+
+    expect(onConnect).toHaveBeenCalledOnce()
+    expect(onRetry).toHaveBeenCalledOnce()
+  })
 })

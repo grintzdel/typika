@@ -2,14 +2,20 @@ import { exerciseStates, validateTemplate, type Manifest, type TemplateFiles } f
 import * as Effect from 'effect/Effect'
 import * as Option from 'effect/Option'
 
+import { GitHubGistPort } from '../../../../github/core/ports/github-gist.port.ts'
+import { GitHubSessionPort } from '../../../../github/core/ports/github-session.port.ts'
+import { GistUnavailableError } from '../../domain/errors/gist-unavailable.error.ts'
 import { ProjectExerciseNotFoundError } from '../../domain/errors/project-exercise-not-found.error.ts'
 import { ProjectNotFoundError } from '../../domain/errors/project-not-found.error.ts'
 import { ProjectTemplateInvalidError } from '../../domain/errors/project-template-invalid.error.ts'
 import { ProjectTemplateNotFoundError } from '../../domain/errors/project-template-not-found.error.ts'
 import { ShareLinkInvalidError } from '../../domain/errors/share-link-invalid.error.ts'
+import { projectOfGistFiles } from '../../domain/gist-share.domain-model.ts'
 import {
   embedTemplateOfKey,
   exerciseOf,
+  gistIdOfKey,
+  gistProjectKeyOf,
   modifiedPathsOf,
   originOfKey,
   projectFilesOf,
@@ -18,6 +24,7 @@ import {
   textOf,
   type ProjectExercise,
   type ProjectFiles,
+  type ProjectOrigin,
   type TemplateProject,
 } from '../../domain/project.domain-model.ts'
 import {
@@ -108,31 +115,35 @@ const loadTemplate = (
     return { manifest, tourSteps, templateFiles: opened.start, exercise: opened.exercise }
   })
 
-const openSharedProject = (encoded: string) =>
+type SharedSource = {
+  readonly projectId: string
+  readonly name: string
+  readonly ref: string | undefined
+  readonly exercise: string | undefined
+  readonly originOf: (templateName: string) => ProjectOrigin
+  readonly filesOf: (templateFiles: ProjectFiles) => ProjectFiles
+}
+
+const openShared = <E>({ projectId, name, ref, exercise, originOf, filesOf }: SharedSource, originNotFound: E) =>
   Effect.gen(function* () {
     const index = yield* TemplateIndexPort
     const storage = yield* ProjectStoragePort
-    const payload = yield* decodeSharePayload(encoded)
-    const projectId = yield* shareProjectIdOf(encoded)
     const stored = yield* storage.findById(projectId).pipe(Effect.orElseSucceed(() => Option.none()))
     const entries = yield* index.entries
-    const entry = payload.o === undefined ? undefined : entryForRef(entries, payload.o)
-    if (payload.o === undefined || entry === undefined) return yield* new ShareLinkInvalidError({ reason: 'origin' })
-    const ref = payload.o
-    const loaded = yield* loadTemplate(entry.name, ref, payload.x, entries)
-    const sharedFiles =
-      payload.f === undefined ? applyShareDelta(loaded.templateFiles, payload.d ?? {}) : filesOfShare(payload.f)
-    const files = Option.match(stored, { onNone: () => sharedFiles, onSome: (project) => project.files })
+    const entry = ref === undefined ? undefined : entryForRef(entries, ref)
+    if (ref === undefined || entry === undefined) return yield* Effect.fail(originNotFound)
+    const loaded = yield* loadTemplate(entry.name, ref, exercise, entries)
+    const files = Option.match(stored, {
+      onNone: () => filesOf(loaded.templateFiles),
+      onSome: (project) => project.files,
+    })
     return {
       ...loaded,
       projectId,
-      name: Option.match(stored, { onNone: () => payload.n, onSome: (project) => project.record.name }),
+      name: Option.match(stored, { onNone: () => name, onSome: (project) => project.record.name }),
       templateName: entry.name,
       ref,
-      origin:
-        payload.x === undefined
-          ? { kind: 'share-url', name: entry.name }
-          : { kind: 'share-url', name: entry.name, exercise: payload.x },
+      origin: originOf(entry.name),
       isShared: true,
       isSaved: Option.isSome(stored),
       files,
@@ -141,10 +152,63 @@ const openSharedProject = (encoded: string) =>
     } satisfies TemplateProject
   })
 
+const openSharedProject = (encoded: string) =>
+  Effect.gen(function* () {
+    const payload = yield* decodeSharePayload(encoded)
+    return yield* openShared(
+      {
+        projectId: yield* shareProjectIdOf(encoded),
+        name: payload.n,
+        ref: payload.o,
+        exercise: payload.x,
+        originOf: (name) => ({ kind: 'share-url', name, ...(payload.x === undefined ? {} : { exercise: payload.x }) }),
+        filesOf: (templateFiles) =>
+          payload.f === undefined ? applyShareDelta(templateFiles, payload.d ?? {}) : filesOfShare(payload.f),
+      },
+      new ShareLinkInvalidError({ reason: 'origin' })
+    )
+  })
+
+const openGistProject = (gistId: string) =>
+  Effect.gen(function* () {
+    const gists = yield* GitHubGistPort
+    const sessions = yield* GitHubSessionPort
+    const accessToken = Option.getOrUndefined(yield* sessions.session)?.accessToken
+    const gist = yield* gists.get(gistId, accessToken).pipe(
+      Effect.catchIf(
+        (error) => error.reason === 'unauthorized',
+        () => gists.get(gistId, undefined)
+      ),
+      Effect.mapError(
+        ({ reason }) => new GistUnavailableError({ reason: reason === 'unauthorized' ? 'unavailable' : reason })
+      )
+    )
+    if (gist.isTruncated) return yield* new GistUnavailableError({ reason: 'invalid' })
+    const shared = yield* projectOfGistFiles(gist.files)
+    return yield* openShared(
+      {
+        projectId: yield* shareProjectIdOf(gistProjectKeyOf(gistId)),
+        name: shared.name,
+        ref: shared.ref,
+        exercise: shared.exercise,
+        originOf: (name) => ({
+          kind: 'gist',
+          name,
+          gistId,
+          ...(shared.exercise === undefined ? {} : { exercise: shared.exercise }),
+        }),
+        filesOf: () => shared.files,
+      },
+      new GistUnavailableError({ reason: 'origin' })
+    )
+  })
+
 export const openTemplateProgram = (key: string) =>
   Effect.gen(function* () {
     const encoded = sharedPayloadOfKey(key)
     if (encoded !== undefined) return yield* openSharedProject(encoded)
+    const gistId = gistIdOfKey(key)
+    if (gistId !== undefined) return yield* openGistProject(gistId)
     const index = yield* TemplateIndexPort
     const projectId = projectIdOfKey(key)
     const embedded = embedTemplateOfKey(key)
@@ -167,7 +231,7 @@ export const openTemplateProgram = (key: string) =>
       templateName: name,
       ref,
       origin,
-      isShared: origin.kind === 'share-url',
+      isShared: origin.kind === 'share-url' || origin.kind === 'gist',
       isSaved: Option.isSome(stored),
       files,
       modifiedPaths: modifiedPathsOf(loaded.templateFiles, files),

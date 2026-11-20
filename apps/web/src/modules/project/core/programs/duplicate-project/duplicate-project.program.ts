@@ -12,8 +12,9 @@ export const duplicateProjectProgram = ({ id, name }: { readonly id: string; rea
     if (Option.isNone(source)) return yield* new ProjectNotFoundError({ id })
     const now = yield* Clock.currentTimeMillis
     const copyId = yield* Effect.sync(() => crypto.randomUUID())
+    const { gistId: _, ...record } = source.value.record
     const copied = yield* storage.duplicate(id, {
-      ...source.value.record,
+      ...record,
       id: copyId,
       name,
       createdAt: now,

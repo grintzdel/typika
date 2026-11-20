@@ -8,6 +8,7 @@ export const PublicConfigSchema = Schema.Struct({
   templateFileUrlTemplate: Schema.String,
   templateListingUrlTemplate: Schema.String,
   kotlinCompilerUrl: Schema.optionalKey(Schema.String),
+  github: Schema.optionalKey(Schema.Struct({ clientId: Schema.String, url: Schema.String, apiUrl: Schema.String })),
 })
 
 export type PublicConfig = typeof PublicConfigSchema.Type

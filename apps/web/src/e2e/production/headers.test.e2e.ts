@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test'
 
+import { FAKE_GITHUB_ENV } from '../fixtures/fake-github.fixture.ts'
 import { APP_URL, RUNTIME_URL } from './production-urls.ts'
 
-const ISOLATED_PATHS = ['/play/strategy-ts', '/p/a-project', '/compare', '/s']
-const PLAIN_PATHS = ['/', '/templates', '/projects']
+const ISOLATED_PATHS = ['/play/strategy-ts', '/p/a-project', '/compare', '/s', '/g/a-gist']
+const PLAIN_PATHS = ['/', '/templates', '/projects', '/auth/github/callback']
 
 const PUBLIC_CONFIG_KEYS = new Set([
   'publicUrl',
@@ -12,6 +13,7 @@ const PUBLIC_CONFIG_KEYS = new Set([
   'registryIndexUrl',
   'templateFileUrlTemplate',
   'templateListingUrlTemplate',
+  'github',
 ])
 
 const expectAppHeaders = (headers: Readonly<Record<string, string>>) => {
@@ -64,6 +66,7 @@ test.describe('app origin', () => {
     const keys = typeof body === 'object' && body !== null ? Object.keys(body) : []
     expect(keys).toEqual(expect.arrayContaining(['publicUrl', 'runtimeOrigin']))
     expect(keys.filter((key) => !PUBLIC_CONFIG_KEYS.has(key))).toEqual([])
+    expect(JSON.stringify(body)).not.toContain(FAKE_GITHUB_ENV.GITHUB_CLIENT_SECRET)
     expectAppHeaders(response.headers())
   })
 

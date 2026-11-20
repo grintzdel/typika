@@ -456,6 +456,19 @@ l'ordre du tour à la variante TypeScript. Avec `--run`, il fait tourner les tes
 qui sert l'index et des archives `git archive`. Les projets `strategy-ts`, `strategy-go` et `strategy-kotlin`, créés
 par le CLI, passent leurs tests avec `npm test`, `go test` et `gradle test`. Cette vérification est faite à la main.
 
+Lot 6 coupé en deux PR ([0034](decisions/0034-github-oauth-and-gists.md)) : (a) connexion, gist et `/g/<id>` ; (b)
+push vers un nouveau dépôt.
+
+Lot 6 (a) livré : sur une instance qui a une OAuth App, le dialogue Partager propose un gist. « Se connecter à
+GitHub » part sur GitHub avec le scope `gist`, un `state` et un défi PKCE, puis revient sur `/auth/github/callback`,
+qui échange le code par `POST /api/github/token` et garde le jeton en `sessionStorage`. La sandbox se rouvre sur le
+dialogue. Le gist, secret par défaut, porte les fichiers complets et `typika.share.json`. Re-partager un projet
+enregistré met à jour le même gist. `/g/<id>` ouvre le gist sans connexion, dans une sandbox éphémère, comme un lien
+`/s#…`. Un gist introuvable, illisible, plus récent ou dont le template manque a son message. L'échange refuse un
+autre `Origin` et limite par IP. Les E2E de dev et de production passent par un faux GitHub local
+(`scripts/serve-fake-github.ts`, `TYPIKA_GITHUB_URL`, `TYPIKA_GITHUB_API_URL`). La vérification contre le vrai GitHub,
+avec l'OAuth App de développement, reste à faire à la main.
+
 ## M6 — Kotlin
 
 **Objectif** : le langage POO de référence du catalogue.

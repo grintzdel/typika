@@ -40,6 +40,8 @@ valeurs publiques au client via `/config.json`.
 | `TYPIKA_TRUST_PROXY` | non | non | `true` | L'IP du client est le dernier `X-Forwarded-For` ; seulement derrière un proxy qui réécrit cet en-tête (Caddy). `docker-compose.yml` le fixe à `true` |
 | `GITHUB_CLIENT_ID` | non | oui | `Iv1.…` | Application OAuth ; absent ⇒ fonctions GitHub désactivées |
 | `GITHUB_CLIENT_SECRET` | si `GITHUB_CLIENT_ID` | **non** | — | Échange `code` → token, jamais exposé au client |
+| `TYPIKA_GITHUB_URL` | non | oui | `https://github.example.com` | Remplace `https://github.com` : GitHub Enterprise, ou le faux GitHub des E2E ([0034](../decisions/0034-github-oauth-and-gists.md)) |
+| `TYPIKA_GITHUB_API_URL` | non | oui | `https://github.example.com/api/v3` | Remplace `https://api.github.com` ; son origine entre dans `connect-src` |
 | `PORT` | non | non | `3000` | Port d'écoute du service `web` |
 | `NODE_ENV` | non | non | `production` | — |
 
@@ -235,9 +237,14 @@ Les assets de runtime (WASM d'esbuild, toolchain Go) sont dans l'image et servis
 
 ## 8. GitHub OAuth
 
-1. Créer l'application OAuth (ou GitHub App, choix au M5 — [security.md](../specs/security.md) §3.5).
+1. Créer une OAuth App ([0034](../decisions/0034-github-oauth-and-gists.md)) : *Settings → Developer settings → OAuth
+   Apps* du compte ou de l'organisation.
 2. URL de callback : `<TYPIKA_PUBLIC_URL>/auth/github/callback`.
-3. Renseigner `GITHUB_CLIENT_ID` et `GITHUB_CLIENT_SECRET`.
+3. Renseigner `GITHUB_CLIENT_ID` et `GITHUB_CLIENT_SECRET`. L'échange `POST /api/github/token` est limité à 10 par
+   minute et par IP, et refuse un `Origin` autre que l'app.
+
+En développement, le callback est `http://localhost:3000/auth/github/callback`, et les deux variables se passent à
+`pnpm --filter @typika/web dev`.
 
 ## 9. Checklist après déploiement
 

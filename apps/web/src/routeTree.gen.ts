@@ -15,10 +15,12 @@ import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as SRouteImport } from './routes/s'
 import { Route as CompareNameRouteImport } from './routes/compare/$name'
 import { Route as EmbedTemplateNameRouteImport } from './routes/embed/$templateName'
+import { Route as GGistIdRouteImport } from './routes/g/$gistId'
 import { Route as PProjectIdRouteImport } from './routes/p/$projectId'
 import { Route as PlayTemplateNameRouteImport } from './routes/play/$templateName'
 import { Route as TemplatesIndexRouteImport } from './routes/templates/index'
 import { Route as TemplatesNameRouteImport } from './routes/templates/$name'
+import { Route as AuthGithubCallbackRouteImport } from './routes/auth/github/callback'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -50,6 +52,11 @@ const EmbedTemplateNameRoute = EmbedTemplateNameRouteImport.update({
   path: '/embed/$templateName',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GGistIdRoute = GGistIdRouteImport.update({
+  id: '/g/$gistId',
+  path: '/g/$gistId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PProjectIdRoute = PProjectIdRouteImport.update({
   id: '/p/$projectId',
   path: '/p/$projectId',
@@ -70,6 +77,11 @@ const TemplatesNameRoute = TemplatesNameRouteImport.update({
   path: '/templates/$name',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthGithubCallbackRoute = AuthGithubCallbackRouteImport.update({
+  id: '/auth/github/callback',
+  path: '/auth/github/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -78,10 +90,12 @@ export interface FileRoutesByFullPath {
   '/s': typeof SRoute
   '/compare/$name': typeof CompareNameRoute
   '/embed/$templateName': typeof EmbedTemplateNameRoute
+  '/g/$gistId': typeof GGistIdRoute
   '/p/$projectId': typeof PProjectIdRoute
   '/play/$templateName': typeof PlayTemplateNameRoute
   '/templates/$name': typeof TemplatesNameRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/auth/github/callback': typeof AuthGithubCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -90,10 +104,12 @@ export interface FileRoutesByTo {
   '/s': typeof SRoute
   '/compare/$name': typeof CompareNameRoute
   '/embed/$templateName': typeof EmbedTemplateNameRoute
+  '/g/$gistId': typeof GGistIdRoute
   '/p/$projectId': typeof PProjectIdRoute
   '/play/$templateName': typeof PlayTemplateNameRoute
   '/templates/$name': typeof TemplatesNameRoute
   '/templates': typeof TemplatesIndexRoute
+  '/auth/github/callback': typeof AuthGithubCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,10 +119,12 @@ export interface FileRoutesById {
   '/s': typeof SRoute
   '/compare/$name': typeof CompareNameRoute
   '/embed/$templateName': typeof EmbedTemplateNameRoute
+  '/g/$gistId': typeof GGistIdRoute
   '/p/$projectId': typeof PProjectIdRoute
   '/play/$templateName': typeof PlayTemplateNameRoute
   '/templates/$name': typeof TemplatesNameRoute
   '/templates/': typeof TemplatesIndexRoute
+  '/auth/github/callback': typeof AuthGithubCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,10 +135,12 @@ export interface FileRouteTypes {
     | '/s'
     | '/compare/$name'
     | '/embed/$templateName'
+    | '/g/$gistId'
     | '/p/$projectId'
     | '/play/$templateName'
     | '/templates/$name'
     | '/templates/'
+    | '/auth/github/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -129,10 +149,12 @@ export interface FileRouteTypes {
     | '/s'
     | '/compare/$name'
     | '/embed/$templateName'
+    | '/g/$gistId'
     | '/p/$projectId'
     | '/play/$templateName'
     | '/templates/$name'
     | '/templates'
+    | '/auth/github/callback'
   id:
     | '__root__'
     | '/'
@@ -141,10 +163,12 @@ export interface FileRouteTypes {
     | '/s'
     | '/compare/$name'
     | '/embed/$templateName'
+    | '/g/$gistId'
     | '/p/$projectId'
     | '/play/$templateName'
     | '/templates/$name'
     | '/templates/'
+    | '/auth/github/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -154,10 +178,12 @@ export interface RootRouteChildren {
   SRoute: typeof SRoute
   CompareNameRoute: typeof CompareNameRoute
   EmbedTemplateNameRoute: typeof EmbedTemplateNameRoute
+  GGistIdRoute: typeof GGistIdRoute
   PProjectIdRoute: typeof PProjectIdRoute
   PlayTemplateNameRoute: typeof PlayTemplateNameRoute
   TemplatesNameRoute: typeof TemplatesNameRoute
   TemplatesIndexRoute: typeof TemplatesIndexRoute
+  AuthGithubCallbackRoute: typeof AuthGithubCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -204,6 +230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmbedTemplateNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/g/$gistId': {
+      id: '/g/$gistId'
+      path: '/g/$gistId'
+      fullPath: '/g/$gistId'
+      preLoaderRoute: typeof GGistIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$projectId': {
       id: '/p/$projectId'
       path: '/p/$projectId'
@@ -232,6 +265,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TemplatesNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/github/callback': {
+      id: '/auth/github/callback'
+      path: '/auth/github/callback'
+      fullPath: '/auth/github/callback'
+      preLoaderRoute: typeof AuthGithubCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -242,10 +282,12 @@ const rootRouteChildren: RootRouteChildren = {
   SRoute: SRoute,
   CompareNameRoute: CompareNameRoute,
   EmbedTemplateNameRoute: EmbedTemplateNameRoute,
+  GGistIdRoute: GGistIdRoute,
   PProjectIdRoute: PProjectIdRoute,
   PlayTemplateNameRoute: PlayTemplateNameRoute,
   TemplatesNameRoute: TemplatesNameRoute,
   TemplatesIndexRoute: TemplatesIndexRoute,
+  AuthGithubCallbackRoute: AuthGithubCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

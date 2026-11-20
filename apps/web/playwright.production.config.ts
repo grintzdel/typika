@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 
+import { FAKE_GITHUB_ENV, FAKE_GITHUB_URL } from './src/e2e/fixtures/fake-github.fixture.ts'
 import { TEST_REGISTRY_URL } from './src/e2e/production/production-urls.ts'
 
 const external = process.env.TYPIKA_E2E_APP_URL !== undefined
@@ -28,7 +29,13 @@ export default defineConfig({
               TYPIKA_REGISTRY_INDEX_URL: `${TEST_REGISTRY_URL}/index.json`,
               TYPIKA_TEMPLATE_FILE_URL_TEMPLATE: `${TEST_REGISTRY_URL}/gh/{owner}/{repo}@{ref}/{path}`,
               TYPIKA_TEMPLATE_LISTING_URL_TEMPLATE: `${TEST_REGISTRY_URL}/listing/gh/{owner}/{repo}@{ref}.json`,
+              ...FAKE_GITHUB_ENV,
             },
+          },
+          {
+            command: 'node scripts/serve-fake-github.ts 3090',
+            url: `${FAKE_GITHUB_URL}/health`,
+            reuseExistingServer: false,
           },
           {
             command: 'node src/e2e/production/serve-registry.ts dist/client/registry',
