@@ -245,8 +245,9 @@ Les assets de runtime (WASM d'esbuild, toolchain Go) sont dans l'image et servis
 3. Renseigner `GITHUB_CLIENT_ID` et `GITHUB_CLIENT_SECRET`. L'échange `POST /api/github/token` est limité par IP
    (`TYPIKA_GITHUB_RATE_*`), et refuse un `Origin` autre que l'app.
 
-En développement, le callback est `http://localhost:3000/auth/github/callback`, et les deux variables se passent à
-`pnpm --filter @typika/web dev`.
+En développement, le callback est `http://localhost:3000/auth/github/callback`, et les deux variables vont dans
+`apps/web/.env.local`, que `pnpm --filter @typika/web dev` lit au démarrage. Ce fichier est ignoré par git, et une
+variable déjà définie dans le shell l'emporte sur lui.
 
 ## 9. Checklist après déploiement
 
