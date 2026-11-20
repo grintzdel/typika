@@ -6,7 +6,12 @@ import { codeChallengeOf, GitHubScope } from '../../domain/github-oauth.domain-m
 import { GITHUB_TEST_CONFIG, makeGitHubSessionsInMemory, makeGitHubTestLayer } from '../../github.test-layer.ts'
 import { beginGitHubAuthorizationProgram } from './begin-github-authorization.program.ts'
 
-const INPUT = { scopes: [GitHubScope.GIST], returnTo: '/play/strategy-ts', appOrigin: 'https://typika.example.org' }
+const INPUT = {
+  scopes: [GitHubScope.GIST],
+  returnTo: '/play/strategy-ts',
+  intent: 'share-gist',
+  appOrigin: 'https://typika.example.org',
+}
 
 describe('beginGitHubAuthorizationProgram', () => {
   it('sends the user to GitHub with the scope, a state and a PKCE challenge it remembers', async () => {
@@ -29,6 +34,7 @@ describe('beginGitHubAuthorizationProgram', () => {
       code_challenge_method: 'S256',
     })
     expect(pending?.returnTo).toBe('/play/strategy-ts')
+    expect(pending?.intent).toBe('share-gist')
     expect(pending?.state).not.toBe(pending?.codeVerifier)
   })
 

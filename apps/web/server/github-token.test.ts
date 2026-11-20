@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { makeGitHubTokenExchange, type GitHubTokenExchangeOptions } from './github-token.ts'
+import { gitHubTokenExchangeFromEnv, makeGitHubTokenExchange, type GitHubTokenExchangeOptions } from './github-token.ts'
 import { makeRateLimiter } from './rate-limiter.ts'
 
 const APP = 'https://typika.example.org'
@@ -106,5 +106,22 @@ describe('makeGitHubTokenExchange', () => {
 
     expect((await exchange(new Request(`${APP}/api/github/token`, { headers: { origin: APP } }))).status).toBe(405)
     expect((await exchange(tokenRequest({ path: '/api/github/other' }))).status).toBe(404)
+  })
+})
+
+describe('gitHubTokenExchangeFromEnv', () => {
+  const ENV = { GITHUB_CLIENT_ID: 'client-id', GITHUB_CLIENT_SECRET: 'client-secret' }
+
+  it('has no exchange without an OAuth application', () => {
+    expect(gitHubTokenExchangeFromEnv({}, APP, 'https://github.com')).toBeUndefined()
+    expect(gitHubTokenExchangeFromEnv(ENV, APP, undefined)).toBeUndefined()
+  })
+
+  it('lets an instance set its own rate', async () => {
+    const exchange = gitHubTokenExchangeFromEnv({ ...ENV, TYPIKA_GITHUB_RATE_BURST: '1' }, APP, 'http://127.0.0.1:9')
+
+    await exchange?.(tokenRequest())
+
+    expect((await exchange?.(tokenRequest()))?.status).toBe(429)
   })
 })

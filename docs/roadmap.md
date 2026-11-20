@@ -469,6 +469,16 @@ autre `Origin` et limite par IP. Les E2E de dev et de production passent par un 
 (`scripts/serve-fake-github.ts`, `TYPIKA_GITHUB_URL`, `TYPIKA_GITHUB_API_URL`). La vérification contre le vrai GitHub,
 avec l'OAuth App de développement, reste à faire à la main.
 
+Lot 6 (b) livré : le dialogue Exporter propose de créer un dépôt GitHub. La connexion demande `public_repo` en plus
+des scopes déjà accordés, et le dialogue se rouvre au retour. Le formulaire prend le nom du dépôt, une description et
+l'option des fichiers Typika. Le dépôt, public, reçoit le projet en un seul commit : `typika.toml` y garde `parent`,
+et un README minimal renvoie au template si le projet n'en a pas. Un nom refusé, une session sans le droit, une limite
+d'API ou un envoi incomplet ont leur message, et le formulaire reste rempli. L'échange du code a un débit réglable
+(`TYPIKA_GITHUB_RATE_PER_MINUTE`, `TYPIKA_GITHUB_RATE_BURST`). Le critère de fin du lot est joué contre le faux GitHub
+: un gist secret se rouvre par `/g/<id>` sans connexion, et un push crée un dépôt dont le `typika.toml` garde `parent`.
+Il reste à le jouer contre le vrai GitHub, à la main, et à lier la suggestion « proposer au registre » quand le
+registre sera public (#92).
+
 ## M6 — Kotlin
 
 **Objectif** : le langage POO de référence du catalogue.

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '../../../../ui/Button.tsx'
@@ -10,16 +10,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '../../../../ui/Dialog.tsx'
+import { RepositoryPushSection, type RepositoryPushSectionProps } from './RepositoryPushSection.tsx'
 
 export type ExportDialogProps = {
   readonly onExport: (includeTypikaFiles: boolean) => void
+  readonly repository?: RepositoryPushSectionProps | undefined
+  readonly defaultOpen?: boolean
+  readonly onResumed?: () => void
 }
 
-export const ExportDialog = ({ onExport }: ExportDialogProps) => {
+export const ExportDialog = ({ onExport, repository, defaultOpen = false, onResumed }: ExportDialogProps) => {
   const { t } = useTranslation('project')
   const [includeTypikaFiles, setIncludeTypikaFiles] = useState(true)
+  useEffect(() => {
+    if (defaultOpen) onResumed?.()
+  }, [defaultOpen, onResumed])
   return (
-    <Dialog>
+    <Dialog defaultOpen={defaultOpen}>
       <DialogTrigger render={<Button />}>{t('export.trigger')}</DialogTrigger>
       <DialogPopup>
         <DialogTitle>{t('export.title')}</DialogTitle>
@@ -38,6 +45,7 @@ export const ExportDialog = ({ onExport }: ExportDialogProps) => {
             {t('export.download')}
           </DialogClose>
         </div>
+        {repository === undefined ? null : <RepositoryPushSection {...repository} />}
       </DialogPopup>
     </Dialog>
   )

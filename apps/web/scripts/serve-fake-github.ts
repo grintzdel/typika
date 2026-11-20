@@ -10,7 +10,11 @@ type Gist = { readonly id: string; readonly html_url: string; files: Record<stri
 const port = Number(argv[2] ?? '3090')
 const origin = `http://127.0.0.1:${port}`
 const challenges = new Map<string, { readonly challenge: string; readonly scope: string }>()
-const tokens = new Set<string>()
+const tokens = new Map<string, string>()
+const repositories = new Map<string, Record<string, string>>()
+const trees = new Map<string, Record<string, string>>()
+const commits = new Map<string, string>()
+const LOGIN = 'e2e-user'
 const gists = new Map<string, Gist>()
 
 const CORS = {
@@ -57,12 +61,13 @@ const exchange = async (request: IncomingMessage, response: ServerResponse) => {
   )
     return json(response, 200, { error: 'bad_verification_code' })
   const token = `gho_${randomBytes(8).toString('hex')}`
-  tokens.add(token)
+  tokens.set(token, granted.scope)
   return json(response, 200, { access_token: token, scope: granted.scope, token_type: 'bearer' })
 }
 
-const isSignedIn = (request: IncomingMessage) =>
-  tokens.has((request.headers.authorization ?? '').replace('Bearer ', ''))
+const scopeOf = (request: IncomingMessage) => tokens.get((request.headers.authorization ?? '').replace('Bearer ', ''))
+
+const isSignedIn = (request: IncomingMessage) => scopeOf(request) !== undefined
 
 const writeGist = async (request: IncomingMessage, response: ServerResponse, id: string | undefined) => {
   if (!isSignedIn(request)) return json(response, 401, { message: 'Bad credentials' })
@@ -81,10 +86,45 @@ const writeGist = async (request: IncomingMessage, response: ServerResponse, id:
   return json(response, id === undefined ? 201 : 200, gist)
 }
 
+const createRepository = async (request: IncomingMessage, response: ServerResponse) => {
+  if (!(scopeOf(request) ?? '').split(',').includes('public_repo')) return json(response, 403, { message: 'Forbidden' })
+  const name = String((await readJson(request)).name)
+  if (repositories.has(name)) return json(response, 422, { message: 'name already exists on this account' })
+  repositories.set(name, { 'README.md': `# ${name}\n` })
+  return json(response, 201, {
+    full_name: `${LOGIN}/${name}`,
+    html_url: `${origin}/${LOGIN}/${name}`,
+    default_branch: 'main',
+  })
+}
+
+const createTree = async (request: IncomingMessage, response: ServerResponse) => {
+  const entries = ((await readJson(request)).tree ?? []) as ReadonlyArray<{ path: string; content: string }>
+  const sha = randomBytes(20).toString('hex')
+  trees.set(sha, Object.fromEntries(entries.map((entry) => [entry.path, entry.content])))
+  return json(response, 201, { sha })
+}
+
+const createCommit = async (request: IncomingMessage, response: ServerResponse) => {
+  const body = await readJson(request)
+  const sha = randomBytes(20).toString('hex')
+  commits.set(sha, String(body.tree))
+  return json(response, 201, { sha })
+}
+
+const updateRef = async (request: IncomingMessage, response: ServerResponse, name: string) => {
+  const files = trees.get(commits.get(String((await readJson(request)).sha)) ?? '')
+  if (files === undefined) return json(response, 422, { message: 'Object does not exist' })
+  repositories.set(name, files)
+  return json(response, 200, { ref: 'refs/heads/main' })
+}
+
 const server = createServer((request, response) => {
   const url = new URL(request.url ?? '/', origin)
   const gistId = /^\/api\/gists\/([0-9a-f]+)$/.exec(url.pathname)?.[1]
-  const route = `${request.method ?? 'GET'} ${gistId === undefined ? url.pathname : '/api/gists/:id'}`
+  const [, repository, git] = /^\/api\/repos\/e2e-user\/([^/]+)\/(.+)$/.exec(url.pathname) ?? []
+  const path = gistId !== undefined ? '/api/gists/:id' : repository === undefined ? url.pathname : `/repo/${git}`
+  const route = `${request.method ?? 'GET'} ${path}`
   const handled = (() => {
     if (request.method === 'OPTIONS') return json(response, 204, undefined)
     if (route === 'GET /health') return json(response, 200, { ok: true })
@@ -96,6 +136,14 @@ const server = createServer((request, response) => {
       const gist = gists.get(gistId ?? '')
       return gist === undefined ? json(response, 404, { message: 'Not Found' }) : json(response, 200, gist)
     }
+    if (route === 'POST /api/user/repos') return createRepository(request, response)
+    if (repository !== undefined && isSignedIn(request)) {
+      if (route === 'POST /repo/git/trees') return createTree(request, response)
+      if (route === 'POST /repo/git/commits') return createCommit(request, response)
+      if (route === 'PATCH /repo/git/refs/heads/main') return updateRef(request, response, repository)
+    }
+    // Not a GitHub route: lets the E2E read what a push left in a repository.
+    if (route === 'GET /repo/files') return json(response, 200, repositories.get(repository ?? '') ?? null)
     return json(response, 404, { message: 'Not Found' })
   })()
   void Promise.resolve(handled).catch(() => json(response, 400, { message: 'Bad Request' }))

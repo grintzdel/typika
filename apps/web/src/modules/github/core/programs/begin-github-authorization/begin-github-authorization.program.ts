@@ -15,10 +15,12 @@ import { GitHubSessionPort } from '../../ports/github-session.port.ts'
 export const beginGitHubAuthorizationProgram = ({
   scopes,
   returnTo,
+  intent,
   appOrigin,
 }: {
   readonly scopes: ReadonlyArray<GitHubScope>
   readonly returnTo: string
+  readonly intent: string
   readonly appOrigin: string
 }) =>
   Effect.gen(function* () {
@@ -28,7 +30,7 @@ export const beginGitHubAuthorizationProgram = ({
     const granted = Option.match(yield* sessions.session, { onNone: () => [], onSome: (session) => session.scopes })
     const state = yield* Effect.sync(randomToken)
     const codeVerifier = yield* Effect.sync(randomToken)
-    yield* sessions.savePending({ state, codeVerifier, returnTo: returnPathOf(returnTo) })
+    yield* sessions.savePending({ state, codeVerifier, returnTo: returnPathOf(returnTo), intent })
     return authorizeUrlOf({
       githubUrl: github.url,
       clientId: github.clientId,

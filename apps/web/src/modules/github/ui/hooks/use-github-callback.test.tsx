@@ -12,7 +12,7 @@ import { makeRuntimeTestLayer } from '../../../runtime/core/runtime.test-layer.t
 import { makeGitHubSessionsInMemory, makeGitHubTestLayer, TEST_GITHUB_SESSION } from '../../core/github.test-layer.ts'
 import { useGitHubCallback } from './use-github-callback.ts'
 
-const PENDING = { state: 'the-state', codeVerifier: 'the-verifier', returnTo: '/play/sample-ts' }
+const PENDING = { state: 'the-state', codeVerifier: 'the-verifier', returnTo: '/play/sample-ts', intent: 'share-gist' }
 
 const renderCallback = (search: string, sessions = makeGitHubSessionsInMemory({ pending: PENDING })) => {
   const onReturn = vi.fn()
@@ -41,7 +41,7 @@ describe('useGitHubCallback', () => {
 
     await waitFor(() => expect(onReturn).toHaveBeenCalledWith('/play/sample-ts'))
     expect(sessions.current()).toEqual(TEST_GITHUB_SESSION)
-    expect(sessionStorage.getItem('typika:github:resume')).toBe('/play/sample-ts')
+    expect(sessionStorage.getItem('typika:github:resume')).toBe('share-gist /play/sample-ts')
     expect(result.current.failure).toBeUndefined()
   })
 

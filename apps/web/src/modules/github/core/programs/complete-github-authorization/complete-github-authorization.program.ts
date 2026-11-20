@@ -21,5 +21,5 @@ export const completeGitHubAuthorizationProgram = ({
       return yield* new GitHubAuthorizationError({ reason: 'state' })
     if (code === undefined) return yield* new GitHubAuthorizationError({ reason: 'denied' })
     yield* sessions.save(yield* tokens.exchange({ code, codeVerifier: pending.value.codeVerifier }))
-    return pending.value.returnTo
+    return { returnTo: pending.value.returnTo, intent: pending.value.intent }
   })

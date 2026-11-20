@@ -155,10 +155,15 @@ par le navigateur.
   publics : `repo` n'est jamais demandé ([0034](../decisions/0034-github-oauth-and-gists.md)).
 - Formulaire : nom du dépôt, description, inclure les fichiers Typika (oui par défaut).
 - Crée le dépôt, puis un commit initial unique sur la branche par défaut. Pas de push vers un dépôt existant en V1.
+  L'API Git de GitHub refuse un dépôt vide : le dépôt est créé avec `auto_init`, puis sa branche est replacée sur un
+  commit sans parent qui porte les fichiers.
 - Le `typika.toml` poussé conserve `parent` ; un README minimal est ajouté s'il n'existe pas, avec un lien vers le
   template d'origine.
 - Résultat : lien vers le dépôt et suggestion « proposer au registre » ([registry](registry.md#2-processus-de-contribution)).
-- Erreurs (nom déjà pris, scope refusé, limite d'API) : message avec la cause, formulaire conservé.
+- Erreurs (nom déjà pris, scope refusé, limite d'API) : message avec la cause, formulaire conservé. Si le dépôt est
+  créé mais que l'envoi des fichiers échoue, le message demande de le supprimer avant de réessayer.
+- Le formulaire vit dans le dialogue Exporter. La suggestion « proposer au registre » n'a pas de lien tant que le
+  registre n'est pas public (#92).
 
 ## 6. CLI `typika create`
 

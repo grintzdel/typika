@@ -22,8 +22,8 @@ export const useGitHubCallback = (search: string, onReturn: (path: string) => vo
     const params = new URLSearchParams(search)
     void complete({ code: params.get('code') ?? undefined, state: params.get('state') ?? undefined }).then((exit) => {
       if (Exit.isSuccess(exit)) {
-        markGitHubResume(exit.value)
-        onReturn(exit.value)
+        markGitHubResume(exit.value.intent, exit.value.returnTo)
+        onReturn(exit.value.returnTo)
         return
       }
       const error = Option.getOrUndefined(Cause.findErrorOption(exit.cause))

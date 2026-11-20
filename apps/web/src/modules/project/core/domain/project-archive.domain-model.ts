@@ -7,6 +7,17 @@ const UNSAFE_FILE_NAME = /[\\/:*?"<>|]/g
 
 export const archiveNameOf = (name: string): string => `${name.replace(UNSAFE_FILE_NAME, '-').trim() || 'project'}.zip`
 
+export const exportedFilesOf = ({
+  files,
+  ref,
+  includeTypikaFiles,
+}: {
+  readonly files: ReadonlyMap<string, string>
+  readonly ref: string | undefined
+  readonly includeTypikaFiles: boolean
+}): ReadonlyMap<string, string> =>
+  includeTypikaFiles ? (ref === undefined ? files : withParent(files, ref)) : withoutTypikaFiles(files)
+
 export const projectArchiveOf = ({
   name,
   ref,
@@ -18,7 +29,7 @@ export const projectArchiveOf = ({
   readonly files: ReadonlyMap<string, string>
   readonly includeTypikaFiles: boolean
 }): ProjectArchive => {
-  const exported = includeTypikaFiles ? (ref === undefined ? files : withParent(files, ref)) : withoutTypikaFiles(files)
+  const exported = exportedFilesOf({ files, ref, includeTypikaFiles })
   return {
     fileName: archiveNameOf(name),
     bytes: zipSync(Object.fromEntries([...exported].map(([path, content]) => [path, strToU8(content)]))),

@@ -104,7 +104,7 @@ describe('useGistShare', () => {
   })
 
   it('resumes the share dialog on the page the sign-in came back to, once', () => {
-    sessionStorage.setItem('typika:github:resume', `${window.location.pathname}${window.location.search}`)
+    sessionStorage.setItem('typika:github:resume', `share-gist ${window.location.pathname}${window.location.search}`)
     const { result, rerender } = renderGistShare(makeGitHubTestLayer())
     expect(result.current.shouldResume).toBe(true)
 

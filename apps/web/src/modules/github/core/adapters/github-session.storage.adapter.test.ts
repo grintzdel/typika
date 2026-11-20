@@ -19,7 +19,7 @@ const refuse = () => {
 }
 
 const SESSION = { accessToken: 'gho_test', scopes: ['gist'] }
-const PENDING = { state: 's', codeVerifier: 'v', returnTo: '/play/strategy-ts' }
+const PENDING = { state: 's', codeVerifier: 'v', returnTo: '/play/strategy-ts', intent: 'share-gist' }
 
 describe('makeGitHubSessionStorage', () => {
   it('keeps the session until it is cleared', () => {
