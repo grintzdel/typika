@@ -10,8 +10,12 @@ import { signOutGitHubProgram } from '../programs/sign-out-github/sign-out-githu
 export const gitHubStatusAtom = appRuntime.atom(readGitHubStatusProgram)
 
 export const beginGitHubAuthorizationAtom = appRuntime.fn(
-  (input: { readonly scopes: ReadonlyArray<GitHubScope>; readonly returnTo: string; readonly appOrigin: string }) =>
-    beginGitHubAuthorizationProgram(input)
+  (input: {
+    readonly scopes: ReadonlyArray<GitHubScope>
+    readonly returnTo: string
+    readonly intent: string
+    readonly appOrigin: string
+  }) => beginGitHubAuthorizationProgram(input)
 )
 
 export const completeGitHubAuthorizationAtom = appRuntime.fn(

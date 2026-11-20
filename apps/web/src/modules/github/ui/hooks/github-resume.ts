@@ -1,16 +1,24 @@
 const RESUME_KEY = 'typika:github:resume'
 
-export const markGitHubResume = (path: string) => {
+export const GitHubIntent = {
+  SHARE_GIST: 'share-gist',
+  PUSH_REPOSITORY: 'push-repository',
+} as const
+export type GitHubIntent = (typeof GitHubIntent)[keyof typeof GitHubIntent]
+
+const resumeOf = (intent: string, path: string) => `${intent} ${path}`
+
+export const markGitHubResume = (intent: string, path: string) => {
   try {
-    sessionStorage.setItem(RESUME_KEY, path)
+    sessionStorage.setItem(RESUME_KEY, resumeOf(intent, path))
   } catch {
     return
   }
 }
 
-export const isGitHubResume = (path: string): boolean => {
+export const isGitHubResume = (intent: GitHubIntent, path: string): boolean => {
   try {
-    return sessionStorage.getItem(RESUME_KEY) === path
+    return sessionStorage.getItem(RESUME_KEY) === resumeOf(intent, path)
   } catch {
     return false
   }

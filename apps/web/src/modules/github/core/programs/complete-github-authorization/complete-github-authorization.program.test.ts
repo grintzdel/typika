@@ -6,7 +6,12 @@ import { GitHubAuthorizationError } from '../../domain/errors/github-authorizati
 import { makeGitHubSessionsInMemory, makeGitHubTestLayer, TEST_GITHUB_SESSION } from '../../github.test-layer.ts'
 import { completeGitHubAuthorizationProgram } from './complete-github-authorization.program.ts'
 
-const PENDING = { state: 'the-state', codeVerifier: 'the-verifier', returnTo: '/play/strategy-ts' }
+const PENDING = {
+  state: 'the-state',
+  codeVerifier: 'the-verifier',
+  returnTo: '/play/strategy-ts',
+  intent: 'share-gist',
+}
 
 const complete = (
   input: { readonly code: string | undefined; readonly state: string | undefined },
@@ -20,7 +25,7 @@ describe('completeGitHubAuthorizationProgram', () => {
 
     const exit = await complete({ code: 'the-code', state: 'the-state' }, { sessions, exchange })
 
-    expect(exit).toEqual(Exit.succeed('/play/strategy-ts'))
+    expect(exit).toEqual(Exit.succeed({ returnTo: '/play/strategy-ts', intent: 'share-gist' }))
     expect(exchange).toHaveBeenCalledWith({ code: 'the-code', codeVerifier: 'the-verifier' })
     expect(sessions.current()).toEqual(TEST_GITHUB_SESSION)
     expect(sessions.currentPending()).toBeUndefined()

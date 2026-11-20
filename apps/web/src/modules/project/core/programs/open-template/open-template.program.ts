@@ -180,7 +180,11 @@ const openGistProject = (gistId: string) =>
         () => gists.get(gistId, undefined)
       ),
       Effect.mapError(
-        ({ reason }) => new GistUnavailableError({ reason: reason === 'unauthorized' ? 'unavailable' : reason })
+        ({ reason }) =>
+          new GistUnavailableError({
+            reason:
+              reason === 'not-found' || reason === 'rate-limited' || reason === 'invalid' ? reason : 'unavailable',
+          })
       )
     )
     if (gist.isTruncated) return yield* new GistUnavailableError({ reason: 'invalid' })

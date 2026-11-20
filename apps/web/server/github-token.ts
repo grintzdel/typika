@@ -86,8 +86,13 @@ export const makeGitHubTokenExchange = ({
   }
 }
 
-const RATE_PER_MINUTE = 10
-const RATE_BURST = 5
+const DEFAULT_RATE_PER_MINUTE = 10
+const DEFAULT_RATE_BURST = 5
+
+const positiveInt = (value: string | undefined, fallback: number) => {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback
+}
 
 export const gitHubTokenExchangeFromEnv = (
   env: Readonly<Record<string, string | undefined>>,
@@ -102,7 +107,10 @@ export const gitHubTokenExchangeFromEnv = (
     clientSecret,
     githubUrl,
     appOrigin,
-    limiter: makeRateLimiter({ perMinute: RATE_PER_MINUTE, burst: RATE_BURST }),
+    limiter: makeRateLimiter({
+      perMinute: positiveInt(env.TYPIKA_GITHUB_RATE_PER_MINUTE, DEFAULT_RATE_PER_MINUTE),
+      burst: positiveInt(env.TYPIKA_GITHUB_RATE_BURST, DEFAULT_RATE_BURST),
+    }),
     clientIpOf: clientIpOf({ trustProxy: env.TYPIKA_TRUST_PROXY === 'true' }),
   })
 }

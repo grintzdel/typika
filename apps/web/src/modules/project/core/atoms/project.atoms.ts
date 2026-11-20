@@ -16,6 +16,7 @@ import { listRecentProjectsProgram } from '../programs/list-recent-projects/list
 import { listTemplatesProgram } from '../programs/list-templates/list-templates.program.ts'
 import { openBaseProgram } from '../programs/open-base/open-base.program.ts'
 import { openTemplateProgram } from '../programs/open-template/open-template.program.ts'
+import { pushRepositoryProgram } from '../programs/push-repository/push-repository.program.ts'
 import { renameProjectProgram } from '../programs/rename-project/rename-project.program.ts'
 import { resetProjectProgram } from '../programs/reset-project/reset-project.program.ts'
 import { saveProjectFilesProgram } from '../programs/save-project-files/save-project-files.program.ts'
@@ -112,6 +113,24 @@ export const shareGistAtom = Atom.family((name: string) =>
       Effect.flatMap(get.result(templateProjectAtom(name)), (project) => shareGistProgram({ project, ...input })).pipe(
         Effect.tapError(() => Effect.sync(() => get.refresh(gitHubStatusAtom)))
       )
+  )
+)
+
+export const pushRepositoryAtom = Atom.family((name: string) =>
+  appRuntime.fn(
+    (
+      input: {
+        readonly files: ReadonlyMap<string, string>
+        readonly name: string
+        readonly description: string
+        readonly includeTypikaFiles: boolean
+        readonly appOrigin: string
+      },
+      get
+    ) =>
+      Effect.flatMap(get.result(templateProjectAtom(name)), (project) =>
+        pushRepositoryProgram({ project, ...input })
+      ).pipe(Effect.tapError(() => Effect.sync(() => get.refresh(gitHubStatusAtom))))
   )
 )
 

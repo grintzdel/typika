@@ -11,7 +11,7 @@ import {
 import { GitHubApiError } from '../../../github/core/domain/errors/github-api.error.ts'
 import { GitHubAuthorizationError } from '../../../github/core/domain/errors/github-authorization.error.ts'
 import { GitHubScope, hasScopes } from '../../../github/core/domain/github-oauth.domain-model.ts'
-import { clearGitHubResume, currentPath, isGitHubResume } from '../../../github/ui/hooks/github-resume.ts'
+import { clearGitHubResume, currentPath, GitHubIntent, isGitHubResume } from '../../../github/ui/hooks/github-resume.ts'
 import { shareGistAtom } from '../../core/atoms/project.atoms.ts'
 import type { GistShareFailure } from '../components/GistShareSection.tsx'
 
@@ -39,12 +39,13 @@ export const useGistShare = (projectKey: string) => {
         ? failureOf(Option.getOrUndefined(AsyncResult.error(result)))
         : undefined,
     revokeUrl: status?.revokeUrl,
-    shouldResume: isGitHubResume(currentPath()),
+    shouldResume: isGitHubResume(GitHubIntent.SHARE_GIST, currentPath()),
     handleResumed: clearGitHubResume,
     handleConnect: () => {
       void begin({
         scopes: [GitHubScope.GIST],
         returnTo: currentPath(),
+        intent: GitHubIntent.SHARE_GIST,
         appOrigin: window.location.origin,
       }).then((exit) => {
         if (Exit.isSuccess(exit)) window.location.assign(exit.value)

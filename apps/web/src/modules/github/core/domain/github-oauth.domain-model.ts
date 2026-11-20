@@ -21,6 +21,7 @@ export const PendingAuthorizationSchema = Schema.Struct({
   state: Schema.String,
   codeVerifier: Schema.String,
   returnTo: Schema.String,
+  intent: Schema.String,
 })
 export type PendingAuthorization = typeof PendingAuthorizationSchema.Type
 

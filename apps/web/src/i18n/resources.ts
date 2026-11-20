@@ -179,6 +179,30 @@ export const resources = {
           unavailable: 'GitHub could not be reached. Check your connection and try again.',
         },
       },
+      repository: {
+        label: 'GitHub repository',
+        connectDescription:
+          'Typika creates a new public repository on your GitHub account, with the project in a single commit. GitHub grants this right for all your public repositories: Typika only creates this one. You will leave this page and come back to it.',
+        description: 'A new public repository on your GitHub account, with the project in a single commit.',
+        name: 'Repository name',
+        nameRule: 'Letters, digits, dots, hyphens and underscores, 100 characters at most.',
+        descriptionField: 'Description (optional)',
+        includeTypikaFiles: 'Include the Typika files (typika.toml, tour/)',
+        push: 'Create the repository',
+        pushing: 'Sending to GitHub…',
+        pushed: 'Repository created:',
+        propose: 'You can propose it to the Typika registry.',
+        failed: {
+          required: 'Sign in to GitHub to create a repository.',
+          unauthorized:
+            'GitHub no longer accepts this session, or it lacks the right to create a repository. Sign in again.',
+          'rate-limited': 'GitHub is limiting requests for now. Try again in a few minutes.',
+          'name-taken': 'GitHub refused this name: you may already have a repository called that.',
+          incomplete:
+            'The repository was created, but its files could not be sent. Delete it on GitHub, then try again.',
+          unavailable: 'GitHub could not be reached. Check your connection and try again.',
+        },
+      },
       gistFailed: {
         'not-found': 'This gist does not exist, or was deleted.',
         'rate-limited': 'GitHub is limiting anonymous requests for now. Sign in to GitHub, or try again later.',
@@ -543,6 +567,30 @@ export const resources = {
           required: 'Connectez-vous à GitHub pour créer un gist.',
           unauthorized: 'GitHub n’accepte plus cette session. Reconnectez-vous.',
           'rate-limited': 'GitHub limite les requêtes pour l’instant. Réessayez dans quelques minutes.',
+          unavailable: 'GitHub est injoignable. Vérifiez votre connexion, puis réessayez.',
+        },
+      },
+      repository: {
+        label: 'Dépôt GitHub',
+        connectDescription:
+          'Typika crée un nouveau dépôt public sur votre compte GitHub, avec le projet en un seul commit. GitHub accorde ce droit pour tous vos dépôts publics : Typika ne crée que celui-ci. Vous quitterez cette page, puis vous y reviendrez.',
+        description: 'Un nouveau dépôt public sur votre compte GitHub, avec le projet en un seul commit.',
+        name: 'Nom du dépôt',
+        nameRule: 'Lettres, chiffres, points, tirets et tirets bas, 100 caractères au plus.',
+        descriptionField: 'Description (facultative)',
+        includeTypikaFiles: 'Inclure les fichiers Typika (typika.toml, tour/)',
+        push: 'Créer le dépôt',
+        pushing: 'Envoi à GitHub…',
+        pushed: 'Dépôt créé :',
+        propose: 'Vous pouvez le proposer au registre de Typika.',
+        failed: {
+          required: 'Connectez-vous à GitHub pour créer un dépôt.',
+          unauthorized:
+            'GitHub n’accepte plus cette session, ou il lui manque le droit de créer un dépôt. Reconnectez-vous.',
+          'rate-limited': 'GitHub limite les requêtes pour l’instant. Réessayez dans quelques minutes.',
+          'name-taken': 'GitHub a refusé ce nom : vous avez peut-être déjà un dépôt qui s’appelle ainsi.',
+          incomplete:
+            'Le dépôt a été créé, mais ses fichiers n’ont pas pu être envoyés. Supprimez-le sur GitHub, puis réessayez.',
           unavailable: 'GitHub est injoignable. Vérifiez votre connexion, puis réessayez.',
         },
       },

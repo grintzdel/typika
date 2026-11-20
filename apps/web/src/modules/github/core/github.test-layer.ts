@@ -8,7 +8,9 @@ import { AppConfig } from '../../shared/core/ports/app-config.port.ts'
 import { GitHubApiError } from './domain/errors/github-api.error.ts'
 import type { Gist, GistDraft } from './domain/gist.domain-model.ts'
 import type { GitHubSession, PendingAuthorization } from './domain/github-oauth.domain-model.ts'
+import type { RepositoryDraft } from './domain/repository.domain-model.ts'
 import { GitHubGistPort } from './ports/github-gist.port.ts'
+import { GitHubRepositoryPort } from './ports/github-repository.port.ts'
 import { GitHubSessionPort } from './ports/github-session.port.ts'
 import { GitHubTokenPort } from './ports/github-token.port.ts'
 
@@ -90,20 +92,42 @@ export const makeGistsInMemory = (initial: ReadonlyArray<Gist> = []): InMemoryGi
   }
 }
 
+export type InMemoryRepositories = Context.Service.Shape<typeof GitHubRepositoryPort> & {
+  readonly drafts: ReadonlyMap<string, RepositoryDraft>
+}
+
+export const makeRepositoriesInMemory = (owner = 'octocat'): InMemoryRepositories => {
+  const drafts = new Map<string, RepositoryDraft>()
+  return {
+    create: (_, draft) => {
+      if (drafts.has(draft.name)) return Effect.fail(new GitHubApiError({ reason: 'name-taken' }))
+      drafts.set(draft.name, draft)
+      return Effect.succeed({
+        fullName: `${owner}/${draft.name}`,
+        htmlUrl: `https://github.example.com/${owner}/${draft.name}`,
+      })
+    },
+    drafts,
+  }
+}
+
 export const makeGitHubTestLayer = ({
   config = GITHUB_TEST_CONFIG,
   sessions = makeGitHubSessionsInMemory(),
   gists = makeGistsInMemory(),
+  repositories = makeRepositoriesInMemory(),
   exchange = () => Effect.succeed(TEST_GITHUB_SESSION),
 }: {
   readonly config?: PublicConfig
   readonly sessions?: Context.Service.Shape<typeof GitHubSessionPort>
   readonly gists?: Context.Service.Shape<typeof GitHubGistPort>
+  readonly repositories?: Context.Service.Shape<typeof GitHubRepositoryPort>
   readonly exchange?: Context.Service.Shape<typeof GitHubTokenPort>['exchange']
 } = {}) =>
   Layer.mergeAll(
     Layer.succeed(AppConfig, config),
     Layer.succeed(GitHubSessionPort, sessions),
     Layer.succeed(GitHubGistPort, gists),
+    Layer.succeed(GitHubRepositoryPort, repositories),
     Layer.succeed(GitHubTokenPort, { exchange })
   )

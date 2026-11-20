@@ -29,6 +29,7 @@ import { ExercisePanel } from '../../modules/exercise/ui/components/ExercisePane
 import { useExercise } from '../../modules/exercise/ui/hooks/use-exercise.ts'
 import { HealthBanner } from '../../modules/hub/ui/components/HealthBanner.tsx'
 import { isTypikaFile } from '../../modules/project/core/domain/file-tree.domain-model.ts'
+import { repositoryNameOf } from '../../modules/project/core/domain/repository-push.domain-model.ts'
 import { ExportDialog } from '../../modules/project/ui/components/ExportDialog.tsx'
 import { FileTree } from '../../modules/project/ui/components/FileTree.tsx'
 import { ProjectStatus } from '../../modules/project/ui/components/ProjectStatus.tsx'
@@ -40,6 +41,7 @@ import { WorkbenchSkeleton } from '../../modules/project/ui/components/Workbench
 import { useBaseTemplate } from '../../modules/project/ui/hooks/use-base-template.ts'
 import { useExportProject } from '../../modules/project/ui/hooks/use-export-project.ts'
 import { useGistShare } from '../../modules/project/ui/hooks/use-gist-share.ts'
+import { usePushRepository } from '../../modules/project/ui/hooks/use-push-repository.ts'
 import { useShareLink } from '../../modules/project/ui/hooks/use-share-link.ts'
 import { useTemplateProject } from '../../modules/project/ui/hooks/use-template-project.ts'
 import { OutputPanels, type OutputPanel } from '../../modules/runtime/ui/components/OutputPanels.tsx'
@@ -90,6 +92,7 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
   const base = useBaseTemplate(projectKey)
   const share = useShareLink(projectKey)
   const gist = useGistShare(projectKey)
+  const pushing = usePushRepository(projectKey)
   const exporting = useExportProject(projectKey)
   const currentFiles = new Map([...(template?.files ?? NO_FILES), ...edits.editedFiles])
   const latestFiles = () => new Map([...currentFiles, ...edits.commitPending()])
@@ -204,6 +207,22 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
             />
             <ExportDialog
               onExport={(includeTypikaFiles) => exporting.handleExport(latestFiles(), includeTypikaFiles)}
+              defaultOpen={pushing.shouldResume}
+              onResumed={pushing.handleResumed}
+              repository={
+                pushing.isEnabled
+                  ? {
+                      defaultName: repositoryNameOf(template.name),
+                      isConnected: pushing.isConnected,
+                      isPushing: pushing.isPushing,
+                      repository: pushing.repository,
+                      failure: pushing.failure,
+                      revokeUrl: pushing.revokeUrl,
+                      onConnect: pushing.handleConnect,
+                      onPush: (input) => pushing.handlePush(latestFiles(), input),
+                    }
+                  : undefined
+              }
             />
             <LanguageMenu {...languageMenu} />
           </Toolbar>
