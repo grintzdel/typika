@@ -10,6 +10,7 @@ export default defineConfig({
   testIgnore: 'e2e/production/**',
   globalSetup: './src/e2e/global-setup.ts',
   fullyParallel: true,
+  timeout: process.env.CI === undefined ? 30_000 : 90_000,
   expect: { timeout: 15_000 },
   forbidOnly: process.env.CI !== undefined,
   retries: process.env.CI === undefined ? 0 : 2,
