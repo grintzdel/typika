@@ -33,11 +33,11 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/interface-segregation-base/kotlin"
+template = "github:typika-app/templates/interface-segregation-base/kotlin"
 focus = ["src/main/kotlin/payments/**", "src/main/kotlin/app/**"]
 
 [variants]
-typescript = "github:typika/templates/interface-segregation/ts"
+typescript = "github:typika-app/templates/interface-segregation/ts"
 
 [[exercises]]
 name = "add-gift-card-payment"

@@ -33,13 +33,13 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/decorator-base/ts"
+template = "github:typika-app/templates/decorator-base/ts"
 focus = ["src/notifications/**"]
 
 [variants]
-go = "github:typika/templates/decorator/go"
-javascript = "github:typika/templates/decorator/js"
-kotlin = "github:typika/templates/decorator/kotlin"
+go = "github:typika-app/templates/decorator/go"
+javascript = "github:typika-app/templates/decorator/js"
+kotlin = "github:typika-app/templates/decorator/kotlin"
 
 [[exercises]]
 name = "add-sms-with-retry"

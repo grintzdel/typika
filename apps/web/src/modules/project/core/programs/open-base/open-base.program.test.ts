@@ -6,7 +6,7 @@ import { templateFiles } from '../../../__tests__/template.factory.ts'
 import { makeProjectTestLayer } from '../../project.test-layer.ts'
 import { openBaseProgram } from './open-base.program.ts'
 
-const BASE_REF = 'github:typika/templates/sample-base/ts'
+const BASE_REF = 'github:typika-app/templates/sample-base/ts'
 
 const open = (base: { readonly template: string; readonly focus?: ReadonlyArray<string> }) =>
   Effect.runPromiseExit(
@@ -30,7 +30,7 @@ describe('openBaseProgram', () => {
   })
 
   it('fails when the base is not embedded', async () => {
-    const exit = await open({ template: 'github:typika/templates/missing/ts' })
+    const exit = await open({ template: 'github:typika-app/templates/missing/ts' })
 
     expect(Exit.isFailure(exit) && exit.cause.reasons[0]).toMatchObject({
       error: { _tag: 'ProjectTemplateNotFoundError' },

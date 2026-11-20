@@ -8,7 +8,7 @@ import { manifestToml } from '../__tests__/manifest.factory.ts'
 import { makeFakeSource } from '../__tests__/template-source.fake.ts'
 import { validateProject, type ValidateOptions } from './validate-project.ts'
 
-const TS_REF = 'github:typika/templates/strategy/ts@1318eae7665d'
+const TS_REF = 'github:typika-app/templates/strategy/ts@1318eae7665d'
 
 const tour = (...ids: ReadonlyArray<string>) =>
   ids.map(
@@ -77,7 +77,7 @@ describe('validateProject', () => {
     ])
     const index = indexOf([indexTemplate('strategy-ts', { ref: TS_REF })])
     const files = goProject(
-      `${tourToml(['problem', 'overview', 'trade-offs'])}\n[variants]\ntypescript = "github:typika/templates/strategy/ts"\n`,
+      `${tourToml(['problem', 'overview', 'trade-offs'])}\n[variants]\ntypescript = "github:typika-app/templates/strategy/ts"\n`,
       tour('problem', 'overview', 'trade-offs')
     )
 
@@ -87,12 +87,12 @@ describe('validateProject', () => {
   })
 
   it('notes that the tour order was not compared when the TypeScript variant is not reachable', async () => {
-    const files = goProject('\n[variants]\ntypescript = "github:typika/templates/strategy/ts"\n')
+    const files = goProject('\n[variants]\ntypescript = "github:typika-app/templates/strategy/ts"\n')
 
     const report = await validate({ files })
 
     expect(report.notes).toEqual([
-      'The TypeScript variant github:typika/templates/strategy/ts is not reachable: the tour order was not compared.',
+      'The TypeScript variant github:typika-app/templates/strategy/ts is not reachable: the tour order was not compared.',
     ])
   })
 

@@ -85,7 +85,7 @@ export const failingProjectStorage: ProjectStorage = {
 
 export const testRefOf = (name: string, commit = '0123456789ab') => {
   const cut = name.lastIndexOf('-')
-  return `github:typika/templates/${name.slice(0, cut)}/${name.slice(cut + 1)}@${commit}`
+  return `github:typika-app/templates/${name.slice(0, cut)}/${name.slice(cut + 1)}@${commit}`
 }
 
 const pathOfRef = (ref: string) => ref.replace(/@.*$/, '')

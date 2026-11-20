@@ -1,6 +1,6 @@
 # Guide — Écrire un template
 
-Pour qui : toute personne qui écrit un template officiel (`typika/*`) ou tiers.
+Pour qui : toute personne qui écrit un template officiel (`typika-app/*`) ou tiers.
 Références : format normatif dans [manifest.md](../specs/manifest.md), contenu attendu du catalogue dans
 [catalogue.md](../specs/catalogue.md), entrée au registre dans [registry.md](../specs/registry.md).
 
@@ -354,7 +354,7 @@ ils ne sont pas lancés et la commande le signale.
 
 ## 9. Licence
 
-- Templates officiels `typika/*` : `license = "MIT-0"` et le texte MIT-0 dans `LICENSE`. Pas d'en-tête de licence
+- Templates officiels `typika-app/*` : `license = "MIT-0"` et le texte MIT-0 dans `LICENSE`. Pas d'en-tête de licence
   dans les fichiers source : le code est fait pour être copié.
 - Templates tiers : toute licence approuvée OSI, identifiant SPDX dans le manifeste, texte dans `LICENSE`.
 - Pas de code copié d'une source dont la licence est incompatible ou inconnue (exemples de livres, articles).

@@ -84,7 +84,7 @@ par le navigateur.
 ```jsonc
 {
   "n": "strategy-ts (remix)",            // nom
-  "o": "github:typika/templates/strategy/ts@3f2c9a1e7b4d", // origine, optionnelle
+  "o": "github:typika-app/templates/strategy/ts@3f2c9a1e7b4d", // origine, optionnelle
   "r": "browser-js",                     // runtime
   "x": "implement-express",              // exercice, optionnel : le delta part de son état de départ
   "f": { "src/main.ts": "…" },           // fichiers complets si pas d'origine

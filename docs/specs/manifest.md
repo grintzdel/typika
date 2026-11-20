@@ -295,7 +295,7 @@ directement sous `exercises/` ne sont pas des exercices et sont ignorés.
 
 ```toml
 [base]
-template = "github:typika/templates/strategy-base/ts"
+template = "github:typika-app/templates/strategy-base/ts"
 focus = ["src/checkout/**"]
 ```
 
@@ -311,8 +311,8 @@ La base DOIT avoir le même `language` et le même `runtime.kind` que le templat
 
 ```toml
 [variants]
-kotlin = "github:typika/templates/strategy/kotlin"
-go = "github:typika/templates/strategy/go"
+kotlin = "github:typika-app/templates/strategy/kotlin"
+go = "github:typika-app/templates/strategy/go"
 ```
 
 - Clés : valeurs de `facets.language`, différentes du langage du template (`E_VARIANT_SELF`).
@@ -347,7 +347,7 @@ le hub l'utilise pour afficher la filiation et le diff avec le parent.
 
 - `license` DOIT être un identifiant SPDX valide (`E_LICENSE_INVALID`).
 - Un fichier `LICENSE` DOIT exister (`E_LICENSE_FILE_MISSING`).
-- Registre : la licence DOIT être approuvée OSI (`E_LICENSE_NOT_OSI`) ; les templates officiels `typika/*` DOIVENT
+- Registre : la licence DOIT être approuvée OSI (`E_LICENSE_NOT_OSI`) ; les templates officiels `typika-app/*` DOIVENT
   être en `MIT-0` (règle de revue).
 
 ## 10. Versionnement du schéma
@@ -365,7 +365,7 @@ le hub l'utilise pour afficher la filiation et le diff avec le parent.
 - Un nouvel avertissement `W_` ne change pas la version : il n'empêche pas l'ouverture.
 - Chaque changement de version s'accompagne d'une migration automatique dans le package `manifest`, exposée par le CLI.
 - Le registre refuse les nouvelles entrées dans une version dépréciée et ouvre une PR de migration sur les templates
-  `typika/*`.
+  `typika-app/*`.
 
 ## 11. Validation
 
@@ -415,7 +415,7 @@ Les erreurs bloquent ; les avertissements (`W_`) n'empêchent pas l'ouverture da
 | `E_TESTS_FAIL` | registre | `The tests of the template do not pass ({reason}).` |
 | `E_REF_NOT_PINNED` | registre | `Ref "{ref}" must be pinned to a commit SHA.` |
 | `E_ENTRY_NAME_MISMATCH` | registre | `Entry file "{file}" must be named after its template "{name}".` |
-| `E_CATEGORY_MISMATCH` | registre | `An official template must live under github:typika/.` |
+| `E_CATEGORY_MISMATCH` | registre | `An official template must live under github:typika-app/.` |
 | `E_LICENSE_NOT_MIT0` | registre | `An official template must use the MIT-0 license.` |
 | `E_REFACTOR_EXERCISE_MISSING` | registre | `A {category} template needs at least one refactor exercise.` |
 | `E_TOUR_REQUIRED_STEP` | registre | `An official tour must start with "overview" and end with "trade-offs".` |
@@ -473,12 +473,12 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/strategy-base/ts"
+template = "github:typika-app/templates/strategy-base/ts"
 focus = ["src/checkout/**"]
 
 [variants]
-go = "github:typika/templates/strategy/go"
-kotlin = "github:typika/templates/strategy/kotlin"
+go = "github:typika-app/templates/strategy/go"
+kotlin = "github:typika-app/templates/strategy/kotlin"
 
 [[exercises]]
 name = "add-pickup-point-option"

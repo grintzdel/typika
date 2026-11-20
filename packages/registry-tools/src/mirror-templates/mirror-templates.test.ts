@@ -30,26 +30,26 @@ const mirror = (refs: ReadonlyArray<string>) =>
 
 describe('mirrorTemplates', () => {
   it('lays out each file under its repository at the pinned commit, as jsDelivr serves it', async () => {
-    const files = await mirror(['github:typika/templates/strategy/ts@0123456789ab'])
+    const files = await mirror(['github:typika-app/templates/strategy/ts@0123456789ab'])
 
     expect(files).toContainEqual({
-      path: 'gh/typika/templates@0123456789ab/strategy/ts/src/main.ts',
+      path: 'gh/typika-app/templates@0123456789ab/strategy/ts/src/main.ts',
       content: 'main\n',
     })
   })
 
   it('lists the mirrored files of each repository at each commit, in the jsDelivr flat format', async () => {
     const files = await mirror([
-      'github:typika/templates/strategy/ts@0123456789ab',
-      'github:typika/templates/strategy-base/ts@0123456789ab',
-      'github:typika/templates/observer/ts@ba9876543210',
+      'github:typika-app/templates/strategy/ts@0123456789ab',
+      'github:typika-app/templates/strategy-base/ts@0123456789ab',
+      'github:typika-app/templates/observer/ts@ba9876543210',
     ])
     const listing = (ref: string): unknown =>
-      JSON.parse(String(files.find((file) => file.path === `listing/gh/typika/templates@${ref}.json`)?.content))
+      JSON.parse(String(files.find((file) => file.path === `listing/gh/typika-app/templates@${ref}.json`)?.content))
 
     expect(listing('0123456789ab')).toMatchObject({
       type: 'gh',
-      name: 'typika/templates',
+      name: 'typika-app/templates',
       version: '0123456789ab',
       files: [
         { name: '/strategy-base/ts/typika.toml', size: 26 },
@@ -61,7 +61,9 @@ describe('mirrorTemplates', () => {
   })
 
   it('refuses a ref that is not pinned', async () => {
-    const exit = await Effect.runPromiseExit(mirrorTemplates([{ ref: 'github:typika/templates/strategy/ts' }], resolve))
+    const exit = await Effect.runPromiseExit(
+      mirrorTemplates([{ ref: 'github:typika-app/templates/strategy/ts' }], resolve)
+    )
 
     expect(Exit.isFailure(exit) && exit.cause.reasons[0]).toMatchObject({ error: { _tag: 'RefUnresolvableError' } })
   })

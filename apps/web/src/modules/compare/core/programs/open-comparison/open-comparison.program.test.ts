@@ -48,9 +48,9 @@ const TEMPLATES = {
     'typescript',
     'browser-js',
     'src/main.ts',
-    'go = "github:typika/templates/strategy/go"\nkotlin = "github:typika/templates/strategy/kotlin"'
+    'go = "github:typika-app/templates/strategy/go"\nkotlin = "github:typika-app/templates/strategy/kotlin"'
   ),
-  'strategy-go': files('strategy-go', 'go', 'go', 'main.go', 'typescript = "github:typika/templates/strategy/ts"'),
+  'strategy-go': files('strategy-go', 'go', 'go', 'main.go', 'typescript = "github:typika-app/templates/strategy/ts"'),
 }
 
 const open = (name: string, a?: string, b?: string) =>

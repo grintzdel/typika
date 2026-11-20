@@ -27,7 +27,7 @@ beforeAll(async () => {
   report = await Effect.runPromise(
     checkRegistry(
       await readRegistry(`${REPO_ROOT}/registry`),
-      makeGitResolver({ 'typika/templates': { repo: REPO_ROOT, prefix: 'templates' } }),
+      makeGitResolver({ 'typika-app/templates': { repo: REPO_ROOT, prefix: 'templates' } }),
       {}
     )
   )
@@ -56,11 +56,11 @@ describe('buildIndex on the local registry', () => {
 
   it('resolves the base to its pinned ref and the variants to template names', () => {
     expect(templateNamed('strategy-ts')).toMatchObject({
-      ref: 'github:typika/templates/strategy/ts@1318eae7665d',
+      ref: 'github:typika-app/templates/strategy/ts@1318eae7665d',
       addedAt: '2026-10-08',
       updatedAt: '2026-10-12',
       manifest: {
-        base: 'github:typika/templates/strategy-base/ts@a17e93a7af3e',
+        base: 'github:typika-app/templates/strategy-base/ts@a17e93a7af3e',
         variants: { go: 'strategy-go', kotlin: 'strategy-kotlin' },
       },
     })

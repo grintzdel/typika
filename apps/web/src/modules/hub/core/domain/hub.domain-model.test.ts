@@ -135,7 +135,7 @@ describe('templatePageOf', () => {
       language: 'typescript',
       level: 'intermediate',
       license: 'MIT-0',
-      ref: 'github:typika/templates/strategy-ts@0123456789ab',
+      ref: 'github:typika-app/templates/strategy-ts@0123456789ab',
       updatedAt: '2026-10-08',
       category: 'official',
       maintainers: ['github:maoudin'],
@@ -197,7 +197,7 @@ describe('templatePageOf', () => {
 
   it('keeps the base ref when the index does not hold the base', () => {
     expect(templatePageOf(hubIndex(), 'strategy-go')?.base).toBe(
-      'github:typika/templates/strategy-base-go@0123456789ab'
+      'github:typika-app/templates/strategy-base-go@0123456789ab'
     )
   })
 

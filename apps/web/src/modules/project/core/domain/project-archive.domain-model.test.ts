@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import { archiveNameOf, projectArchiveOf } from './project-archive.domain-model.ts'
 
-const REF = 'github:typika/templates/strategy/ts@3f2c9a1e7b4d'
+const REF = 'github:typika-app/templates/strategy/ts@3f2c9a1e7b4d'
 
 const FILES = new Map([
   ['typika.toml', 'schema = 1\nname = "strategy-ts"\n\n[facets]\nlanguage = "typescript"\n'],

@@ -184,7 +184,7 @@ chaque vague. On passe au M3 comme prévu, parce que le M4 et le M5 supposent un
 Livrables :
 
 - Dépôt registre, `packages/registry-tools` (génération de `index.json`, CI de santé) — voir [registry](specs/registry.md).
-- Renovate sur les dépôts `typika/*`.
+- Renovate sur les dépôts `typika-app/*`.
 - Pages hub prérendues : accueil, liste à facettes, page template — voir [ui](specs/ui.md).
 - Recherche côté client sur l'index.
 - Interface en anglais et en français.
@@ -195,9 +195,9 @@ apparaît sur le hub.
 ### Découpage
 
 Un lot = une branche `m3/<lot>` et une PR. Les lots 1 à 6 restent dans ce dépôt : `templates/` y joue le rôle de
-`typika/templates`, et un dossier de registre local celui de `typika/registry`. Seul le lot 7 crée des dépôts sur
-GitHub. Il demande des décisions qui ne sont pas techniques : l'organisation `typika`, la visibilité publique, et la
-recherche de marques (R6).
+`typika-app/templates`, et un dossier de registre local celui de `typika-app/registry`. Seul le lot 7 crée des dépôts
+sur GitHub. Il demande des décisions qui ne sont pas techniques : l'organisation GitHub
+([0033](decisions/0033-github-org-typika-app.md)), la visibilité publique, et la recherche de marques (R6).
 
 | # | Lot | Contenu | Terminé quand |
 |---|---|---|---|
@@ -207,7 +207,7 @@ recherche de marques (R6).
 | 4 | `search` | Recherche plein texte côté client sur `search.text` de l'index, combinée aux facettes, avec compteurs par valeur, tri et état vide ([ui §4](specs/ui.md)). Raccourci `/`. Une ADR si une dépendance entre. | Un test E2E cherche « switch », filtre sur `typescript` et trouve `strategy-ts`. Un filtre sans résultat affiche l'état vide et retire ses filtres un par un. |
 | 5 | `i18n` | Les ressources `en` et `fr` existent déjà, et la langue est détectée depuis le navigateur. Le lot ajoute le menu de langue, la mémorisation locale, le formatage des dates et des nombres selon la langue, et le libellé « contenu en anglais » sur la page template ([ui §17](specs/ui.md)). Aucune chaîne en dur dans les nouvelles pages du hub. | Changer de langue dans le menu traduit le hub et la sandbox, et le choix survit au rechargement. Un test vérifie que chaque clé `en` existe en `fr`. |
 | 6 | `health` | Le run de santé de [registry §4.2 et §4.3](specs/registry.md) devient une commande de `registry-tools`. Il démarre chaque template dans Chromium piloté par Playwright, lance ses tests, rejoue ses exercices et écrit `health/<name>.json`, que l'index intègre. Le hub affiche les badges `degraded`, et les bandeaux `broken` et `deprecated` ([ui §2](specs/ui.md)). | Un template volontairement cassé passe `broken` et son bandeau s'affiche. Un template rétabli redevient `healthy`. |
-| 7 | `registry-repos` | Il faut d'abord la recherche de marques (R6) et l'accord sur l'organisation GitHub. Ensuite : création de `typika/templates`, où `templates/` part avec son historique, et de `typika/registry`, avec les workflows `validate-pr`, `build-index` et `health`, `CODEOWNERS` et `maintainers.toml`. Renovate est activé sur les deux dépôts. La publication de l'index déclenche la reconstruction de l'app ([hosting](guides/hosting.md)). | Le critère de fin du M3 : une PR au registre ajoute un template sans toucher à l'app, et sa santé apparaît sur le hub après le déploiement. |
+| 7 | `registry-repos` | Il faut d'abord la recherche de marques (R6) et l'accord sur l'organisation GitHub. Ensuite : création de `typika-app/templates`, où `templates/` part avec son historique, et de `typika-app/registry`, avec les workflows `validate-pr`, `build-index` et `health`, `CODEOWNERS` et `maintainers.toml`. Renovate est activé sur les deux dépôts. La publication de l'index déclenche la reconstruction de l'app ([hosting](guides/hosting.md)). | Le critère de fin du M3 : une PR au registre ajoute un template sans toucher à l'app, et sa santé apparaît sur le hub après le déploiement. |
 
 État (2026-10-12) : lot 1 livré. `packages/registry-tools` vérifie le registre local `registry/`, qui a une entrée
 par template (38) et le vocabulaire des 16 topics. Il lit chaque template à son commit épinglé, applique V1 à V7, V9 et
@@ -268,8 +268,9 @@ sur un exercice et un template introuvables.
 
 Lot 7 prêt, publication en attente. `registry-tools` lit un dépôt de templates depuis un clone local (`--checkout`).
 L'extraction de `templates/` et `registry/` en dépôts, leurs workflows et la branche qui les branche en sous-modules
-sont préparés en local, gate vert, sans rien publier. La publication attend la recherche de marques (R6), l'organisation
-`typika` sur GitHub et la réservation de `typika.dev`. Le critère de fin du M3 passe par ce registre public : le M3
+sont préparés en local, gate vert, sans rien publier. La publication attend la recherche de marques (R6) et la
+réservation de `typika.dev` ; l'organisation `typika-app` existe depuis le 2026-11-20
+([0033](decisions/0033-github-org-typika-app.md)). Le critère de fin du M3 passe par ce registre public : le M3
 reste ouvert jusque-là. Rien ne bloque le M4, qui garde les templates dans ce dépôt. Un template modifié d'ici là se
 reporte en relançant l'extraction et en rebasant la branche.
 
@@ -402,7 +403,7 @@ un exercice. Le partage demande des projets indépendants : le lot 1 les apporte
 | 3 | `export-zip` | Export zip depuis la sandbox et `/projects` ([sharing-and-cli §4](specs/sharing-and-cli.md)), avec l'option « sans les fichiers Typika ». La règle de retrait (§6.4) vit dans `@typika/manifest`, pour que le CLI la reprenne. | Le zip de `strategy-ts`, de `strategy-go` et de `strategy-kotlin`, extrait, passe ses tests avec l'outil natif du langage, avec et sans les fichiers Typika. |
 | 4 | `embed` | `/embed/<name>` ([ui §13](specs/ui.md), [security §3.6](specs/security.md), [0016](decisions/0016-isolation-and-embed.md)) : éditeur et sortie, paramètres d'URL, runtime démarré à la première interaction, `postMessage` validé par schéma, aucune persistance locale, `frame-ancestors` ouvert sur `/embed/*` seulement. « Ouvrir dans Typika » passe l'état courant par un lien du lot 2. Le snippet se copie depuis la page template. Le lot tranche, dans une ADR, quels runtimes tournent en embed : Go n'utilise pas `SharedArrayBuffer`, et Kotlin compile par le relais de l'app. | Un E2E sur le build de production embarque `strategy-ts` dans une page servie sur une autre origine, lance les tests et reçoit `typika:test-result`. Chaque autre route garde `frame-ancestors 'none'`. |
 | 5 | `cli` | `packages/cli`, package `typika` ([sharing-and-cli §6-7](specs/sharing-and-cli.md)) : `typika create` (nom ou ref, `--variant`, `--exercise`, `--keep-tour`, `--registry`, `--force`, `--json`, codes de sortie) et `typika validate` (`--run` s'appuie sur les runners de `template-check`). Les tests passent par un registre servi en local, archives comprises, puisque le dépôt est privé. Le package n'est pas publié sur npm. | `typika create strategy-ts`, lancé contre le registre local, produit un projet qui passe ses tests hors de Typika, et de même pour les variantes Go et Kotlin. `typika validate` signale un template volontairement cassé avec le code `5`. |
-| 6 | `github` | Partage par gist (`/g/<gistId>`) et push vers un nouveau dépôt ([sharing-and-cli §3, §5](specs/sharing-and-cli.md)) : endpoint d'échange OAuth sur le serveur de l'app, jeton en `sessionStorage`, scopes demandés au moment de l'action. Il demande une OAuth App GitHub : celle de développement se crée sur le compte du mainteneur, celle de production avec l'organisation (#92). | Un gist secret créé depuis la sandbox se rouvre par `/g/<id>` sans connexion. Un push crée un dépôt dont le `typika.toml` garde `parent`. |
+| 6 | `github` | Partage par gist (`/g/<gistId>`) et push vers un nouveau dépôt ([sharing-and-cli §3, §5](specs/sharing-and-cli.md)) : endpoint d'échange OAuth sur le serveur de l'app, jeton en `sessionStorage`, scopes demandés au moment de l'action. Il demande une OAuth App GitHub : celle de développement se crée sur le compte du mainteneur, celle de production sous l'organisation `typika-app`, à la publication (#92). | Un gist secret créé depuis la sandbox se rouvre par `/g/<id>` sans connexion. Un push crée un dépôt dont le `typika.toml` garde `parent`. |
 
 Le critère de fin se joue en deux temps. L'embed dans une page tierce est joué au lot 4, et `typika create` contre le
 registre local au lot 5. `npx typika create` contre l'instance publique attend la publication du package et du

@@ -33,11 +33,11 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/observer-base/js"
+template = "github:typika-app/templates/observer-base/js"
 focus = ["src/orders/**", "src/open-shop.js"]
 
 [variants]
-typescript = "github:typika/templates/observer/ts"
+typescript = "github:typika-app/templates/observer/ts"
 
 [[exercises]]
 name = "add-loyalty-points"

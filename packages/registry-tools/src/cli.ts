@@ -106,7 +106,7 @@ if (command === 'health' && values.app !== undefined) {
 
 if (command !== 'build') {
   console.error(
-    'Usage: registry-tools build <registry> [--out <index.json>] [--force] | health <registry> --app <url> [--only <names>] [--run-url <url>] | mirror <index.json> --out <dir> | schema [--out <index.schema.json>]\nbuild, health and mirror read typika/templates in this monorepo, or in the clones given by --checkout owner/repo=<dir>.'
+    'Usage: registry-tools build <registry> [--out <index.json>] [--force] | health <registry> --app <url> [--only <names>] [--run-url <url>] | mirror <index.json> --out <dir> | schema [--out <index.schema.json>]\nbuild, health and mirror read typika-app/templates in this monorepo, or in the clones given by --checkout owner/repo=<dir>.'
   )
   exit(2)
 }

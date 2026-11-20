@@ -34,11 +34,11 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/factory-method-base/kotlin"
+template = "github:typika-app/templates/factory-method-base/kotlin"
 focus = ["src/main/kotlin/shipping/**"]
 
 [variants]
-typescript = "github:typika/templates/factory-method/ts"
+typescript = "github:typika-app/templates/factory-method/ts"
 
 [[exercises]]
 name = "add-locker-carrier"

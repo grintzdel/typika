@@ -6,7 +6,7 @@ Statut : brouillon · 2026-10-08 · Voir aussi : [manifest](manifest.md), [catal
 Le registre est la seule source de vérité du hub. Il ne contient pas de code de template : il référence des templates
 hébergés sur GitHub et produit l'index statique que l'app consomme.
 
-## 1. Le dépôt `typika/registry`
+## 1. Le dépôt `typika-app/registry`
 
 ```
 registry/
@@ -36,7 +36,7 @@ registry/
 Un fichier par template, nommé d'après le `name` du manifeste.
 
 ```toml
-ref = "github:typika/templates/strategy/ts@3f2c9a1e7b4d"
+ref = "github:typika-app/templates/strategy/ts@3f2c9a1e7b4d"
 maintainers = ["github:maoudin", "github:alice"]
 category = "official"          # official | community
 added = 2026-10-08
@@ -46,7 +46,7 @@ added = 2026-10-08
 |---|---|---|
 | `ref` | oui | Référence complète, **épinglée sur un SHA de commit** (§6). Branche ou tag refusés. |
 | `maintainers` | oui | Au moins un compte GitHub. Reçoit les notifications de santé. |
-| `category` | oui | `official` : dépôt sous `typika/*`, maintenu par l'équipe de curation. `community` : tout autre dépôt. |
+| `category` | oui | `official` : dépôt sous `typika-app/*`, maintenu par l'équipe de curation. `community` : tout autre dépôt. |
 | `added` | oui | Date d'entrée, renseignée par la PR. |
 | `parent` | non | Ref épinglée du template dont celui-ci est un remix (§7). |
 | `deprecated` | non | `true` : décision de l'équipe de déprécier le template (§5), appliquée au run de santé suivant. |
@@ -58,18 +58,18 @@ catégories confondues.
 
 | | `official` | `community` |
 |---|---|---|
-| Hébergement | `typika/*` | N'importe quel dépôt GitHub public |
+| Hébergement | `typika-app/*` | N'importe quel dépôt GitHub public |
 | Licence | MIT-0 | Toute licence approuvée OSI, déclarée dans le manifeste |
 | Revue | Équipe de curation, 2 approbations | Équipe de curation, 1 approbation |
 | Mise en avant | Accueil, parcours, catalogue | Liste à facettes, recherche |
 
 ### 1.3 Dépôt des templates officiels
 
-Les templates officiels vivent dans **un seul dépôt**, `typika/templates`, et pas un dépôt par template : avec les
+Les templates officiels vivent dans **un seul dépôt**, `typika-app/templates`, et pas un dépôt par template : avec les
 bases et les variantes, cela ferait près de 80 dépôts à configurer, surveiller et mettre à jour.
 
 ```
-typika/templates/
+typika-app/templates/
 ├── strategy/
 │   ├── ts/            # typika.toml + sources
 │   ├── go/
@@ -81,8 +81,8 @@ typika/templates/
 └── renovate.json
 ```
 
-- Ref d'un template officiel : `github:typika/templates/<concept>/<langage>@<sha>`.
-- Ref d'une base : `github:typika/templates/<concept>-base/<langage>@<sha>`.
+- Ref d'un template officiel : `github:typika-app/templates/<concept>/<langage>@<sha>`.
+- Ref d'une base : `github:typika-app/templates/<concept>-base/<langage>@<sha>`.
 - Une PR du dépôt ne lance que les tests des dossiers modifiés.
 - Un commit change le SHA de tout le dépôt : l'automatisation du registre ne met à jour que les entrées dont le
   dossier a changé (§6).
@@ -107,7 +107,7 @@ Les templates communautaires restent libres de leur organisation (un dépôt, un
 | V1 | Le fichier d'entrée respecte le schéma (§1.1), `ref` épinglée sur un SHA existant. | `E_MISSING_FIELD`, `E_UNKNOWN_FIELD`, `E_INVALID_VALUE`, `E_INVALID_REF`, `E_REF_NOT_PINNED`, `E_REF_UNRESOLVABLE` |
 | V2 | Le manifeste `typika.toml` est présent à la ref et valide (schéma partagé `manifest`). | codes `manifeste` de [manifest §11](manifest.md) |
 | V3 | `name` unique ; nom de fichier = `name`. | `E_NAME_TAKEN`, `E_ENTRY_NAME_MISMATCH` |
-| V4 | Licence présente et approuvée OSI ; `official` ⇒ MIT-0, hébergé sous `typika/*`, et rangé dans `templates/official/`. | `E_LICENSE_NOT_OSI`, `E_LICENSE_NOT_MIT0`, `E_CATEGORY_MISMATCH`, `E_INVALID_VALUE` |
+| V4 | Licence présente et approuvée OSI ; `official` ⇒ MIT-0, hébergé sous `typika-app/*`, et rangé dans `templates/official/`. | `E_LICENSE_NOT_OSI`, `E_LICENSE_NOT_MIT0`, `E_CATEGORY_MISMATCH`, `E_INVALID_VALUE` |
 | V5 | Toutes les refs internes (`base`, `variants`, `parent`) existent et sont elles-mêmes au registre ou dans la même PR. | `E_REF_UNRESOLVABLE`, `E_BASE_MISMATCH`, `E_VARIANT_LANGUAGE_MISMATCH` |
 | V6 | Les fichiers référencés existent : `runtime.entry`, étapes de tour, ancres `file#Lx-Ly` dans les bornes du fichier. Un tour officiel commence par `overview` et finit par `trade-offs` ([manifest §5.3](manifest.md)). | codes `workspace` de [manifest §11](manifest.md), `E_TOUR_REQUIRED_STEP` |
 | V7 | Topics connus de `vocabulary.toml` (`<category>/<slug>`) ; facettes valides. | `E_INVALID_VALUE` |
@@ -117,10 +117,10 @@ Les templates communautaires restent libres de leur organisation (un dépôt, un
 | V11 | Un template Go n'importe que la stdlib embarquée par le runtime `go` ([runtimes §6.3](runtimes.md)). | `E_GO_IMPORT_UNAVAILABLE` |
 
 `packages/registry-tools` porte ces vérifications : `registry-tools build <registre> --out <index.json>` les exécute,
-puis écrit l'index. Elle lit chaque template à son SHA épinglé. Tant que `typika/templates` n'existe pas (lot 7 du M3),
-le dossier `registry/` du monorepo tient lieu de registre, et `github:typika/templates/<chemin>@<sha>` se lit dans le
+puis écrit l'index. Elle lit chaque template à son SHA épinglé. Tant que `typika-app/templates` n'existe pas (lot 7 du M3),
+le dossier `registry/` du monorepo tient lieu de registre, et `github:typika-app/templates/<chemin>@<sha>` se lit dans le
 dossier `templates/` du monorepo, à ce commit. `--checkout <owner>/<repo>=<dossier>` lit à la place un dépôt dans
-un clone local, depuis sa racine : c'est ainsi que la CI de `typika/registry` lira `typika/templates`. V8 dépend du run de santé (§4), que `registry-tools health` mène. Comme `template-check`, `registry-tools` exécute
+un clone local, depuis sa racine : c'est ainsi que la CI de `typika-app/registry` lira `typika-app/templates`. V8 dépend du run de santé (§4), que `registry-tools health` mène. Comme `template-check`, `registry-tools` exécute
 les exercices Go et applique V11. Il exécute les exercices Kotlin (V9) quand `KOTLIN_COMPILER_URL` désigne un service
 de compilation, et signale sinon qu'il ne l'a pas fait ; le build de l'app s'en passe. Avec ce service,
 `registry-tools build` écrit aussi les artefacts précompilés des templates Kotlin et de l'état de départ de leurs
@@ -174,7 +174,7 @@ artefacts Kotlin sont publiés avec lui, dans `artifacts/kotlin/` à côté de `
   "templates": [
     {
       "name": "strategy-ts",
-      "ref": "github:typika/templates/strategy/ts@3f2c9a1e7b4d",
+      "ref": "github:typika-app/templates/strategy/ts@3f2c9a1e7b4d",
       "category": "official",
       "maintainers": ["github:maoudin"],
       "addedAt": "2026-10-08",
@@ -195,7 +195,7 @@ artefacts Kotlin sont publiés avec lui, dans `artifacts/kotlin/` à côté de `
           "useCase": []
         },
         "runtime": { "kind": "browser-js" },
-        "base": "github:typika/templates/strategy-base/ts@9e8d7c6b5a4f",
+        "base": "github:typika-app/templates/strategy-base/ts@9e8d7c6b5a4f",
         "variants": { "kotlin": "kotlin-strategy", "go": "go-strategy" },
         "tour": { "steps": [{ "id": "the-switch", "title": "The growing switch" }] },
         "exercises": [{ "name": "add-shipping-rule", "kind": "refactor", "title": "Add a new shipping rule" }]
@@ -206,7 +206,7 @@ artefacts Kotlin sont publiés avec lui, dans `artifacts/kotlin/` à côté de `
         "checkedAt": "2026-10-06T03:00:00Z",
         "brokenSince": null,
         "checks": { "boot": "pass", "tests": "pass", "exercises": "pass", "deps": "pass" },
-        "runUrl": "https://github.com/typika/registry/actions/runs/…"
+        "runUrl": "https://github.com/typika-app/registry/actions/runs/…"
       },
       "search": { "text": "strategy switch behaviour polymorphism" }
     }
@@ -267,7 +267,7 @@ l'instant, et un boot de plus de 20 s rend le template `degraded`.
 
 ### 4.4 Renovate
 
-- Activé sur tous les dépôts `typika/*`.
+- Activé sur tous les dépôts `typika-app/*`.
 - Les PR Renovate sur un dépôt de template déclenchent les tests du template ; une fois mergées, l'automatisation de
   l'équipe ouvre la PR de mise à jour de `ref` dans le registre (§2.4).
 - Les templates `community` sont libres de l'activer ; le guide d'auteur fournit une configuration.

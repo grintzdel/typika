@@ -33,12 +33,12 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/naive-crud/ts"
+template = "github:typika-app/templates/naive-crud/ts"
 focus = ["src/orders/**", "src/open-shop.ts"]
 
 [variants]
-go = "github:typika/templates/cqrs/go"
-kotlin = "github:typika/templates/cqrs/kotlin"
+go = "github:typika-app/templates/cqrs/go"
+kotlin = "github:typika-app/templates/cqrs/kotlin"
 
 [[exercises]]
 name = "add-revenue-dashboard"

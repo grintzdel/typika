@@ -13,7 +13,7 @@ import { readRegistry } from '../read-registry/read-registry.ts'
 import { makeGitResolver, type LocalCheckouts } from '../resolve-ref/resolve-ref.ts'
 
 export const MONOREPO_CHECKOUTS: LocalCheckouts = {
-  'typika/templates': { repo: fileURLToPath(new URL('../../../..', import.meta.url)), prefix: 'templates' },
+  'typika-app/templates': { repo: fileURLToPath(new URL('../../../..', import.meta.url)), prefix: 'templates' },
 }
 
 export type LocalIndexBuild = {

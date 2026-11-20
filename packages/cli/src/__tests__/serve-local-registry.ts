@@ -6,7 +6,7 @@ import { promisify } from 'node:util'
 import { buildLocalIndex } from '@typika/registry-tools'
 
 const MONOREPO = fileURLToPath(new URL('../../../..', import.meta.url))
-const ARCHIVE = /^\/archive\/typika\/templates\/([0-9a-f]{7,40})\.tar\.gz$/
+const ARCHIVE = /^\/archive\/typika-app\/templates\/([0-9a-f]{7,40})\.tar\.gz$/
 
 export type LocalRegistry = {
   readonly indexUrl: string

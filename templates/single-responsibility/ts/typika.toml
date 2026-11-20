@@ -32,11 +32,11 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/single-responsibility-base/ts"
+template = "github:typika-app/templates/single-responsibility-base/ts"
 focus = ["src/orders/**", "src/pricing/**", "src/invoices/**"]
 
 [variants]
-kotlin = "github:typika/templates/single-responsibility/kotlin"
+kotlin = "github:typika-app/templates/single-responsibility/kotlin"
 
 [[exercises]]
 name = "add-pdf-invoice"

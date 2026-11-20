@@ -9,7 +9,7 @@ import { duplicateProjectProgram } from './duplicate-project.program.ts'
 describe('duplicateProjectProgram', () => {
   it('copies a project and its files under a new id and name', async () => {
     const source = {
-      record: projectRecord({ ref: 'github:typika/templates/sample/ts@0123456789ab' }),
+      record: projectRecord({ ref: 'github:typika-app/templates/sample/ts@0123456789ab' }),
       files: projectFiles({ 'src/main.ts': 'mine' }),
     }
     const storage = makeProjectStorageInMemory([source])

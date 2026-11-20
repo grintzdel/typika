@@ -33,12 +33,12 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/naive-crud/ts"
+template = "github:typika-app/templates/naive-crud/ts"
 focus = ["src/orders/**", "src/open-shop.ts"]
 
 [variants]
-go = "github:typika/templates/hexagonal/go"
-kotlin = "github:typika/templates/hexagonal/kotlin"
+go = "github:typika-app/templates/hexagonal/go"
+kotlin = "github:typika-app/templates/hexagonal/kotlin"
 
 [[exercises]]
 name = "add-csv-import"

@@ -34,11 +34,11 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/composition-over-inheritance-base/go"
+template = "github:typika-app/templates/composition-over-inheritance-base/go"
 focus = ["internal/catalog/**"]
 
 [variants]
-typescript = "github:typika/templates/composition-over-inheritance/ts"
+typescript = "github:typika-app/templates/composition-over-inheritance/ts"
 
 [[exercises]]
 name = "add-gift-wrap"

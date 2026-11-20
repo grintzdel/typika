@@ -33,11 +33,11 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/naive-crud/ts"
+template = "github:typika-app/templates/naive-crud/ts"
 focus = ["src/orders/**", "src/open-shop.ts"]
 
 [variants]
-kotlin = "github:typika/templates/event-sourcing/kotlin"
+kotlin = "github:typika-app/templates/event-sourcing/kotlin"
 
 [[exercises]]
 name = "order-timeline"

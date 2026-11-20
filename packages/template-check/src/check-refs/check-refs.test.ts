@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest'
 import { manifestOf } from '../__tests__/manifest.factory.ts'
 import { checkRefs } from './check-refs.ts'
 
-const SELF = 'github:typika/templates/strategy/ts'
-const BASE = 'github:typika/templates/strategy-base/ts'
-const GO = 'github:typika/templates/strategy/go'
+const SELF = 'github:typika-app/templates/strategy/ts'
+const BASE = 'github:typika-app/templates/strategy-base/ts'
+const GO = 'github:typika-app/templates/strategy/go'
 
 const template = manifestOf({ extra: `\n[base]\ntemplate = "${BASE}"\n\n[variants]\ngo = "${GO}"\n` })
 

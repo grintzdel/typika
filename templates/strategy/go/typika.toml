@@ -34,12 +34,12 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/strategy-base/go"
+template = "github:typika-app/templates/strategy-base/go"
 focus = ["internal/checkout/**"]
 
 [variants]
-typescript = "github:typika/templates/strategy/ts"
-kotlin = "github:typika/templates/strategy/kotlin"
+typescript = "github:typika-app/templates/strategy/ts"
+kotlin = "github:typika-app/templates/strategy/kotlin"
 
 [[exercises]]
 name = "add-pickup-point-option"

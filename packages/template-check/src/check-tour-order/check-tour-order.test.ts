@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { manifestOf } from '../__tests__/manifest.factory.ts'
 import { checkTourOrder } from './check-tour-order.ts'
 
-const TS = 'github:typika/templates/strategy/ts'
+const TS = 'github:typika-app/templates/strategy/ts'
 const REFERENCE = ['overview', 'context', 'strategy-interface', 'delegate', 'trade-offs']
 
 const kotlin = manifestOf({
@@ -36,7 +36,7 @@ describe('checkTourOrder', () => {
   })
 
   it('does not compare the reference with its own variants', () => {
-    const typescript = manifestOf({ extra: '\n[variants]\nkotlin = "github:typika/templates/strategy/kotlin"\n' })
+    const typescript = manifestOf({ extra: '\n[variants]\nkotlin = "github:typika-app/templates/strategy/kotlin"\n' })
 
     expect(checkTourOrder(typescript, ['trade-offs', 'overview'], () => ['overview', 'trade-offs'])).toEqual([])
   })

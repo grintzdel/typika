@@ -166,8 +166,8 @@ describe('parseManifest', () => {
   it('rejects malformed template references', async () => {
     const manifest = manifestFixture({
       parent: 'github:someone',
-      base: { template: 'typika/templates/strategy-base/ts' },
-      variants: { go: 'github:typika/templates/../go' },
+      base: { template: 'typika-app/templates/strategy-base/ts' },
+      variants: { go: 'github:typika-app/templates/../go' },
     })
 
     expect(await issuesFor(manifest)).toEqual([
@@ -179,8 +179,8 @@ describe('parseManifest', () => {
 
   it('rejects a variant in the template own language and unknown variant languages', async () => {
     const variants = {
-      typescript: 'github:typika/templates/strategy/ts',
-      rust: 'github:typika/templates/strategy/rust',
+      typescript: 'github:typika-app/templates/strategy/ts',
+      rust: 'github:typika-app/templates/strategy/rust',
     }
 
     expect(await issuesFor(manifestFixture({ variants }))).toEqual([
@@ -219,7 +219,7 @@ describe('parseManifest', () => {
   it('rejects tour, base and variants on a base template', async () => {
     const manifest = baseManifestFixture({
       tour: { steps: ['tour/01-overview.md'] },
-      variants: { go: 'github:typika/templates/strategy-base/go' },
+      variants: { go: 'github:typika-app/templates/strategy-base/go' },
     })
 
     expect(await issuesFor(manifest)).toEqual(['E_BASE_FORBIDDEN_FIELD variants', 'E_BASE_FORBIDDEN_FIELD tour'])

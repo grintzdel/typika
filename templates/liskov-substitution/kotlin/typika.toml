@@ -33,11 +33,11 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/liskov-substitution-base/kotlin"
+template = "github:typika-app/templates/liskov-substitution-base/kotlin"
 focus = ["src/main/kotlin/catalog/**", "src/main/kotlin/checkout/**"]
 
 [variants]
-typescript = "github:typika/templates/liskov-substitution/ts"
+typescript = "github:typika-app/templates/liskov-substitution/ts"
 
 [[exercises]]
 name = "add-gift-card"

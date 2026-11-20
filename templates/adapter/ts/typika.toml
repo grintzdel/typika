@@ -33,12 +33,12 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/adapter-base/ts"
+template = "github:typika-app/templates/adapter-base/ts"
 focus = ["src/checkout/**", "src/payments/**"]
 
 [variants]
-go = "github:typika/templates/adapter/go"
-kotlin = "github:typika/templates/adapter/kotlin"
+go = "github:typika-app/templates/adapter/go"
+kotlin = "github:typika-app/templates/adapter/kotlin"
 
 [[exercises]]
 name = "switch-provider"

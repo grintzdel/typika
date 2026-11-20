@@ -33,11 +33,11 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/open-closed-base/kotlin"
+template = "github:typika-app/templates/open-closed-base/kotlin"
 focus = ["src/main/kotlin/pricing/**", "src/main/kotlin/receipts/**"]
 
 [variants]
-typescript = "github:typika/templates/open-closed/ts"
+typescript = "github:typika-app/templates/open-closed/ts"
 
 [[exercises]]
 name = "add-black-friday-rule"

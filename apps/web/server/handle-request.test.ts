@@ -35,7 +35,7 @@ beforeAll(async () => {
     'client/robots.txt': 'User-agent: *',
     'client/registry/index.json': '{}',
     'client/registry/artifacts/kotlin/0123.json': '{"_tag":"Failed","diagnostics":[]}',
-    'client/registry/gh/typika/templates@0123456789ab/strategy/ts/typika.toml': 'name = "strategy-ts"',
+    'client/registry/gh/typika-app/templates@0123456789ab/strategy/ts/typika.toml': 'name = "strategy-ts"',
     'runtime/frame.html': '<!doctype html>',
     'runtime/assets/esbuild-abc.wasm': 'wasm',
     'runtime/assets/go/0123/compile.wasm': 'compile',
@@ -147,7 +147,7 @@ describe('makeRequestHandler on the app origin', () => {
   })
 
   it('serves the registry index for revalidation and the pinned template files as immutable', async () => {
-    const pinned = await get(`${APP}/registry/gh/typika/templates@0123456789ab/strategy/ts/typika.toml`)
+    const pinned = await get(`${APP}/registry/gh/typika-app/templates@0123456789ab/strategy/ts/typika.toml`)
 
     expect((await get(`${APP}/registry/index.json`)).headers.get('cache-control')).toBe('no-cache')
     expect(await pinned.text()).toBe('name = "strategy-ts"')

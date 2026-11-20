@@ -32,12 +32,12 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/interface-segregation-base/ts"
+template = "github:typika-app/templates/interface-segregation-base/ts"
 focus = ["src/payments/**", "src/open-shop.ts"]
 
 [variants]
-go = "github:typika/templates/interface-segregation/go"
-kotlin = "github:typika/templates/interface-segregation/kotlin"
+go = "github:typika-app/templates/interface-segregation/go"
+kotlin = "github:typika-app/templates/interface-segregation/kotlin"
 
 [[exercises]]
 name = "add-gift-card-payment"

@@ -14,7 +14,7 @@ import {
   type SharePayload,
 } from './share-link.domain-model.ts'
 
-const ORIGIN = 'github:typika/templates/strategy/ts@3f2c9a1e7b4d'
+const ORIGIN = 'github:typika-app/templates/strategy/ts@3f2c9a1e7b4d'
 
 const PAYLOAD: SharePayload = {
   n: 'strategy-ts',

@@ -104,11 +104,11 @@ test = "vitest"
 steps = ["tour/01-domain.md", "tour/02-ports.md", "tour/03-adapters.md"]
 
 [base]
-template = "github:typika/templates/hexagonal-base/ts"
+template = "github:typika-app/templates/hexagonal-base/ts"
 
 [variants]
-kotlin = "github:typika/templates/hexagonal/kotlin"
-go = "github:typika/templates/hexagonal/go"
+kotlin = "github:typika-app/templates/hexagonal/kotlin"
+go = "github:typika-app/templates/hexagonal/go"
 
 [[exercises]]
 kind = "fix"
@@ -185,14 +185,14 @@ Soit environ 44 templates.
 
 ### 6.3 Registre et index
 
-- **Registre** = repo `typika/registry`. Une PR ajoute une entrée `{ ref, maintainers }`. Revue humaine pour la
+- **Registre** = repo `typika-app/registry`. Une PR ajoute une entrée `{ ref, maintainers }`. Revue humaine pour la
   curation.
 - **Index** = `index.json` généré par la CI du registre (manifestes résolus + santé), publié en asset statique.
 - **CI de santé** hebdomadaire : pour chaque template, installer, démarrer, lancer les tests dans le même runtime
   navigateur que l'app (Playwright headless).
   - `healthy` : tout passe. `degraded` : warnings / deps obsolètes. `broken` : échec.
   - `broken` depuis 90 jours → `deprecated`, masqué par défaut du hub.
-- **Renovate** activé sur les repos `typika/*`.
+- **Renovate** activé sur les repos `typika-app/*`.
 - **Recherche** côté client (MiniSearch ou Orama) sur l'index statique. Dérogation assumée à la règle « pas de filtre
   côté client » : il n'y a pas de backend, et l'index (quelques centaines d'entrées) tient en mémoire.
 - **Remix** : forker un template conserve un lien `parent` ; la page affiche le diff avec le parent.
@@ -324,7 +324,7 @@ OAuth, sans stockage).
 
 - **Plateforme** (app, packages, CLI) : **MIT**. Standard de l'écosystème JS, aucune friction pour contribuer ou
   réutiliser.
-- **Templates officiels** (`typika/*`) : **MIT-0** (MIT sans obligation d'attribution). Un template est fait pour
+- **Templates officiels** (`typika-app/*`) : **MIT-0** (MIT sans obligation d'attribution). Un template est fait pour
   être copié dans des projets, y compris propriétaires, via `typika create` ; exiger une notice de licence dans chaque
   projet généré serait un frein.
 - **Templates tiers** : licence libre au choix de l'auteur, déclarée dans le manifeste et affichée sur la page template.

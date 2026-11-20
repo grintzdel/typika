@@ -33,11 +33,11 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/naive-crud/ts"
+template = "github:typika-app/templates/naive-crud/ts"
 focus = ["src/orders/**", "src/infrastructure/in-memory-database.ts"]
 
 [variants]
-kotlin = "github:typika/templates/state-machine/kotlin"
+kotlin = "github:typika-app/templates/state-machine/kotlin"
 
 [[exercises]]
 name = "add-returns"

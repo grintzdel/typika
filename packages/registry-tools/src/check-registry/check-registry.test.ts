@@ -73,12 +73,12 @@ describe('checkRegistry', () => {
 
   it('refuses a ref that is not pinned to a commit', async () => {
     const report = await check([
-      { file: 'templates/official/strategy-ts.toml', source: 'ref = "github:typika/templates/strategy/ts@main"\n' },
+      { file: 'templates/official/strategy-ts.toml', source: 'ref = "github:typika-app/templates/strategy/ts@main"\n' },
     ])
 
     expect(codesOf(report.checks, 'templates/official/strategy-ts.toml')).toContain('E_MISSING_FIELD')
     const pinned = await check([
-      officialEntry('strategy-ts', 'strategy/ts', { ref: 'github:typika/templates/strategy/ts@main' }),
+      officialEntry('strategy-ts', 'strategy/ts', { ref: 'github:typika-app/templates/strategy/ts@main' }),
     ])
     expect(codesOf(pinned.checks, 'templates/official/strategy-ts.toml')).toEqual(['E_REF_NOT_PINNED'])
   })
@@ -170,7 +170,7 @@ describe('checkRegistry', () => {
 
   it('refuses a parent that is not in the registry', async () => {
     const remix = officialEntry('strategy-ts', 'strategy/ts', {
-      extra: 'parent = "github:typika/templates/observer/ts@0123456789ab"\n',
+      extra: 'parent = "github:typika-app/templates/observer/ts@0123456789ab"\n',
     })
     const report = await check([remix, ...STRATEGY.slice(1)])
 

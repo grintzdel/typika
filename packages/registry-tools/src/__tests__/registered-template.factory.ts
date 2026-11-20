@@ -7,11 +7,11 @@ import { RegistryCategory } from '../domain/constants/registry-category.constant
 import { makeGitResolver } from '../resolve-ref/resolve-ref.ts'
 import { REPO_ROOT } from './registry.factory.ts'
 
-export const STRATEGY_KOTLIN_REF = 'github:typika/templates/strategy/kotlin@1318eae7665d'
-export const STRATEGY_BASE_KOTLIN_REF = 'github:typika/templates/strategy-base/kotlin@17f8f058901a'
-export const STRATEGY_TS_REF = 'github:typika/templates/strategy/ts@1318eae7665d'
+export const STRATEGY_KOTLIN_REF = 'github:typika-app/templates/strategy/kotlin@1318eae7665d'
+export const STRATEGY_BASE_KOTLIN_REF = 'github:typika-app/templates/strategy-base/kotlin@17f8f058901a'
+export const STRATEGY_TS_REF = 'github:typika-app/templates/strategy/ts@1318eae7665d'
 
-const resolve = makeGitResolver({ 'typika/templates': { repo: REPO_ROOT, prefix: 'templates' } })
+const resolve = makeGitResolver({ 'typika-app/templates': { repo: REPO_ROOT, prefix: 'templates' } })
 
 export const registeredTemplate = (
   ref: string,

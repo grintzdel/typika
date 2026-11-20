@@ -29,7 +29,7 @@ export type TemplateCheck = {
   readonly exercisesRun: boolean
 }
 
-const OFFICIAL_PREFIX = 'github:typika/templates/'
+const OFFICIAL_PREFIX = 'github:typika-app/templates/'
 
 export const officialRefOf = (dir: string): string => `${OFFICIAL_PREFIX}${dir}`
 

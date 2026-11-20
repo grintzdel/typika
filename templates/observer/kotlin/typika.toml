@@ -34,11 +34,11 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/observer-base/kotlin"
+template = "github:typika-app/templates/observer-base/kotlin"
 focus = ["src/main/kotlin/orders/**", "src/main/kotlin/app/**"]
 
 [variants]
-typescript = "github:typika/templates/observer/ts"
+typescript = "github:typika-app/templates/observer/ts"
 
 [[exercises]]
 name = "add-loyalty-points"

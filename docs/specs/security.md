@@ -12,7 +12,7 @@ valeur** (token GitHub, projets locaux, session).
 |---|---|
 | Token GitHub de l'utilisateur | Mémoire et `sessionStorage` de l'origine app |
 | Projets locaux | IndexedDB de l'origine app |
-| Intégrité des templates officiels | Registre `typika/registry`, repos `typika/*` |
+| Intégrité des templates officiels | Registre `typika-app/registry`, repos `typika-app/*` |
 | Disponibilité du service de compilation Kotlin | Conteneur `kotlin-compiler` |
 | Réputation de l'instance | Domaine de l'instance (phishing, contenu hébergé) |
 | Navigateur du visiteur | Ressources CPU / réseau consommées par le code exécuté |
@@ -73,7 +73,7 @@ Service kotlin-compiler: compile du code non fiable. N'exécute pas le code comp
 | Scripts `postinstall` | Exécution à l'installation (CLI) | Aucun `npm install` dans la sandbox ([ADR 0017](../decisions/0017-node-runtime.md)) ; le CLI n'installe rien et n'exécute rien |
 | CDN ESM compromis (`browser-js`) | Code injecté dans les dépendances | Versions épinglées ; assets propres à Typika avec SRI ; le risque résiduel du CDN pour les dépendances tierces est assumé et documenté |
 | Tour Markdown contenant du HTML ou du JavaScript | XSS sur l'origine app | Markdown rendu **sans HTML brut**, sortie assainie, liens externes en `rel="noopener noreferrer"`, pas d'URL `javascript:` |
-| Template de tiers trompeur (faux « officiel ») | Confiance abusée | Badge « officiel » réservé à `typika/*` ; les autres sont étiquetés « communauté » |
+| Template de tiers trompeur (faux « officiel ») | Confiance abusée | Badge « officiel » réservé à `typika-app/*` ; les autres sont étiquetés « communauté » |
 | CI de santé qui exécute un template malveillant | Vol de secrets CI | La CI de santé tourne dans un job sans secret, sans token d'écriture, dans un navigateur headless |
 
 ### 3.3 Service de compilation Kotlin

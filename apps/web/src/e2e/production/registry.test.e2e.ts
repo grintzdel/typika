@@ -18,7 +18,7 @@ test('opens a template served by the registry, at its pinned commit', async ({ p
   await expect(page.getByRole('tree', { name: 'Fichiers' })).toBeVisible({ timeout: 30_000 })
   expect(registryRequests).toContain(`${TEST_REGISTRY_URL}/index.json`)
   expect(
-    registryRequests.some((url) => /\/gh\/typika\/templates@[0-9a-f]{12}\/strategy\/ts\/typika\.toml$/.test(url))
+    registryRequests.some((url) => /\/gh\/typika-app\/templates@[0-9a-f]{12}\/strategy\/ts\/typika\.toml$/.test(url))
   ).toBe(true)
 })
 

@@ -16,7 +16,7 @@ export type EntryFixture = {
 }
 
 export const entryToml = ({
-  ref = 'github:typika/templates/strategy/ts@2be9bdff96b6',
+  ref = 'github:typika-app/templates/strategy/ts@2be9bdff96b6',
   category = RegistryCategory.OFFICIAL,
   maintainers = ['github:maoudin'],
   added = '2026-10-08',
@@ -30,5 +30,5 @@ ${extra}`
 export const officialEntry = (name: string, dir: string, extra: EntryFixture = {}) =>
   ({
     file: `templates/${extra.category ?? RegistryCategory.OFFICIAL}/${name}.toml`,
-    source: entryToml({ ref: `github:typika/templates/${dir}@0123456789ab`, ...extra }),
+    source: entryToml({ ref: `github:typika-app/templates/${dir}@0123456789ab`, ...extra }),
   }) as const

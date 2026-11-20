@@ -41,8 +41,8 @@ export const manifestFixture = (overrides: ManifestInput = {}): ManifestInput =>
   commands: { test: 'vitest' },
   tests: { include: ['tests/**/*.test.ts'] },
   tour: { steps: ['tour/01-overview.md', 'tour/02-context.md'] },
-  base: { template: 'github:typika/templates/strategy-base/ts', focus: ['src/checkout/**'] },
-  variants: { go: 'github:typika/templates/strategy/go' },
+  base: { template: 'github:typika-app/templates/strategy-base/ts', focus: ['src/checkout/**'] },
+  variants: { go: 'github:typika-app/templates/strategy/go' },
   exercises: exercisesFixture(),
   ...overrides,
 })

@@ -33,12 +33,12 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/observer-base/ts"
+template = "github:typika-app/templates/observer-base/ts"
 focus = ["src/orders/**", "src/open-shop.ts"]
 
 [variants]
-javascript = "github:typika/templates/observer/js"
-kotlin = "github:typika/templates/observer/kotlin"
+javascript = "github:typika-app/templates/observer/js"
+kotlin = "github:typika-app/templates/observer/kotlin"
 
 [[exercises]]
 name = "add-loyalty-points"

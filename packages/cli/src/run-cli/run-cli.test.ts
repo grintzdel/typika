@@ -60,7 +60,7 @@ const trackedAt = (ref: string, dir: string) =>
     .filter((path) => path !== '')
     .map((path) => path.slice(`templates/${dir}/`.length))
 
-const PINNED = /^github:typika\/templates\/([^@]+)@([0-9a-f]+)$/
+const PINNED = /^github:typika-app\/templates\/([^@]+)@([0-9a-f]+)$/
 
 const codeFilesOf = (ref: string) => {
   const [, dir = '', sha = ''] = PINNED.exec(ref) ?? []
@@ -105,7 +105,7 @@ describe('typika create', () => {
 
     expect(code).toBe(0)
     expect(await readFile(join(work, 'with-tour', 'typika.toml'), 'utf8')).toMatch(
-      /^parent = "github:typika\/templates\/strategy\/go@[0-9a-f]{12}"$/m
+      /^parent = "github:typika-app\/templates\/strategy\/go@[0-9a-f]{12}"$/m
     )
     expect(await filesIn(join(work, 'with-tour', 'tour'))).toContain('01-overview.md')
   })

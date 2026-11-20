@@ -11,7 +11,7 @@ export const indexTemplate = (
   { manifest = {}, ...entry }: IndexTemplateOverrides = {}
 ): IndexTemplate => ({
   name,
-  ref: `github:typika/templates/${name}@0123456789ab`,
+  ref: `github:typika-app/templates/${name}@0123456789ab`,
   category: 'official',
   maintainers: ['github:maoudin'],
   addedAt: '2026-10-08',

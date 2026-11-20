@@ -11,7 +11,7 @@ import { TemplateFilesPort } from '../ports/template-files.port.ts'
 import { TemplateIndexPort } from '../ports/template-index.port.ts'
 
 const MANIFEST_SUFFIX = `/${MANIFEST_FILE}`
-const OFFICIAL_OWNER = 'typika'
+const OFFICIAL_OWNER = 'typika-app'
 const OFFICIAL_REPO = 'templates'
 const ROOT_PREFIX = `/${OFFICIAL_REPO}/`
 

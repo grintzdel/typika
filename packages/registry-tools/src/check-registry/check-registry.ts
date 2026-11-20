@@ -43,7 +43,7 @@ type Resolved = {
 }
 
 const PINNED_SHA = /^[0-9a-f]{7,40}$/
-const OFFICIAL_OWNER = 'typika'
+const OFFICIAL_OWNER = 'typika-app'
 const CATEGORIES_WITH_REFACTOR: ReadonlySet<string> = new Set(['principle', 'design-pattern'])
 const OSI_LICENSES: ReadonlySet<string> = new Set(
   Object.entries(spdxLicenses)
@@ -84,7 +84,13 @@ const checkEntry = (file: string, entry: RegistryEntry, ref: PinnedRef): Readonl
         ),
       ]),
   ...(entry.category === RegistryCategory.OFFICIAL && ref.owner !== OFFICIAL_OWNER
-    ? [makeIssue(ManifestIssueCode.CATEGORY_MISMATCH, 'ref', `An official template must live under github:typika/.`)]
+    ? [
+        makeIssue(
+          ManifestIssueCode.CATEGORY_MISMATCH,
+          'ref',
+          `An official template must live under github:typika-app/.`
+        ),
+      ]
     : []),
 ]
 

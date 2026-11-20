@@ -160,6 +160,9 @@ ont été abandonnés ([ADR 0014](decisions/0014-name-typika.md)).
 Fait : `typika` libre sur npm, `typika.dev` libre, aucun compte ni organisation `typika` sur GitHub ;
 aucun produit logiciel homonyme trouvé par recherche web (le plus proche : Typic, éditeur photo mobile).
 
+Le 2026-11-20, l'organisation `typika` est prise sur GitHub, depuis le 2026-10-12, par un tiers : à verser à la
+recherche. Le projet prend `typika-app` ([ADR 0033](decisions/0033-github-org-typika-app.md)).
+
 À faire : recherche de marques déposées dans les classes 9 et 42 (EUIPO, USPTO, INPI) ; réserver le domaine,
 l'organisation et le paquet.
 

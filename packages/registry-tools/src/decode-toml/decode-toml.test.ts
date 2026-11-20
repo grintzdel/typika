@@ -14,7 +14,7 @@ describe('decodeToml', () => {
     const entry = await Effect.runPromise(decodeToml(RegistryEntrySchema, FILE, entryToml()))
 
     expect(entry).toEqual({
-      ref: 'github:typika/templates/strategy/ts@2be9bdff96b6',
+      ref: 'github:typika-app/templates/strategy/ts@2be9bdff96b6',
       maintainers: ['github:maoudin'],
       category: 'official',
       added: '2026-10-08',
@@ -23,7 +23,7 @@ describe('decodeToml', () => {
 
   it('reports missing, unknown and invalid fields together', async () => {
     const error = await decodeEntry(
-      'ref = "github:typika/templates/strategy/ts@2be9bdff96b6"\ncategory = "vendor"\nadded = 2026-10-08\nstars = 3\n'
+      'ref = "github:typika-app/templates/strategy/ts@2be9bdff96b6"\ncategory = "vendor"\nadded = 2026-10-08\nstars = 3\n'
     )
 
     expect(error.issues.map((issue) => [issue.code, issue.path])).toEqual(

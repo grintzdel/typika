@@ -39,3 +39,4 @@ Statuts : `Proposée` (en attente d'un spike), `Acceptée`, `Remplacée par NNNN
 | [0030](0030-kotlin-exercise-artifacts.md) | Exercices Kotlin : leur état de départ est précompilé | Acceptée |
 | [0031](0031-embed-runtimes.md) | Runtimes en embed : les trois, dans un contexte sécurisé | Acceptée |
 | [0032](0032-cli-archives-and-validate.md) | CLI : archives GitHub et `validate --run` dans Node | Acceptée |
+| [0033](0033-github-org-typika-app.md) | Organisation GitHub : `typika-app` | Acceptée |

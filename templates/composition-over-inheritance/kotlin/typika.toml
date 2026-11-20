@@ -34,11 +34,11 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/composition-over-inheritance-base/kotlin"
+template = "github:typika-app/templates/composition-over-inheritance-base/kotlin"
 focus = ["src/main/kotlin/catalog/**"]
 
 [variants]
-typescript = "github:typika/templates/composition-over-inheritance/ts"
+typescript = "github:typika-app/templates/composition-over-inheritance/ts"
 
 [[exercises]]
 name = "add-gift-wrap"

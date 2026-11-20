@@ -25,7 +25,7 @@ describe('makeTemplateIndexFetch', () => {
     expect(await Effect.runPromise(index.entries)).toEqual([
       {
         name: 'strategy-ts',
-        ref: 'github:typika/templates/strategy-ts@0123456789ab',
+        ref: 'github:typika-app/templates/strategy-ts@0123456789ab',
         role: 'template',
         title: 'Strategy',
         summary: 'Replace a growing switch.',

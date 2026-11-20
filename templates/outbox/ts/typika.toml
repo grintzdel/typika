@@ -33,12 +33,12 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/naive-crud/ts"
+template = "github:typika-app/templates/naive-crud/ts"
 focus = ["src/orders/**", "src/loyalty/**", "src/infrastructure/in-memory-database.ts", "src/open-shop.ts"]
 
 [variants]
-go = "github:typika/templates/outbox/go"
-kotlin = "github:typika/templates/outbox/kotlin"
+go = "github:typika-app/templates/outbox/go"
+kotlin = "github:typika-app/templates/outbox/kotlin"
 
 [[exercises]]
 name = "survive-broker-outage"

@@ -12,7 +12,7 @@ export const indexTemplate = (name: string, overrides: IndexTemplateOverrides = 
   const { facets = {}, ...fields } = manifest
   return {
     name,
-    ref: `github:typika/templates/${name}@0123456789ab`,
+    ref: `github:typika-app/templates/${name}@0123456789ab`,
     category: 'official',
     maintainers: ['github:maoudin'],
     addedAt: '2026-10-08',

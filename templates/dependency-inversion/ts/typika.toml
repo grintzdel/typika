@@ -33,12 +33,12 @@ steps = [
 ]
 
 [base]
-template = "github:typika/templates/dependency-inversion-base/ts"
+template = "github:typika-app/templates/dependency-inversion-base/ts"
 focus = ["src/checkout/**", "src/infrastructure/**", "src/open-shop.ts"]
 
 [variants]
-go = "github:typika/templates/dependency-inversion/go"
-kotlin = "github:typika/templates/dependency-inversion/kotlin"
+go = "github:typika-app/templates/dependency-inversion/go"
+kotlin = "github:typika-app/templates/dependency-inversion/kotlin"
 
 [[exercises]]
 name = "test-without-smtp"

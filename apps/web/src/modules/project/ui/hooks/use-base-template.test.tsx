@@ -11,7 +11,7 @@ import { templateFiles, templateToml } from '../../__tests__/template.factory.ts
 import { makeProjectTestLayer } from '../../core/project.test-layer.ts'
 import { useBaseTemplate } from './use-base-template.ts'
 
-const WITH_BASE = `${templateToml()}\n[base]\ntemplate = "github:typika/templates/sample-base/ts"\nfocus = ["src/**"]\n`
+const WITH_BASE = `${templateToml()}\n[base]\ntemplate = "github:typika-app/templates/sample-base/ts"\nfocus = ["src/**"]\n`
 
 const renderBase = (templates: Parameters<typeof makeProjectTestLayer>[0]) =>
   renderHook(() => useBaseTemplate('sample-ts'), {

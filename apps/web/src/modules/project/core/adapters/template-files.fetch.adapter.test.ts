@@ -8,9 +8,9 @@ const URLS = {
   fileUrlTemplate: 'https://cdn.example.com/gh/{owner}/{repo}@{ref}/{path}',
   listingUrlTemplate: 'https://data.example.com/v1/packages/gh/{owner}/{repo}@{ref}?structure=flat',
 }
-const REF = 'github:typika/templates/strategy/ts@0123456789ab'
-const LISTING = 'https://data.example.com/v1/packages/gh/typika/templates@0123456789ab?structure=flat'
-const FILE = 'https://cdn.example.com/gh/typika/templates@0123456789ab/'
+const REF = 'github:typika-app/templates/strategy/ts@0123456789ab'
+const LISTING = 'https://data.example.com/v1/packages/gh/typika-app/templates@0123456789ab?structure=flat'
+const FILE = 'https://cdn.example.com/gh/typika-app/templates@0123456789ab/'
 
 const urlOf = (input: RequestInfo | URL) => (input instanceof Request ? input.url : input.toString())
 
@@ -24,7 +24,7 @@ const makeServer = (responses: Readonly<Record<string, BodyInit | Error>>) =>
 const REPOSITORY = {
   [LISTING]: JSON.stringify({
     type: 'gh',
-    name: 'typika/templates',
+    name: 'typika-app/templates',
     version: '0123456789ab',
     default: null,
     files: [
@@ -75,9 +75,9 @@ describe('makeTemplateFilesFetch', () => {
   })
 
   it.each([
-    ['the ref is not pinned', 'github:typika/templates/strategy/ts'],
-    ['nothing exists at the ref', 'github:typika/templates/observer/ts@0123456789ab'],
-    ['the commit is unknown', 'github:typika/templates/strategy/ts@ba9876543210'],
+    ['the ref is not pinned', 'github:typika-app/templates/strategy/ts'],
+    ['nothing exists at the ref', 'github:typika-app/templates/observer/ts@0123456789ab'],
+    ['the commit is unknown', 'github:typika-app/templates/strategy/ts@ba9876543210'],
   ])('fails when %s', async (_, ref) => {
     const exit = await Effect.runPromiseExit(makeTemplateFilesFetch(URLS, makeServer(REPOSITORY)).load(ref))
 

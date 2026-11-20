@@ -45,8 +45,8 @@ beforeAll(() => {
 const resolve = (ref: Partial<PinnedRef> = {}) =>
   Effect.runPromise(
     Effect.result(
-      makeGitResolver({ 'typika/templates': { repo: root, prefix: 'templates' } })({
-        owner: 'typika',
+      makeGitResolver({ 'typika-app/templates': { repo: root, prefix: 'templates' } })({
+        owner: 'typika-app',
         repo: 'templates',
         path: 'strategy/ts',
         ref: first,
@@ -92,8 +92,8 @@ describe('makeGitResolver', () => {
 
     const result = await Effect.runPromise(
       Effect.result(
-        makeGitResolver({ 'typika/templates': { repo: templatesRepo, prefix: '' } })({
-          owner: 'typika',
+        makeGitResolver({ 'typika-app/templates': { repo: templatesRepo, prefix: '' } })({
+          owner: 'typika-app',
           repo: 'templates',
           path: 'strategy/ts',
           ref,
@@ -109,8 +109,8 @@ describe('makeGitResolver', () => {
 
 describe('parseCheckout', () => {
   it('maps a repository to the root of a local clone', () => {
-    expect(parseCheckout('typika/templates=../templates', '/work/registry')).toEqual({
-      'typika/templates': { repo: '/work/templates', prefix: '' },
+    expect(parseCheckout('typika-app/templates=../templates', '/work/registry')).toEqual({
+      'typika-app/templates': { repo: '/work/templates', prefix: '' },
     })
   })
 

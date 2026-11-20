@@ -18,27 +18,27 @@ describe('bundled template source', () => {
     const entries = await Effect.runPromise(source.index.entries)
 
     expect(entries.map(({ name, ref }) => ({ name, ref }))).toEqual([
-      { name: 'strategy-base-ts', ref: 'github:typika/templates/strategy-base/ts' },
-      { name: 'strategy-go', ref: 'github:typika/templates/strategy/go' },
-      { name: 'strategy-ts', ref: 'github:typika/templates/strategy/ts' },
+      { name: 'strategy-base-ts', ref: 'github:typika-app/templates/strategy-base/ts' },
+      { name: 'strategy-go', ref: 'github:typika-app/templates/strategy/go' },
+      { name: 'strategy-ts', ref: 'github:typika-app/templates/strategy/ts' },
     ])
   })
 
   it('loads the files of a template by its ref, with paths relative to its folder', async () => {
-    const files = await Effect.runPromise(source.files.load('github:typika/templates/strategy/ts@0123456789ab'))
+    const files = await Effect.runPromise(source.files.load('github:typika-app/templates/strategy/ts@0123456789ab'))
 
     expect(Object.fromEntries(files)).toEqual({ 'typika.toml': templateToml('strategy-ts'), 'src/main.ts': 'ts' })
   })
 
   it('fails for a ref that is not embedded', async () => {
     const results = await Promise.all(
-      ['github:typika/templates/observer/ts', 'github:someone/templates/strategy/ts', 'not a ref'].map((ref) =>
+      ['github:typika-app/templates/observer/ts', 'github:someone/templates/strategy/ts', 'not a ref'].map((ref) =>
         Effect.runPromiseExit(source.files.load(ref))
       )
     )
 
     expect(results.map((exit) => Exit.isFailure(exit) && exit.cause.reasons[0])).toMatchObject([
-      { error: { _tag: 'ProjectFilesUnavailableError', ref: 'github:typika/templates/observer/ts' } },
+      { error: { _tag: 'ProjectFilesUnavailableError', ref: 'github:typika-app/templates/observer/ts' } },
       { error: { _tag: 'ProjectFilesUnavailableError', ref: 'github:someone/templates/strategy/ts' } },
       { error: { _tag: 'ProjectFilesUnavailableError', ref: 'not a ref' } },
     ])

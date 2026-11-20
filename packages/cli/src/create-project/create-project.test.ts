@@ -7,9 +7,9 @@ import { manifestToml } from '../__tests__/manifest.factory.ts'
 import { makeFakeSource } from '../__tests__/template-source.fake.ts'
 import { createProject, type CreateOptions } from './create-project.ts'
 
-const TS_REF = 'github:typika/templates/strategy/ts@1318eae7665d'
-const GO_REF = 'github:typika/templates/strategy/go@8203d3dae8a4'
-const BASE_REF = 'github:typika/templates/strategy-base/ts@0a0b218aaaaa'
+const TS_REF = 'github:typika-app/templates/strategy/ts@1318eae7665d'
+const GO_REF = 'github:typika-app/templates/strategy/go@8203d3dae8a4'
+const BASE_REF = 'github:typika-app/templates/strategy-base/ts@0a0b218aaaaa'
 
 const project = (manifest: string, extra: ReadonlyArray<readonly [string, string]> = []): TemplateFiles =>
   new Map([
@@ -24,10 +24,10 @@ const strategyTs = project(
   manifestToml({
     extra: `
 [base]
-template = "github:typika/templates/strategy-base/ts"
+template = "github:typika-app/templates/strategy-base/ts"
 
 [variants]
-go = "github:typika/templates/strategy/go"
+go = "github:typika-app/templates/strategy/go"
 
 [[exercises]]
 name = "add-pickup-point"
@@ -65,7 +65,7 @@ const index = indexOf([
   indexTemplate('strategy-go', { ref: GO_REF }),
   indexTemplate('strategy-base-ts', { ref: BASE_REF }),
   indexTemplate('observer-ts', {
-    ref: 'github:typika/templates/observer/ts@aaaaaaaaaaaa',
+    ref: 'github:typika-app/templates/observer/ts@aaaaaaaaaaaa',
     health: {
       status: 'deprecated',
       checkedAt: '2026-10-20',
@@ -81,7 +81,7 @@ const sourceOf = (templates: Readonly<Record<string, TemplateFiles>> = {}) =>
     [TS_REF]: strategyTs,
     [GO_REF]: strategyGo,
     [BASE_REF]: strategyBase,
-    'github:typika/templates/observer/ts@aaaaaaaaaaaa': project(manifestToml({ name: 'observer-ts' })),
+    'github:typika-app/templates/observer/ts@aaaaaaaaaaaa': project(manifestToml({ name: 'observer-ts' })),
     ...templates,
   })
 
