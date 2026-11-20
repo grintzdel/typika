@@ -687,6 +687,18 @@ mainteneur, et le lot 5 attend #92.
 | 4 | `hosting` | Choix de la cible de l'instance publique, dans une ADR : Docker derrière Caddy, la cible principale, ou Vercel avec le service Kotlin à part ([hosting §4 à §6](guides/hosting.md)). Puis sa configuration. | La checklist de [hosting §9](guides/hosting.md) passe sur une instance non publique de la cible retenue. |
 | 5 | `publish` | Après #92 : transfert du dépôt, création des deux dépôts, Pages et Renovate, OAuth App de production, publication du package `typika` avec provenance, instance publique, lien « proposer au registre ». | Le critère de fin du M7. |
 
+État (2026-11-20) : lot 1 prêt, rien n'est publié. L'extraction donne `typika-app/templates` et `typika-app/registry`
+à partir du `main` courant : les 78 entrées sont réépinglées sur les SHA extraits, les 101 artefacts Kotlin suivent le
+registre, et `registry-tools build` y passe, exercices Go et Kotlin compris. Les workflows des deux dépôts appellent
+l'action `.github/actions/setup` de ce dépôt, qui installe pnpm, Node, le Go épinglé avec ses assets et lance le
+service de compilation Kotlin. `build-index` compile les artefacts Kotlin manquants, les commite dans le registre, puis
+publie l'index et les artefacts sur GitHub Pages. Ces workflows n'ont jamais tourné : `actionlint` les valide, et leur
+premier run aura lieu à la publication. La branche des sous-modules, `m7/registry-repos`, reste locale. Elle porte
+l'ADR 0026 et passe le contrôle complet : 24 tâches Turbo sur 24, 125 E2E en dev, 44 en production, et l'image Docker,
+construite depuis les sous-modules, sert un index de 78 templates. Les E2E de dev de `main`, en attente depuis #118,
+sont repassés : 125 sur 125. Avant la publication, les manifestes des templates doivent nommer le bon compte GitHub
+(#120), ce qui demandera de relancer l'extraction.
+
 ---
 
 ## Après M7 (non planifié)
