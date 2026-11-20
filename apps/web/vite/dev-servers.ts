@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { fileURLToPath } from 'node:url'
 
@@ -19,7 +20,10 @@ const DEV_ENV = {
   TYPIKA_RUNTIME_ORIGIN: 'http://127.0.0.1:3001',
 }
 
+const DEV_ENV_FILE = fileURLToPath(new URL('../.env.local', import.meta.url))
+
 export const withDevEnv = () => {
+  if (existsSync(DEV_ENV_FILE)) process.loadEnvFile(DEV_ENV_FILE)
   for (const [name, value] of Object.entries(DEV_ENV)) process.env[name] ??= value
 }
 

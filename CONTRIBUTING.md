@@ -46,6 +46,8 @@ Ouvrez une issue avant tout changement important. Pour remettre en cause une dé
 - App : `pnpm --filter @typika/web dev` sert l'app sur `http://localhost:3000` et la runtime frame sur
   `http://127.0.0.1:3001`. Les tests E2E (`pnpm --filter @typika/web test:e2e`) démarrent ce serveur s'il ne tourne
   pas déjà.
+- Variables de dev : `apps/web/.env.local` (ignoré par git) est lu au démarrage du serveur de dev, une ligne
+  `NOM=valeur` par variable. Une variable déjà définie dans le shell l'emporte, donc les E2E gardent les leurs.
 - GitHub : les E2E lancent un faux GitHub (`node apps/web/scripts/serve-fake-github.ts 3090`) et l'app avec
   `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `TYPIKA_GITHUB_URL` et `TYPIKA_GITHUB_API_URL`. Un serveur de dev déjà
   lancé sans ces variables fait échouer les E2E de gist : arrêtez-le d'abord. Contre le vrai GitHub, créez une OAuth
