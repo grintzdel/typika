@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "docker:pinDigests", "helpers:pinGitHubActionDigests"],
+  "ignorePaths": ["**/node_modules/**", "**/fixtures/**", "templates/**", "registry/**"],
+  "minimumReleaseAge": "7 days",
+  "internalChecksFilter": "strict",
+  "packageRules": [
+    {
+      "description": "A Go bump rebuilds the runtime assets and moves the Dockerfile, the setup action and GoRelease together.",
+      "matchPackageNames": ["golang", "go"],
+      "matchUpdateTypes": ["major", "minor", "patch"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "A Kotlin bump changes every artifact key: all Kotlin artifacts of the registry are recompiled.",
+      "matchPackageNames": ["/^org\\.jetbrains\\.kotlin[.:]/"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Gradle and the JDK move together in the compiler image, the CI and the conformance suite.",
+      "matchPackageNames": ["gradle", "eclipse-temurin", "java-jdk"],
+      "matchUpdateTypes": ["major", "minor"],
+      "dependencyDashboardApproval": true
+    }
+  ]
+}

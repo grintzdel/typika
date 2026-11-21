@@ -188,12 +188,19 @@ canal (§2.2), pas sur `frame-ancestors`.
 ## 5. Chaîne d'approvisionnement de Typika
 
 - Lockfile obligatoire, `pnpm install --frozen-lockfile` en CI.
-- Renovate, avec délai avant adoption des nouvelles versions.
-- Assets publiés (WASM, test runner) versionnés et accompagnés de leur hash SRI.
+- Délai de sept jours avant d'adopter une nouvelle version. pnpm refuse de résoudre une version plus récente
+  (`minimumReleaseAge` dans `pnpm-workspace.yaml`), et Renovate attend le même délai avant d'ouvrir sa PR
+  (`renovate.json`). Renovate épingle aussi par digest les images Docker et les actions GitHub. Les montées de Go, de
+  Kotlin, de Gradle et du JDK attendent une approbation dans son tableau de bord : elles touchent plusieurs fichiers à
+  la fois, et celle de Kotlin fait recompiler les artefacts du registre.
+- Assets de runtime (WASM d'esbuild, toolchain Go, test runner) : construits avec l'app et servis par l'instance, sous
+  une URL qui change avec leur contenu. Aucun ne vient d'un CDN tiers. Le chargeur vérifie le SHA-256 de chaque asset
+  Go avant de le mettre en cache ([0027](../decisions/0027-go-assets-delivery.md)), et le runtime `browser-js` accepte
+  un hash SRI pour le WASM d'esbuild : une instance qui les servirait depuis un CDN le fournit.
 - Paquets npm (`cli`, `test-runner`) publiés depuis la CI avec provenance.
-- Image Docker construite en CI depuis le dépôt, avec une image de base épinglée par digest.
+- Image Docker construite en CI depuis le dépôt, avec des images de base épinglées par digest.
 
 ## 6. Signalement
 
-Un `SECURITY.md` à la racine indique comment signaler une vulnérabilité en privé (GitHub Security Advisories). Il est
-créé au M1.
+Le [`SECURITY.md`](../../SECURITY.md) à la racine indique comment signaler une vulnérabilité en privé (signalement privé
+de GitHub, activé sur le dépôt), les versions suivies et le périmètre.
