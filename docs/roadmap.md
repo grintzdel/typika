@@ -706,9 +706,19 @@ les 44 de production, puis l'image Docker et les E2E de production qui se passen
 exprès fait échouer `check`. C'est aussi le premier run de l'action `setup`, service Kotlin compris. Le runner, plus
 lent et sans cache, a demandé quatre réglages : `--allowOnly` pour le Vitest de référence de la suite de conformité
 (Vitest refuse `.only` quand `CI` est défini), le pré-bundle des dépendances que Vite découvrait en cours de test, une
-tâche Turbo à la fois, et 90 secondes par E2E de dev au lieu de 30. Un run coûte 30 à 40 minutes, sur les 2 000 par
-mois d'un dépôt privé : le workflow ne tourne donc pas sur `main`, et le contrôle local reste la référence jusqu'à ce
-que le dépôt soit public.
+tâche Turbo à la fois, et 90 secondes par E2E de dev au lieu de 30. Un run prend 30 à 40 minutes de runner.
+
+Lot 3 livré, avec une correction du lot 2 : `grintzdel/typika` est public depuis sa création, contrairement à ce que la
+roadmap supposait. Les minutes d'Actions n'y sont donc pas comptées, et `ci` tourne aussi sur `main`. `SECURITY.md`
+renvoie vers le signalement privé de GitHub, activé sur le dépôt. Les points de [security §5](specs/security.md) :
+
+| Point | État |
+|---|---|
+| Lockfile et `--frozen-lockfile` en CI | Fait (lot 2). |
+| Délai d'adoption | Fait : `minimumReleaseAge` de sept jours dans pnpm, et `renovate.json` avec le même délai. Un run à blanc de Renovate sur le dépôt lit 22 fichiers et laisse `templates/`, `registry/` et les fixtures de côté. L'installation de l'app Renovate sur le dépôt reste au lot 5. |
+| Assets de runtime | Fait depuis le M4 : servis par l'instance, SHA-256 vérifié pour Go ([0027](decisions/0027-go-assets-delivery.md)). La spec ne parle plus de SRI sur un CDN. |
+| Provenance npm | Lot 5, avec la publication du package `typika`. |
+| Image construite en CI, bases épinglées par digest | Fait : les cinq images du `Dockerfile`, du service Kotlin et de Compose portent un digest, et `ci` construit l'image (lot 2). Renovate épinglera les actions GitHub à son premier passage. |
 
 ---
 
