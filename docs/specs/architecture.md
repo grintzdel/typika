@@ -300,10 +300,12 @@ Tests transverses obligatoires :
 
 - **Lint / format** : oxlint et oxfmt, config partagée dans `packages/config`.
 - **Types** : `tsc --noEmit` par package via Turborepo.
-- **CI (GitHub Actions)**, à chaque PR qui touche autre chose que la documentation (`.github/workflows/ci.yml`) :
+- **CI (GitHub Actions)**, à chaque PR et à chaque push sur `main` qui touchent autre chose que la documentation
+  (`.github/workflows/ci.yml`) :
   un job `check` (lint, format, `turbo run typecheck test`, `template-check`, `registry:build`, avec Go, Gradle et le
   service Kotlin) et un job `e2e` (E2E de dev, E2E de production, puis `docker build` et les E2E de production sans
   registre de test contre l'image). L'action `.github/actions/setup` installe l'outillage commun.
-- **Dépendances** : Renovate, lockfile obligatoire.
+- **Dépendances** : lockfile obligatoire, Renovate (`renovate.json`) et sept jours avant d'adopter une nouvelle
+  version ([security §5](./security.md)).
 - **Publication** : `cli` et `test-runner` publiés sur npm avec provenance ; noms de paquets sous le
   scope `@typika` ([ADR 0014](../decisions/0014-name-typika.md)).

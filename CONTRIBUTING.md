@@ -20,7 +20,7 @@ Ouvrez une issue avant tout changement important. Pour remettre en cause une dé
 
 - Architecture et conventions : [architecture](docs/specs/architecture.md).
 - Une PR qui touche autre chose que la documentation lance le workflow `ci` (GitHub Actions), qui rejoue le contrôle
-  ci-dessous et les E2E.
+  ci-dessous et les E2E. Il tourne aussi sur `main`.
 - TDD : tests E2E puis tests unitaires rouges avant l'implémentation.
 - `pnpm lint`, `pnpm format:check`, `pnpm test` et `pnpm template-check` doivent passer. `template-check` valide chaque
   template de `templates/` (manifeste, refs `[base]` et `[variants]`, ancres du tour) et exécute les états de départ et
@@ -57,6 +57,10 @@ Ouvrez une issue avant tout changement important. Pour remettre en cause une dé
 - Production : `pnpm --filter @typika/web test:e2e:production` construit l'app, lance le serveur de production sur le
   port 3100 et vérifie les en-têtes de chaque route. Contre une autre instance (l'image Docker, par exemple), passez
   `TYPIKA_E2E_APP_URL` et `TYPIKA_E2E_RUNTIME_URL` ([hosting](docs/guides/hosting.md) §4.4).
+- Dépendances : pnpm refuse une version publiée depuis moins de sept jours (`minimumReleaseAge` dans
+  `pnpm-workspace.yaml`, [security §5](docs/specs/security.md)). Attendez, plutôt que de l'ajouter à
+  `minimumReleaseAgeExclude`.
+- Sécurité : une vulnérabilité se signale en privé, voir [SECURITY.md](SECURITY.md).
 - Messages de commit en anglais, à l'impératif.
 
 ## Licence
