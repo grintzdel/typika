@@ -1,7 +1,8 @@
 # Héberger Typika
 
 Statut : guide · aligné sur les fichiers du dépôt (`Dockerfile`, `docker-compose.yml`, `deploy/Caddyfile`,
-`.env.example`) depuis le M1, et sur le profil Compose `kotlin` depuis le lot 3 du M6. Vercel (§5) reste à faire.
+`.env.example`) depuis le M1, et sur le profil Compose `kotlin` depuis le lot 3 du M6. L'instance publique suit le §4
+([0035](../decisions/0035-public-instance-hosting.md)) ; Vercel (§5) reste à faire.
 
 Contexte : [architecture.md](../specs/architecture.md) pour les composants, [security.md](../specs/security.md) pour les
 en-têtes et l'isolation.
@@ -143,6 +144,7 @@ Le conteneur ne lit ni n'écrit rien d'autre que `dist/` : il tourne avec `read_
 `docker-compose.yml` lance `web` (construit depuis le `Dockerfile`) derrière Caddy, qui attend que `web` soit
 `healthy`. `deploy/Caddyfile` déclare les deux domaines (`TYPIKA_APP_DOMAIN`, `TYPIKA_RUNTIME_DOMAIN`), obtient les
 certificats, ajoute HSTS, compresse, retire l'en-tête `Server` et transmet tout à `web:3000` en conservant `Host`.
+Compose publie les ports 80 et 443, ce dernier en TCP et en UDP pour HTTP/3.
 
 Le service Kotlin est dans le profil Compose `kotlin`. Il n'est branché qu'au réseau `kotlin`, déclaré `internal` :
 aucun accès sortant, et seul `web`, branché aux deux réseaux, le joint. Caddy ne le voit pas. `web` le relaie sous
@@ -194,6 +196,45 @@ docker run --rm -p 3200:3000 --read-only --cap-drop ALL \
 
 `localhost` et `127.0.0.1` sont des sites différents et des contextes sécurisés : la runtime frame y est isolée comme
 en production.
+
+### 4.6 Sur un VPS, et la répétition locale
+
+L'instance publique tourne ainsi ([0035](../decisions/0035-public-instance-hosting.md)). Sur la machine :
+
+- Docker avec Compose, et un **clone complet** du dépôt : le build lit l'historique Git (§3).
+- Les deux domaines pointent sur la machine (`A`, et `AAAA` si elle a une IPv6) avant le premier démarrage : Caddy
+  demande les certificats dès qu'il se lance.
+- Le pare-feu laisse entrer 80/tcp, 443/tcp et 443/udp, et rien d'autre que SSH.
+- `.env` à partir de `.env.example`, lisible par le seul compte qui lance Compose : il porte `GITHUB_CLIENT_SECRET`.
+
+Une mise à jour de l'app, ou une publication du registre à faire apparaître dans le hub :
+
+```sh
+git pull --ff-only
+docker compose --profile kotlin up -d --build
+```
+
+La pile se répète en local, en HTTPS, sans domaine ni VPS. Caddy signe les noms en `.localhost` avec son autorité
+interne, et `localhost` et `typika-run.localhost` sont deux sites différents. Dans `.env` :
+
+```sh
+TYPIKA_PUBLIC_URL=https://localhost
+TYPIKA_RUNTIME_ORIGIN=https://typika-run.localhost
+TYPIKA_APP_DOMAIN=localhost
+TYPIKA_RUNTIME_DOMAIN=typika-run.localhost
+TYPIKA_EMBED_ENABLED=true
+```
+
+```sh
+docker compose up -d --build
+docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt /tmp/caddy-root.crt
+curl -I --cacert /tmp/caddy-root.crt https://localhost/play/strategy-ts
+```
+
+Le test de charge (§4.5) lit cette autorité avec `NODE_EXTRA_CA_CERTS=/tmp/caddy-root.crt` et
+`--app https://localhost`. La suite E2E de production (§9) ne la connaît pas : `TYPIKA_E2E_IGNORE_HTTPS_ERRORS=1` lui
+fait accepter le certificat. Une IP ne convient pas comme second site en HTTPS : sans SNI, Caddy ne trouve pas son
+certificat.
 
 ## 5. Vercel
 
@@ -268,5 +309,7 @@ variable déjà définie dans le shell l'emporte sur lui.
       sortante depuis le conteneur `kotlin-compiler` échoue.
 - [ ] Sans Kotlin : aucun template Kotlin n'apparaît dans le hub.
 - [ ] Avec GitHub : connexion, création de gist, puis déconnexion qui vide `sessionStorage`.
-- [ ] La suite E2E de production passe contre l'instance :
-      `TYPIKA_E2E_APP_URL=<app> TYPIKA_E2E_RUNTIME_URL=<runtime> pnpm --filter @typika/web test:e2e:production`.
+- [ ] La suite E2E de production passe contre l'instance, lancée sans Kotlin, puisque ses tests du hub attendent une
+      instance qui ne compile pas :
+      `TYPIKA_E2E_APP_URL=<app> TYPIKA_E2E_RUNTIME_URL=<runtime> pnpm --filter @typika/web test:e2e:production headers sandbox hub compare embed`.
+      `registry` et `health` demandent le registre de test du build local, et `github` son faux GitHub.

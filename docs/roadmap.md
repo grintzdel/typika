@@ -720,6 +720,26 @@ renvoie vers le signalement privé de GitHub, activé sur le dépôt. Les points
 | Provenance npm | Lot 5, avec la publication du package `typika`. |
 | Image construite en CI, bases épinglées par digest | Fait : les cinq images du `Dockerfile`, du service Kotlin et de Compose portent un digest, et `ci` construit l'image (lot 2). Renovate épinglera les actions GitHub à son premier passage. |
 
+Lot 4 livré : l'instance publique tournera sur un VPS, avec Docker derrière Caddy et le service Kotlin sur la même
+machine ([0035](decisions/0035-public-instance-hosting.md)). La configuration existait ; le lot y ajoute le port
+`443/udp`, que Caddy annonçait pour HTTP/3 sans que Compose le publie. Faute de VPS et de domaines (#92), la checklist
+de [hosting §9](guides/hosting.md) a été jouée sur la pile Compose locale, en HTTPS, avec l'autorité interne de Caddy
+et les sites `localhost` et `typika-run.localhost` ([hosting §4.6](guides/hosting.md)) :
+
+| Point | Résultat |
+|---|---|
+| HTTPS sur les deux domaines | Passe avec l'autorité interne de Caddy. Les certificats publics attendent le lot 5. |
+| Deux sites différents | Passe pour les noms locaux. Les domaines réels attendent #92. |
+| En-têtes de `/play`, `/`, `/embed`, origine runtime qui ne sert pas l'app, `/config.json` sans secret | Passe, à la main et par les E2E de production. |
+| Language service, `crossOriginIsolated`, template TS, Go en brotli | Passe par les E2E de production : 35 sur 35, hors `registry`, `health` et `github`. |
+| Go non retéléchargé après un rechargement | Passe, vérifié par un test jetable. |
+| Avec Kotlin | Un template modifié compile par le relais, le hub liste les 16 variantes, le scénario `rate` passe (10 réponses `200`, 20 `429`), et une connexion sortante depuis le réseau du service échoue. |
+| Sans Kotlin | Aucun template Kotlin dans le hub. |
+| Avec GitHub | Non joué : il faut une OAuth App dont le callback est l'instance. Lot 5, avec l'application de production. |
+
+Au repos, `web` occupe 30 Mio, Caddy 15 Mio et le service Kotlin 480 Mio sur son plafond de 1 Gio. La taille du VPS
+se choisit au lot 5 : la mémoire que demande la construction de l'image n'est pas mesurée.
+
 ---
 
 ## Après M7 (non planifié)

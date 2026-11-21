@@ -11,7 +11,12 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: process.env.CI !== undefined,
   reporter: process.env.CI === undefined ? 'list' : 'github',
-  use: { locale: 'fr-FR', timezoneId: 'Europe/Paris', trace: 'retain-on-failure' },
+  use: {
+    locale: 'fr-FR',
+    timezoneId: 'Europe/Paris',
+    trace: 'retain-on-failure',
+    ignoreHTTPSErrors: process.env.TYPIKA_E2E_IGNORE_HTTPS_ERRORS !== undefined,
+  },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   ...(external
     ? {}

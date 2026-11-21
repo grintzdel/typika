@@ -41,3 +41,4 @@ Statuts : `Proposée` (en attente d'un spike), `Acceptée`, `Remplacée par NNNN
 | [0032](0032-cli-archives-and-validate.md) | CLI : archives GitHub et `validate --run` dans Node | Acceptée |
 | [0033](0033-github-org-typika-app.md) | Organisation GitHub : `typika-app` | Acceptée |
 | [0034](0034-github-oauth-and-gists.md) | GitHub : OAuth App, échange sur le serveur de l'app, gist lisible | Acceptée |
+| [0035](0035-public-instance-hosting.md) | Instance publique : Docker derrière Caddy sur un VPS | Acceptée |
