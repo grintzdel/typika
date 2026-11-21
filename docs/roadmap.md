@@ -699,6 +699,17 @@ construite depuis les sous-modules, sert un index de 78 templates. Les E2E de de
 sont repassés : 125 sur 125. Avant la publication, les manifestes des templates doivent nommer le bon compte GitHub
 (#120), ce qui demandera de relancer l'extraction.
 
+Lot 2 livré : `.github/workflows/ci.yml` joue le contrôle local sur chaque PR qui touche autre chose que la
+documentation, et à la demande. Le job `check` passe en 11 à 15 minutes : lint, format, les 24 tâches Turbo, puis
+`template-check` et `registry:build` avec le service Kotlin. Le job `e2e` passe en 18 à 26 minutes : les 125 E2E de dev,
+les 44 de production, puis l'image Docker et les E2E de production qui se passent du registre de test. Un test cassé
+exprès fait échouer `check`. C'est aussi le premier run de l'action `setup`, service Kotlin compris. Le runner, plus
+lent et sans cache, a demandé quatre réglages : `--allowOnly` pour le Vitest de référence de la suite de conformité
+(Vitest refuse `.only` quand `CI` est défini), le pré-bundle des dépendances que Vite découvrait en cours de test, une
+tâche Turbo à la fois, et 90 secondes par E2E de dev au lieu de 30. Un run coûte 30 à 40 minutes, sur les 2 000 par
+mois d'un dépôt privé : le workflow ne tourne donc pas sur `main`, et le contrôle local reste la référence jusqu'à ce
+que le dépôt soit public.
+
 ---
 
 ## Après M7 (non planifié)

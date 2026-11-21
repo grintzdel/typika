@@ -19,6 +19,8 @@ Ouvrez une issue avant tout changement important. Pour remettre en cause une dé
 À partir du M1 :
 
 - Architecture et conventions : [architecture](docs/specs/architecture.md).
+- Une PR qui touche autre chose que la documentation lance le workflow `ci` (GitHub Actions), qui rejoue le contrôle
+  ci-dessous et les E2E.
 - TDD : tests E2E puis tests unitaires rouges avant l'implémentation.
 - `pnpm lint`, `pnpm format:check`, `pnpm test` et `pnpm template-check` doivent passer. `template-check` valide chaque
   template de `templates/` (manifeste, refs `[base]` et `[variants]`, ancres du tour) et exécute les états de départ et
