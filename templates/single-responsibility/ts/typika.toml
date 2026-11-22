@@ -3,7 +3,7 @@ name = "single-responsibility-ts"
 title = "Single responsibility: placing an order"
 summary = "Split a class along its reasons to change, so each change touches one small piece."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "typescript"

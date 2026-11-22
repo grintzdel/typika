@@ -4,7 +4,7 @@ title = "Observer: reacting to an order"
 summary = "Announce that something happened and let any number of subscribers react, without knowing them."
 keywords = ["events", "listeners", "lambda"]
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "kotlin"

@@ -4,7 +4,7 @@ title = "Liskov substitution: shipping products"
 summary = "A subtype must keep every promise of the type it stands in for, or not claim to be one."
 keywords = ["open", "override", "contract"]
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "kotlin"

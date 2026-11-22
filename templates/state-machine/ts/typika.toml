@@ -3,7 +3,7 @@ name = "state-machine-ts"
 title = "State machine: the order lifecycle"
 summary = "Replace status booleans with explicit states and one table of allowed transitions."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "typescript"

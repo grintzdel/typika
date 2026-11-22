@@ -3,7 +3,7 @@ name = "open-closed-base-ts"
 title = "Open/closed base: discounts"
 summary = "Discounts as a switch on the customer tier, repeated wherever a price is shown, before the rules."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 role = "base"
 
 [facets]

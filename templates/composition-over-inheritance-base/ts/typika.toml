@@ -3,7 +3,7 @@ name = "composition-over-inheritance-base-ts"
 title = "Composition vs inheritance base: a product catalogue"
 summary = "Products told apart by a chain of subclasses, before composition."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 role = "base"
 
 [facets]

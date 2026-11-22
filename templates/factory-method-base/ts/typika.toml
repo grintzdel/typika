@@ -3,7 +3,7 @@ name = "factory-method-base-ts"
 title = "Factory Method base: shipping parcels"
 summary = "Shipping an order builds its parcel in a switch on the carrier, before the Factory Method pattern."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 role = "base"
 
 [facets]

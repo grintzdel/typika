@@ -3,7 +3,7 @@ name = "adapter-ts"
 title = "Adapter: taking payments"
 summary = "Wrap a foreign interface in one class that speaks the interface your code expects."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "typescript"

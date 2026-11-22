@@ -3,7 +3,7 @@ name = "dependency-inversion-base-kotlin"
 title = "Dependency inversion base: confirming an order"
 summary = "A CheckoutService that creates its own SMTP mailer and order store, before the inversion."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 role = "base"
 
 [facets]

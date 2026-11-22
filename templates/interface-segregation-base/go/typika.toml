@@ -3,7 +3,7 @@ name = "interface-segregation-base-go"
 title = "Interface segregation base: payment methods"
 summary = "One PaymentGateway interface with four methods, forced on every payment method, before the split."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 role = "base"
 
 [facets]

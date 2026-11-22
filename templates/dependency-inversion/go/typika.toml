@@ -3,7 +3,7 @@ name = "dependency-inversion-go"
 title = "Dependency inversion: confirming an order"
 summary = "Make the business code own the interfaces it needs, and let the infrastructure plug into them."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "go"

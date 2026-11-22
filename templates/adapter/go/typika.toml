@@ -4,7 +4,7 @@ title = "Adapter: taking payments"
 summary = "Wrap a foreign interface in one type that speaks the interface your code expects."
 keywords = ["sdk", "wrapper"]
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "go"

@@ -3,7 +3,7 @@ name = "composition-over-inheritance-ts"
 title = "Composition vs inheritance: a product catalogue"
 summary = "Build objects from small, swappable parts instead of a tree of subclasses."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "typescript"

@@ -4,7 +4,7 @@ title = "Composition vs inheritance: a product catalogue"
 summary = "Build values from small, swappable parts instead of a chain of embedded structs."
 keywords = ["embedding", "embed"]
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "go"

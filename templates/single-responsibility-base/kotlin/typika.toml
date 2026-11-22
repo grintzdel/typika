@@ -3,7 +3,7 @@ name = "single-responsibility-base-kotlin"
 title = "Single responsibility base: placing an order"
 summary = "One OrderService validates, prices, saves, writes the invoice and emails it, before the split."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 role = "base"
 
 [facets]

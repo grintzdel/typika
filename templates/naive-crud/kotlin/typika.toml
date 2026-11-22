@@ -3,7 +3,7 @@ name = "naive-crud-kotlin"
 title = "Naive CRUD: the orders module"
 summary = "An orders module where one HTTP handler validates, saves, charges, publishes and emails, before any architecture."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 role = "base"
 
 [facets]

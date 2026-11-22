@@ -3,7 +3,7 @@ name = "hexagonal-go"
 title = "Hexagonal architecture: the orders module"
 summary = "Keep the business rules in a core that declares ports, and plug HTTP, storage and providers in as adapters."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "go"

@@ -4,7 +4,7 @@ title = "Decorator: sending notifications"
 summary = "Add behaviour to an object by wrapping it in another object with the same interface."
 keywords = ["delegation", "wrapper", "retry"]
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "kotlin"

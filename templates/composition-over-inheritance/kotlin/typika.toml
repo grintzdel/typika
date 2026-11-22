@@ -4,7 +4,7 @@ title = "Composition vs inheritance: a product catalogue"
 summary = "Build objects from small, swappable parts instead of a chain of open subclasses."
 keywords = ["open", "final", "delegation", "by"]
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "kotlin"

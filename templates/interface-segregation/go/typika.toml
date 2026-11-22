@@ -3,7 +3,7 @@ name = "interface-segregation-go"
 title = "Interface segregation: payment methods"
 summary = "Let each client declare an interface with only the methods it calls, so no implementation has to fake the rest."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "go"

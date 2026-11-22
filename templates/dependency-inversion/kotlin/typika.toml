@@ -4,7 +4,7 @@ title = "Dependency inversion: confirming an order"
 summary = "Make the business code own the interfaces it needs, and let the infrastructure plug into them."
 keywords = ["injection", "constructor", "testing"]
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "kotlin"

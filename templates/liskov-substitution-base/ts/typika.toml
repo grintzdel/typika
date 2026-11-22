@@ -3,7 +3,7 @@ name = "liskov-substitution-base-ts"
 title = "Liskov substitution base: shipping products"
 summary = "A digital product that extends a physical one and throws when shipped, before the fix."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 role = "base"
 
 [facets]

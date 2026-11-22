@@ -3,7 +3,7 @@ name = "open-closed-ts"
 title = "Open/closed: discount rules"
 summary = "Add a new discount by adding a rule, without editing the code that computes prices."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "typescript"

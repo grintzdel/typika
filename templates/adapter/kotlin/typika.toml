@@ -4,7 +4,7 @@ title = "Adapter: taking payments"
 summary = "Wrap a foreign interface in one class that speaks the interface your code expects."
 keywords = ["interface", "sealed", "extension"]
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "kotlin"

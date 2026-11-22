@@ -4,7 +4,7 @@ title = "Decorator: sending notifications"
 summary = "Add behaviour to a value by wrapping it in another value with the same interface."
 keywords = ["middleware", "wrapper"]
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "go"

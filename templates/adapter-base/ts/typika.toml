@@ -3,7 +3,7 @@ name = "adapter-base-ts"
 title = "Adapter base: taking payments"
 summary = "The checkout calls a payment SDK directly, with its units and codes, before the Adapter pattern."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 role = "base"
 
 [facets]

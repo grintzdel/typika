@@ -3,7 +3,7 @@ name = "factory-method-ts"
 title = "Factory Method: shipping parcels"
 summary = "Let subclasses decide which object to create, inside an algorithm the base class keeps."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "typescript"

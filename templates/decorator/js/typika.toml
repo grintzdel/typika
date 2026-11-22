@@ -3,7 +3,7 @@ name = "decorator-js"
 title = "Decorator: sending notifications"
 summary = "Add behaviour to a function by wrapping it in another function with the same signature."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "javascript"

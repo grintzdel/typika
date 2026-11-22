@@ -3,7 +3,7 @@ name = "decorator-base-go"
 title = "Decorator base: sending notifications"
 summary = "One email notifier with an option for each extra behaviour, before the Decorator pattern."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 role = "base"
 
 [facets]

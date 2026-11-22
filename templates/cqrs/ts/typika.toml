@@ -3,7 +3,7 @@ name = "cqrs-ts"
 title = "CQRS: the customer order history"
 summary = "Change orders through commands, and answer reads from read models that projections keep up to date."
 license = "MIT-0"
-authors = ["github:maoudin"]
+authors = ["github:grintzdel"]
 
 [facets]
 language = "typescript"
