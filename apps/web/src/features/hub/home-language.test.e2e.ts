@@ -32,6 +32,6 @@ test.describe('language', () => {
     await page.getByRole('combobox', { name: 'Language' }).selectOption('fr')
 
     await expect(page.getByText('Le contenu des templates est en anglais.')).toBeVisible()
-    await expect(page.getByRole('region', { name: 'À propos' }).locator('time')).toHaveText('20 novembre 2026')
+    await expect(page.getByRole('region', { name: 'À propos' }).locator('time')).toHaveText('22 novembre 2026')
   })
 })

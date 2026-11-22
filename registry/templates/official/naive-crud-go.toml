@@ -1,4 +1,4 @@
-ref = "github:typika-app/templates/naive-crud/go@df0fc9164336"
+ref = "github:typika-app/templates/naive-crud/go@3834803db886"
 maintainers = ["github:grintzdel"]
 category = "official"
 added = 2026-10-12
