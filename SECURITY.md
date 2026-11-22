@@ -3,7 +3,7 @@
 ## Signaler une vulnérabilité
 
 Ne créez pas d'issue publique. Utilisez le signalement privé de GitHub :
-[Signaler une vulnérabilité](https://github.com/grintzdel/typika/security/advisories/new) (onglet **Security** du dépôt,
+[Signaler une vulnérabilité](https://github.com/typika-app/typika/security/advisories/new) (onglet **Security** du dépôt,
 puis **Report a vulnerability**). Le rapport n'est visible que par vous et les mainteneurs.
 
 Un bon rapport contient :
