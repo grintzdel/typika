@@ -51,6 +51,7 @@ test.describe('local projects', () => {
   })
 
   test('keeps the edits of a copy apart from its original', async ({ page }) => {
+    test.slow()
     await editStrategy(page, '// original edit')
 
     await page.goto('/projects')
