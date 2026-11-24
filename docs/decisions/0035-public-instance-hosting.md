@@ -33,8 +33,12 @@ configuration et en fonctions Vercel, et le service Kotlin demanderait de toute 
 - Le hub prérendu suit le registre au rythme des reconstructions. Tant que personne ne reconstruit, l'accueil et la
   liste montrent l'index du build ([0023](0023-hub-prerendering.md)). Le déclenchement automatique après une
   publication du registre attend le lot 5, quand le dépôt du registre existera.
-- La construction partage la machine avec le service Kotlin, plafonné à 2 CPU et 1 Gio. Sa consommation n'est pas
-  mesurée : la taille du VPS se choisit au lot 5, sur la machine réelle.
+- La construction partage la machine avec le service Kotlin, plafonné à 2 CPU et 1 Gio. Mesurée le 2026-11-22 dans
+  un builder limité à 2 CPU, sans swap, sur arm64 : l'image `web` demande environ 2 Gio de mémoire vive (elle se
+  construit sous 3 Gio en 2 min 20, et est tuée sous 2 Gio), l'image `kotlin-compiler` environ 1,5 Gio (elle se
+  construit sous 2 Gio en 40 s, et est tuée sous 1 Gio). Une machine de **4 Gio avec du swap** est donc le minimum
+  pour construire pendant que la pile tourne, qui occupe environ 525 Mio au repos ; 2 Gio ne suffisent pas. Les
+  durées sur un VPS x86 et la mémoire de la pile sous charge restent à relever au lot 5, sur la machine réelle.
 - Pas de retour arrière outillé : revenir à une version, c'est `git checkout <commit>` puis reconstruire.
 
 ## Alternatives écartées
@@ -44,6 +48,6 @@ configuration et en fonctions Vercel, et le service Kotlin demanderait de toute 
 - **Tirer l'image depuis un registre de conteneurs** (GHCR), construite par la CI : la machine ne construirait plus,
   et le retour arrière serait un changement de tag. Cela publie un artefact de plus, à signer et à garder en phase
   avec le registre des templates, dont l'index est figé dans l'image. À reconsidérer si la construction sur place
-  gêne le service.
+  gêne le service, ou pour une machine de moins de 4 Gio : elle n'aurait plus que la pile à faire tourner.
 - **Une IP comme second site pour la répétition locale** (`127.0.0.1`, comme dans les essais en HTTP) : en HTTPS un
   client n'envoie pas de SNI pour une IP, et Caddy, qui voit l'adresse du conteneur, ne trouve pas le certificat.

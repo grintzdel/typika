@@ -202,6 +202,9 @@ en production.
 L'instance publique tourne ainsi ([0035](../decisions/0035-public-instance-hosting.md)). Sur la machine :
 
 - Docker avec Compose, et un **clone complet** du dépôt : le build lit l'historique Git (§3).
+- Au moins **4 Gio de mémoire, avec du swap** : construire l'image `web` demande environ 2 Gio et celle de
+  `kotlin-compiler` environ 1,5 Gio, pendant que la pile continue de tourner. Sous 2 Gio, la construction de `web`
+  est tuée faute de mémoire ([0035](../decisions/0035-public-instance-hosting.md)).
 - Les deux domaines pointent sur la machine (`A`, et `AAAA` si elle a une IPv6) avant le premier démarrage : Caddy
   demande les certificats dès qu'il se lance.
 - Le pare-feu laisse entrer 80/tcp, 443/tcp et 443/udp, et rien d'autre que SSH.
