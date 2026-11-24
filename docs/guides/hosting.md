@@ -239,6 +239,23 @@ Le test de charge (§4.5) lit cette autorité avec `NODE_EXTRA_CA_CERTS=/tmp/cad
 fait accepter le certificat. Une IP ne convient pas comme second site en HTTPS : sans SNI, Caddy ne trouve pas son
 certificat.
 
+### 4.7 Derrière le proxy d'une plateforme (Coolify)
+
+Sur une machine dont un proxy tient déjà les ports 80 et 443, `docker-compose.coolify.yml` lance `web` et
+`kotlin-compiler` sans Caddy et sans publier de port : la plateforme termine TLS et route les deux domaines vers le
+port 3000 de `web`. Écrit pour Coolify (ressource « Docker Compose » pointée sur ce fichier), il convient à tout proxy
+qui rejoint le réseau du projet.
+
+- Les deux domaines se rattachent au service `web`, port 3000. `kotlin-compiler` n'en reçoit aucun.
+- `TYPIKA_PUBLIC_URL` et `TYPIKA_RUNTIME_ORIGIN` sont obligatoires ; `GITHUB_CLIENT_ID` et `GITHUB_CLIENT_SECRET`
+  se règlent au même endroit. Kotlin est toujours activé.
+- La plateforme doit faire un **clone complet** (§3) : désactiver le clone superficiel s'il est le défaut.
+- La construction a lieu sur la machine, avec les besoins du §4.6.
+- `Strict-Transport-Security`, que le Caddyfile pose ici, revient au proxy de la plateforme.
+- À vérifier après le premier déploiement : que la plateforme n'a pas branché `kotlin-compiler` à un réseau qui sort
+  (`docker inspect`), et que le proxy remplace bien le `X-Forwarded-For` reçu, sans quoi la limite de débit par IP se
+  contourne.
+
 ## 5. Vercel
 
 - Projet Vercel sur `apps/web`, deux domaines rattachés : celui de l'app et celui du runtime.
