@@ -249,9 +249,11 @@ qui rejoint le réseau du projet.
 - Les deux domaines se rattachent au service `web`, port 3000. `kotlin-compiler` n'en reçoit aucun.
 - `TYPIKA_PUBLIC_URL` et `TYPIKA_RUNTIME_ORIGIN` sont obligatoires ; `GITHUB_CLIENT_ID` et `GITHUB_CLIENT_SECRET`
   se règlent au même endroit. Kotlin est toujours activé.
-- Un clone superficiel, le défaut de Coolify, convient : le `Dockerfile` le complète depuis `origin` avant de
-  construire, ce qui demande que la machine joigne le dépôt sans identifiant.
-- La construction a lieu sur la machine, avec les besoins du §4.6.
+- La machine ne construit rien : elle tire `ghcr.io/typika-app/typika-web` et
+  `ghcr.io/typika-app/typika-kotlin-compiler`, que le workflow `images` publie pour amd64 et arm64 à chaque commit de
+  `main`, sous `latest` et sous le SHA du commit. `TYPIKA_IMAGE_TAG` épingle un SHA. Construire les deux images à la
+  fois demande environ 3,5 Gio (§4.6), ce qu'une machine de 4 Gio partagée n'a pas.
+- Les images ne sont pas signées.
 - `Strict-Transport-Security`, que le Caddyfile pose ici, revient au proxy de la plateforme.
 - À vérifier après le premier déploiement : que la plateforme n'a pas branché `kotlin-compiler` à un réseau qui sort
   (`docker inspect`), et que le proxy remplace bien le `X-Forwarded-For` reçu, sans quoi la limite de débit par IP se

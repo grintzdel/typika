@@ -1,6 +1,6 @@
 services:
   web:
-    build: .
+    image: ghcr.io/typika-app/typika-web:${TYPIKA_IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       TYPIKA_PUBLIC_URL: ${TYPIKA_PUBLIC_URL:?set TYPIKA_PUBLIC_URL}
@@ -16,7 +16,7 @@ services:
     security_opt: ['no-new-privileges:true']
 
   kotlin-compiler:
-    build: services/kotlin-compiler
+    image: ghcr.io/typika-app/typika-kotlin-compiler:${TYPIKA_IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       KOTLIN_COMPILER_CONCURRENCY: ${KOTLIN_COMPILER_CONCURRENCY:-2}
