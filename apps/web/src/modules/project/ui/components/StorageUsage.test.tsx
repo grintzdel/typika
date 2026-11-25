@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 
 import { StorageUsage } from './StorageUsage.tsx'
 
+const glyphIn = (element: Element) => element.querySelector('[aria-hidden="true"]')?.textContent
+
 describe('StorageUsage', () => {
   it('shows the space used out of the quota', () => {
     render(<StorageUsage usage={{ usage: 1_500_000, quota: 2_000_000_000, isNearlyFull: false }} />)
@@ -21,5 +23,11 @@ describe('StorageUsage', () => {
     const { container } = render(<StorageUsage usage={undefined} />)
 
     expect(container.childElementCount).toBe(0)
+  })
+
+  it('opens the warning with "!"', () => {
+    render(<StorageUsage usage={{ usage: 1_700_000_000, quota: 2_000_000_000, isNearlyFull: true }} />)
+
+    expect(glyphIn(screen.getByRole('alert'))).toBe('!')
   })
 })

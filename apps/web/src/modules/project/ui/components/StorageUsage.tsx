@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
+import { StatusGlyph } from '../../../../ui/StatusGlyph.tsx'
 import type { StorageUsage as Usage } from '../../core/domain/storage-usage.domain-model.ts'
 
 export type StorageUsageProps = {
@@ -29,9 +30,13 @@ export const StorageUsage = ({ usage }: StorageUsageProps) => {
         })}
       </p>
       {usage.isNearlyFull ? (
-        <p role="alert" className="rounded-sm border border-warning-border bg-warning-bg p-3 text-warning-fg">
-          {t('storage.nearlyFull')}
-        </p>
+        <div
+          role="alert"
+          className="flex gap-2 rounded-sm border border-warning-border bg-warning-bg p-3 text-warning-fg"
+        >
+          <StatusGlyph tone="warning" />
+          <p>{t('storage.nearlyFull')}</p>
+        </div>
       ) : null}
     </div>
   )

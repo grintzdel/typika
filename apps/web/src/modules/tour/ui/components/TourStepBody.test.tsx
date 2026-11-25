@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { TourStepBody } from './TourStepBody.tsx'
 
+const glyphIn = (element: Element) => element.querySelector('[aria-hidden="true"]')?.textContent
+
 const renderBody = (isChanged: boolean) => {
   const onOpenOriginal = vi.fn()
   const { container } = render(
@@ -36,5 +38,11 @@ describe('TourStepBody', () => {
     renderBody(false)
 
     expect(screen.queryByText('Le code a changé depuis cette visite.')).toBeNull()
+  })
+
+  it('opens the change notice with "!"', () => {
+    const { container } = renderBody(true)
+
+    expect(glyphIn(container)).toBe('!')
   })
 })

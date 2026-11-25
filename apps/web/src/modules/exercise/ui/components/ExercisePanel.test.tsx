@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { ExercisePanel, type ExercisePanelProps } from './ExercisePanel.tsx'
 
+const glyphIn = (element: Element) => element.querySelector('[aria-hidden="true"]')?.textContent
+
 const EXERCISE = {
   name: 'implement-express',
   kind: 'fix',
@@ -82,5 +84,12 @@ describe('ExercisePanel', () => {
     renderPanel({ revealedHints: 2 })
 
     expect(screen.queryByRole('button', { name: /Afficher un indice/ })).toBeNull()
+  })
+
+  it('opens the success with "✓" and each hint with "i"', () => {
+    renderPanel({ isSolved: true, revealedHints: 1 })
+
+    expect(glyphIn(screen.getByText('Exercice réussi !').parentElement?.parentElement ?? panel())).toBe('✓')
+    expect(glyphIn(screen.getByRole('heading', { name: 'Indice 1' }).parentElement?.parentElement ?? panel())).toBe('i')
   })
 })

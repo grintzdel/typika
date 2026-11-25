@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 
 import { HealthBanner } from './HealthBanner.tsx'
 
+const glyphIn = (element: Element) => element.querySelector('[aria-hidden="true"]')?.textContent
+
 describe('HealthBanner', () => {
   it('says a broken template fails its check and links to the run', () => {
     render(
@@ -38,5 +40,14 @@ describe('HealthBanner', () => {
     )
 
     expect(container.textContent).toBe('')
+  })
+
+  it('opens a broken template with "!" and a deprecated one with "i"', () => {
+    const { unmount } = render(<HealthBanner health={{ status: 'broken', runUrl: null }} alternatives="/templates" />)
+    expect(glyphIn(screen.getByRole('note'))).toBe('!')
+    unmount()
+
+    render(<HealthBanner health={{ status: 'deprecated', runUrl: null }} alternatives="/templates" />)
+    expect(glyphIn(screen.getByRole('note'))).toBe('i')
   })
 })
