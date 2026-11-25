@@ -2,6 +2,7 @@ import { MergeView, unifiedMergeView } from '@codemirror/merge'
 import { EditorState, type Extension } from '@codemirror/state'
 import { EditorView, lineNumbers } from '@codemirror/view'
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { editorTheme } from '../../../editor/ui/components/editor-theme.ts'
 import { languageSupportOf } from '../../../editor/ui/components/language-support.ts'
@@ -26,12 +27,13 @@ export type DiffEditorProps = {
 
 const COLLAPSE_UNCHANGED = { margin: 3, minSize: 4 }
 
-const extensionsFor = (path: string, label: string): Array<Extension> => {
+const extensionsFor = (path: string, label: string, unchangedLines: string): Array<Extension> => {
   const language = languageSupportOf(path)
   return [
     lineNumbers(),
     diffSigns,
     EditorState.readOnly.of(true),
+    EditorState.phrases.of({ '$ unchanged lines': unchangedLines }),
     EditorView.contentAttributes.of({ 'aria-label': label }),
     editorTheme,
     diffTheme,
@@ -40,6 +42,8 @@ const extensionsFor = (path: string, label: string): Array<Extension> => {
 }
 
 export const DiffEditor = ({ path, before, after, layout, labels, unifiedLabel }: DiffEditorProps) => {
+  const { t } = useTranslation('diff')
+  const unchangedLines = t('unchangedLines')
   const container = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -48,8 +52,8 @@ export const DiffEditor = ({ path, before, after, layout, labels, unifiedLabel }
     const view =
       layout === DiffLayout.SPLIT
         ? new MergeView({
-            a: { doc: before, extensions: extensionsFor(path, labels.before) },
-            b: { doc: after, extensions: extensionsFor(path, labels.after) },
+            a: { doc: before, extensions: extensionsFor(path, labels.before, unchangedLines) },
+            b: { doc: after, extensions: extensionsFor(path, labels.after, unchangedLines) },
             parent,
             collapseUnchanged: COLLAPSE_UNCHANGED,
           })
@@ -58,13 +62,13 @@ export const DiffEditor = ({ path, before, after, layout, labels, unifiedLabel }
             state: EditorState.create({
               doc: after,
               extensions: [
-                ...extensionsFor(path, unifiedLabel),
+                ...extensionsFor(path, unifiedLabel, unchangedLines),
                 unifiedMergeView({ original: before, mergeControls: false, collapseUnchanged: COLLAPSE_UNCHANGED }),
               ],
             }),
           })
     return () => view.destroy()
-  }, [path, before, after, layout, labels.before, labels.after, unifiedLabel])
+  }, [path, before, after, layout, labels.before, labels.after, unifiedLabel, unchangedLines])
 
   return <div ref={container} className="h-full overflow-auto [&_.cm-mergeView]:h-full" />
 }

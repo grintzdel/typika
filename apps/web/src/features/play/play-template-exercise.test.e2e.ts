@@ -67,14 +67,14 @@ test.describe('exercises', () => {
     await runTests(page)
 
     await expect(exercisePanel(page).getByText('5 / 5 tests cibles verts')).toBeVisible()
-    await expect(exercisePanel(page).getByText('Exercice réussi !')).toBeVisible()
+    await expect(exercisePanel(page).getByText('Exercice réussi.')).toBeVisible()
     await expect(exercisePanel(page).getByRole('link', { name: 'Exercice suivant' })).toHaveAttribute(
       'href',
       '/play/strategy-ts?exercise=add-pickup-point-option'
     )
 
     await page.reload()
-    await expect(exercisePanel(page).getByText('Exercice réussi !')).toBeVisible()
+    await expect(exercisePanel(page).getByText('Exercice réussi.')).toBeVisible()
   })
 
   test('keeps the exercise apart from the template project', async ({ page }) => {
@@ -125,6 +125,6 @@ test.describe('exercises', () => {
     await expect(page.getByRole('treeitem', { name: 'pickup-point.ts' })).toBeVisible()
     await runTests(page)
     await expect(results(page).getByText('0 échec')).toBeVisible()
-    await expect(exercisePanel(page).getByText('Exercice réussi !')).toBeVisible()
+    await expect(exercisePanel(page).getByText('Exercice réussi.')).toBeVisible()
   })
 })

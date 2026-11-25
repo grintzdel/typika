@@ -32,7 +32,7 @@ describe('ConceptSections', () => {
     expect(card.getAttribute('href')).toBe('/templates/strategy-ts')
     expect(card.textContent).toContain('TypeScript')
     expect(card.textContent).toContain('Go')
-    expect(within(section).getByRole('link', { name: 'Comportement' }).getAttribute('href')).toBe(
+    expect(within(section).getByRole('link', { name: 'Comportementaux' }).getAttribute('href')).toBe(
       '/templates?topic=design-pattern%2Fbehavioral'
     )
     expect(within(section).getByRole('link', { name: 'Tout voir' }).getAttribute('href')).toBe(

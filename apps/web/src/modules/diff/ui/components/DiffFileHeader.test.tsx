@@ -31,6 +31,6 @@ describe('DiffFileHeader', () => {
   it('shows no step list without anchored steps', () => {
     renderHeader([])
 
-    expect(screen.queryByRole('list', { name: 'Étapes du tour dans ce fichier' })).toBeNull()
+    expect(screen.queryByRole('list', { name: 'Étapes de la visite dans ce fichier' })).toBeNull()
   })
 })

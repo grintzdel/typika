@@ -119,7 +119,7 @@ test.describe('Kotlin sandbox', () => {
     await replaceFile(page, 'Main.kt', main.replace('fun main() {', 'fun main() {\n    undefinedCall()'))
     await page.getByRole('button', { name: 'Exécuter' }).click()
 
-    await expect(consoleRegion(page).getByText('Échec du build')).toBeVisible({ timeout: TIMEOUT })
+    await expect(consoleRegion(page).getByText('Échec de la compilation')).toBeVisible({ timeout: TIMEOUT })
     await expect(
       consoleRegion(page).getByText(/src\/main\/kotlin\/Main\.kt:\d+:\d+ Unresolved reference 'undefinedCall'/)
     ).toBeVisible()
@@ -145,7 +145,7 @@ test.describe('Kotlin sandbox', () => {
     await replaceFile(page, 'ExpressShipping.kt', solution)
     await runTests(page)
 
-    await expect(exercisePanel(page).getByText('Exercice réussi !')).toBeVisible()
+    await expect(exercisePanel(page).getByText('Exercice réussi.')).toBeVisible()
   })
 
   test('solves the refactor exercise with its solution', async ({ page }) => {
@@ -158,6 +158,6 @@ test.describe('Kotlin sandbox', () => {
     await page.getByRole('alertdialog').getByRole('button', { name: 'Appliquer la solution' }).click()
     await runTests(page)
 
-    await expect(exercisePanel(page).getByText('Exercice réussi !')).toBeVisible()
+    await expect(exercisePanel(page).getByText('Exercice réussi.')).toBeVisible()
   })
 })

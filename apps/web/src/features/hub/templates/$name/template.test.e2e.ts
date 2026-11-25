@@ -6,7 +6,7 @@ test.describe('template page', () => {
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Strategy: shipping options')
     await expect(
-      page.getByRole('navigation', { name: "Fil d'Ariane" }).getByRole('link', { name: 'Templates' })
+      page.getByRole('navigation', { name: 'Fil d’Ariane' }).getByRole('link', { name: 'Templates' })
     ).toHaveAttribute('href', '/templates')
     await expect(page.getByRole('link', { name: 'Ouvrir dans la sandbox' })).toHaveAttribute(
       'href',

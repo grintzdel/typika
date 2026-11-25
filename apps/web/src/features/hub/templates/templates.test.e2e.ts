@@ -35,7 +35,7 @@ test.describe('templates list', () => {
   test('filters by a branch of the topic tree', async ({ page }) => {
     await page.goto('/templates?topic=design-pattern/behavioral&language=typescript')
 
-    await expect(facet(page, 'Sujet').getByRole('checkbox', { name: 'Comportement' })).toBeChecked()
+    await expect(facet(page, 'Sujet').getByRole('checkbox', { name: 'Comportementaux' })).toBeChecked()
     await expect(results(page).getByRole('listitem')).toHaveCount(2)
     await expect(results(page).getByRole('link', { name: /^Strategy/ })).toBeVisible()
     await expect(results(page).getByRole('link', { name: /^Observer/ })).toBeVisible()

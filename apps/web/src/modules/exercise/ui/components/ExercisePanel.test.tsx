@@ -58,7 +58,7 @@ describe('ExercisePanel', () => {
   it('congratulates and links to the next exercise once solved', () => {
     renderPanel({ isSolved: true })
 
-    expect(screen.getByText('Exercice réussi !')).toBeTruthy()
+    expect(screen.getByText('Exercice réussi.')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Exercice suivant' }).getAttribute('href')).toBe(
       '/play/strategy-ts?exercise=other'
     )
@@ -89,7 +89,7 @@ describe('ExercisePanel', () => {
   it('opens the success with "✓" and each hint with "i"', () => {
     renderPanel({ isSolved: true, revealedHints: 1 })
 
-    expect(glyphIn(screen.getByText('Exercice réussi !').parentElement?.parentElement ?? panel())).toBe('✓')
+    expect(glyphIn(screen.getByText('Exercice réussi.').parentElement?.parentElement ?? panel())).toBe('✓')
     expect(glyphIn(screen.getByRole('heading', { name: 'Indice 1' }).parentElement?.parentElement ?? panel())).toBe('i')
   })
 })

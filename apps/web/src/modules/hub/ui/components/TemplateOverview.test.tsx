@@ -10,8 +10,8 @@ describe('TemplateOverview', () => {
   it('shows the trail, the title and a link to the sandbox', () => {
     render(<TemplateOverview page={templatePage()} />)
 
-    const trail = screen.getByRole('navigation', { name: "Fil d'Ariane" })
-    expect(within(trail).getByRole('link', { name: 'Comportement' }).getAttribute('href')).toBe(
+    const trail = screen.getByRole('navigation', { name: 'Fil d’Ariane' })
+    expect(within(trail).getByRole('link', { name: 'Comportementaux' }).getAttribute('href')).toBe(
       '/templates?topic=design-pattern%2Fbehavioral'
     )
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Strategy: shipping options')

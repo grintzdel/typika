@@ -28,7 +28,7 @@ describe('TourStepBody', () => {
   it('tells when the code has changed and opens the original', () => {
     const { onOpenOriginal } = renderBody(true)
 
-    expect(screen.getByText('Le code a changé depuis cette visite.')).toBeTruthy()
+    expect(screen.getByText('Le code a changé depuis l’écriture de cette visite.')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Voir la version d’origine' }))
 
     expect(onOpenOriginal).toHaveBeenCalled()
@@ -37,7 +37,7 @@ describe('TourStepBody', () => {
   it('says nothing about changes while the code matches', () => {
     renderBody(false)
 
-    expect(screen.queryByText('Le code a changé depuis cette visite.')).toBeNull()
+    expect(screen.queryByText('Le code a changé depuis l’écriture de cette visite.')).toBeNull()
   })
 
   it('opens the change notice with "!"', () => {
