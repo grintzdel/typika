@@ -1,6 +1,7 @@
 services:
   web:
     image: ghcr.io/typika-app/typika-web:${TYPIKA_IMAGE_TAG:-latest}
+    pull_policy: always
     restart: unless-stopped
     environment:
       TYPIKA_PUBLIC_URL: ${TYPIKA_PUBLIC_URL:?set TYPIKA_PUBLIC_URL}
@@ -17,6 +18,7 @@ services:
 
   kotlin-compiler:
     image: ghcr.io/typika-app/typika-kotlin-compiler:${TYPIKA_IMAGE_TAG:-latest}
+    pull_policy: always
     restart: unless-stopped
     environment:
       KOTLIN_COMPILER_CONCURRENCY: ${KOTLIN_COMPILER_CONCURRENCY:-2}
