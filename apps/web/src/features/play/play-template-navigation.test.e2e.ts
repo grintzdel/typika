@@ -143,3 +143,33 @@ test.describe('editor shortcuts', () => {
     await expect(editor(page)).not.toContainText('orders')
   })
 })
+
+test.describe('workbench layout', () => {
+  test('resizes the file tree by dragging its edge, and keeps the width after a reload', async ({ page }) => {
+    await openStrategy(page)
+    const tree = page.getByRole('navigation').filter({ has: page.getByRole('tree', { name: 'Fichiers' }) })
+    const before = (await tree.boundingBox())?.width ?? 0
+    const handle = await page.getByRole('separator', { name: 'Redimensionner les fichiers' }).boundingBox()
+    if (handle === null) throw new Error('The file tree has no resize handle')
+
+    await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(handle.x + handle.width / 2 + 100, handle.y + handle.height / 2, { steps: 5 })
+    await page.mouse.up()
+
+    await expect.poll(async () => (await tree.boundingBox())?.width).toBeCloseTo(before + 100, -1)
+    await page.reload()
+    await expect.poll(async () => (await tree.boundingBox())?.width).toBeCloseTo(before + 100, -1)
+  })
+
+  test('resizes the bottom panel from the keyboard', async ({ page }) => {
+    await openStrategy(page)
+    const handle = page.getByRole('separator', { name: 'Redimensionner le panneau du bas' })
+    const before = Number(await handle.getAttribute('aria-valuenow'))
+
+    await handle.focus()
+    await page.keyboard.press('Shift+ArrowUp')
+
+    await expect(handle).toHaveAttribute('aria-valuenow', String(before + 64))
+  })
+})

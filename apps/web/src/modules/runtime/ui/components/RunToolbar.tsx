@@ -32,7 +32,7 @@ export const RunToolbar = ({
   const ready = status === 'ready' || status === 'idle'
   const reason = ready ? undefined : status === 'unsupported' ? t('unsupported') : t('loading')
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-3">
+    <div className="flex flex-1 items-center gap-3">
       <div role="status" className="flex min-w-0 flex-1 items-center gap-2 truncate text-sm text-fg-muted">
         {status === 'loading' ? <span className="truncate">{t('loading')}</span> : null}
         {status === 'loading' && isDownloading(download) ? (

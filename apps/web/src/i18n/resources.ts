@@ -275,6 +275,11 @@ export const resources = {
         hint: 'Enter to rename, Escape to cancel',
         unavailable: 'This symbol cannot be renamed.',
       },
+      resize: {
+        sidebar: 'Resize the files',
+        aside: 'Resize the side panel',
+        bottom: 'Resize the bottom panel',
+      },
       quickOpen: {
         label: 'Open a file',
         placeholder: 'Type part of a file name',
@@ -706,6 +711,11 @@ export const resources = {
         label: 'Nouveau nom',
         hint: 'Entrée pour renommer, Échap pour annuler',
         unavailable: 'Ce symbole ne peut pas être renommé.',
+      },
+      resize: {
+        sidebar: 'Redimensionner les fichiers',
+        aside: 'Redimensionner le panneau latéral',
+        bottom: 'Redimensionner le panneau du bas',
       },
       quickOpen: {
         label: 'Ouvrir un fichier',
