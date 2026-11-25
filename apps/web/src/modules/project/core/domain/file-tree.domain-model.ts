@@ -30,29 +30,40 @@ const TOUR_FOLDER = 'tour/'
 
 export const isTypikaFile = (path: string): boolean => path === MANIFEST_PATH || path.startsWith(TOUR_FOLDER)
 
-const nodesOf = (paths: ReadonlyArray<string>): ReadonlyArray<FileTreeNode> => {
+const folderAt = (root: MutableFolder, segments: ReadonlyArray<string>) => {
+  let folder = root
+  for (const segment of segments) {
+    let child = folder.folders.get(segment)
+    if (child === undefined) {
+      child = { folders: new Map(), files: [] }
+      folder.folders.set(segment, child)
+    }
+    folder = child
+  }
+  return folder
+}
+
+const nodesOf = (paths: ReadonlyArray<string>, folders: ReadonlyArray<string> = []): ReadonlyArray<FileTreeNode> => {
   const root: MutableFolder = { folders: new Map(), files: [] }
+  for (const folder of folders) folderAt(root, folder.split('/'))
   for (const path of paths) {
     const segments = path.split('/')
     const name = segments.pop() ?? path
-    let folder = root
-    for (const segment of segments) {
-      let child = folder.folders.get(segment)
-      if (child === undefined) {
-        child = { folders: new Map(), files: [] }
-        folder.folders.set(segment, child)
-      }
-      folder = child
-    }
-    folder.files.push(name)
+    folderAt(root, segments).files.push(name)
   }
   return toNodes(root, '')
 }
 
-export const buildFileTree = (paths: Iterable<string>): ReadonlyArray<FileTreeNode> => {
+export const buildFileTree = (
+  paths: Iterable<string>,
+  folders: ReadonlyArray<string> = []
+): ReadonlyArray<FileTreeNode> => {
   const all = [...paths]
   const typika = all.filter(isTypikaFile)
-  const project = nodesOf(all.filter((path) => !isTypikaFile(path)))
+  const project = nodesOf(
+    all.filter((path) => !isTypikaFile(path)),
+    folders
+  )
   if (typika.length === 0) return project
   return [...project, { _tag: 'Folder', name: 'Typika', path: TYPIKA_GROUP_PATH, children: nodesOf(typika) }]
 }

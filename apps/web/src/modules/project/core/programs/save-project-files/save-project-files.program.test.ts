@@ -19,7 +19,8 @@ const TEMPLATES = { 'sample-ts': templateFiles() }
 
 const save = (
   edits: ReadonlyArray<readonly [string, string]>,
-  storage: ProjectStorage = makeProjectStorageInMemory()
+  storage: ProjectStorage = makeProjectStorageInMemory(),
+  removed: ReadonlyArray<string> = []
 ) =>
   Effect.runPromiseExit(
     openTemplateProgram('sample-ts').pipe(
@@ -27,6 +28,7 @@ const save = (
         saveProjectFilesProgram({
           project,
           edits: edits.map(([path, content]) => [projectPath(path), content] as const),
+          removed: removed.map((path) => projectPath(path)),
         })
       ),
       Effect.provide(makeProjectTestLayer(TEMPLATES, storage))
@@ -60,6 +62,17 @@ describe('saveProjectFilesProgram', () => {
     ])
 
     expect(Exit.isSuccess(exit) && exit.value).toEqual(['src/main.ts'])
+  })
+
+  it('moves a file and reports both of its paths as modified', async () => {
+    const storage = makeProjectStorageInMemory()
+
+    const exit = await save([['src/app.ts', 'main']], storage, ['src/main.ts'])
+
+    const [project] = storage.projects.values()
+    expect(project?.files.has(projectPath('src/main.ts'))).toBe(false)
+    expect(project?.files.get(projectPath('src/app.ts'))).toBe('main')
+    expect(Exit.isSuccess(exit) && exit.value).toEqual(['src/app.ts', 'src/main.ts'])
   })
 
   it('fails with a storage error when the edits cannot be written', async () => {

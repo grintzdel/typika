@@ -69,10 +69,29 @@ describe('useLanguageService', () => {
     expect(Object.keys(languageService.started[0] ?? {})).toContain('src/main.ts')
   })
 
+  it('follows the files created, moved or removed in the project', async () => {
+    const { result } = renderLanguageService(makeLanguageServiceInMemory().layer)
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+
+    result.current.handleStructureChange({
+      written: [['src/total.ts', 'export const total: number = 1\n']],
+      removed: ['src/main.ts'],
+    })
+
+    await waitFor(async () => {
+      const session = result.current.session
+      if (session === undefined) throw new Error('no session')
+      expect(await Effect.runPromise(session.quickInfo('src/total.ts', 'export const '.length))).toMatchObject({
+        signature: 'const total: number',
+      })
+      expect(await Effect.runPromise(session.quickInfo('src/main.ts', 'const '.length))).toBeUndefined()
+    })
+  })
+
   it('is starting while the language service is not ready', () => {
     const { result } = renderLanguageService(Layer.succeed(LanguageServicePort, { start: () => Effect.never }))
 
-    expect(result.current).toEqual({ session: undefined, status: 'starting' })
+    expect(result.current).toMatchObject({ session: undefined, status: 'starting' })
   })
 
   it('is unavailable without a session when the language service cannot start', async () => {
@@ -82,7 +101,7 @@ describe('useLanguageService', () => {
       })
     )
 
-    await waitFor(() => expect(result.current).toEqual({ session: undefined, status: 'unavailable' }))
+    await waitFor(() => expect(result.current).toMatchObject({ session: undefined, status: 'unavailable' }))
   })
 
   it('stays off for a template that TypeScript does not analyze', async () => {

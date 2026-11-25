@@ -108,6 +108,10 @@ export type StoredFile = Schema.Schema.Type<typeof StoredFileSchema>
 
 export type ProjectFiles = ReadonlyMap<ProjectPath, string>
 export type ProjectFileEdit = readonly [ProjectPath, string]
+export type ProjectFileChanges = {
+  readonly edits: ReadonlyArray<ProjectFileEdit>
+  readonly removed: ReadonlyArray<ProjectPath>
+}
 
 export type StoredProject = {
   readonly record: ProjectRecord

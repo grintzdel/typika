@@ -9,8 +9,9 @@ afterEach(() => vi.useRealTimers())
 const renderEdits = () => {
   const onPersist = vi.fn()
   const onSync = vi.fn()
-  const rendered = renderHook(() => useEditFiles({ onPersist, onSync }))
-  return { ...rendered, onPersist, onSync }
+  const onStructureChange = vi.fn()
+  const rendered = renderHook(() => useEditFiles({ onPersist, onSync, onStructureChange }))
+  return { ...rendered, onPersist, onSync, onStructureChange }
 }
 
 const setVisibility = (state: DocumentVisibilityState) => {
@@ -124,5 +125,56 @@ describe('useEditFiles', () => {
 
     expect(onPersist).toHaveBeenCalledExactlyOnceWith([['src/a.ts', 'a1']])
     expect(onSync).toHaveBeenCalledExactlyOnceWith([['src/a.ts', 'a1']])
+  })
+
+  it('adds a created file to the edited files at once', () => {
+    const { result, onStructureChange } = renderEdits()
+
+    act(() => result.current.handleStructureChange({ written: [['src/new.ts', '']], removed: [] }))
+
+    expect(result.current.filesOf(new Map([['src/a.ts', 'a']]))).toEqual(
+      new Map([
+        ['src/a.ts', 'a'],
+        ['src/new.ts', ''],
+      ])
+    )
+    expect(onStructureChange).toHaveBeenCalledExactlyOnceWith({ written: [['src/new.ts', '']], removed: [] })
+  })
+
+  it('flushes the pending edits before a file moves, then drops its old path', () => {
+    const { result, onPersist, onSync, onStructureChange } = renderEdits()
+
+    act(() => result.current.handleChange('src/a.ts', 'a1'))
+    act(() => result.current.handleStructureChange({ written: [['src/b.ts', 'a1']], removed: ['src/a.ts'] }))
+
+    expect(onPersist).toHaveBeenCalledExactlyOnceWith([['src/a.ts', 'a1']])
+    expect(onSync).toHaveBeenCalledExactlyOnceWith([['src/a.ts', 'a1']])
+    expect(onPersist.mock.invocationCallOrder[0]).toBeLessThan(onStructureChange.mock.invocationCallOrder[0] ?? 0)
+    expect(result.current.editedContentOf('src/a.ts')).toBeUndefined()
+    expect(result.current.editedContentOf('src/b.ts')).toBe('a1')
+    expect(result.current.filesOf(new Map([['src/a.ts', 'a']]))).toEqual(new Map([['src/b.ts', 'a1']]))
+  })
+
+  it('brings a removed path back when a file is written there again', () => {
+    const { result } = renderEdits()
+
+    act(() => result.current.handleStructureChange({ written: [['src/b.ts', 'a']], removed: ['src/a.ts'] }))
+    act(() => result.current.handleStructureChange({ written: [['src/a.ts', '']], removed: [] }))
+
+    expect(result.current.filesOf(new Map([['src/a.ts', 'a']]))).toEqual(
+      new Map([
+        ['src/a.ts', ''],
+        ['src/b.ts', 'a'],
+      ])
+    )
+  })
+
+  it('forgets the removed paths with the pending edits', () => {
+    const { result } = renderEdits()
+
+    act(() => result.current.handleStructureChange({ written: [['src/b.ts', 'a']], removed: ['src/a.ts'] }))
+    act(() => result.current.discardPending())
+
+    expect(result.current.filesOf(new Map([['src/a.ts', 'a']]))).toEqual(new Map([['src/a.ts', 'a']]))
   })
 })

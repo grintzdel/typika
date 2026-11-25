@@ -4,7 +4,7 @@ import * as Option from 'effect/Option'
 import { IDBFactory } from 'fake-indexeddb'
 import { describe, expect, it } from 'vitest'
 
-import { projectFiles, projectRecord } from '../../__tests__/project.factory.ts'
+import { projectFiles, projectPath, projectRecord } from '../../__tests__/project.factory.ts'
 import { makeProjectStorageIndexedDb } from './project-storage.indexeddb.adapter.ts'
 
 const TEMPLATE = projectFiles({ 'src/a.ts': 'a', 'src/b.ts': 'b' })
@@ -52,6 +52,22 @@ describe('makeProjectStorageIndexedDb', () => {
 
     expect(saved.record).toEqual({ ...first, updatedAt: 2_000 })
     expect(Object.fromEntries(saved.files)).toEqual({ 'src/a.ts': 'A', 'src/b.ts': 'B' })
+  })
+
+  it('removes files with the same save, including from a project it creates', async () => {
+    const storage = makeProjectStorageIndexedDb(new IDBFactory())
+
+    const saved = await run(
+      storage.saveTemplateEdits({
+        project: projectRecord(),
+        initialFiles: TEMPLATE,
+        edits: projectFiles({ 'src/c.ts': 'a' }),
+        removed: [projectPath('src/a.ts')],
+      })
+    )
+
+    expect(Object.fromEntries(saved.files)).toEqual({ 'src/b.ts': 'b', 'src/c.ts': 'a' })
+    expect(filesOf(await run(storage.findByOrigin(SAMPLE)))).toEqual({ 'src/b.ts': 'b', 'src/c.ts': 'a' })
   })
 
   it('creates a single project when two saves race', async () => {

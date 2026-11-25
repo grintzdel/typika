@@ -1,3 +1,4 @@
+import type { ProjectPath } from '@typika/runtime-core'
 import * as Effect from 'effect/Effect'
 import * as Atom from 'effect/reactivity/Atom'
 import * as Stream from 'effect/Stream'
@@ -5,6 +6,7 @@ import * as Stream from 'effect/Stream'
 import { appRuntime } from '../../../app/core/app.runtime.ts'
 import { templateProjectAtom } from '../../../project/core/atoms/project.atoms.ts'
 import type { FileWrite } from '../domain/file-write.domain-model.ts'
+import { deleteProjectFilesProgram } from '../programs/delete-project-files/delete-project-files.program.ts'
 import { loadRuntimeProgram } from '../programs/load-runtime/load-runtime.program.ts'
 import { runProjectProgram } from '../programs/run-project/run-project.program.ts'
 import { startRuntimeSessionProgram } from '../programs/start-runtime-session/start-runtime-session.program.ts'
@@ -55,6 +57,19 @@ export const writeProjectFilesAtom = Atom.family((name: string) =>
         const session = yield* get.result(runtimeSessionAtom(name), LATEST)
         const current = yield* get.result(templateProjectAtom(name), LATEST)
         if (current.generation === generation) yield* writeProjectFilesProgram(session, writes)
+      }),
+    { concurrent: true }
+  )
+)
+
+export const deleteProjectFilesAtom = Atom.family((name: string) =>
+  appRuntime.fn(
+    (paths: ReadonlyArray<ProjectPath>, get) =>
+      Effect.gen(function* () {
+        const { generation } = yield* get.result(templateProjectAtom(name), LATEST)
+        const session = yield* get.result(runtimeSessionAtom(name), LATEST)
+        const current = yield* get.result(templateProjectAtom(name), LATEST)
+        if (current.generation === generation) yield* deleteProjectFilesProgram(session, paths)
       }),
     { concurrent: true }
   )

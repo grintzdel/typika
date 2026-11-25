@@ -76,6 +76,7 @@ export type LanguageServiceFiles = Readonly<Record<string, string>>
 export type TypeScriptProject = {
   readonly setFiles: (files: LanguageServiceFiles) => void
   readonly updateFile: (path: string, content: string) => void
+  readonly removeFile: (path: string) => void
   readonly diagnostics: (path: string) => ReadonlyArray<EditorDiagnostic>
   readonly completions: (path: string, position: number) => CompletionList | undefined
   readonly completionChanges: (path: string, position: number, item: CompletionItem) => ReadonlyArray<TextChange>

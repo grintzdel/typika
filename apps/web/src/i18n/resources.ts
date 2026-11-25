@@ -112,7 +112,24 @@ export const resources = {
       retry: 'Retry',
     },
     project: {
-      tree: { label: 'Files', modifiedItem: '{{name}}, modified', readOnlyItem: '{{name}}, read-only' },
+      tree: {
+        label: 'Files',
+        modifiedItem: '{{name}}, modified',
+        readOnlyItem: '{{name}}, read-only',
+        newFile: 'New file',
+        newFolder: 'New folder',
+        rename: 'Rename',
+        newFileName: 'Name of the new file',
+        newFolderName: 'Name of the new folder',
+        renameName: 'New name of {{name}}',
+        issues: {
+          empty: 'Type a name.',
+          invalid: 'A name cannot hold / \\ : * ? " < > | nor be . or ..',
+          taken: 'A file or a folder already has this name.',
+          reserved: 'This place is kept for the Typika files.',
+          'read-only': 'This file is read-only: it cannot be renamed.',
+        },
+      },
       status: { label: 'Project status', modified: 'Modified', unsaved: 'Changes not saved' },
       reset: {
         trigger: 'Reset',
@@ -544,7 +561,24 @@ export const resources = {
       retry: 'Réessayer',
     },
     project: {
-      tree: { label: 'Fichiers', modifiedItem: '{{name}}, modifié', readOnlyItem: '{{name}}, lecture seule' },
+      tree: {
+        label: 'Fichiers',
+        modifiedItem: '{{name}}, modifié',
+        readOnlyItem: '{{name}}, lecture seule',
+        newFile: 'Nouveau fichier',
+        newFolder: 'Nouveau dossier',
+        rename: 'Renommer',
+        newFileName: 'Nom du nouveau fichier',
+        newFolderName: 'Nom du nouveau dossier',
+        renameName: 'Nouveau nom de {{name}}',
+        issues: {
+          empty: 'Saisissez un nom.',
+          invalid: 'Un nom ne peut contenir ni / \\ : * ? " < > |, ni valoir . ou ..',
+          taken: 'Un fichier ou un dossier porte déjà ce nom.',
+          reserved: 'Cet emplacement est réservé aux fichiers de Typika.',
+          'read-only': 'Ce fichier est en lecture seule : il ne peut pas être renommé.',
+        },
+      },
       status: { label: 'État du projet', modified: 'Modifié', unsaved: 'Modifications non enregistrées' },
       reset: {
         trigger: 'Réinitialiser',

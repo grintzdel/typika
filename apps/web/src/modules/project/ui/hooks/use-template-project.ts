@@ -8,6 +8,7 @@ import {
   applySolutionAtom,
   embeddedTemplatesAtom,
   resetProjectAtom,
+  savedModifiedPathsAtom,
   saveProjectFilesAtom,
   templateProjectAtom,
 } from '../../core/atoms/project.atoms.ts'
@@ -19,8 +20,7 @@ import { ProjectNotFoundError } from '../../core/domain/errors/project-not-found
 import { ProjectTemplateInvalidError } from '../../core/domain/errors/project-template-invalid.error.ts'
 import { ProjectTemplateNotFoundError } from '../../core/domain/errors/project-template-not-found.error.ts'
 import { ShareLinkInvalidError } from '../../core/domain/errors/share-link-invalid.error.ts'
-import { buildFileTree } from '../../core/domain/file-tree.domain-model.ts'
-import { textOf, type ProjectFileEdit } from '../../core/domain/project.domain-model.ts'
+import { textOf, type ProjectFileChanges, type ProjectFileEdit } from '../../core/domain/project.domain-model.ts'
 
 export type OpenTemplateFailure =
   | { readonly _tag: 'NotFound'; readonly name: string }
@@ -57,6 +57,7 @@ const currentFiles = (files: ReadonlyMap<string, FileContent>): ReadonlyMap<stri
 export const useTemplateProject = (templateName: string) => {
   const result = useAtomValue(templateProjectAtom(templateName))
   const [saveResult, save] = useAtom(saveProjectFilesAtom(templateName))
+  const savedModifiedPaths = useAtomValue(savedModifiedPathsAtom(templateName))
   const reset = useAtomSet(resetProjectAtom(templateName))
   const applySolution = useAtomSet(applySolutionAtom(templateName))
   const refresh = useAtomRefresh(templateProjectAtom(templateName))
@@ -81,7 +82,6 @@ export const useTemplateProject = (templateName: string) => {
           runtime: opened.manifest.runtime.kind,
           generation: opened.generation,
           tourSteps: opened.tourSteps,
-          tree: buildFileTree(opened.files.keys()),
           contentOf: (path: string) => {
             const content = files.get(path)
             return content === undefined ? '' : textOf(content)
@@ -96,11 +96,12 @@ export const useTemplateProject = (templateName: string) => {
     failure,
     embeddedTemplates,
     isLoading: template === undefined && failure === undefined,
-    modifiedPaths: Option.getOrElse(AsyncResult.value(saveResult), () => opened?.modifiedPaths ?? []),
+    modifiedPaths: savedModifiedPaths ?? opened?.modifiedPaths ?? [],
     saveFailed: AsyncResult.isFailure(saveResult),
     isSaved: opened?.isSaved === true || AsyncResult.isSuccess(saveResult),
-    handleSave: (edits: ReadonlyArray<ProjectFileEdit>) => save(edits),
-    handleSaveShared: () => save([]),
+    handleSave: (edits: ReadonlyArray<ProjectFileEdit>) => save({ edits, removed: [] }),
+    handleChangeFiles: (changes: ProjectFileChanges) => save(changes),
+    handleSaveShared: () => save({ edits: [], removed: [] }),
     handleReset: () => reset(),
     handleApplySolution: () => applySolution(),
     handleRetry: () => refresh(),

@@ -13,6 +13,7 @@ export type InMemoryLanguageService = {
 
 const sessionOf = (project: TypeScriptProject): LanguageServiceSession => ({
   updateFile: (path, content) => Effect.sync(() => project.updateFile(path, content)),
+  removeFile: (path) => Effect.sync(() => project.removeFile(path)),
   diagnostics: (path) => Effect.sync(() => project.diagnostics(path)),
   completions: (path, position) => Effect.sync(() => project.completions(path, position)),
   completionChanges: (path, position, item) => Effect.sync(() => project.completionChanges(path, position, item)),

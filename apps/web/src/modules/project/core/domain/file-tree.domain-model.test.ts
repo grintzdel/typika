@@ -40,6 +40,21 @@ describe('buildFileTree', () => {
       },
     ])
   })
+
+  it('shows the empty folders among the others', () => {
+    expect(buildFileTree(['src/main.ts'], ['src/empty', 'docs'])).toEqual([
+      { _tag: 'Folder', name: 'docs', path: 'docs', children: [] },
+      {
+        _tag: 'Folder',
+        name: 'src',
+        path: 'src',
+        children: [
+          { _tag: 'Folder', name: 'empty', path: 'src/empty', children: [] },
+          { _tag: 'File', name: 'main.ts', path: 'src/main.ts' },
+        ],
+      },
+    ])
+  })
 })
 
 describe('isTypikaFile', () => {

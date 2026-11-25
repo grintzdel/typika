@@ -1,3 +1,4 @@
+import type { ProjectPath } from '@typika/runtime-core'
 import * as Context from 'effect/Context'
 import type * as Effect from 'effect/Effect'
 import type * as Option from 'effect/Option'
@@ -9,6 +10,7 @@ export type SaveTemplateEdits = {
   readonly project: ProjectRecord
   readonly initialFiles: ProjectFiles
   readonly edits: ProjectFiles
+  readonly removed?: ReadonlyArray<ProjectPath>
   readonly match?: 'origin' | 'id'
 }
 

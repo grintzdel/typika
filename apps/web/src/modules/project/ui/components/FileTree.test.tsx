@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
+import { FileNameIssue } from '../../core/domain/file-operations.domain-model.ts'
 import { buildFileTree } from '../../core/domain/file-tree.domain-model.ts'
-import { FileTree } from './FileTree.tsx'
+import { FileTree, type FileTreeEditing } from './FileTree.tsx'
 
 const nodes = buildFileTree(['src/main.ts', 'src/shop/money.ts', 'README.md'])
 
@@ -81,5 +82,174 @@ describe('FileTree', () => {
 
     expect(screen.getByRole('treeitem', { name: 'typika.toml, lecture seule' })).toBeTruthy()
     expect(screen.getByRole('treeitem', { name: 'main.ts' })).toBeTruthy()
+  })
+})
+
+const makeEditing = (overrides: Partial<FileTreeEditing> = {}): FileTreeEditing => ({
+  draft: undefined,
+  issue: undefined,
+  focusRequest: undefined,
+  onCreate: vi.fn(),
+  onRename: vi.fn(),
+  onDraftChange: vi.fn(),
+  onDraftSubmit: vi.fn(),
+  onDraftBlur: vi.fn(),
+  onDraftCancel: vi.fn(),
+  ...overrides,
+})
+
+const renderEditable = (editing: FileTreeEditing, paths = ['src/main.ts', 'src/shop/money.ts', 'typika.toml']) =>
+  render(
+    <FileTree
+      nodes={buildFileTree(paths)}
+      selectedPath="src/main.ts"
+      modifiedPaths={[]}
+      onSelect={vi.fn()}
+      editing={editing}
+    />
+  )
+
+describe('FileTree editing', () => {
+  it('creates a file or a folder next to the item holding the tab stop', () => {
+    const editing = makeEditing()
+    renderEditable(editing)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Nouveau fichier' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Nouveau dossier' }))
+
+    expect(editing.onCreate).toHaveBeenNthCalledWith(1, 'file', { path: 'src/main.ts', isFolder: false })
+    expect(editing.onCreate).toHaveBeenNthCalledWith(2, 'folder', { path: 'src/main.ts', isFolder: false })
+  })
+
+  it('asks for the name of a new file inside its folder, focused', () => {
+    renderEditable(makeEditing({ draft: { _tag: 'Create', kind: 'file', parentPath: 'src/shop' } }))
+
+    const input = screen.getByRole('textbox', { name: 'Nom du nouveau fichier' })
+    expect(document.activeElement).toBe(input)
+    expect(input.closest('[role="group"]')?.parentElement?.dataset.path).toBe('src/shop')
+  })
+
+  it('asks for the name of a new folder at the root', () => {
+    renderEditable(makeEditing({ draft: { _tag: 'Create', kind: 'folder', parentPath: '' } }))
+
+    const input = screen.getByRole('textbox', { name: 'Nom du nouveau dossier' })
+    expect(input.closest('[role="tree"]')).toBeTruthy()
+    expect(input.closest('[role="group"]')).toBeNull()
+  })
+
+  it('submits the typed name with Enter and cancels with Escape', () => {
+    const editing = makeEditing({ draft: { _tag: 'Create', kind: 'file', parentPath: 'src' } })
+    renderEditable(editing)
+    const input = screen.getByRole('textbox', { name: 'Nom du nouveau fichier' })
+
+    fireEvent.change(input, { target: { value: 'tax.ts' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    fireEvent.keyDown(input, { key: 'Escape' })
+
+    expect(editing.onDraftChange).toHaveBeenCalledWith('tax.ts')
+    expect(editing.onDraftSubmit).toHaveBeenCalledWith('tax.ts')
+    expect(editing.onDraftCancel).toHaveBeenCalledOnce()
+  })
+
+  it('hands the name over when the input loses the focus', () => {
+    const editing = makeEditing({ draft: { _tag: 'Create', kind: 'file', parentPath: 'src' } })
+    renderEditable(editing)
+    const input = screen.getByRole('textbox', { name: 'Nom du nouveau fichier' })
+
+    fireEvent.change(input, { target: { value: 'tax.ts' } })
+    fireEvent.blur(input)
+
+    expect(editing.onDraftBlur).toHaveBeenCalledWith('tax.ts')
+  })
+
+  it('keeps the tree keys away from the name being typed', () => {
+    const editing = makeEditing({ draft: { _tag: 'Create', kind: 'file', parentPath: 'src' } })
+    renderEditable(editing)
+    const input = screen.getByRole('textbox', { name: 'Nom du nouveau fichier' })
+
+    fireEvent.keyDown(input, { key: 'ArrowDown' })
+    fireEvent.keyDown(input, { key: 'F2' })
+
+    expect(document.activeElement).toBe(input)
+    expect(editing.onRename).not.toHaveBeenCalled()
+  })
+
+  it('explains why a name is refused, next to the input', () => {
+    renderEditable(
+      makeEditing({ draft: { _tag: 'Create', kind: 'file', parentPath: 'src' }, issue: FileNameIssue.TAKEN })
+    )
+
+    const input = screen.getByRole('textbox', { name: 'Nom du nouveau fichier' })
+    expect(input.getAttribute('aria-invalid')).toBe('true')
+    const message = document.getElementById(input.getAttribute('aria-describedby') ?? '')
+    expect(message?.textContent).toBe('Un fichier ou un dossier porte déjà ce nom.')
+  })
+
+  it('renames the focused item with F2 or a double click', () => {
+    const editing = makeEditing()
+    renderEditable(editing)
+    const shop = screen.getByRole('treeitem', { name: 'shop' })
+
+    shop.focus()
+    fireEvent.keyDown(shop, { key: 'F2' })
+    fireEvent.doubleClick(screen.getByRole('treeitem', { name: 'money.ts' }))
+
+    expect(editing.onRename).toHaveBeenNthCalledWith(1, 'src/shop', true)
+    expect(editing.onRename).toHaveBeenNthCalledWith(2, 'src/shop/money.ts', false)
+  })
+
+  it('asks for the new name in place of the renamed item, its stem selected', () => {
+    renderEditable(makeEditing({ draft: { _tag: 'Rename', path: 'src/shop/money.ts', isFolder: false } }))
+
+    const input = screen.getByRole('textbox', { name: 'Nouveau nom de money.ts' })
+    expect(input instanceof HTMLInputElement && input.value).toBe('money.ts')
+    expect(document.activeElement).toBe(input)
+    expect(input instanceof HTMLInputElement && [input.selectionStart, input.selectionEnd]).toEqual([0, 5])
+    expect(screen.queryByRole('treeitem', { name: 'money.ts' })).toBeNull()
+  })
+
+  it('tells why an item cannot be renamed', () => {
+    renderEditable(makeEditing({ issue: FileNameIssue.READ_ONLY }))
+
+    expect(screen.getByRole('status').textContent).toBe(
+      'Ce fichier est en lecture seule : il ne peut pas être renommé.'
+    )
+  })
+
+  it('moves the focus to the item an operation asked for', async () => {
+    const { rerender } = renderEditable(makeEditing())
+
+    rerender(
+      <FileTree
+        nodes={buildFileTree(['src/main.ts', 'src/shop/money.ts', 'src/tax.ts'])}
+        selectedPath="src/main.ts"
+        modifiedPaths={[]}
+        onSelect={vi.fn()}
+        editing={makeEditing({ focusRequest: { path: 'src/tax.ts' } })}
+      />
+    )
+
+    await waitFor(() => expect(document.activeElement?.getAttribute('data-path')).toBe('src/tax.ts'))
+  })
+
+  it('offers the file actions of an item in its context menu', async () => {
+    const editing = makeEditing()
+    renderEditable(editing)
+
+    fireEvent.contextMenu(screen.getByRole('treeitem', { name: 'shop' }))
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Nouveau fichier' }))
+    fireEvent.contextMenu(screen.getByRole('treeitem', { name: 'shop' }))
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Renommer' }))
+
+    expect(editing.onCreate).toHaveBeenCalledWith('file', { path: 'src/shop', isFolder: true })
+    expect(editing.onRename).toHaveBeenCalledWith('src/shop', true)
+  })
+
+  it('disables the renaming of a Typika file in its context menu', async () => {
+    renderEditable(makeEditing())
+
+    fireEvent.contextMenu(screen.getByRole('treeitem', { name: 'typika.toml, lecture seule' }))
+
+    expect((await screen.findByRole('menuitem', { name: 'Renommer' })).getAttribute('aria-disabled')).toBe('true')
   })
 })

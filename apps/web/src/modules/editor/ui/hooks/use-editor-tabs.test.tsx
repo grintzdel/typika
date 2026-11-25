@@ -115,4 +115,23 @@ describe('useEditorTabs', () => {
     act(() => result.current.handleStep(-1))
     expect(result.current.activeTab).toEqual(fileTab('src/quote.ts'))
   })
+
+  it('follows a renamed file in its tabs', () => {
+    const { result } = renderHook(() => useEditorTabs('src/main.ts'))
+
+    act(() => result.current.handleRenamePaths([['src/main.ts', 'src/app.ts']]))
+
+    expect(result.current.tabs).toEqual([fileTab('src/app.ts')])
+    expect(result.current.editorTab).toEqual(fileTab('src/app.ts'))
+  })
+
+  it('closes the tabs of the files that no longer exist', () => {
+    const { result } = renderHook(() => useEditorTabs('src/main.ts'))
+    act(() => result.current.handleOpenFile('src/new.ts'))
+
+    act(() => result.current.handleRetainFiles(new Set(['src/main.ts'])))
+
+    expect(result.current.tabs).toEqual([fileTab('src/main.ts')])
+    expect(result.current.editorTab).toEqual(fileTab('src/main.ts'))
+  })
 })

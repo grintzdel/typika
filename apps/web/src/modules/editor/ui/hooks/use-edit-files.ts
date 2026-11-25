@@ -5,9 +5,20 @@ import { useEffect, useRef, useState } from 'react'
 
 export type FileEdit = readonly [ProjectPath, string]
 
+export type FileStructureChange = {
+  readonly written: ReadonlyArray<FileEdit>
+  readonly removed: ReadonlyArray<ProjectPath>
+}
+
+export type FileStructureRequest = {
+  readonly written: ReadonlyArray<readonly [string, string]>
+  readonly removed: ReadonlyArray<string>
+}
+
 export type EditSinks = {
   readonly onPersist: (edits: ReadonlyArray<FileEdit>) => void
   readonly onSync: (edits: ReadonlyArray<FileEdit>) => void
+  readonly onStructureChange?: (change: FileStructureChange) => void
 }
 
 const FLUSH_DELAY_MS = 300
@@ -16,7 +27,9 @@ const decodePath = Schema.decodeUnknownOption(ProjectPathSchema)
 export const useEditFiles = (sinks: EditSinks) => {
   const pending = useRef(new Map<ProjectPath, string>())
   const edited = useRef(new Map<string, string>())
+  const removed = useRef(new Set<string>())
   const [editedFiles, setEditedFiles] = useState<ReadonlyMap<string, string>>(new Map())
+  const [removedPaths, setRemovedPaths] = useState<ReadonlySet<string>>(new Set())
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const latestSinks = useRef(sinks)
 
@@ -32,7 +45,9 @@ export const useEditFiles = (sinks: EditSinks) => {
   const discardPending = () => {
     clearPending()
     edited.current.clear()
+    removed.current.clear()
     setEditedFiles(new Map())
+    setRemovedPaths(new Set())
   }
 
   const commitPending = (): ReadonlyArray<FileEdit> => {
@@ -68,7 +83,39 @@ export const useEditFiles = (sinks: EditSinks) => {
     timer.current = setTimeout(flush, FLUSH_DELAY_MS)
   }
 
+  const handleStructureChange = (request: FileStructureRequest) => {
+    const change: FileStructureChange = {
+      written: request.written.flatMap(([path, content]) =>
+        Option.match(decodePath(path), { onNone: () => [], onSome: (valid) => [[valid, content] as const] })
+      ),
+      removed: request.removed.flatMap((path) => Option.toArray(decodePath(path))),
+    }
+    flush()
+    for (const path of change.removed) {
+      edited.current.delete(path)
+      removed.current.add(path)
+    }
+    for (const [path, content] of change.written) {
+      edited.current.set(path, content)
+      removed.current.delete(path)
+    }
+    setEditedFiles(new Map(edited.current))
+    setRemovedPaths(new Set(removed.current))
+    latestSinks.current.onStructureChange?.(change)
+  }
+
   const editedContentOf = (path: string): string | undefined => edited.current.get(path)
 
-  return { handleChange, commitPending, discardPending, editedContentOf, editedFiles }
+  const filesOf = (base: ReadonlyMap<string, string>): ReadonlyMap<string, string> =>
+    new Map([...base, ...editedFiles].filter(([path]) => !removedPaths.has(path)))
+
+  return {
+    handleChange,
+    handleStructureChange,
+    commitPending,
+    discardPending,
+    editedContentOf,
+    editedFiles,
+    filesOf,
+  }
 }

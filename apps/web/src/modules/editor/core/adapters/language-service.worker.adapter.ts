@@ -30,6 +30,7 @@ const call = <A>(request: () => Promise<A>) =>
 
 const sessionOf = (remote: Comlink.Remote<LanguageServiceWorkerApi>): LanguageServiceSession => ({
   updateFile: (path, content) => call(() => remote.updateFile(path, content)),
+  removeFile: (path) => call(() => remote.removeFile(path)),
   diagnostics: (path) => call(() => remote.diagnostics(path)),
   completions: (path, position) => call(() => remote.completions(path, position)),
   completionChanges: (path, position, item) => call(() => remote.completionChanges(path, position, item)),

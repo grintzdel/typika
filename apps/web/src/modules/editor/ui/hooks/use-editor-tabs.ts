@@ -7,6 +7,8 @@ import {
   EMPTY_TABS,
   openFile,
   openFiles,
+  renameTabs,
+  retainFileTabs,
   stepTab,
   type EditorTab,
   type EditorTabs,
@@ -65,6 +67,24 @@ export const useEditorTabs = (initialPath: string | undefined) => {
     handleClose: (key: string) => update((tabs) => ({ ...tabs, ...closeTab(tabs, key) })),
     handleCloseActive: () =>
       update((tabs) => (tabs.activeKey === undefined ? tabs : { ...tabs, ...closeTab(tabs, tabs.activeKey) })),
+    handleRenamePaths: (moves: ReadonlyArray<readonly [string, string]>) =>
+      update((tabs) => {
+        const renamed = renameTabs({ ...tabs, tabs: tabs.editorTab === undefined ? [] : [tabs.editorTab] }, moves)
+        return {
+          ...tabs,
+          ...renameTabs(tabs, moves),
+          editorTab: renamed.tabs[0],
+          highlight: undefined,
+          reveal: undefined,
+        }
+      }),
+    handleRetainFiles: (paths: ReadonlySet<string>) =>
+      update((tabs) => ({
+        ...tabs,
+        ...retainFileTabs(tabs, paths),
+        editorTab:
+          tabs.editorTab?.kind === EditorTabKind.FILE && !paths.has(tabs.editorTab.path) ? undefined : tabs.editorTab,
+      })),
     handleStep: (step: 1 | -1) => update((tabs) => ({ ...tabs, ...stepTab(tabs, step) })),
     handleReveal: ({ path, from, to }: SourceRange) =>
       update((tabs) => ({ ...tabs, ...openFile(tabs, path), reveal: { key: path, range: { from, to } } })),
