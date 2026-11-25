@@ -9,11 +9,11 @@ test.describe('language', () => {
 
     await page.getByRole('combobox', { name: 'Language' }).selectOption('fr')
 
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText("Apprenez l'architecture en exécutant du code.")
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Apprenez l’architecture en exécutant du code.')
     await expect(page.locator('html')).toHaveAttribute('lang', 'fr')
 
     await page.reload()
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText("Apprenez l'architecture en exécutant du code.")
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Apprenez l’architecture en exécutant du code.')
 
     await page.goto('/play/strategy-ts')
     await expect(page.getByRole('button', { name: 'Réinitialiser' })).toBeVisible()

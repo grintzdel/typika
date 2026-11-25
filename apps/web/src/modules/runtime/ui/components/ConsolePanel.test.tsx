@@ -54,7 +54,7 @@ describe('ConsolePanel', () => {
     )
 
     expect(screen.getByText('src/main.ts:3:7 Expected ";"')).toBeTruthy()
-    expect(screen.getByRole('status').textContent).toBe('Échec du build')
+    expect(screen.getByRole('status').textContent).toBe('Échec de la compilation')
   })
 
   it('says when the beginning of the output was dropped', () => {

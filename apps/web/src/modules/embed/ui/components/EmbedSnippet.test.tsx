@@ -8,7 +8,7 @@ describe('EmbedSnippet', () => {
     const onCopy = vi.fn()
     render(<EmbedSnippet name="strategy-ts" isCopied={false} onCopy={onCopy} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /Copier le snippet d’embed/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Copier le code d’intégration/ }))
 
     expect(screen.getByText('/embed/strategy-ts')).toBeDefined()
     expect(onCopy).toHaveBeenCalledOnce()
@@ -18,6 +18,6 @@ describe('EmbedSnippet', () => {
   it('confirms the copy', () => {
     render(<EmbedSnippet name="strategy-ts" isCopied onCopy={vi.fn()} />)
 
-    expect(screen.getByRole('status').textContent).toBe('Snippet copié')
+    expect(screen.getByRole('status').textContent).toBe('Code copié')
   })
 })

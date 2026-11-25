@@ -4,7 +4,7 @@ test.describe('home', () => {
   test('shows one card per concept, grouped by category', async ({ page }) => {
     await page.goto('/')
 
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText("Apprenez l'architecture en exécutant du code.")
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Apprenez l’architecture en exécutant du code.')
     const patterns = page.getByRole('region', { name: 'Design patterns' })
     const strategy = patterns.getByRole('link', { name: /^Strategy/ })
     await expect(strategy).toHaveAttribute('href', '/templates/strategy-ts')

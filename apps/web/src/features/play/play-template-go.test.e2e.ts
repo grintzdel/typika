@@ -89,7 +89,7 @@ test.describe('Go sandbox', () => {
     await replaceFile(page, 'main.go', source.replace('func main() {', 'func main() {\n\tundefinedCall()'))
     await page.getByRole('button', { name: 'Exécuter' }).click()
 
-    await expect(consoleRegion(page).getByText('Échec du build')).toBeVisible({ timeout: TIMEOUT })
+    await expect(consoleRegion(page).getByText('Échec de la compilation')).toBeVisible({ timeout: TIMEOUT })
     await expect(consoleRegion(page).getByText(/cmd\/shop\/main\.go:\d+:\d+ undefined: undefinedCall/)).toBeVisible()
     await expect(editor(page).locator('.cm-lintRange-error')).toHaveText('undefinedCall')
   })
@@ -122,7 +122,7 @@ test.describe('Go sandbox', () => {
     await replaceFile(page, 'express.go', solution)
     await runTests(page)
 
-    await expect(exercisePanel(page).getByText('Exercice réussi !')).toBeVisible()
+    await expect(exercisePanel(page).getByText('Exercice réussi.')).toBeVisible()
   })
 
   test('solves the refactor exercise with its solution', async ({ page }) => {
@@ -135,6 +135,6 @@ test.describe('Go sandbox', () => {
     await page.getByRole('alertdialog').getByRole('button', { name: 'Appliquer la solution' }).click()
     await runTests(page)
 
-    await expect(exercisePanel(page).getByText('Exercice réussi !')).toBeVisible()
+    await expect(exercisePanel(page).getByText('Exercice réussi.')).toBeVisible()
   })
 })

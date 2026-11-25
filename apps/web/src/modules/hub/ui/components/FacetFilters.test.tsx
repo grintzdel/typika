@@ -45,7 +45,7 @@ describe('FacetFilters', () => {
 
     const topics = screen.getByRole('group', { name: 'Sujet' })
     expect(within(topics).getByRole('checkbox', { name: 'Design patterns 3' })).toHaveProperty('checked', false)
-    expect(within(topics).getByRole('checkbox', { name: 'Comportement 2' })).toHaveProperty('checked', true)
+    expect(within(topics).getByRole('checkbox', { name: 'Comportementaux 2' })).toHaveProperty('checked', true)
     const languages = screen.getByRole('group', { name: 'Langage' })
     expect(within(languages).getByRole('checkbox', { name: 'Go 1' })).toHaveProperty('checked', true)
     fireEvent.click(within(languages).getByRole('checkbox', { name: 'TypeScript 0' }))

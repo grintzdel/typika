@@ -108,7 +108,7 @@ test.describe('guided tour', () => {
       .getByRole('button', { name: titleOf(3) })
       .click()
 
-    await expect(tour(page).getByText('Le code a changé depuis cette visite.')).toBeVisible()
+    await expect(tour(page).getByText('Le code a changé depuis l’écriture de cette visite.')).toBeVisible()
     await expect(highlightedLines(page)).toHaveCount(0)
 
     await tour(page).getByRole('button', { name: 'Voir la version d’origine' }).click()

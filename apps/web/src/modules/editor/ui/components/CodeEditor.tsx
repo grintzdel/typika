@@ -55,12 +55,16 @@ const languageServiceExtensions = (
 ): Extension =>
   session === undefined || readOnly || !isAnalyzedPath(path) ? [] : typescriptExtensions(session, path, handlers)
 
+const localeExtensions = (label: string, phrases: Readonly<Record<string, string>>): Extension => [
+  EditorState.phrases.of(phrases),
+  EditorView.contentAttributes.of({ 'aria-label': label }),
+]
+
 const makeState = (
   path: string,
   doc: string,
-  label: string,
   readOnly: boolean,
-  phrases: Readonly<Record<string, string>>,
+  locale: Extension,
   languageService: Extension,
   onDocChange: (content: string) => void
 ): EditorState => {
@@ -77,9 +81,8 @@ const makeState = (
     search({ top: true }),
     keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, indentWithTab]),
     EditorView.clickAddsSelectionRange.of((event) => event.altKey),
-    EditorState.phrases.of(phrases),
+    locale,
     EditorState.readOnly.of(readOnly),
-    EditorView.contentAttributes.of({ 'aria-label': label }),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) onDocChange(update.state.doc.toString())
     }),
@@ -109,8 +112,9 @@ export const CodeEditor = ({
   onGoTo,
   onReferences,
 }: CodeEditorProps) => {
-  const { t } = useTranslation('editor')
+  const { t, i18n } = useTranslation('editor')
   const phrases = editorPhrasesOf(t)
+  const language = i18n.language
   const container = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
   const states = useRef(new Map<string, EditorState>())
@@ -122,6 +126,7 @@ export const CodeEditor = ({
   const latestOnChange = useRef(onChange)
   const latestLanguageService = useRef(languageService)
   const languageServiceSlot = useRef(new Compartment())
+  const localeSlot = useRef(new Compartment())
   const latestNavigation = useRef({ onGoTo, onReferences })
 
   useEffect(() => {
@@ -172,18 +177,23 @@ export const CodeEditor = ({
     documents.current.set(documentKey, opened)
     const slot = languageServiceSlot.current
     const extensions = languageServiceExtensions(path, readOnly, latestLanguageService.current, handlers.current)
+    const locale = localeExtensions(label, phrases)
     const cached = states.current.get(documentKey)
     if (cached === undefined) {
       editor.setState(
-        makeState(path, content, label, readOnly, phrases, slot.of(extensions), (next) =>
+        makeState(path, content, readOnly, localeSlot.current.of(locale), slot.of(extensions), (next) =>
           latestOnChange.current(path, next)
         )
       )
     } else {
       editor.setState(cached)
-      editor.dispatch({ effects: slot.reconfigure(extensions) })
+      editor.dispatch({ effects: [slot.reconfigure(extensions), localeSlot.current.reconfigure(locale)] })
     }
   }, [documentKey, path, content, readOnly, label])
+
+  useEffect(() => {
+    view.current?.dispatch({ effects: localeSlot.current.reconfigure(localeExtensions(label, phrases)) })
+  }, [label, language])
 
   useEffect(() => {
     const editor = view.current

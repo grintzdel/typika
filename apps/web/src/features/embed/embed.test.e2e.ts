@@ -102,7 +102,7 @@ test.describe('Embed', () => {
 
   test('shows the tour step the host page asks for', async ({ page }) => {
     const embed = await openHostPage(page, SECURE_HOST, '/embed/strategy-ts?tour-step=overview')
-    const step = embed.getByRole('region', { name: 'Étape du tour' })
+    const step = embed.getByRole('region', { name: 'Étape de la visite' })
     await expect(step.getByRole('heading')).toHaveText('Two ways to ship, two ways to price')
 
     await postToEmbed(page, { type: 'typika:goto-step', id: 'strategy-interface' })
@@ -168,9 +168,9 @@ test('copies the embed snippet from the template page', async ({ page, context }
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
   await page.goto('/templates/strategy-ts')
 
-  await page.getByRole('button', { name: /Copier le snippet d’embed/ }).click()
+  await page.getByRole('button', { name: /Copier le code d’intégration/ }).click()
 
-  await expect(page.getByRole('region', { name: 'Embed' }).getByRole('status')).toHaveText('Snippet copié')
+  await expect(page.getByRole('region', { name: 'Intégrer' }).getByRole('status')).toHaveText('Code copié')
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(
     '<iframe src="http://localhost:3000/embed/strategy-ts"'
   )
