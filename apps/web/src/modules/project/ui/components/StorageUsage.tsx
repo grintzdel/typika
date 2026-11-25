@@ -21,15 +21,15 @@ export const StorageUsage = ({ usage }: StorageUsageProps) => {
   const { t, i18n } = useTranslation('project')
   if (usage === undefined) return null
   return (
-    <div className="space-y-2 text-sm">
-      <p className="text-neutral-600 dark:text-neutral-400">
+    <div className="space-y-2 text-base">
+      <p className="text-fg-muted">
         {t('storage.used', {
           usage: formatBytes(i18n.language, usage.usage),
           quota: formatBytes(i18n.language, usage.quota),
         })}
       </p>
       {usage.isNearlyFull ? (
-        <p role="alert" className="rounded-md bg-amber-50 p-3 text-amber-900 dark:bg-amber-950 dark:text-amber-100">
+        <p role="alert" className="rounded-sm border border-warning-border bg-warning-bg p-3 text-warning-fg">
           {t('storage.nearlyFull')}
         </p>
       ) : null}

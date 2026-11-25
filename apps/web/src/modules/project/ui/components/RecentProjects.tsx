@@ -12,17 +12,17 @@ export const RecentProjects = ({ projects, now }: RecentProjectsProps) => {
   const { t, i18n } = useTranslation('project')
   if (projects.length === 0) return null
   return (
-    <section aria-labelledby="recent-projects" className="border-t border-neutral-200 py-6 dark:border-neutral-800">
+    <section aria-labelledby="recent-projects" className="border-t border-border py-6">
       <h2 id="recent-projects" className="mb-2 font-semibold">
         {t('recent.title')}
       </h2>
-      <ul className="space-y-1 text-sm">
+      <ul className="space-y-1 text-base">
         {projects.map((project) => (
           <li key={project.path}>
-            <a href={project.path} className="text-sky-700 hover:underline">
+            <a href={project.path} className="text-link underline underline-offset-2 hover:text-link-hover">
               {project.exercise === undefined ? project.name : `${project.name} · ${project.exercise}`}
             </a>{' '}
-            <span className="text-neutral-600 dark:text-neutral-400">
+            <span className="text-fg-muted">
               · {t('recent.modified', { time: relativeTime(i18n.language, now - project.updatedAt) })}
             </span>
           </li>

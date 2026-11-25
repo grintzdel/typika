@@ -9,16 +9,15 @@ export type SidePickerProps = {
   readonly onChoose: (a: string | undefined, b: string | undefined) => void
 }
 
-const SELECT =
-  'h-8 rounded-md border border-neutral-300 bg-white px-2 text-sm dark:border-neutral-700 dark:bg-neutral-900'
+const SELECT = 'min-h-control-sm rounded-md border border-border-strong bg-surface-raised px-3 text-compact'
 
 export const SidePicker = ({ variants, a, b, onChoose }: SidePickerProps) => {
   const { t } = useTranslation('compare')
   const isKnown = (language: string | undefined) => variants.some((variant) => variant.language === language)
 
   const select = (label: string, value: string | undefined, onChange: (language: string) => void) => (
-    <label className="flex items-center gap-2 text-sm">
-      <span className="text-neutral-600 dark:text-neutral-400">{label}</span>
+    <label className="flex items-center gap-2 text-compact">
+      <span className="text-fg-muted">{label}</span>
       <select
         className={SELECT}
         value={isKnown(value) ? value : ''}

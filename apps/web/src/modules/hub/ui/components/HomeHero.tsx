@@ -3,11 +3,11 @@ import { useTranslation } from 'react-i18next'
 export const HomeHero = () => {
   const { t } = useTranslation('hub')
   return (
-    <div className="py-10">
-      <h1 className="text-3xl font-semibold tracking-tight">{t('hero.title')}</h1>
+    <div className="py-12">
+      <h1 className="text-display font-bold tracking-tight">{t('hero.title')}</h1>
       <a
         href="/templates"
-        className="mt-6 inline-flex h-9 items-center rounded-md bg-sky-700 px-3.5 text-sm font-medium text-white hover:bg-sky-800"
+        className="mt-6 inline-flex min-h-control-md items-center rounded-md bg-accent px-5 text-base font-semibold text-on-accent transition-colors duration-150 hover:bg-accent-hover"
       >
         {t('hero.browse')}
       </a>

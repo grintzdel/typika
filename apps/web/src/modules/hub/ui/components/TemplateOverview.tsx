@@ -14,17 +14,17 @@ export const TemplateOverview = ({ page }: TemplateOverviewProps) => {
   const { t, i18n } = useTranslation('hub')
   const labels = useHubLabels()
   return (
-    <div className="space-y-4 border-b border-neutral-200 pb-6 dark:border-neutral-800">
+    <div className="space-y-4 border-b border-border pb-6">
       <nav aria-label={t('template.trail')}>
-        <ol className="flex flex-wrap gap-2 text-sm text-neutral-600 dark:text-neutral-400">
+        <ol className="flex flex-wrap gap-2 text-base text-fg-muted">
           <li>
-            <a href="/templates" className="hover:text-sky-700">
+            <a href="/templates" className="hover:text-link">
               {t('nav.templates')}
             </a>
           </li>
           {page.trail.map((crumb) => (
             <li key={crumb.topic} className="before:mr-2 before:content-['/']">
-              <a href={topicHref(crumb.topic)} className="hover:text-sky-700">
+              <a href={topicHref(crumb.topic)} className="hover:text-link">
                 {crumb.family === undefined ? labels.category(crumb.category) : labels.family(crumb.family)}
               </a>
             </li>
@@ -32,32 +32,32 @@ export const TemplateOverview = ({ page }: TemplateOverviewProps) => {
         </ol>
       </nav>
       <div>
-        <h1 lang="en" className="text-2xl font-semibold">
+        <h1 lang="en" className="text-page-title font-bold">
           {page.title}
         </h1>
-        <p lang="en" className="mt-1 text-neutral-600 dark:text-neutral-400">
+        <p lang="en" className="mt-1 text-fg-muted">
           {page.summary}
         </p>
         {i18n.resolvedLanguage === 'en' ? null : (
-          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">{t('template.contentInEnglish')}</p>
+          <p className="mt-2 text-sm text-fg-subtle">{t('template.contentInEnglish')}</p>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-base">
         <nav aria-label={t('template.language')} className="flex items-center gap-2">
-          <span className="text-neutral-600 dark:text-neutral-400">{t('template.language')}</span>
+          <span className="text-fg-muted">{t('template.language')}</span>
           {page.languages.map(({ language, name }) => (
             <a
               key={name}
               href={`/templates/${name}`}
               aria-current={name === page.name ? 'page' : undefined}
-              className="rounded border border-neutral-200 px-2 py-0.5 hover:border-sky-600 aria-[current=page]:border-sky-700 aria-[current=page]:bg-sky-50 dark:border-neutral-800 dark:aria-[current=page]:bg-sky-950"
+              className="inline-flex min-h-target items-center rounded-full border border-border-strong px-3 hover:bg-surface-muted aria-[current=page]:border-accent aria-[current=page]:bg-selected-bg aria-[current=page]:font-semibold aria-[current=page]:text-selected-fg"
             >
               {labels.language(language)}
             </a>
           ))}
         </nav>
         <p>
-          <span className="text-neutral-600 dark:text-neutral-400">{t('template.level')} </span>
+          <span className="text-fg-muted">{t('template.level')} </span>
           {labels.level(page.level)}
         </p>
         <HealthBadge status={page.health?.status} />
@@ -65,7 +65,7 @@ export const TemplateOverview = ({ page }: TemplateOverviewProps) => {
       <div className="flex flex-wrap items-center gap-2">
         <a
           href={`/play/${page.name}`}
-          className="inline-flex h-9 items-center rounded-md bg-sky-700 px-3.5 text-sm font-medium text-white hover:bg-sky-800"
+          className="inline-flex min-h-control-md items-center rounded-md bg-accent px-5 text-base font-semibold text-on-accent transition-colors duration-150 hover:bg-accent-hover"
         >
           {t('template.open')}
         </a>
@@ -75,7 +75,7 @@ export const TemplateOverview = ({ page }: TemplateOverviewProps) => {
               <a
                 key={language}
                 href={`/compare/${page.name}?${new URLSearchParams({ a: page.language, b: language }).toString()}`}
-                className="inline-flex h-9 items-center rounded-md border border-neutral-300 px-3.5 text-sm font-medium hover:border-sky-600 dark:border-neutral-700"
+                className="inline-flex min-h-control-md items-center rounded-md border border-border-strong bg-surface-raised px-5 text-base font-semibold shadow-sm transition-colors duration-150 hover:bg-surface-muted"
               >
                 {t('template.compareWith', { language: labels.language(language) })}
               </a>

@@ -10,27 +10,16 @@ export type DiffFileHeaderProps = {
   readonly onOpenStep: (index: number) => void
 }
 
-const PRESSED =
-  'aria-pressed:bg-sky-100 aria-pressed:text-sky-950 dark:aria-pressed:bg-sky-950 dark:aria-pressed:text-sky-100'
-
 export const DiffFileHeader = ({ layout, steps, onLayoutChange, onOpenStep }: DiffFileHeaderProps) => {
   const { t } = useTranslation('diff')
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-neutral-200 px-3 py-1.5 text-sm dark:border-neutral-800">
+    <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-1.5 text-compact">
       <div role="group" aria-label={t('layout.label')} className="flex gap-1">
-        <Button
-          aria-pressed={layout === DiffLayout.SPLIT}
-          className={PRESSED}
-          onClick={() => onLayoutChange(DiffLayout.SPLIT)}
-        >
+        <Button aria-pressed={layout === DiffLayout.SPLIT} onClick={() => onLayoutChange(DiffLayout.SPLIT)}>
           {t('layout.split')}
         </Button>
-        <Button
-          aria-pressed={layout === DiffLayout.UNIFIED}
-          className={PRESSED}
-          onClick={() => onLayoutChange(DiffLayout.UNIFIED)}
-        >
+        <Button aria-pressed={layout === DiffLayout.UNIFIED} onClick={() => onLayoutChange(DiffLayout.UNIFIED)}>
           {t('layout.unified')}
         </Button>
       </div>
@@ -41,7 +30,7 @@ export const DiffFileHeader = ({ layout, steps, onLayoutChange, onOpenStep }: Di
               <button
                 type="button"
                 aria-label={t('step', { number: step.index + 1, title: step.title })}
-                className="rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-amber-950 hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-sky-600 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100 dark:hover:bg-amber-900"
+                className="inline-flex min-h-target items-center rounded-full border border-warning-border bg-warning-bg px-3 text-warning-fg hover:border-modified"
                 onClick={() => onOpenStep(step.index)}
               >
                 {step.index + 1}. {step.title}

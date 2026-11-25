@@ -30,7 +30,7 @@ export type RepositoryPushSectionProps = {
 }
 
 const FIELD =
-  'w-full rounded-md border border-neutral-300 bg-transparent px-2 py-1 text-sm aria-invalid:border-red-600 dark:border-neutral-700'
+  'w-full min-h-control-sm rounded-md border border-border-strong bg-surface-raised px-3 text-base aria-invalid:border-danger-text'
 
 export const RepositoryPushSection = ({
   defaultName,
@@ -48,11 +48,8 @@ export const RepositoryPushSection = ({
   const [includeTypikaFiles, setIncludeTypikaFiles] = useState(true)
   const isValid = isRepositoryName(name)
   return (
-    <section
-      aria-label={t('repository.label')}
-      className="space-y-2 border-t border-neutral-200 pt-3 dark:border-neutral-800"
-    >
-      <h3 className="text-sm font-semibold">{t('repository.label')}</h3>
+    <section aria-label={t('repository.label')} className="space-y-2 border-t border-border pt-3">
+      <h3 className="text-base font-semibold">{t('repository.label')}</h3>
       {isConnected ? (
         <form
           className="space-y-2"
@@ -61,8 +58,8 @@ export const RepositoryPushSection = ({
             if (isValid) onPush({ name, description, includeTypikaFiles })
           }}
         >
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">{t('repository.description')}</p>
-          <label className="block space-y-1 text-sm">
+          <p className="text-base text-fg-muted">{t('repository.description')}</p>
+          <label className="block space-y-1 text-base">
             <span>{t('repository.name')}</span>
             <input
               value={name}
@@ -72,14 +69,14 @@ export const RepositoryPushSection = ({
               className={FIELD}
             />
           </label>
-          <p id="repository-name-rule" className="text-xs text-neutral-600 dark:text-neutral-400">
+          <p id="repository-name-rule" className="text-sm text-fg-muted">
             {t('repository.nameRule')}
           </p>
-          <label className="block space-y-1 text-sm">
+          <label className="block space-y-1 text-base">
             <span>{t('repository.descriptionField')}</span>
             <input value={description} onChange={(event) => setDescription(event.target.value)} className={FIELD} />
           </label>
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-base">
             <input
               type="checkbox"
               checked={includeTypikaFiles}
@@ -92,7 +89,12 @@ export const RepositoryPushSection = ({
               {isPushing ? t('repository.pushing') : t('repository.push')}
             </Button>
             {revokeUrl === undefined ? null : (
-              <a href={revokeUrl} target="_blank" rel="noreferrer" className="text-sm text-sky-700 hover:underline">
+              <a
+                href={revokeUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-base text-link underline underline-offset-2 hover:text-link-hover"
+              >
                 {t('gist.revoke')}
               </a>
             )}
@@ -100,19 +102,24 @@ export const RepositoryPushSection = ({
         </form>
       ) : (
         <>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">{t('repository.connectDescription')}</p>
+          <p className="text-base text-fg-muted">{t('repository.connectDescription')}</p>
           <Button onClick={onConnect}>{t('gist.connect')}</Button>
         </>
       )}
       {failure === undefined ? null : (
-        <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+        <p role="alert" className="text-base text-danger-text">
           {t(`repository.failed.${failure}`)}
         </p>
       )}
       {repository === undefined ? null : (
-        <p role="status" className="text-sm">
+        <p role="status" className="text-base">
           {t('repository.pushed')}{' '}
-          <a href={repository.htmlUrl} target="_blank" rel="noreferrer" className="text-sky-700 hover:underline">
+          <a
+            href={repository.htmlUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-link underline underline-offset-2 hover:text-link-hover"
+          >
             {repository.fullName}
           </a>
           . {t('repository.propose')}

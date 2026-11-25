@@ -21,7 +21,7 @@ export const HomePage = ({ sections }: HomePageProps) => {
   return (
     <>
       <HubHeader languageMenu={languageMenu} searchRef={searchRef} />
-      <main className="mx-auto max-w-6xl px-4 pb-10">
+      <main className="mx-auto max-w-page px-6 pb-10">
         <HomeHero />
         <ConceptSections sections={sectionsWithout(sections, hidden)} />
         <RecentProjects projects={recent.projects} now={recent.now} />

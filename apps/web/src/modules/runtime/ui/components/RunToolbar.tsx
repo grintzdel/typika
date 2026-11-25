@@ -33,15 +33,12 @@ export const RunToolbar = ({
   const reason = ready ? undefined : status === 'unsupported' ? t('unsupported') : t('loading')
   return (
     <div className="flex min-w-0 flex-1 items-center gap-3">
-      <div
-        role="status"
-        className="flex min-w-0 flex-1 items-center gap-2 truncate text-xs text-neutral-600 dark:text-neutral-400"
-      >
+      <div role="status" className="flex min-w-0 flex-1 items-center gap-2 truncate text-sm text-fg-muted">
         {status === 'loading' ? <span className="truncate">{t('loading')}</span> : null}
         {status === 'loading' && isDownloading(download) ? (
           <>
             <progress
-              className="h-1.5 w-24 shrink-0 accent-blue-600"
+              className="h-1.5 w-24 shrink-0 accent-accent"
               aria-label={t('download.label')}
               max={download.totalBytes}
               value={download.loadedBytes}
@@ -55,7 +52,7 @@ export const RunToolbar = ({
           </>
         ) : null}
         {status === 'failed' ? (
-          <span className="text-red-700 dark:text-red-400">{t('bootFailed', { reason: bootError ?? '' })}</span>
+          <span className="text-danger-text">{t('bootFailed', { reason: bootError ?? '' })}</span>
         ) : null}
         {status === 'unsupported' ? <span className="truncate">{t('unsupported')}</span> : null}
         {status === 'insecure' ? <span className="truncate">{t('insecure')}</span> : null}

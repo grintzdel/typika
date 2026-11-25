@@ -25,9 +25,9 @@ const SIGNS: Readonly<Record<Status, string>> = {
 }
 
 const SIGN_COLORS: Readonly<Record<Status, string>> = {
-  [FileChangeStatus.ADDED]: 'text-green-700 dark:text-green-400',
-  [FileChangeStatus.MODIFIED]: 'text-amber-700 dark:text-amber-400',
-  [FileChangeStatus.DELETED]: 'text-red-700 dark:text-red-400',
+  [FileChangeStatus.ADDED]: 'text-success-text',
+  [FileChangeStatus.MODIFIED]: 'text-warning-text',
+  [FileChangeStatus.DELETED]: 'text-danger-text',
 }
 
 export const DiffPanel = ({
@@ -42,29 +42,20 @@ export const DiffPanel = ({
   const { t } = useTranslation('diff')
 
   return (
-    <div className="flex h-full min-h-0 flex-col text-sm">
-      <div className="flex flex-wrap items-center gap-2 border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+    <div className="flex h-full min-h-0 flex-col text-compact">
+      <div className="flex flex-wrap items-center gap-2 border-b border-border px-4 py-3">
         <Button
           aria-pressed={source === DiffSource.BASE}
           disabled={baseName === undefined}
-          className="aria-pressed:bg-sky-100 aria-pressed:text-sky-950 dark:aria-pressed:bg-sky-950 dark:aria-pressed:text-sky-100"
           onClick={() => onSourceChange(DiffSource.BASE)}
         >
           {t('sinceBase')}
         </Button>
-        <Button
-          aria-pressed={source === DiffSource.MINE}
-          className="aria-pressed:bg-sky-100 aria-pressed:text-sky-950 dark:aria-pressed:bg-sky-950 dark:aria-pressed:text-sky-100"
-          onClick={() => onSourceChange(DiffSource.MINE)}
-        >
+        <Button aria-pressed={source === DiffSource.MINE} onClick={() => onSourceChange(DiffSource.MINE)}>
           {t('mine')}
         </Button>
         {hasSolution ? (
-          <Button
-            aria-pressed={source === DiffSource.SOLUTION}
-            className="aria-pressed:bg-sky-100 aria-pressed:text-sky-950 dark:aria-pressed:bg-sky-950 dark:aria-pressed:text-sky-100"
-            onClick={() => onSourceChange(DiffSource.SOLUTION)}
-          >
+          <Button aria-pressed={source === DiffSource.SOLUTION} onClick={() => onSourceChange(DiffSource.SOLUTION)}>
             {t('solution')}
           </Button>
         ) : null}
@@ -73,17 +64,15 @@ export const DiffPanel = ({
             href={`/play/${baseName}`}
             target="_blank"
             rel="noopener"
-            className="ml-auto text-sky-700 underline underline-offset-2 hover:text-sky-900 dark:text-sky-400 dark:hover:text-sky-300"
+            className="ml-auto text-link underline underline-offset-2 hover:text-link-hover"
           >
             {t('openBase')}
           </a>
         ) : null}
       </div>
       <div className="min-h-0 flex-1 overflow-auto px-2 py-2">
-        {isLoading ? <p className="px-2 text-neutral-600 dark:text-neutral-400">{t('loading')}</p> : null}
-        {!isLoading && changes.length === 0 ? (
-          <p className="px-2 text-neutral-600 dark:text-neutral-400">{t('empty')}</p>
-        ) : null}
+        {isLoading ? <p className="px-2 text-fg-muted">{t('loading')}</p> : null}
+        {!isLoading && changes.length === 0 ? <p className="px-2 text-fg-muted">{t('empty')}</p> : null}
         {!isLoading && changes.length > 0 ? (
           <ul aria-label={t('files')}>
             {changes.map((change) => (
@@ -91,7 +80,7 @@ export const DiffPanel = ({
                 <button
                   type="button"
                   aria-label={`${change.path}, ${t(`status.${change.status}`)}`}
-                  className="flex w-full items-center gap-2 rounded px-2 py-1 text-left hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-sky-600 dark:hover:bg-neutral-800"
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left hover:bg-surface-muted"
                   onClick={() => onOpen(change.path)}
                 >
                   <span aria-hidden="true" className={`w-3 font-mono font-bold ${SIGN_COLORS[change.status]}`}>

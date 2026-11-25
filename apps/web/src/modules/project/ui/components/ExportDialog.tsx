@@ -31,7 +31,7 @@ export const ExportDialog = ({ onExport, repository, defaultOpen = false, onResu
       <DialogPopup>
         <DialogTitle>{t('export.title')}</DialogTitle>
         <DialogDescription>{t('export.description')}</DialogDescription>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="flex items-center gap-2 text-base">
           <input
             type="checkbox"
             checked={includeTypikaFiles}

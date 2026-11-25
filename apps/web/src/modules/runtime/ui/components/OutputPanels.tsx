@@ -28,7 +28,7 @@ export const OutputPanels = ({ active, onActiveChange, console, testRun }: Outpu
         <Tab value="tests">
           {t('panels.tests')}
           {testRun === undefined ? null : (
-            <span className="ml-1.5 text-xs text-neutral-500">
+            <span className="ml-1.5 text-sm text-fg-subtle">
               {testRun.counts.passed} ✓ {testRun.counts.failed} ✕
             </span>
           )}

@@ -7,9 +7,9 @@ export type LanguageChipsProps = {
 export const LanguageChips = ({ languages }: LanguageChipsProps) => {
   const labels = useHubLabels()
   return (
-    <span className="mt-3 flex flex-wrap gap-2 text-xs">
+    <span className="mt-3 flex flex-wrap gap-2 text-sm">
       {languages.map((language) => (
-        <span key={language} className="rounded bg-neutral-100 px-1.5 py-0.5 dark:bg-neutral-800">
+        <span key={language} className="rounded-full bg-surface-muted px-3 py-0.5">
           {labels.language(language)}
         </span>
       ))}

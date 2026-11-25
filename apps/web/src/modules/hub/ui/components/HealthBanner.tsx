@@ -12,7 +12,7 @@ export const HealthBanner = ({ health, alternatives }: HealthBannerProps) => {
     return (
       <div
         role="note"
-        className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-red-300 bg-red-50 px-4 py-2 text-sm text-red-950 dark:border-red-900 dark:bg-red-950 dark:text-red-100"
+        className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-danger-border bg-danger-bg px-4 py-2 text-base text-danger-fg"
       >
         <p>{t('health.broken')}</p>
         {health.runUrl === null ? null : (
@@ -26,7 +26,7 @@ export const HealthBanner = ({ health, alternatives }: HealthBannerProps) => {
     return (
       <div
         role="note"
-        className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-neutral-300 bg-neutral-100 px-4 py-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+        className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-border-strong bg-surface-muted px-4 py-2 text-base text-fg"
       >
         <p>{t('health.deprecated')}</p>
         <a href={alternatives} className="underline underline-offset-2">

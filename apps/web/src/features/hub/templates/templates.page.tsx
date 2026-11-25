@@ -28,8 +28,8 @@ export const TemplatesPage = ({ templates, facets, search }: TemplatesPageProps)
   return (
     <>
       <HubHeader languageMenu={languageMenu} searchRef={searchRef} search={{ text: list.text, onSearch: list.handleSearch }} />
-      <main className="mx-auto grid max-w-6xl gap-8 px-4 py-8 md:grid-cols-[14rem_1fr]">
-        <h1 className="text-2xl font-semibold md:col-span-2">{t('list.title')}</h1>
+      <main className="mx-auto grid max-w-page gap-8 px-6 py-8 md:grid-cols-[14rem_1fr]">
+        <h1 className="text-page-title font-bold md:col-span-2">{t('list.title')}</h1>
         <FacetFilters options={facetsWithout(facets, hidden)} filters={list.filters} counts={list.counts} onToggle={list.handleToggle} />
         <div>
           <ResultsToolbar

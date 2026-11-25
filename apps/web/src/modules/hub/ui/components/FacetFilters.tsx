@@ -25,20 +25,15 @@ const FacetCheckbox = ({
 }) => {
   const { t } = useTranslation('hub')
   return (
-    <label
-      className={`flex items-center gap-2 py-0.5 text-sm ${count === 0 && !checked ? 'text-neutral-400 dark:text-neutral-600' : ''}`}
-    >
+    <label className={`flex items-center gap-2 py-0.5 text-base ${count === 0 && !checked ? 'text-fg-subtle' : ''}`}>
       <input
         type="checkbox"
         checked={checked}
         disabled={count === 0 && !checked}
         onChange={onChange}
-        className="accent-sky-700"
+        className="accent-accent"
       />
-      {label}{' '}
-      <span className="ml-auto text-xs text-neutral-500 tabular-nums dark:text-neutral-400">
-        {t('facets.count', { count })}
-      </span>
+      {label} <span className="ml-auto text-sm text-fg-subtle tabular-nums">{t('facets.count', { count })}</span>
     </label>
   )
 }
@@ -51,7 +46,7 @@ export const FacetFilters = ({ options, filters, counts, onToggle }: FacetFilter
   return (
     <div aria-label={t('facets.label')} role="group" className="space-y-5">
       <fieldset>
-        <legend className="mb-1 text-sm font-semibold">{labels.facet(Facet.TOPIC)}</legend>
+        <legend className="mb-1 text-base font-semibold">{labels.facet(Facet.TOPIC)}</legend>
         <ul>
           {options.topics.map((option) => (
             <li key={option.topic}>
@@ -79,7 +74,7 @@ export const FacetFilters = ({ options, filters, counts, onToggle }: FacetFilter
       </fieldset>
       {options.values.map(({ facet, values }) => (
         <fieldset key={facet}>
-          <legend className="mb-1 text-sm font-semibold">{labels.facet(facet)}</legend>
+          <legend className="mb-1 text-base font-semibold">{labels.facet(facet)}</legend>
           {values.map((value) => (
             <FacetCheckbox
               key={value}

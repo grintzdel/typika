@@ -16,8 +16,8 @@ const isSort = (value: string): value is TemplateSort => (SORTS as ReadonlyArray
 export const ResultsToolbar = ({ count, sort, canRankByRelevance, onSort }: ResultsToolbarProps) => {
   const { t } = useTranslation('hub')
   return (
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-      <p role="status" className="text-neutral-600 dark:text-neutral-400">
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-3 text-base">
+      <p role="status" className="text-fg-muted">
         {t('list.count', { count })}
       </p>
       <label className="flex items-center gap-2">
@@ -25,7 +25,7 @@ export const ResultsToolbar = ({ count, sort, canRankByRelevance, onSort }: Resu
         <select
           value={sort}
           onChange={(event) => isSort(event.target.value) && onSort(event.target.value)}
-          className="rounded-md border border-neutral-300 bg-transparent px-2 py-1 dark:border-neutral-700"
+          className="min-h-control-sm rounded-md border border-border-strong bg-surface-raised px-3"
         >
           {SORTS.filter((option) => canRankByRelevance || option !== TemplateSort.RELEVANCE).map((option) => (
             <option key={option} value={option}>

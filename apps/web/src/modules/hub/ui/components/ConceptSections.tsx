@@ -18,21 +18,24 @@ export const ConceptSections = ({ sections }: ConceptSectionsProps) => {
       {sections.map((section) => (
         <section key={section.category} aria-labelledby={`category-${section.category}`}>
           <div className="mb-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <h2 id={`category-${section.category}`} className="text-lg font-semibold">
+            <h2 id={`category-${section.category}`} className="text-xl font-bold">
               {labels.category(section.category)}
             </h2>
-            <span className="flex gap-3 text-sm">
+            <span className="flex gap-3 text-base">
               {section.families.map((family) => (
                 <a
                   key={family}
                   href={topicHref(`${section.category}/${family}`)}
-                  className="text-neutral-600 hover:text-sky-700 dark:text-neutral-400"
+                  className="text-fg-muted hover:text-link"
                 >
                   {labels.family(family)}
                 </a>
               ))}
             </span>
-            <a href={topicHref(section.category)} className="ml-auto text-sm text-sky-700 hover:underline">
+            <a
+              href={topicHref(section.category)}
+              className="ml-auto text-base text-link underline underline-offset-2 hover:text-link-hover"
+            >
               {t('seeAll')}
             </a>
           </div>
@@ -41,10 +44,10 @@ export const ConceptSections = ({ sections }: ConceptSectionsProps) => {
               <li key={concept.name}>
                 <a
                   href={`/templates/${concept.name}`}
-                  className="block h-full rounded-lg border border-neutral-200 p-4 hover:border-sky-600 focus-visible:outline-2 focus-visible:outline-sky-600 dark:border-neutral-800 dark:hover:border-sky-500"
+                  className="block h-full rounded-lg border border-border bg-surface-raised p-5 shadow-sm transition-[border-color,box-shadow,translate] duration-150 hover:-translate-y-px hover:border-accent hover:shadow-md"
                 >
                   <span className="block font-semibold">{concept.label}</span>
-                  <span className="mt-1 block text-sm text-neutral-600 dark:text-neutral-400">{concept.summary}</span>
+                  <span className="mt-1 block text-base text-fg-muted">{concept.summary}</span>
                   <LanguageChips languages={concept.languages.map(({ language }) => language)} />
                 </a>
               </li>

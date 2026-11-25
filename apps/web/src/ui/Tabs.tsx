@@ -6,15 +6,12 @@ type WithClassName<P> = Omit<P, 'className'> & { readonly className?: string }
 export const Tabs = BaseTabs.Root
 
 export const TabsList = ({ className = '', ...props }: WithClassName<ComponentProps<typeof BaseTabs.List>>) => (
-  <BaseTabs.List
-    className={`flex gap-1 border-b border-neutral-200 px-2 dark:border-neutral-800 ${className}`}
-    {...props}
-  />
+  <BaseTabs.List className={`flex gap-1 border-b border-border px-3 ${className}`} {...props} />
 )
 
 export const Tab = ({ className = '', ...props }: WithClassName<ComponentProps<typeof BaseTabs.Tab>>) => (
   <BaseTabs.Tab
-    className={`-mb-px border-b-2 border-transparent px-2 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 focus-visible:outline-2 focus-visible:outline-sky-600 data-[selected]:border-sky-700 data-[selected]:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100 dark:data-[selected]:text-neutral-100 ${className}`}
+    className={`relative min-h-10 rounded-sm px-3 text-compact text-fg-muted after:absolute after:inset-x-2 after:-bottom-px after:h-[3px] after:rounded-t-[3px] hover:text-fg focus-visible:outline-offset-[-3px] aria-selected:font-bold aria-selected:text-fg aria-selected:after:bg-accent ${className}`}
     {...props}
   />
 )

@@ -11,14 +11,14 @@ export const GitHubCallbackStatus = ({ failure }: GitHubCallbackStatusProps) => 
   const { t } = useTranslation('app')
   if (failure === undefined)
     return (
-      <p role="status" className="mx-auto mt-24 max-w-lg px-6 text-center text-sm">
+      <p role="status" className="mx-auto mt-24 max-w-lg px-6 text-center text-base">
         {t('github.connecting')}
       </p>
     )
   return (
     <ErrorState title={t('github.title')}>
-      <p className="text-sm text-neutral-600 dark:text-neutral-400">{t(`github.failed.${failure}`)}</p>
-      <a href="/templates" className="text-sm text-sky-700 hover:underline">
+      <p className="text-base text-fg-muted">{t(`github.failed.${failure}`)}</p>
+      <a href="/templates" className="text-base text-link underline underline-offset-2 hover:text-link-hover">
         {t('github.back')}
       </a>
     </ErrorState>

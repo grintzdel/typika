@@ -22,7 +22,7 @@ const visibleItems = (
     ...(node._tag === 'Folder' && !collapsed.has(node.path) ? visibleItems(node.children, collapsed, node.path) : []),
   ])
 
-const ROW = 'flex cursor-pointer items-center gap-1 rounded py-0.5 pr-2 text-sm whitespace-nowrap'
+const ROW = 'flex min-h-target cursor-pointer items-center gap-1 rounded-sm pr-2 text-compact whitespace-nowrap'
 
 export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect }: FileTreeProps) => {
   const { t } = useTranslation('project')
@@ -112,7 +112,7 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect }: FileT
         tabIndex={node.path === tabStop ? 0 : -1}
         aria-label={label}
         {...(isFolder ? { 'aria-expanded': isExpanded } : { 'aria-selected': isSelected })}
-        className="outline-none [&:focus-visible>div]:outline-2 [&:focus-visible>div]:outline-sky-600"
+        className="outline-none [&:focus-visible>div]:outline-3 [&:focus-visible>div]:outline-offset-[-3px] [&:focus-visible>div]:outline-focus-ring"
         onClick={(event) => {
           event.stopPropagation()
           setFocusedPath(node.path)
@@ -120,15 +120,15 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect }: FileT
         }}
       >
         <div
-          className={`${ROW} ${isSelected ? 'bg-sky-100 text-sky-950 dark:bg-sky-950 dark:text-sky-100' : 'hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}
+          className={`${ROW} ${isSelected ? 'bg-selected-bg font-semibold text-selected-fg' : 'hover:bg-surface-muted'}`}
           style={{ paddingLeft: `${0.5 + depth * 0.75}rem` }}
         >
-          <span aria-hidden="true" className="w-3 text-neutral-500">
+          <span aria-hidden="true" className="w-3 text-fg-subtle">
             {isFolder ? (isExpanded ? '▾' : '▸') : ''}
           </span>
           <span>{node.name}</span>
           {isModified ? (
-            <span aria-hidden="true" className="ml-auto pl-2 text-xs text-amber-600 dark:text-amber-400">
+            <span aria-hidden="true" className="ml-auto pl-2 text-sm text-modified">
               ●
             </span>
           ) : null}

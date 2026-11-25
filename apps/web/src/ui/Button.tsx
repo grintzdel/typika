@@ -2,17 +2,16 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import type { ComponentProps } from 'react'
 
 const button = cva(
-  'inline-flex items-center gap-1.5 rounded-md font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 disabled:cursor-not-allowed disabled:opacity-50',
+  'inline-flex items-center justify-center gap-2 rounded-md border border-transparent text-base font-semibold transition-[background-color,border-color,box-shadow] duration-150 aria-pressed:border-accent aria-pressed:bg-selected-bg aria-pressed:text-selected-fg aria-pressed:shadow-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-disabled-bg disabled:text-disabled-fg disabled:shadow-none',
   {
     variants: {
       variant: {
-        primary: 'bg-sky-700 text-white hover:bg-sky-800 disabled:hover:bg-sky-700',
-        secondary:
-          'border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800',
+        primary: 'bg-accent text-on-accent enabled:hover:bg-accent-hover',
+        secondary: 'border-border-strong bg-surface-raised text-fg shadow-sm enabled:hover:bg-surface-muted',
       },
       size: {
-        sm: 'h-7 px-2.5 text-sm',
-        md: 'h-9 px-3.5 text-sm',
+        sm: 'min-h-control-sm px-4',
+        md: 'min-h-control-md px-5',
       },
     },
     defaultVariants: { variant: 'secondary', size: 'sm' },

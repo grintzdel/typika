@@ -17,7 +17,7 @@ export const EmptyResults = ({ active, text, onRemove, onClearSearch, onReset }:
   const { t } = useTranslation('hub')
   const labels = useHubLabels()
   return (
-    <div className="rounded-lg border border-dashed border-neutral-300 p-6 dark:border-neutral-700">
+    <div className="rounded-lg border border-dashed border-border-strong p-6">
       <p className="font-semibold">{t('list.empty')}</p>
       <ul aria-label={t('list.activeFilters')} className="mt-3 flex flex-wrap gap-2">
         {text.trim() === '' ? null : (

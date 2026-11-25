@@ -292,9 +292,7 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
               </div>
             </div>
           )}
-          {active === undefined ? (
-            <p className="p-4 text-sm text-neutral-600 dark:text-neutral-400">{t('noFile')}</p>
-          ) : null}
+          {active === undefined ? <p className="p-4 text-compact text-fg-muted">{t('noFile')}</p> : null}
         </EditorTabs>
       }
       aside={

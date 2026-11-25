@@ -7,7 +7,7 @@ export const HubPendingPage = () => {
   return (
     <>
       <HubHeader languageMenu={languageMenu} />
-      <main className="mx-auto max-w-6xl px-4">
+      <main className="mx-auto max-w-page px-6">
         <HubSkeleton />
       </main>
     </>
