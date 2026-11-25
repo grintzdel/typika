@@ -54,6 +54,21 @@ export const closeTab = (state: EditorTabs, key: string): EditorTabs => {
   return { tabs, activeKey: (tabs[index] ?? tabs[index - 1])?.key }
 }
 
+export const renameTabs = (state: EditorTabs, moves: ReadonlyArray<readonly [string, string]>): EditorTabs => {
+  const targets = new Map(moves)
+  const renamed = state.tabs.map((tab) => {
+    const path = targets.get(tab.path)
+    return path === undefined ? tab : tabOf(tab.kind)(path)
+  })
+  const active = state.tabs.findIndex((tab) => tab.key === state.activeKey)
+  return { tabs: renamed, activeKey: active === -1 ? state.activeKey : renamed[active]?.key }
+}
+
+export const retainFileTabs = (state: EditorTabs, paths: ReadonlySet<string>): EditorTabs =>
+  state.tabs
+    .filter((tab) => tab.kind === EditorTabKind.FILE && !paths.has(tab.path))
+    .reduce((tabs, tab) => closeTab(tabs, tab.key), state)
+
 export const stepTab = (state: EditorTabs, step: 1 | -1): EditorTabs => {
   const count = state.tabs.length
   if (count === 0) return state

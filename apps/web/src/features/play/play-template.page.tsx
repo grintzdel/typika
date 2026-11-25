@@ -45,12 +45,14 @@ import { TemplateLoadError } from '../../modules/project/ui/components/TemplateL
 import { WorkbenchSkeleton } from '../../modules/project/ui/components/WorkbenchSkeleton.tsx'
 import { useBaseTemplate } from '../../modules/project/ui/hooks/use-base-template.ts'
 import { useExportProject } from '../../modules/project/ui/hooks/use-export-project.ts'
+import { useFileTreeEditing } from '../../modules/project/ui/hooks/use-file-tree-editing.ts'
 import { useGistShare } from '../../modules/project/ui/hooks/use-gist-share.ts'
 import { usePushRepository } from '../../modules/project/ui/hooks/use-push-repository.ts'
 import { useShareLink } from '../../modules/project/ui/hooks/use-share-link.ts'
 import { useTemplateProject } from '../../modules/project/ui/hooks/use-template-project.ts'
 import { OutputPanels, type OutputPanel } from '../../modules/runtime/ui/components/OutputPanels.tsx'
 import { RunToolbar } from '../../modules/runtime/ui/components/RunToolbar.tsx'
+import { useDeleteProjectFiles } from '../../modules/runtime/ui/hooks/use-delete-project-files.ts'
 import { useSandboxRuntime } from '../../modules/runtime/ui/hooks/use-sandbox-runtime.ts'
 import { useWriteProjectFiles } from '../../modules/runtime/ui/hooks/use-write-project-files.ts'
 import { anchorOf, filesOfStep } from '../../modules/tour/core/domain/tour.domain-model.ts'
@@ -87,9 +89,20 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
   const { t } = useTranslation(['editor', 'tour', 'diff', 'exercise'])
   const languageMenu = useLanguageMenu()
   const project = useTemplateProject(projectKey)
-  const edits = useEditFiles({ onPersist: project.handleSave, onSync: useWriteProjectFiles(projectKey) })
-  const runtime = useSandboxRuntime(projectKey, edits.commitPending)
   const languageService = useLanguageService(projectKey)
+  const writeRuntimeFiles = useWriteProjectFiles(projectKey)
+  const deleteRuntimeFiles = useDeleteProjectFiles(projectKey)
+  const edits = useEditFiles({
+    onPersist: project.handleSave,
+    onSync: writeRuntimeFiles,
+    onStructureChange: (change) => {
+      project.handleChangeFiles({ edits: change.written, removed: change.removed })
+      writeRuntimeFiles(change.written)
+      deleteRuntimeFiles(change.removed)
+      languageService.handleStructureChange(change)
+    },
+  })
+  const runtime = useSandboxRuntime(projectKey, edits.commitPending)
   const [panel, setPanel] = useState<OutputPanel>('console')
   const [sideTab, setSideTab] = useState<SideTab | undefined>(initialPanel)
   const [isSolutionShown, setSolutionShown] = useState(false)
@@ -101,7 +114,7 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
   const gist = useGistShare(projectKey)
   const pushing = usePushRepository(projectKey)
   const exporting = useExportProject(projectKey)
-  const currentFiles = new Map([...(template?.files ?? NO_FILES), ...edits.editedFiles])
+  const currentFiles = edits.filesOf(template?.files ?? NO_FILES)
   const latestFiles = () => new Map([...currentFiles, ...edits.commitPending()])
   const diff = useDiff({
     templateFiles: template?.templateFiles ?? NO_FILES,
@@ -116,6 +129,21 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
     testRun: runtime.testRun,
   })
   const tabs = useEditorTabs(template?.entry)
+  const contentOf = (path: string) => edits.editedContentOf(path) ?? template?.contentOf(path) ?? ''
+  const fileTree = useFileTreeEditing({
+    paths: [...currentFiles.keys()],
+    onCreateFile: (path) => {
+      edits.handleStructureChange({ written: [[path, '']], removed: [] })
+      tabs.handleOpenFile(path)
+    },
+    onMove: (moves) => {
+      edits.handleStructureChange({
+        written: moves.map(([from, to]) => [to, contentOf(from)] as const),
+        removed: moves.map(([from]) => from),
+      })
+      tabs.handleRenamePaths(moves)
+    },
+  })
   const layout = useWorkbenchSizes()
   useWorkbenchShortcuts({
     onCloseTab: tabs.handleCloseActive,
@@ -194,6 +222,8 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
               modifiedPaths={project.modifiedPaths}
               onConfirm={() => {
                 edits.discardPending()
+                fileTree.handleReset()
+                tabs.handleRetainFiles(new Set(template.templateFiles.keys()))
                 project.handleReset()
               }}
             />
@@ -246,10 +276,11 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
       }
       sidebar={
         <FileTree
-          nodes={template.tree}
+          nodes={fileTree.nodes}
           selectedPath={active?.path}
           modifiedPaths={project.modifiedPaths}
           onSelect={tabs.handleOpenFile}
+          editing={fileTree.editing}
         />
       }
       main={
@@ -263,7 +294,7 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
                 content={
                   editorTab.kind === EditorTabKind.ORIGINAL
                     ? (template.originalOf(editorTab.path) ?? '')
-                    : (edits.editedContentOf(editorTab.path) ?? template.contentOf(editorTab.path))
+                    : contentOf(editorTab.path)
                 }
                 readOnly={editorTab.kind === EditorTabKind.ORIGINAL || isTypikaFile(editorTab.path)}
                 highlight={tabs.highlight}
@@ -317,7 +348,7 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
           {active === undefined ? <p className="p-4 text-compact text-fg-muted">{t('noFile')}</p> : null}
           <QuickOpenDialog
             open={isQuickOpenShown}
-            paths={[...template.files.keys()]}
+            paths={[...currentFiles.keys()]}
             onOpenChange={setQuickOpenShown}
             onOpen={tabs.handleOpenFile}
           />
@@ -391,6 +422,8 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
                         }}
                         onApplySolution={() => {
                           edits.discardPending()
+                          fileTree.handleReset()
+                          tabs.handleRetainFiles(new Set(template.exercise?.solutionFiles.keys()))
                           project.handleApplySolution()
                         }}
                       />

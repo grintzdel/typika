@@ -51,19 +51,13 @@ describe('useTemplateProject', () => {
     await waitFor(() => expect(result.current.embeddedTemplates).toEqual(['sample-ts']))
   })
 
-  it('exposes the template title, entry and file tree', async () => {
+  it('exposes the template title, entry and files', async () => {
     const { result } = renderProject()
 
     await waitFor(() => expect(result.current.template).toBeDefined())
     expect(result.current.template?.title).toBe('Sample')
     expect(result.current.template?.entry).toBe('src/main.ts')
-    expect(result.current.template?.tree.map((node) => node.name)).toEqual([
-      'src',
-      'tests',
-      'LICENSE',
-      'README.md',
-      'Typika',
-    ])
+    expect([...(result.current.template?.files.keys() ?? [])]).toContain('src/main.ts')
     expect(result.current.template?.contentOf('src/main.ts')).toBe("console.log('hello')\n")
     expect(result.current.modifiedPaths).toEqual([])
   })
@@ -98,6 +92,33 @@ describe('useTemplateProject', () => {
 
     await waitFor(() => expect(result.current.template?.contentOf('src/main.ts')).toBe('edited'))
     expect(result.current.modifiedPaths).toEqual(['src/main.ts'])
+  })
+
+  it('reports the files modified by the latest change, even when an earlier save is slower', async () => {
+    const storage = makeProjectStorageInMemory()
+    let saves = 0
+    const slowFirstSave: ProjectStorage = {
+      ...storage,
+      saveTemplateEdits: (input) => {
+        saves += 1
+        return saves === 1
+          ? Effect.delay(storage.saveTemplateEdits(input), '50 millis')
+          : storage.saveTemplateEdits(input)
+      },
+    }
+    const { result } = renderProject('sample-ts', slowFirstSave)
+    await waitFor(() => expect(result.current.template).toBeDefined())
+
+    act(() => {
+      result.current.handleSave([[MAIN, 'edited']])
+      result.current.handleChangeFiles({ edits: [[projectPath('src/app.ts'), 'edited']], removed: [MAIN] })
+    })
+
+    await waitFor(() => expect(saves).toBe(2))
+    await waitFor(() => expect(result.current.modifiedPaths).toEqual(['src/app.ts', 'src/main.ts']))
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(result.current.modifiedPaths).toEqual(['src/app.ts', 'src/main.ts'])
+    expect([...storage.projects.values()][0]?.files.has(MAIN)).toBe(false)
   })
 
   it('tells when the edits could not be saved', async () => {

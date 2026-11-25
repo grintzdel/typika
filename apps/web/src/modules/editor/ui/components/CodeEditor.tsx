@@ -179,7 +179,7 @@ export const CodeEditor = ({
     const extensions = languageServiceExtensions(path, readOnly, latestLanguageService.current, handlers.current)
     const locale = localeExtensions(label, phrases)
     const cached = states.current.get(documentKey)
-    if (cached === undefined) {
+    if (cached === undefined || cached.doc.toString() !== content) {
       editor.setState(
         makeState(path, content, readOnly, localeSlot.current.of(locale), slot.of(extensions), (next) =>
           latestOnChange.current(path, next)

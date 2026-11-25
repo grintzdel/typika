@@ -10,6 +10,8 @@ import {
   openFile,
   openFiles,
   originalTab,
+  renameTabs,
+  retainFileTabs,
   stepTab,
   type EditorTabs,
 } from './editor-tabs.domain-model.ts'
@@ -94,5 +96,23 @@ describe('editor tabs', () => {
 
   it('stays put when no tab is open', () => {
     expect(stepTab(EMPTY_TABS, 1)).toBe(EMPTY_TABS)
+  })
+
+  it('follows the renamed files, whatever the kind of their tabs, and keeps the active one', () => {
+    const tabs = openFiles(withFiles('src/a.ts', 'src/b.ts'), [originalTab('src/a.ts'), fileTab('src/a.ts')])
+
+    const renamed = renameTabs(tabs, [['src/a.ts', 'src/c.ts']])
+
+    expect(renamed.tabs).toEqual([fileTab('src/c.ts'), fileTab('src/b.ts'), originalTab('src/c.ts')])
+    expect(renamed.activeKey).toBe('original:src/c.ts')
+  })
+
+  it('closes the file tabs whose files are gone, and keeps the other tabs', () => {
+    const tabs = openFiles(withFiles('a.ts', 'new.ts'), [mineDiffTab('new.ts'), fileTab('new.ts')])
+
+    const retained = retainFileTabs(tabs, new Set(['a.ts']))
+
+    expect(retained.tabs).toEqual([fileTab('a.ts'), mineDiffTab('new.ts')])
+    expect(retained.activeKey).toBe('mine-diff:new.ts')
   })
 })

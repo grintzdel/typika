@@ -141,7 +141,7 @@ export const makeProjectStorageIndexedDb = (factory: IDBFactory): Context.Servic
         return record === undefined ? Option.none() : Option.some({ record, files: await filesOf(files, record.id) })
       }),
 
-    saveTemplateEdits: ({ project, initialFiles, edits, match = 'origin' }) =>
+    saveTemplateEdits: ({ project, initialFiles, edits, removed = [], match = 'origin' }) =>
       transact('readwrite', async ({ projects, files }) => {
         const existing =
           match === 'id' ? await findRecord(projects, project.id) : await latestProjectOf(projects, project.origin)
@@ -151,6 +151,7 @@ export const makeProjectStorageIndexedDb = (factory: IDBFactory): Context.Servic
           requestPersistence()
         }
         projects.put(record)
+        for (const path of removed) files.delete([record.id, path])
         putFiles(files, record.id, edits, record.updatedAt)
         return { record, files: await filesOf(files, record.id) }
       }),

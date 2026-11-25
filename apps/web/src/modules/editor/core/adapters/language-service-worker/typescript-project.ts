@@ -138,6 +138,13 @@ export const makeTypeScriptProject = ({
     else environment.sys.writeFile(absolute(path), content)
   }
 
+  const removeFile = (path: string) => {
+    if (!(path in current)) return
+    current = Object.fromEntries(Object.entries(current).filter(([known]) => known !== path))
+    if (path === TSCONFIG || !isAnalyzedPath(path)) build(current)
+    else environment.deleteFile(absolute(path))
+  }
+
   const definition = (path: string, position: number): ReadonlyArray<SourceRange> => {
     if (!inProgram(path)) return []
     return (service().getDefinitionAtPosition(absolute(path), position) ?? [])
@@ -158,6 +165,8 @@ export const makeTypeScriptProject = ({
     setFiles: build,
 
     updateFile,
+
+    removeFile,
 
     diagnostics: (path) => {
       if (!inProgram(path)) return []

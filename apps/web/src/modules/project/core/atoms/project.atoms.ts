@@ -1,10 +1,12 @@
+import type { ProjectPath } from '@typika/runtime-core'
 import * as Effect from 'effect/Effect'
 import * as Atom from 'effect/reactivity/Atom'
+import * as Semaphore from 'effect/Semaphore'
 
 import { appRuntime } from '../../../app/core/app.runtime.ts'
 import { gitHubStatusAtom } from '../../../github/core/atoms/github.atoms.ts'
 import { projectArchiveOf } from '../domain/project-archive.domain-model.ts'
-import type { ProjectFileEdit, TemplateProject } from '../domain/project.domain-model.ts'
+import type { ProjectFileChanges, TemplateProject } from '../domain/project.domain-model.ts'
 import { applySolutionProgram } from '../programs/apply-solution/apply-solution.program.ts'
 import { createShareLinkProgram } from '../programs/create-share-link/create-share-link.program.ts'
 import { deleteProjectProgram } from '../programs/delete-project/delete-project.program.ts'
@@ -68,13 +70,23 @@ export const baseTemplateAtom = Atom.family((name: string) =>
   )
 )
 
-export const saveProjectFilesAtom = Atom.family((name: string) =>
-  appRuntime.fn(
-    (edits: ReadonlyArray<ProjectFileEdit>, get) =>
-      Effect.flatMap(get.result(templateProjectAtom(name)), (project) => saveProjectFilesProgram({ project, edits })),
+export const savedModifiedPathsAtom = Atom.family((_name: string) =>
+  Atom.make<ReadonlyArray<ProjectPath> | undefined>(undefined)
+)
+
+export const saveProjectFilesAtom = Atom.family((name: string) => {
+  const inOrder = Semaphore.makeUnsafe(1)
+  return appRuntime.fn(
+    (changes: ProjectFileChanges, get) =>
+      Effect.flatMap(get.result(templateProjectAtom(name)), (project) =>
+        saveProjectFilesProgram({ project, ...changes })
+      ).pipe(
+        Effect.tap((paths) => Effect.sync(() => get.set(savedModifiedPathsAtom(name), paths))),
+        Semaphore.withPermits(inOrder, 1)
+      ),
     { concurrent: true }
   )
-)
+})
 
 export const resetProjectAtom = Atom.family((name: string) =>
   appRuntime.fn((_: void, get) =>
@@ -82,6 +94,7 @@ export const resetProjectAtom = Atom.family((name: string) =>
       const project = yield* get.result(templateProjectAtom(name))
       yield* resetProjectProgram(project)
       get.set(saveProjectFilesAtom(name), Atom.Reset)
+      get.set(savedModifiedPathsAtom(name), undefined)
       get.set(generationAtom(name), project.generation + 1)
     })
   )
@@ -93,6 +106,7 @@ export const applySolutionAtom = Atom.family((name: string) =>
       const project = yield* get.result(templateProjectAtom(name))
       yield* applySolutionProgram(project)
       get.set(saveProjectFilesAtom(name), Atom.Reset)
+      get.set(savedModifiedPathsAtom(name), undefined)
       get.set(generationAtom(name), project.generation + 1)
     })
   )

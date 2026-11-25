@@ -181,6 +181,28 @@ describe('makeTypeScriptProject', () => {
     ])
   })
 
+  it('follows a file moved to a new path', () => {
+    const project = makeProject()
+
+    project.updateFile('src/cash.ts', MONEY)
+    project.removeFile('src/money.ts')
+
+    expect(project.diagnostics('src/main.ts').map((diagnostic) => diagnostic.message)).toEqual([
+      expect.stringContaining("Cannot find module './money.ts'"),
+    ])
+    project.updateFile('src/main.ts', MAIN.replace('./money.ts', './cash.ts'))
+    expect(project.diagnostics('src/main.ts')).toEqual([])
+    expect(project.diagnostics('src/money.ts')).toEqual([])
+  })
+
+  it('ignores the removal of a file it does not know', () => {
+    const project = makeProject()
+
+    project.removeFile('src/unknown.ts')
+
+    expect(project.diagnostics('src/main.ts')).toEqual([])
+  })
+
   it('analyses a JavaScript project without a tsconfig', () => {
     const project = makeProject({
       'package.json': JSON.stringify({ type: 'module' }),

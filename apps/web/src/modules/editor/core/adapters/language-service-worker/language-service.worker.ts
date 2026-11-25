@@ -16,6 +16,7 @@ const api = {
     project = makeTypeScriptProject({ libraries, files })
   },
   updateFile: (path: string, content: string) => opened().updateFile(path, content),
+  removeFile: (path: string) => opened().removeFile(path),
   diagnostics: (path: string) => opened().diagnostics(path),
   completions: (path: string, position: number) => opened().completions(path, position),
   completionChanges: (...args: Parameters<TypeScriptProject['completionChanges']>) =>

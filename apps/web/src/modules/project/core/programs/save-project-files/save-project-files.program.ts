@@ -1,3 +1,4 @@
+import type { ProjectPath } from '@typika/runtime-core'
 import * as Clock from 'effect/Clock'
 import * as Effect from 'effect/Effect'
 
@@ -12,9 +13,11 @@ import { ProjectStoragePort } from '../../ports/project-storage.port.ts'
 export const saveProjectFilesProgram = ({
   project,
   edits,
+  removed = [],
 }: {
   readonly project: TemplateProject
   readonly edits: ReadonlyArray<ProjectFileEdit>
+  readonly removed?: ReadonlyArray<ProjectPath>
 }) =>
   Effect.gen(function* () {
     const storage = yield* ProjectStoragePort
@@ -31,6 +34,7 @@ export const saveProjectFilesProgram = ({
       },
       initialFiles: textFilesOf(project.files),
       edits: new Map(edits),
+      removed,
       match: project.projectId === undefined ? 'origin' : 'id',
     })
     return modifiedPathsOf(project.templateFiles, saved.files)
