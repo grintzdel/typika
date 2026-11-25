@@ -16,7 +16,7 @@ export const LanguageMenu = ({ language, disabled, onChange }: LanguageMenuProps
       value={language}
       disabled={disabled}
       onChange={(event) => isSupportedLanguage(event.target.value) && onChange(event.target.value)}
-      className="rounded-md border border-neutral-300 bg-transparent px-2 py-1 text-sm disabled:opacity-60 dark:border-neutral-700"
+      className="min-h-control-sm rounded-md border border-border-strong bg-surface-raised px-3 text-base disabled:border-transparent disabled:bg-disabled-bg disabled:text-disabled-fg"
     >
       {SUPPORTED_LANGUAGES.map((option) => (
         <option key={option} value={option} lang={option}>

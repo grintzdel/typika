@@ -41,7 +41,7 @@ export const ShareDialog = ({ link, isCopied, onOpen, onCopy, gist, defaultOpen 
       <DialogTrigger render={<Button />}>{t('share.trigger')}</DialogTrigger>
       <DialogPopup>
         <DialogTitle>{t('share.title')}</DialogTitle>
-        {link === undefined ? <p className="text-sm">{t('share.creating')}</p> : null}
+        {link === undefined ? <p className="text-base">{t('share.creating')}</p> : null}
         {link?._tag === 'TooLong' ? (
           <DialogDescription>
             {t('share.tooLong', { length: format.format(link.length), max: format.format(link.max) })}{' '}
@@ -57,7 +57,7 @@ export const ShareDialog = ({ link, isCopied, onOpen, onCopy, gist, defaultOpen 
                 aria-label={t('share.linkLabel')}
                 value={link.url}
                 onFocus={(event) => event.target.select()}
-                className="min-w-0 flex-1 rounded-md border border-neutral-300 bg-transparent px-2 py-1 font-mono text-xs dark:border-neutral-700"
+                className="min-w-0 flex-1 min-h-control-sm rounded-md border border-border-strong bg-surface-raised px-3 font-mono text-sm"
               />
               <Button variant="primary" onClick={() => onCopy(link.url)}>
                 {t('share.copy')}
@@ -66,7 +66,7 @@ export const ShareDialog = ({ link, isCopied, onOpen, onCopy, gist, defaultOpen 
           </>
         ) : null}
         {gist === undefined ? null : <GistShareSection {...gist} onCopy={onCopy} />}
-        <p role="status" className="text-sm text-neutral-600 dark:text-neutral-400">
+        <p role="status" className="text-base text-fg-muted">
           {isCopied ? t('share.copied') : ''}
         </p>
         <div className="flex justify-end">

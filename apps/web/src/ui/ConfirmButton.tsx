@@ -25,7 +25,7 @@ export const ConfirmButton = ({ children, title, description, confirm, cancel, o
     <AlertDialogPopup>
       <AlertDialogTitle>{title}</AlertDialogTitle>
       <AlertDialogDescription>{description}</AlertDialogDescription>
-      <div className="flex justify-end gap-2 pt-2">
+      <div className="flex justify-end gap-3 pt-3">
         <AlertDialogClose render={<Button />}>{cancel}</AlertDialogClose>
         <AlertDialogClose render={<Button variant="primary" />} onClick={onConfirm}>
           {confirm}

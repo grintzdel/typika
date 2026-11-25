@@ -7,7 +7,7 @@ export const OpenInTypikaLink = ({ href }: { readonly href: string }) => {
       href={href}
       target="_blank"
       rel="noopener"
-      className="inline-flex h-7 shrink-0 items-center rounded-md border border-neutral-300 px-2.5 text-sm font-medium hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 dark:border-neutral-700 dark:hover:bg-neutral-800"
+      className="inline-flex min-h-control-sm shrink-0 items-center rounded-md border border-border-strong bg-surface-raised px-4 text-base font-semibold shadow-sm hover:bg-surface-muted"
     >
       {t('openInTypika')}
       <span aria-hidden="true" className="ml-1">

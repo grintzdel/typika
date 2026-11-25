@@ -17,17 +17,13 @@ export const TemplateCards = ({ templates }: TemplateCardsProps) => {
         <li key={template.name}>
           <a
             href={`/templates/${template.name}`}
-            className="block h-full rounded-lg border border-neutral-200 p-4 hover:border-sky-600 focus-visible:outline-2 focus-visible:outline-sky-600 dark:border-neutral-800 dark:hover:border-sky-500"
+            className="block h-full rounded-lg border border-border bg-surface-raised p-5 shadow-sm transition-[border-color,box-shadow,translate] duration-150 hover:-translate-y-px hover:border-accent hover:shadow-md"
           >
             <span className="block font-semibold">{template.title}</span>
-            <span className="mt-1 block text-sm text-neutral-600 dark:text-neutral-400">{template.summary}</span>
-            <span className="mt-3 flex gap-2 text-xs">
-              <span className="rounded bg-neutral-100 px-1.5 py-0.5 dark:bg-neutral-800">
-                {labels.language(template.language)}
-              </span>
-              <span className="rounded bg-neutral-100 px-1.5 py-0.5 dark:bg-neutral-800">
-                {labels.level(template.level)}
-              </span>
+            <span className="mt-1 block text-base text-fg-muted">{template.summary}</span>
+            <span className="mt-3 flex gap-2 text-sm">
+              <span className="rounded-full bg-surface-muted px-3 py-0.5">{labels.language(template.language)}</span>
+              <span className="rounded-full bg-surface-muted px-3 py-0.5">{labels.level(template.level)}</span>
               <HealthBadge status={template.health} />
             </span>
           </a>

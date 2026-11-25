@@ -20,7 +20,7 @@ export const TemplateDetailPage = ({ page: indexed }: { readonly page: TemplateP
     <>
       <HubHeader languageMenu={languageMenu} searchRef={searchRef} />
       <HealthBanner health={page.health} alternatives={page.alternatives} />
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto max-w-page px-6 py-8">
         <TemplateOverview page={page} />
         <TemplateDetails
           page={page}

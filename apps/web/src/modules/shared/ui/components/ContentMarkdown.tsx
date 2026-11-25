@@ -7,24 +7,24 @@ export type ContentMarkdownProps = {
   readonly embeddedTemplates: ReadonlyArray<string>
 }
 
-const LINK = 'text-sky-700 underline underline-offset-2 hover:text-sky-900 dark:text-sky-400 dark:hover:text-sky-300'
+const LINK = 'text-link underline underline-offset-2 hover:text-link-hover'
 
 const components = (embeddedTemplates: ReadonlyArray<string>): Components => ({
-  p: ({ node: _node, ...props }) => <p className="my-3 leading-relaxed" {...props} />,
+  p: ({ node: _node, ...props }) => <p className="my-3" {...props} />,
   ul: ({ node: _node, ...props }) => <ul className="my-3 list-disc space-y-1 pl-5" {...props} />,
   ol: ({ node: _node, ...props }) => <ol className="my-3 list-decimal space-y-1 pl-5" {...props} />,
-  h1: ({ node: _node, ...props }) => <h3 className="mt-4 mb-2 font-semibold" {...props} />,
-  h2: ({ node: _node, ...props }) => <h3 className="mt-4 mb-2 font-semibold" {...props} />,
-  h3: ({ node: _node, ...props }) => <h4 className="mt-4 mb-2 font-semibold" {...props} />,
+  h1: ({ node: _node, ...props }) => <h3 className="mt-5 mb-2 font-bold" {...props} />,
+  h2: ({ node: _node, ...props }) => <h3 className="mt-5 mb-2 font-bold" {...props} />,
+  h3: ({ node: _node, ...props }) => <h4 className="mt-5 mb-2 font-bold" {...props} />,
   blockquote: ({ node: _node, ...props }) => (
-    <blockquote className="my-3 border-l-2 border-neutral-300 pl-3 dark:border-neutral-700" {...props} />
+    <blockquote className="my-3 border-l-[3px] border-accent pl-4 text-fg-muted" {...props} />
   ),
   code: ({ node: _node, ...props }) => (
-    <code className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-[0.8125rem] dark:bg-neutral-800" {...props} />
+    <code className="rounded-sm bg-surface-muted px-1 py-0.5 font-mono text-compact" {...props} />
   ),
   pre: ({ node: _node, ...props }) => (
     <pre
-      className="my-3 overflow-x-auto rounded border border-neutral-200 bg-neutral-50 p-3 font-mono text-[0.8125rem] leading-snug dark:border-neutral-800 dark:bg-neutral-900 [&>code]:bg-transparent [&>code]:p-0"
+      className="my-3 overflow-x-auto rounded-sm border border-border bg-surface-sunken p-4 font-mono text-compact leading-6 [&>code]:bg-transparent [&>code]:p-0"
       {...props}
     />
   ),

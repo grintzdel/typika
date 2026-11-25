@@ -6,8 +6,8 @@ export type ErrorStateProps = {
 }
 
 export const ErrorState = ({ title, children }: ErrorStateProps) => (
-  <div role="alert" className="mx-auto mt-24 max-w-lg space-y-2 px-6 text-center">
-    <h1 className="text-lg font-semibold">{title}</h1>
+  <div role="alert" className="mx-auto mt-16 flex max-w-dialog flex-col gap-3 px-6 text-center">
+    <h1 className="text-2xl font-bold">{title}</h1>
     {children}
   </div>
 )

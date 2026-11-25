@@ -8,7 +8,7 @@ export const LanguageServiceStatus = ({ status }: { readonly status: Status }) =
     <span
       role="status"
       aria-label={t('languageService.label')}
-      className={`text-xs whitespace-nowrap ${status === 'unavailable' ? 'text-red-700 dark:text-red-400' : 'text-neutral-600 dark:text-neutral-400'}`}
+      className={`text-sm whitespace-nowrap ${status === 'unavailable' ? 'text-danger-text' : 'text-fg-muted'}`}
     >
       {status === 'starting'
         ? t('languageService.starting')

@@ -14,7 +14,7 @@ export const SharedProjectBanner = ({ templateName, templateTitle, isSaved, onSa
   return (
     <section
       aria-label={t('shared.label')}
-      className="flex flex-wrap items-center gap-3 border-b border-sky-200 bg-sky-50 px-4 py-2 text-sm text-sky-950 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-100"
+      className="flex flex-wrap items-center gap-3 border-b border-info-border bg-info-bg px-4 py-2 text-base text-info-fg"
     >
       <p>
         {t('shared.basedOn')}{' '}

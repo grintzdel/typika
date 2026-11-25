@@ -8,9 +8,9 @@ export type TestsPanelProps = {
 }
 
 const STATUS_STYLE = {
-  passed: { icon: '✓', className: 'text-emerald-700 dark:text-emerald-400' },
-  failed: { icon: '✕', className: 'text-red-700 dark:text-red-400' },
-  skipped: { icon: '○', className: 'text-neutral-500' },
+  passed: { icon: '✓', className: 'text-success-text' },
+  failed: { icon: '✕', className: 'text-danger-text' },
+  skipped: { icon: '○', className: 'text-fg-subtle' },
 } as const
 
 const groupByFile = (tests: ReadonlyArray<TestResult>) => {
@@ -40,15 +40,13 @@ const TestItem = ({ test }: { readonly test: TestResult }) => {
         <span className="sr-only">{t(`tests.status.${test.status}`)}</span>
         <span>{[...test.suitePath, test.name].join(' › ')}</span>
         {test.durationMs === undefined ? null : (
-          <span className="text-xs text-neutral-500">{Math.round(test.durationMs)} ms</span>
+          <span className="text-sm text-fg-subtle">{Math.round(test.durationMs)} ms</span>
         )}
       </div>
       {test.failure === undefined ? null : (
         <div className="mt-1 ml-5 space-y-1">
-          <pre className="font-mono text-xs whitespace-pre-wrap text-red-800 dark:text-red-300">
-            {test.failure.message}
-          </pre>
-          {location === undefined ? null : <p className="font-mono text-xs text-neutral-500">{location}</p>}
+          <pre className="font-mono text-sm whitespace-pre-wrap text-danger-text-strong">{test.failure.message}</pre>
+          {location === undefined ? null : <p className="font-mono text-sm text-fg-subtle">{location}</p>}
         </div>
       )}
     </li>
@@ -78,12 +76,12 @@ const OutcomeNote = ({ outcome }: { readonly outcome: TestRunOutcome }) => {
 export const TestsPanel = ({ run }: TestsPanelProps) => {
   const { t } = useTranslation('runtime')
   return (
-    <section aria-label={t('tests.label')} className="h-full p-3 text-sm">
+    <section aria-label={t('tests.label')} className="h-full p-3 text-compact">
       {run === undefined ? (
-        <p className="text-neutral-600 dark:text-neutral-400">{t('tests.empty')}</p>
+        <p className="text-fg-muted">{t('tests.empty')}</p>
       ) : (
         <>
-          <p role="status" className="mb-3 flex flex-wrap gap-x-4 gap-y-1 font-medium">
+          <p role="status" className="mb-3 flex flex-wrap gap-x-4 gap-y-1 font-semibold">
             <span className={STATUS_STYLE.passed.className}>{t('tests.passed', { count: run.counts.passed })}</span>
             <span className={run.counts.failed > 0 ? STATUS_STYLE.failed.className : ''}>
               {t('tests.failed', { count: run.counts.failed })}
@@ -96,7 +94,7 @@ export const TestsPanel = ({ run }: TestsPanelProps) => {
             <OutcomeNote outcome={run.outcome} />
           </p>
           {run.diagnostics.length > 0 ? (
-            <ul className="mb-3 space-y-1 font-mono text-xs text-amber-800 dark:text-amber-300">
+            <ul className="mb-3 space-y-1 font-mono text-sm text-warning-text">
               {run.diagnostics.map((diagnostic, index) => (
                 <li key={index}>{formatDiagnostic(diagnostic)}</li>
               ))}
@@ -104,7 +102,7 @@ export const TestsPanel = ({ run }: TestsPanelProps) => {
           ) : null}
           {groupByFile(run.tests).map(([file, tests]) => (
             <div key={file} className="mb-3">
-              <h3 className="font-mono text-xs text-neutral-600 dark:text-neutral-400">{file}</h3>
+              <h3 className="font-mono text-sm text-fg-muted">{file}</h3>
               <ul>
                 {tests.map((test) => (
                   <TestItem key={test.testId} test={test} />

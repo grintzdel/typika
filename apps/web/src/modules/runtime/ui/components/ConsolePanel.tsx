@@ -8,8 +8,8 @@ export type ConsolePanelProps = {
 
 const STREAM_CLASS = {
   stdout: '',
-  stderr: 'text-red-700 dark:text-red-400',
-  diagnostic: 'text-amber-800 dark:text-amber-300',
+  stderr: 'text-danger-text',
+  diagnostic: 'text-warning-text',
 } as const
 
 const useOutcomeText = () => {
@@ -40,14 +40,12 @@ export const ConsolePanel = ({ console }: ConsolePanelProps) => {
   const { t } = useTranslation('runtime')
   const outcomeText = useOutcomeText()
   return (
-    <section aria-label={t('console.label')} className="h-full p-3 font-mono text-sm">
+    <section aria-label={t('console.label')} className="h-full p-3 font-mono text-compact">
       {console === undefined ? (
-        <p className="font-sans text-neutral-600 dark:text-neutral-400">{t('console.empty')}</p>
+        <p className="font-sans text-fg-muted">{t('console.empty')}</p>
       ) : (
         <>
-          {console.truncated ? (
-            <p className="mb-2 font-sans text-xs text-neutral-500">{t('console.truncated')}</p>
-          ) : null}
+          {console.truncated ? <p className="mb-2 font-sans text-sm text-fg-subtle">{t('console.truncated')}</p> : null}
           <pre className="whitespace-pre-wrap">
             {console.entries.map((entry, index) => (
               <span key={index} className={STREAM_CLASS[entry.stream]}>
@@ -55,7 +53,7 @@ export const ConsolePanel = ({ console }: ConsolePanelProps) => {
               </span>
             ))}
           </pre>
-          <p role="status" className="mt-2 font-sans text-xs text-neutral-600 dark:text-neutral-400">
+          <p role="status" className="mt-2 font-sans text-sm text-fg-muted">
             {outcomeText(console.outcome)}
           </p>
         </>

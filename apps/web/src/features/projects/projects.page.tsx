@@ -14,11 +14,11 @@ export const ProjectsPage = () => {
   return (
     <>
       <HubHeader languageMenu={languageMenu} />
-      <main className="mx-auto max-w-6xl space-y-4 px-4 py-8">
-        <h1 className="text-2xl font-semibold">{t('projects.title')}</h1>
+      <main className="mx-auto max-w-page space-y-4 px-6 py-8">
+        <h1 className="text-page-title font-bold">{t('projects.title')}</h1>
         <StorageUsage usage={projects.storage} />
         {projects.loadFailed ? (
-          <p role="alert" className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p role="alert" className="text-base text-fg-muted">
             {t('projects.loadFailed')}
           </p>
         ) : projects.isLoading ? (

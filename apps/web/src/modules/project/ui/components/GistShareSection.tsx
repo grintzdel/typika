@@ -32,15 +32,12 @@ export const GistShareSection = ({
   const { t } = useTranslation('project')
   const [isPublic, setPublic] = useState(false)
   return (
-    <section
-      aria-label={t('gist.label')}
-      className="space-y-2 border-t border-neutral-200 pt-3 dark:border-neutral-800"
-    >
-      <h3 className="text-sm font-semibold">{t('gist.label')}</h3>
+    <section aria-label={t('gist.label')} className="space-y-2 border-t border-border pt-3">
+      <h3 className="text-base font-semibold">{t('gist.label')}</h3>
       {isConnected ? (
         <>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">{t('gist.description')}</p>
-          <label className="flex items-center gap-2 text-sm">
+          <p className="text-base text-fg-muted">{t('gist.description')}</p>
+          <label className="flex items-center gap-2 text-base">
             <input type="checkbox" checked={isPublic} onChange={(event) => setPublic(event.target.checked)} />
             {t('gist.public')}
           </label>
@@ -50,7 +47,12 @@ export const GistShareSection = ({
             </Button>
             <Button onClick={onSignOut}>{t('gist.signOut')}</Button>
             {revokeUrl === undefined ? null : (
-              <a href={revokeUrl} target="_blank" rel="noreferrer" className="text-sm text-sky-700 hover:underline">
+              <a
+                href={revokeUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-base text-link underline underline-offset-2 hover:text-link-hover"
+              >
                 {t('gist.revoke')}
               </a>
             )}
@@ -58,12 +60,12 @@ export const GistShareSection = ({
         </>
       ) : (
         <>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">{t('gist.connectDescription')}</p>
+          <p className="text-base text-fg-muted">{t('gist.connectDescription')}</p>
           <Button onClick={onConnect}>{t('gist.connect')}</Button>
         </>
       )}
       {failure === undefined ? null : (
-        <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+        <p role="alert" className="text-base text-danger-text">
           {t(`gist.failed.${failure}`)}
         </p>
       )}
@@ -74,10 +76,15 @@ export const GistShareSection = ({
             aria-label={t('gist.linkLabel')}
             value={link.url}
             onFocus={(event) => event.target.select()}
-            className="min-w-0 flex-1 rounded-md border border-neutral-300 bg-transparent px-2 py-1 font-mono text-xs dark:border-neutral-700"
+            className="min-w-0 flex-1 min-h-control-sm rounded-md border border-border-strong bg-surface-raised px-3 font-mono text-sm"
           />
           <Button onClick={() => onCopy(link.url)}>{t('gist.copy')}</Button>
-          <a href={link.htmlUrl} target="_blank" rel="noreferrer" className="text-sm text-sky-700 hover:underline">
+          <a
+            href={link.htmlUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-base text-link underline underline-offset-2 hover:text-link-hover"
+          >
             {t('gist.view')}
           </a>
         </div>

@@ -10,16 +10,16 @@ export const ProjectStatus = ({ title, isModified, saveFailed }: ProjectStatusPr
   const { t } = useTranslation('project')
   return (
     <div className="flex min-w-0 items-center gap-2">
-      <h1 className="truncate text-sm font-semibold">{title}</h1>
+      <h1 className="truncate text-compact font-semibold">{title}</h1>
       {isModified && !saveFailed ? (
-        <span aria-hidden="true" className="text-xs text-amber-600 dark:text-amber-400">
+        <span aria-hidden="true" className="text-sm text-modified">
           ●
         </span>
       ) : null}
       <span
         role="status"
         aria-label={t('status.label')}
-        className={`text-xs whitespace-nowrap ${saveFailed ? 'font-medium text-red-700 dark:text-red-400' : 'text-neutral-600 dark:text-neutral-400'}`}
+        className={`text-sm whitespace-nowrap ${saveFailed ? 'font-semibold text-danger-text' : 'text-fg-muted'}`}
       >
         {saveFailed ? t('status.unsaved') : isModified ? t('status.modified') : ''}
       </span>

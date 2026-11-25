@@ -34,7 +34,7 @@ export const TemplateDetails = ({ page, embed }: TemplateDetailsProps) => {
     <div className="grid gap-8 py-6 md:grid-cols-[1fr_16rem]">
       <div className="space-y-6">
         <Section id="template-tour" title={t('template.tour')}>
-          <ol lang="en" className="list-decimal space-y-1 pl-6 text-sm">
+          <ol lang="en" className="list-decimal space-y-1 pl-6 text-base">
             {page.tourSteps.map((step) => (
               <li key={step}>{step}</li>
             ))}
@@ -42,15 +42,21 @@ export const TemplateDetails = ({ page, embed }: TemplateDetailsProps) => {
         </Section>
         {page.base === undefined ? null : (
           <Section id="template-base" title={t('template.base')}>
-            <p className="flex flex-wrap items-center gap-3 text-sm">
+            <p className="flex flex-wrap items-center gap-3 text-base">
               <span>{t('template.baseName', { name: page.base })}</span>
-              <a href={`/play/${page.name}?panel=diff`} className="text-sky-700 hover:underline">
+              <a
+                href={`/play/${page.name}?panel=diff`}
+                className="text-link underline underline-offset-2 hover:text-link-hover"
+              >
                 {t('template.viewDiff')}
               </a>
             </p>
             {page.parent === undefined ? null : (
-              <p className="mt-1 text-sm">
-                <a href={`/templates/${page.parent}`} className="text-sky-700 hover:underline">
+              <p className="mt-1 text-base">
+                <a
+                  href={`/templates/${page.parent}`}
+                  className="text-link underline underline-offset-2 hover:text-link-hover"
+                >
                   {t('template.parent', { name: page.parent })}
                 </a>
               </p>
@@ -58,24 +64,22 @@ export const TemplateDetails = ({ page, embed }: TemplateDetailsProps) => {
           </Section>
         )}
         <Section id="template-exercises" title={t('template.exercises')}>
-          <ul className="space-y-1 text-sm">
+          <ul className="space-y-1 text-base">
             {page.exercises.map((exercise) => (
               <li key={exercise.name}>
                 <a
                   href={`/play/${page.name}?exercise=${encodeURIComponent(exercise.name)}`}
-                  className="text-sky-700 hover:underline"
+                  className="text-link underline underline-offset-2 hover:text-link-hover"
                 >
                   {exercise.title}{' '}
-                  <span className="text-neutral-600 dark:text-neutral-400">
-                    ({t(`template.exerciseKinds.${exercise.kind}`)})
-                  </span>
+                  <span className="text-fg-muted">({t(`template.exerciseKinds.${exercise.kind}`)})</span>
                 </a>
               </li>
             ))}
           </ul>
         </Section>
       </div>
-      <aside className="space-y-6 text-sm">
+      <aside className="space-y-6 text-base">
         <Section id="template-topics" title={t('template.topics')}>
           <ul className="space-y-1">
             {page.topics.map((topic) => (
@@ -88,7 +92,10 @@ export const TemplateDetails = ({ page, embed }: TemplateDetailsProps) => {
             <ul className="flex flex-wrap gap-3">
               {variants.map(({ language, name }) => (
                 <li key={name}>
-                  <a href={`/templates/${name}`} className="text-sky-700 hover:underline">
+                  <a
+                    href={`/templates/${name}`}
+                    className="text-link underline underline-offset-2 hover:text-link-hover"
+                  >
                     {labels.language(language)}
                   </a>
                 </li>
@@ -103,13 +110,13 @@ export const TemplateDetails = ({ page, embed }: TemplateDetailsProps) => {
         )}
         <Section id="template-about" title={t('template.about')}>
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-            <dt className="text-neutral-600 dark:text-neutral-400">{t('template.maintainers')}</dt>
+            <dt className="text-fg-muted">{t('template.maintainers')}</dt>
             <dd>{page.maintainers.join(', ')}</dd>
-            <dt className="text-neutral-600 dark:text-neutral-400">{t('template.license')}</dt>
+            <dt className="text-fg-muted">{t('template.license')}</dt>
             <dd>{page.license}</dd>
-            <dt className="text-neutral-600 dark:text-neutral-400">{t('template.ref')}</dt>
-            <dd className="font-mono text-xs break-all">{page.ref}</dd>
-            <dt className="text-neutral-600 dark:text-neutral-400">{t('template.updated')}</dt>
+            <dt className="text-fg-muted">{t('template.ref')}</dt>
+            <dd className="font-mono text-sm break-all">{page.ref}</dd>
+            <dt className="text-fg-muted">{t('template.updated')}</dt>
             <dd>
               <time dateTime={page.updatedAt}>{t('template.updatedOn', { date: new Date(page.updatedAt) })}</time>
             </dd>

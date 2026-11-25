@@ -46,7 +46,7 @@ const RenameForm = ({
           if (event.key === 'Escape') onCancel()
         }}
         autoFocus
-        className="rounded-md border border-neutral-300 bg-transparent px-2 py-1 text-sm dark:border-neutral-700"
+        className="min-h-control-sm rounded-md border border-border-strong bg-surface-raised px-3 text-base"
       />
       <Button type="submit" variant="primary">
         {t('list.save')}
@@ -78,11 +78,11 @@ const ProjectRow = ({ project, now, onRename, onDuplicate, onDelete, onExport }:
             }}
           />
         ) : (
-          <a href={project.path} className="font-medium text-sky-700 hover:underline">
+          <a href={project.path} className="font-semibold text-link underline underline-offset-2 hover:text-link-hover">
             {project.name}
           </a>
         )}
-        <p className="text-sm text-neutral-600 dark:text-neutral-400">{details.join(' · ')}</p>
+        <p className="text-base text-fg-muted">{details.join(' · ')}</p>
       </div>
       {isRenaming ? null : (
         <div className="flex gap-2">
@@ -111,14 +111,14 @@ export const ProjectList = ({ projects, ...row }: ProjectListProps) => {
   if (projects.length === 0)
     return (
       <div className="space-y-3 py-6">
-        <p className="text-neutral-600 dark:text-neutral-400">{t('list.empty')}</p>
-        <a href="/templates" className="text-sky-700 hover:underline">
+        <p className="text-fg-muted">{t('list.empty')}</p>
+        <a href="/templates" className="text-link underline underline-offset-2 hover:text-link-hover">
           {t('list.browse')}
         </a>
       </div>
     )
   return (
-    <ul aria-label={t('list.label')} className="divide-y divide-neutral-200 dark:divide-neutral-800">
+    <ul aria-label={t('list.label')} className="divide-y divide-border">
       {projects.map((project) => (
         <ProjectRow key={project.id} project={project} {...row} />
       ))}

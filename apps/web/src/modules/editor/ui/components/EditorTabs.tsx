@@ -67,7 +67,7 @@ export const EditorTabs = ({ tabs, activeKey, onSelect, onClose, children }: Edi
       <div
         role="tablist"
         aria-label={t('tabs.label')}
-        className="flex shrink-0 overflow-x-auto border-b border-neutral-200 dark:border-neutral-800"
+        className="flex shrink-0 overflow-x-auto overflow-y-hidden border-b border-border bg-surface"
       >
         {tabs.map((tab, index) => {
           const isActive = tab.key === activeKey
@@ -76,7 +76,7 @@ export const EditorTabs = ({ tabs, activeKey, onSelect, onClose, children }: Edi
             <div
               key={tab.key}
               role="presentation"
-              className={`flex items-center border-r border-neutral-200 text-sm dark:border-neutral-800 ${isActive ? 'bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100' : 'text-neutral-600 dark:text-neutral-400'}`}
+              className={`flex items-center border-r border-border text-compact ${isActive ? 'bg-surface-raised font-semibold text-fg' : 'text-fg-muted hover:text-fg'}`}
             >
               <button
                 ref={(element) => {
@@ -90,7 +90,7 @@ export const EditorTabs = ({ tabs, activeKey, onSelect, onClose, children }: Edi
                 aria-selected={isActive}
                 aria-keyshortcuts="Delete"
                 tabIndex={isActive ? 0 : -1}
-                className={`py-1.5 pl-3 whitespace-nowrap focus-visible:outline-2 focus-visible:outline-sky-600 ${tab.kind === EditorTabKind.FILE ? '' : 'italic'}`}
+                className={`py-2 pl-3 whitespace-nowrap ${tab.kind === EditorTabKind.FILE ? '' : 'italic'}`}
                 onClick={() => onSelect(tab.key)}
                 onKeyDown={(event) => handleKeyDown(event, index, tab.key)}
               >
@@ -101,7 +101,7 @@ export const EditorTabs = ({ tabs, activeKey, onSelect, onClose, children }: Edi
                 aria-hidden="true"
                 tabIndex={-1}
                 title={t('tabs.close', { name: label })}
-                className="mx-1 rounded px-1 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-900 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+                className="mx-1 inline-flex size-target items-center justify-center rounded-sm text-fg-subtle hover:bg-surface-muted hover:text-fg"
                 onClick={() => onClose(tab.key)}
               >
                 ×

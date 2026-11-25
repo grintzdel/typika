@@ -21,7 +21,7 @@ export const TemplateLoadError = ({ failure, onRetry, onConnect }: TemplateLoadE
   const { t } = useTranslation('project')
   return (
     <ErrorState title={t('loadFailed.title')}>
-      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="text-base text-fg-muted">
         {failure._tag === 'Invalid' ? t('loadFailed.invalid', { name: failure.name }) : null}
         {failure._tag === 'NotFound' ? t('loadFailed.notFound', { name: failure.name }) : null}
         {failure._tag === 'ExerciseNotFound'
@@ -39,7 +39,7 @@ export const TemplateLoadError = ({ failure, onRetry, onConnect }: TemplateLoadE
         <Button onClick={onConnect}>{t('gistFailed.connect')}</Button>
       ) : null}
       {failure._tag === 'ShareInvalid' || failure._tag === 'GistUnavailable' ? (
-        <a href="/templates" className="text-sm text-sky-700 hover:underline">
+        <a href="/templates" className="text-base text-link underline underline-offset-2 hover:text-link-hover">
           {t('shareFailed.back')}
         </a>
       ) : null}

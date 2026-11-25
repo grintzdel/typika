@@ -13,7 +13,7 @@ export const EmbedSnippet = ({ name, isCopied, onCopy }: EmbedSnippetProps) => {
   const { t } = useTranslation('hub')
   return (
     <div className="space-y-2">
-      <code className="block font-mono text-xs break-all">
+      <code className="block font-mono text-sm break-all">
         {EMBED_PATH_PREFIX}
         {name}
       </code>
@@ -22,7 +22,7 @@ export const EmbedSnippet = ({ name, isCopied, onCopy }: EmbedSnippetProps) => {
           <span aria-hidden="true">⧉</span>
           {t('template.copyEmbed')}
         </Button>
-        <span role="status" className="text-xs text-neutral-600 dark:text-neutral-400">
+        <span role="status" className="text-sm text-fg-muted">
           {isCopied ? t('template.embedCopied') : ''}
         </span>
       </div>

@@ -16,7 +16,7 @@ export const HubIndexError = ({ failure, onRetry }: HubIndexErrorProps) => {
   const { t } = useTranslation('hub')
   return (
     <ErrorState title={t('indexFailed.title')}>
-      <p className="text-sm text-neutral-600 dark:text-neutral-400">{t(`indexFailed.${failure}`)}</p>
+      <p className="text-base text-fg-muted">{t(`indexFailed.${failure}`)}</p>
       {failure === RegistryIndexFailure.NETWORK ? <Button onClick={onRetry}>{t('retry')}</Button> : null}
     </ErrorState>
   )

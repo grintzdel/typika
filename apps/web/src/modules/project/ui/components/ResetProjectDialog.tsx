@@ -26,7 +26,7 @@ export const ResetProjectDialog = ({ modifiedPaths, onConfirm }: ResetProjectDia
       <AlertDialogPopup>
         <AlertDialogTitle>{t('reset.title')}</AlertDialogTitle>
         <AlertDialogDescription>{t('reset.description')}</AlertDialogDescription>
-        <ul className="max-h-48 overflow-auto font-mono text-sm">
+        <ul className="max-h-48 overflow-auto font-mono text-base">
           {modifiedPaths.map((path) => (
             <li key={path}>{path}</li>
           ))}

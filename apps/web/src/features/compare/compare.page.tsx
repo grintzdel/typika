@@ -42,7 +42,7 @@ export const ComparePage = ({ name, a, b, onChoose }: ComparePageProps) => {
     title: string,
     picked: { readonly a: string | undefined; readonly b: string | undefined }
   ): ReactNode => (
-    <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-neutral-200 px-3 py-2 dark:border-neutral-800">
+    <header className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border px-3 py-2">
       <h1 className="font-semibold">{t('title', { title })}</h1>
       <SidePicker variants={variants} a={picked.a} b={picked.b} onChoose={onChoose} />
       <div className="ml-auto">
