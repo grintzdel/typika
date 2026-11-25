@@ -251,7 +251,8 @@ qui rejoint le réseau du projet.
   se règlent au même endroit. Kotlin est toujours activé.
 - La machine ne construit rien : elle tire `ghcr.io/typika-app/typika-web` et
   `ghcr.io/typika-app/typika-kotlin-compiler`, que le workflow `images` publie pour amd64 et arm64 à chaque commit de
-  `main`, sous `latest` et sous le SHA du commit. `TYPIKA_IMAGE_TAG` épingle un SHA. Construire les deux images à la
+  `main`, sous `latest` et sous le SHA du commit. Les deux services ont `pull_policy: always` : chaque redéploiement retélécharge
+  `latest`, sans quoi la plateforme relance l'image déjà présente. `TYPIKA_IMAGE_TAG` épingle un SHA. Construire les deux images à la
   fois demande environ 3,5 Gio (§4.6), ce qu'une machine de 4 Gio partagée n'a pas.
 - Les images ne sont pas signées.
 - `Strict-Transport-Security`, que le Caddyfile pose ici, revient au proxy de la plateforme.
