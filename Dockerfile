@@ -4,13 +4,15 @@ FROM golang:1.24.5-bookworm@sha256:ef8c5c733079ac219c77edab604c425d748c740d86995
 
 FROM node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20 AS build
 ENV PNPM_HOME=/pnpm CI=true PATH=/usr/local/go/bin:$PATH GOTOOLCHAIN=local
-RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates git && rm -rf /var/lib/apt/lists/*
 COPY --from=go /usr/local/go /usr/local/go
 RUN corepack enable
 WORKDIR /repo
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch --frozen-lockfile
 COPY . .
+# The registry build reads each template at its pinned commit: a shallow clone does not have them.
+RUN if [ "$(git rev-parse --is-shallow-repository)" = true ]; then git fetch --unshallow; fi
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --offline --frozen-lockfile
 RUN pnpm --filter @typika/runtime-go build:assets && pnpm --filter @typika/web build
 

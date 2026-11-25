@@ -249,7 +249,8 @@ qui rejoint le réseau du projet.
 - Les deux domaines se rattachent au service `web`, port 3000. `kotlin-compiler` n'en reçoit aucun.
 - `TYPIKA_PUBLIC_URL` et `TYPIKA_RUNTIME_ORIGIN` sont obligatoires ; `GITHUB_CLIENT_ID` et `GITHUB_CLIENT_SECRET`
   se règlent au même endroit. Kotlin est toujours activé.
-- La plateforme doit faire un **clone complet** (§3) : désactiver le clone superficiel s'il est le défaut.
+- Un clone superficiel, le défaut de Coolify, convient : le `Dockerfile` le complète depuis `origin` avant de
+  construire, ce qui demande que la machine joigne le dépôt sans identifiant.
 - La construction a lieu sur la machine, avec les besoins du §4.6.
 - `Strict-Transport-Security`, que le Caddyfile pose ici, revient au proxy de la plateforme.
 - À vérifier après le premier déploiement : que la plateforme n'a pas branché `kotlin-compiler` à un réseau qui sort
