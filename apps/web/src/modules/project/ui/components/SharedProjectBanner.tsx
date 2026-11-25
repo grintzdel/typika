@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '../../../../ui/Button.tsx'
+import { StatusGlyph } from '../../../../ui/StatusGlyph.tsx'
 
 export type SharedProjectBannerProps = {
   readonly templateName: string
@@ -16,6 +17,7 @@ export const SharedProjectBanner = ({ templateName, templateTitle, isSaved, onSa
       aria-label={t('shared.label')}
       className="flex flex-wrap items-center gap-3 border-b border-info-border bg-info-bg px-4 py-2 text-base text-info-fg"
     >
+      <StatusGlyph tone="info" />
       <p>
         {t('shared.basedOn')}{' '}
         <a href={`/templates/${templateName}`} className="underline">

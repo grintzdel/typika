@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { SharedProjectBanner } from './SharedProjectBanner.tsx'
 
+const glyphIn = (element: Element) => element.querySelector('[aria-hidden="true"]')?.textContent
+
 describe('SharedProjectBanner', () => {
   it('names the template the shared project comes from and offers to save it', () => {
     const onSave = vi.fn()
@@ -20,5 +22,11 @@ describe('SharedProjectBanner', () => {
 
     expect(screen.queryByRole('button')).toBeNull()
     expect(screen.getByRole('status').textContent).toBe('Enregistré dans vos projets')
+  })
+
+  it('opens with "i"', () => {
+    render(<SharedProjectBanner templateName="strategy-ts" templateTitle="Strategy" isSaved={false} onSave={vi.fn()} />)
+
+    expect(glyphIn(screen.getByRole('region', { name: 'Projet partagé' }))).toBe('i')
   })
 })

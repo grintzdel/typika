@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Button } from '../../../../ui/Button.tsx'
 import { ConfirmButton } from '../../../../ui/ConfirmButton.tsx'
+import { StatusGlyph } from '../../../../ui/StatusGlyph.tsx'
 import { ContentMarkdown } from '../../../shared/ui/components/ContentMarkdown.tsx'
 import type { TargetProgress } from '../../core/domain/exercise-progress.domain-model.ts'
 
@@ -48,14 +49,17 @@ export const ExercisePanel = ({
       </header>
       <div className="min-h-0 flex-1 overflow-auto px-4">
         {isSolved ? (
-          <div className="mt-3 rounded-sm border border-success-border bg-success-bg p-3 text-success-fg">
-            <p className="font-semibold">{t('solved')}</p>
-            <a
-              href={next.href}
-              className="mt-1 inline-block text-link underline underline-offset-2 hover:text-link-hover"
-            >
-              {next.kind === 'exercise' ? t('next') : t('backToTemplate')}
-            </a>
+          <div className="mt-3 flex gap-2 rounded-sm border border-success-border bg-success-bg p-3 text-success-fg">
+            <StatusGlyph tone="success" />
+            <div>
+              <p className="font-semibold">{t('solved')}</p>
+              <a
+                href={next.href}
+                className="mt-1 inline-block text-link underline underline-offset-2 hover:text-link-hover"
+              >
+                {next.kind === 'exercise' ? t('next') : t('backToTemplate')}
+              </a>
+            </div>
           </div>
         ) : null}
         <ContentMarkdown markdown={exercise.readme.replace(README_TITLE, '')} embeddedTemplates={embeddedTemplates} />
@@ -66,9 +70,14 @@ export const ExercisePanel = ({
           ))}
         </ul>
         {exercise.hints.slice(0, revealedHints).map((hint, index) => (
-          <div key={index} className="mt-3 rounded-sm border border-info-border bg-info-bg px-3">
-            <h3 className="mt-2 font-semibold">{t('hintTitle', { number: index + 1 })}</h3>
-            <ContentMarkdown markdown={hint} embeddedTemplates={embeddedTemplates} />
+          <div key={index} className="mt-3 flex gap-2 rounded-sm border border-info-border bg-info-bg px-3">
+            <div className="mt-2">
+              <StatusGlyph tone="info" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="mt-2 font-semibold">{t('hintTitle', { number: index + 1 })}</h3>
+              <ContentMarkdown markdown={hint} embeddedTemplates={embeddedTemplates} />
+            </div>
           </div>
         ))}
         {revealedHints < exercise.hints.length ? (
