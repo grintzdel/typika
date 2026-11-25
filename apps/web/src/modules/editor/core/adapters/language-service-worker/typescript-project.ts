@@ -6,7 +6,11 @@ import {
   type CompletionItem,
   type DiagnosticSeverity,
   type EditorDiagnostic,
+  type FileRename,
   type LanguageServiceFiles,
+  type SourceRange,
+  type SymbolReference,
+  type TextChange,
   type TypeScriptProject,
 } from '../../domain/language-service.domain-model.ts'
 
@@ -39,6 +43,23 @@ const SEVERITY: Readonly<Record<ts.DiagnosticCategory, DiagnosticSeverity>> = {
 
 const absolute = (path: string) => `/${path}`
 
+const relative = (fileName: string) => fileName.replace(/^\//, '')
+
+const rangeOf = (fileName: string, span: ts.TextSpan): SourceRange => ({
+  path: relative(fileName),
+  from: span.start,
+  to: span.start + span.length,
+})
+
+const sameRange = (a: SourceRange, b: SourceRange) => a.path === b.path && a.from === b.from && a.to === b.to
+
+const byPosition = (a: SourceRange, b: SourceRange) => a.path.localeCompare(b.path) || a.from - b.from
+
+const applyChanges = (text: string, changes: ReadonlyArray<TextChange>) =>
+  changes
+    .toReversed()
+    .reduce((result, change) => result.slice(0, change.from) + change.insert + result.slice(change.to), text)
+
 const entryKey = (name: string, source: string | undefined) => `${name}\u0000${source ?? ''}`
 
 const compilerOptionsOf = (tsconfig: string | undefined): ts.CompilerOptions => {
@@ -65,6 +86,12 @@ const wordStart = (text: string, position: number) => {
   let start = position
   while (start > 0 && IDENTIFIER_PART.test(text.charAt(start - 1))) start -= 1
   return start
+}
+
+const wordAt = (text: string, position: number) => {
+  let end = position
+  while (end < text.length && IDENTIFIER_PART.test(text.charAt(end))) end += 1
+  return text.slice(wordStart(text, position), end)
 }
 
 export const makeTypeScriptProject = ({
@@ -96,19 +123,41 @@ export const makeTypeScriptProject = ({
   const service = () => environment.languageService
   const textOf = (path: string) => environment.getSourceFile(absolute(path))?.text ?? ''
   const inProgram = (path: string) => service().getProgram()?.getSourceFile(absolute(path)) !== undefined
+  const isProjectFile = (fileName: string) => {
+    const path = relative(fileName)
+    return path in current && isAnalyzedPath(path)
+  }
+
+  const updateFile = (path: string, content: string) => {
+    if (current[path] === content) return
+    const isNew = !(path in current)
+    current[path] = content
+    if (path === TSCONFIG || (isNew && !isAnalyzedPath(path))) build(current)
+    else if (isNew) environment.createFile(absolute(path), content)
+    else if (isAnalyzedPath(path)) environment.updateFile(absolute(path), content)
+    else environment.sys.writeFile(absolute(path), content)
+  }
+
+  const definition = (path: string, position: number): ReadonlyArray<SourceRange> => {
+    if (!inProgram(path)) return []
+    return (service().getDefinitionAtPosition(absolute(path), position) ?? [])
+      .filter((found) => isProjectFile(found.fileName))
+      .map((found) => rangeOf(found.fileName, found.textSpan))
+  }
+
+  const referenceOf = (entry: ts.ReferenceEntry, definitions: ReadonlyArray<SourceRange>): SymbolReference => {
+    const range = rangeOf(entry.fileName, entry.textSpan)
+    const source = environment.getSourceFile(entry.fileName)
+    const line = source?.getLineAndCharacterOfPosition(range.from).line ?? 0
+    const starts = source?.getLineStarts() ?? []
+    const lineText = (source?.text ?? '').slice(starts[line] ?? 0, starts[line + 1]).trim()
+    return { ...range, line: line + 1, lineText, isDefinition: definitions.some((found) => sameRange(found, range)) }
+  }
 
   return {
     setFiles: build,
 
-    updateFile: (path, content) => {
-      if (current[path] === content) return
-      const isNew = !(path in current)
-      current[path] = content
-      if (path === TSCONFIG || (isNew && !isAnalyzedPath(path))) build(current)
-      else if (isNew) environment.createFile(absolute(path), content)
-      else if (isAnalyzedPath(path)) environment.updateFile(absolute(path), content)
-      else environment.sys.writeFile(absolute(path), content)
-    },
+    updateFile,
 
     diagnostics: (path) => {
       if (!inProgram(path)) return []
@@ -183,6 +232,50 @@ export const makeTypeScriptProject = ({
         activeParameter: help.argumentIndex,
         documentation: ts.displayPartsToString(item.documentation),
       }
+    },
+
+    definition,
+
+    references: (path, position) => {
+      if (!inProgram(path)) return undefined
+      const symbols = service().findReferences(absolute(path), position)
+      if (symbols === undefined || symbols.length === 0) return undefined
+      const definitions = definition(path, position)
+      const references = symbols
+        .flatMap((symbol) => symbol.references)
+        .filter((entry) => isProjectFile(entry.fileName))
+        .map((entry) => referenceOf(entry, definitions))
+        .filter((reference, index, all) => all.findIndex((other) => sameRange(other, reference)) === index)
+        .toSorted(byPosition)
+      return { symbol: wordAt(textOf(path), position), references }
+    },
+
+    rename: (path, position, newName) => {
+      if (!inProgram(path) || !service().getRenameInfo(absolute(path), position).canRename) return undefined
+      const declarations = service().getDefinitionAtPosition(absolute(path), position) ?? []
+      if (declarations.length === 0 || !declarations.every((found) => isProjectFile(found.fileName))) return undefined
+      const locations = service().findRenameLocations(absolute(path), position, false, false, {
+        providePrefixAndSuffixTextForRename: false,
+      })
+      if (locations === undefined) return undefined
+      const changesByPath = Map.groupBy(
+        locations.filter((location) => isProjectFile(location.fileName)),
+        (location) => relative(location.fileName)
+      )
+      const renames = [...changesByPath]
+        .map(([renamed, found]): FileRename => {
+          const changes = found
+            .map((location): TextChange => ({
+              from: location.textSpan.start,
+              to: location.textSpan.start + location.textSpan.length,
+              insert: `${location.prefixText ?? ''}${newName}${location.suffixText ?? ''}`,
+            }))
+            .toSorted((a, b) => a.from - b.from)
+          return { path: renamed, changes, content: applyChanges(textOf(renamed), changes) }
+        })
+        .toSorted((a, b) => a.path.localeCompare(b.path))
+      for (const renamed of renames) updateFile(renamed.path, renamed.content)
+      return renames
     },
   }
 }

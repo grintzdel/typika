@@ -35,6 +35,9 @@ const sessionOf = (remote: Comlink.Remote<LanguageServiceWorkerApi>): LanguageSe
   completionChanges: (path, position, item) => call(() => remote.completionChanges(path, position, item)),
   quickInfo: (path, position) => call(() => remote.quickInfo(path, position)),
   signatureHelp: (path, position) => call(() => remote.signatureHelp(path, position)),
+  definition: (path, position) => call(() => remote.definition(path, position)),
+  references: (path, position) => call(() => remote.references(path, position)),
+  rename: (path, position, newName) => call(() => remote.rename(path, position, newName)),
 })
 
 const start = (files: LanguageServiceFiles) =>

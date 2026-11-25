@@ -18,12 +18,16 @@ import {
   solutionDiffTab,
   type EditorTab,
 } from '../../modules/editor/core/domain/editor-tabs.domain-model.ts'
+import type { ReferenceSearch } from '../../modules/editor/core/domain/language-service.domain-model.ts'
 import { CodeEditor } from '../../modules/editor/ui/components/CodeEditor.tsx'
 import { EditorTabs } from '../../modules/editor/ui/components/EditorTabs.tsx'
 import { LanguageServiceStatus } from '../../modules/editor/ui/components/LanguageServiceStatus.tsx'
+import { QuickOpenDialog } from '../../modules/editor/ui/components/QuickOpenDialog.tsx'
+import { ReferencesPanel } from '../../modules/editor/ui/components/ReferencesPanel.tsx'
 import { useEditFiles } from '../../modules/editor/ui/hooks/use-edit-files.ts'
 import { useEditorTabs } from '../../modules/editor/ui/hooks/use-editor-tabs.ts'
 import { useLanguageService } from '../../modules/editor/ui/hooks/use-language-service.ts'
+import { useWorkbenchShortcuts } from '../../modules/editor/ui/hooks/use-workbench-shortcuts.ts'
 import { ExerciseList } from '../../modules/exercise/ui/components/ExerciseList.tsx'
 import { ExercisePanel } from '../../modules/exercise/ui/components/ExercisePanel.tsx'
 import { useExercise } from '../../modules/exercise/ui/hooks/use-exercise.ts'
@@ -88,6 +92,8 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
   const [panel, setPanel] = useState<OutputPanel>('console')
   const [sideTab, setSideTab] = useState<SideTab | undefined>(initialPanel)
   const [isSolutionShown, setSolutionShown] = useState(false)
+  const [referenceSearch, setReferenceSearch] = useState<ReferenceSearch | undefined>(undefined)
+  const [isQuickOpenShown, setQuickOpenShown] = useState(false)
   const { template, failure } = project
   const base = useBaseTemplate(projectKey)
   const share = useShareLink(projectKey)
@@ -109,6 +115,11 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
     testRun: runtime.testRun,
   })
   const tabs = useEditorTabs(template?.entry)
+  useWorkbenchShortcuts({
+    onCloseTab: tabs.handleCloseActive,
+    onStepTab: tabs.handleStep,
+    onQuickOpen: () => setQuickOpenShown(true),
+  })
   const tour = useTour({
     steps: template?.tourSteps ?? [],
     anchorOf: (step) =>
@@ -247,7 +258,7 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
                 content={
                   editorTab.kind === EditorTabKind.ORIGINAL
                     ? (template.originalOf(editorTab.path) ?? '')
-                    : template.contentOf(editorTab.path)
+                    : (edits.editedContentOf(editorTab.path) ?? template.contentOf(editorTab.path))
                 }
                 readOnly={editorTab.kind === EditorTabKind.ORIGINAL || isTypikaFile(editorTab.path)}
                 highlight={tabs.highlight}
@@ -258,7 +269,13 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
                 }
                 label={t('label')}
                 languageService={languageService.session}
+                reveal={tabs.reveal}
                 onChange={edits.handleChange}
+                onGoTo={tabs.handleReveal}
+                onReferences={(search) => {
+                  setReferenceSearch(search)
+                  setPanel('references')
+                }}
               />
             </div>
           )}
@@ -293,6 +310,12 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
             </div>
           )}
           {active === undefined ? <p className="p-4 text-compact text-fg-muted">{t('noFile')}</p> : null}
+          <QuickOpenDialog
+            open={isQuickOpenShown}
+            paths={[...template.files.keys()]}
+            onOpenChange={setQuickOpenShown}
+            onOpen={tabs.handleOpenFile}
+          />
         </EditorTabs>
       }
       aside={
@@ -388,7 +411,20 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
         />
       }
       bottom={
-        <OutputPanels active={panel} onActiveChange={setPanel} console={runtime.console} testRun={runtime.testRun} />
+        <OutputPanels
+          active={panel}
+          onActiveChange={setPanel}
+          console={runtime.console}
+          testRun={runtime.testRun}
+          references={
+            languageService.status !== 'off'
+              ? {
+                  count: referenceSearch?.references.length,
+                  content: <ReferencesPanel search={referenceSearch} onOpen={tabs.handleReveal} />,
+                }
+              : undefined
+          }
+        />
       }
     />
   )

@@ -48,6 +48,29 @@ export type SignatureHelp = {
   readonly documentation: string
 }
 
+export type SourceRange = {
+  readonly path: string
+  readonly from: number
+  readonly to: number
+}
+
+export type SymbolReference = SourceRange & {
+  readonly line: number
+  readonly lineText: string
+  readonly isDefinition: boolean
+}
+
+export type ReferenceSearch = {
+  readonly symbol: string
+  readonly references: ReadonlyArray<SymbolReference>
+}
+
+export type FileRename = {
+  readonly path: string
+  readonly changes: ReadonlyArray<TextChange>
+  readonly content: string
+}
+
 export type LanguageServiceFiles = Readonly<Record<string, string>>
 
 export type TypeScriptProject = {
@@ -58,6 +81,9 @@ export type TypeScriptProject = {
   readonly completionChanges: (path: string, position: number, item: CompletionItem) => ReadonlyArray<TextChange>
   readonly quickInfo: (path: string, position: number) => QuickInfo | undefined
   readonly signatureHelp: (path: string, position: number) => SignatureHelp | undefined
+  readonly definition: (path: string, position: number) => ReadonlyArray<SourceRange>
+  readonly references: (path: string, position: number) => ReferenceSearch | undefined
+  readonly rename: (path: string, position: number, newName: string) => ReadonlyArray<FileRename> | undefined
 }
 
 const ANALYZED = /\.(?:[cm]?tsx?|[cm]?jsx?)$/

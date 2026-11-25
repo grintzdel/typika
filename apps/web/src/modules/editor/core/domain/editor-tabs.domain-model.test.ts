@@ -10,6 +10,7 @@ import {
   openFile,
   openFiles,
   originalTab,
+  stepTab,
   type EditorTabs,
 } from './editor-tabs.domain-model.ts'
 
@@ -76,5 +77,22 @@ describe('editor tabs', () => {
 
   it('has no active tab once every tab is closed', () => {
     expect(activeTabOf(closeTab(withFiles('a.ts'), 'a.ts'))).toBeUndefined()
+  })
+
+  it('activates the next tab, and wraps around after the last one', () => {
+    const tabs = openFile(withFiles('a.ts', 'b.ts', 'c.ts'), 'b.ts')
+
+    expect(stepTab(tabs, 1).activeKey).toBe('c.ts')
+    expect(stepTab(stepTab(tabs, 1), 1).activeKey).toBe('a.ts')
+  })
+
+  it('activates the previous tab, and wraps around before the first one', () => {
+    const tabs = openFile(withFiles('a.ts', 'b.ts', 'c.ts'), 'a.ts')
+
+    expect(stepTab(tabs, -1).activeKey).toBe('c.ts')
+  })
+
+  it('stays put when no tab is open', () => {
+    expect(stepTab(EMPTY_TABS, 1)).toBe(EMPTY_TABS)
   })
 })

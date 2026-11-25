@@ -13,6 +13,7 @@ import * as Effect from 'effect/Effect'
 
 import type { CompletionItem, QuickInfo, SignatureHelp } from '../../core/domain/language-service.domain-model.ts'
 import type { LanguageServiceSession } from '../../core/ports/language-service.port.ts'
+import { navigationExtensions, type NavigationHandlers } from './navigation.ts'
 
 const LINT_DELAY_MS = 300
 const SIGNATURE_DELAY_MS = 50
@@ -185,11 +186,16 @@ const quickInfo = (session: LanguageServiceSession, path: string) =>
     return { pos: info.from, end: info.to, above: true, create: () => ({ dom: quickInfoDom(info) }) }
   })
 
-export const typescriptExtensions = (session: LanguageServiceSession, path: string): Extension => [
+export const typescriptExtensions = (
+  session: LanguageServiceSession,
+  path: string,
+  handlers: NavigationHandlers
+): Extension => [
   fileSync(session, path),
   autocompletion({ override: [completions(session, path)] }),
   diagnostics(session, path),
   quickInfo(session, path),
   signatureField,
   signatureHelp(session, path),
+  navigationExtensions(session, path, handlers),
 ]

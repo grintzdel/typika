@@ -81,4 +81,13 @@ describe('EditorTabs', () => {
 
     expect(onClose).toHaveBeenCalledWith('original:src/checkout/quote.ts')
   })
+
+  it('closes a tab with a middle click', () => {
+    const { onClose, onSelect } = renderTabs()
+
+    fireEvent(tab('quote.ts'), new MouseEvent('auxclick', { bubbles: true, button: 1 }))
+
+    expect(onClose).toHaveBeenCalledWith('src/checkout/quote.ts')
+    expect(onSelect).not.toHaveBeenCalled()
+  })
 })

@@ -22,6 +22,9 @@ const api = {
     opened().completionChanges(...args),
   quickInfo: (path: string, position: number) => opened().quickInfo(path, position),
   signatureHelp: (path: string, position: number) => opened().signatureHelp(path, position),
+  definition: (path: string, position: number) => opened().definition(path, position),
+  references: (path: string, position: number) => opened().references(path, position),
+  rename: (path: string, position: number, newName: string) => opened().rename(path, position, newName),
 }
 
 export type LanguageServiceWorkerApi = typeof api
