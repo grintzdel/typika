@@ -70,7 +70,7 @@ const replayExercise = async (page: Page, appUrl: string, template: IndexTemplat
   await page.getByRole('alertdialog').getByRole('button', { name: 'Apply the solution' }).click()
   await page.getByRole('button', { name: 'Tests', exact: true }).click()
   try {
-    await waitFor(panel.getByText('Exercise solved!'), `${exercise}: the solved exercise`)
+    await waitFor(panel.getByText(/^Exercise solved[.!]$/), `${exercise}: the solved exercise`)
   } catch (error) {
     throw new ProbeError(
       `${String(error instanceof Error ? error.message : error)} (${await panel.getByText(PROGRESS).textContent()})`
