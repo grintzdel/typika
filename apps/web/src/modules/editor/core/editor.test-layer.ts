@@ -18,6 +18,9 @@ const sessionOf = (project: TypeScriptProject): LanguageServiceSession => ({
   completionChanges: (path, position, item) => Effect.sync(() => project.completionChanges(path, position, item)),
   quickInfo: (path, position) => Effect.sync(() => project.quickInfo(path, position)),
   signatureHelp: (path, position) => Effect.sync(() => project.signatureHelp(path, position)),
+  definition: (path, position) => Effect.sync(() => project.definition(path, position)),
+  references: (path, position) => Effect.sync(() => project.references(path, position)),
+  rename: (path, position, newName) => Effect.sync(() => project.rename(path, position, newName)),
 })
 
 let libraries: LanguageServiceFiles | undefined

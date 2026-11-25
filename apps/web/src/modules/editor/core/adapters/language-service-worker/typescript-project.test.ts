@@ -193,4 +193,72 @@ describe('makeTypeScriptProject', () => {
     expect(project.diagnostics('src/money.js')).toEqual([])
     expect(project.completions('src/main.js', end)?.items.map((item) => item.label)).toContain('cents')
   })
+
+  it('finds the declaration of an imported symbol in its own file', () => {
+    const project = makeProject()
+
+    expect(project.definition('src/main.ts', MAIN.lastIndexOf('money'))).toEqual([
+      { path: 'src/money.ts', from: MONEY.indexOf('money ='), to: MONEY.indexOf('money =') + 'money'.length },
+    ])
+  })
+
+  it('finds no declaration for a symbol of the standard library', () => {
+    expect(makeProject().definition('src/main.ts', MAIN.indexOf('console'))).toEqual([])
+  })
+
+  it('lists every reference of a symbol across the project, its declaration marked', () => {
+    const project = makeProject()
+
+    const search = project.references('src/money.ts', MONEY.indexOf('money ='))
+
+    expect(search?.symbol).toBe('money')
+    expect(search?.references.map(({ path, line, isDefinition }) => ({ path, line, isDefinition }))).toEqual([
+      { path: 'src/main.ts', line: 1, isDefinition: false },
+      { path: 'src/main.ts', line: 3, isDefinition: false },
+      { path: 'src/money.ts', line: 4, isDefinition: true },
+      { path: 'src/money.ts', line: 6, isDefinition: false },
+      { path: 'tests/money.test.ts', line: 2, isDefinition: false },
+      { path: 'tests/money.test.ts', line: 6, isDefinition: false },
+    ])
+    expect(search?.references[1]).toMatchObject({
+      from: MAIN.lastIndexOf('money'),
+      to: MAIN.lastIndexOf('money') + 'money'.length,
+      lineText: 'console.log(money(100))',
+    })
+  })
+
+  it('finds no reference outside of a symbol', () => {
+    expect(makeProject().references('src/main.ts', MAIN.indexOf('\n\n') + 1)).toBeUndefined()
+  })
+
+  it('renames a symbol in every file that uses it', () => {
+    const project = makeProject()
+
+    const renamed = project.rename('src/main.ts', MAIN.lastIndexOf('money'), 'makeMoney')
+
+    expect(renamed?.map(({ path, content }) => ({ path, content }))).toEqual([
+      {
+        path: 'src/main.ts',
+        content: MAIN.replace('{ money }', '{ makeMoney }').replace('log(money', 'log(makeMoney'),
+      },
+      {
+        path: 'src/money.ts',
+        content: MONEY.replace('const money', 'const makeMoney').replace('=> money(', '=> makeMoney('),
+      },
+      {
+        path: 'tests/money.test.ts',
+        content: TEST.replace('{ money }', '{ makeMoney }').replace('expect(money', 'expect(makeMoney'),
+      },
+    ])
+    expect(renamed?.[0]?.changes).toEqual([
+      { from: MAIN.indexOf('money'), to: MAIN.indexOf('money') + 'money'.length, insert: 'makeMoney' },
+      { from: MAIN.lastIndexOf('money'), to: MAIN.lastIndexOf('money') + 'money'.length, insert: 'makeMoney' },
+    ])
+    expect(project.diagnostics('src/main.ts')).toEqual([])
+    expect(project.diagnostics('tests/money.test.ts')).toEqual([])
+  })
+
+  it('refuses to rename a symbol of the standard library', () => {
+    expect(makeProject().rename('src/main.ts', MAIN.indexOf('console'), 'terminal')).toBeUndefined()
+  })
 })

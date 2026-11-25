@@ -3,23 +3,9 @@ import { join } from 'node:path'
 
 import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 
+import { editor, LANGUAGE_SERVICE_TIMEOUT, openStrategy } from '../../e2e/fixtures/strategy-ts.fixture.ts'
+
 const STRATEGY_DIR = join(import.meta.dirname, '..', '..', '..', '..', '..', 'templates', 'strategy', 'ts')
-const LANGUAGE_SERVICE_TIMEOUT = 15_000
-
-const editor = (page: Page) => page.getByRole('textbox', { name: 'Éditeur' })
-
-const openStrategy = async (page: Page) => {
-  await page.goto('/play/strategy-ts')
-  await expect(page.getByRole('tree', { name: 'Fichiers' })).toBeVisible()
-  const symbol = editor(page).getByText('quoteShipping', { exact: true }).first()
-  await expect(async () => {
-    await page.mouse.move(0, 0)
-    await symbol.hover()
-    await expect(page.getByRole('tooltip')).toBeVisible({ timeout: 1_000 })
-  }).toPass({ timeout: LANGUAGE_SERVICE_TIMEOUT })
-  await page.mouse.move(0, 0)
-  await expect(page.getByRole('tooltip')).toBeHidden()
-}
 
 const holdLanguageServiceWorker = async (context: BrowserContext) => {
   const { promise: released, resolve: release } = Promise.withResolvers<void>()

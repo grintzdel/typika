@@ -11,6 +11,8 @@ export type EditorTabsProps = {
   readonly children: ReactNode
 }
 
+const MIDDLE_BUTTON = 1
+
 const nameOf = (path: string) => path.split('/').at(-1) ?? path
 
 export const EditorTabs = ({ tabs, activeKey, onSelect, onClose, children }: EditorTabsProps) => {
@@ -63,7 +65,7 @@ export const EditorTabs = ({ tabs, activeKey, onSelect, onClose, children }: Edi
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div data-editor-area className="flex h-full flex-col">
       <div
         role="tablist"
         aria-label={t('tabs.label')}
@@ -92,6 +94,12 @@ export const EditorTabs = ({ tabs, activeKey, onSelect, onClose, children }: Edi
                 tabIndex={isActive ? 0 : -1}
                 className={`py-2 pl-3 whitespace-nowrap ${tab.kind === EditorTabKind.FILE ? '' : 'italic'}`}
                 onClick={() => onSelect(tab.key)}
+                onMouseDown={(event) => {
+                  if (event.button === MIDDLE_BUTTON) event.preventDefault()
+                }}
+                onAuxClick={(event) => {
+                  if (event.button === MIDDLE_BUTTON) onClose(tab.key)
+                }}
                 onKeyDown={(event) => handleKeyDown(event, index, tab.key)}
               >
                 {label}

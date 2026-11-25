@@ -53,3 +53,10 @@ export const closeTab = (state: EditorTabs, key: string): EditorTabs => {
   if (state.activeKey !== key) return { tabs, activeKey: state.activeKey }
   return { tabs, activeKey: (tabs[index] ?? tabs[index - 1])?.key }
 }
+
+export const stepTab = (state: EditorTabs, step: 1 | -1): EditorTabs => {
+  const count = state.tabs.length
+  if (count === 0) return state
+  const index = state.tabs.findIndex((tab) => tab.key === state.activeKey)
+  return { tabs: state.tabs, activeKey: state.tabs[(index + step + count) % count]?.key }
+}

@@ -1,6 +1,7 @@
 import { startCompletion } from '@codemirror/autocomplete'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
 import { bracketMatching, indentOnInput } from '@codemirror/language'
+import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search'
 import { Compartment, EditorState, type Extension } from '@codemirror/state'
 import {
   drawSelection,
@@ -13,12 +14,20 @@ import {
 import type { Diagnostic } from '@typika/runtime-core'
 import * as Effect from 'effect/Effect'
 import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
-import { isAnalyzedPath } from '../../core/domain/language-service.domain-model.ts'
+import {
+  isAnalyzedPath,
+  type FileRename,
+  type ReferenceSearch,
+  type SourceRange,
+} from '../../core/domain/language-service.domain-model.ts'
 import type { LanguageServiceSession } from '../../core/ports/language-service.port.ts'
 import { buildDiagnostics, setBuildDiagnostics, toLintDiagnostics } from './build-diagnostics.ts'
+import { editorPhrasesOf } from './editor-phrases.ts'
 import { editorTheme } from './editor-theme.ts'
 import { languageSupportOf } from './language-support.ts'
+import type { NavigationHandlers } from './navigation.ts'
 import { isCompletionPending, pendingCompletion } from './pending-completion.ts'
 import { scrollToTourHighlight, setTourHighlight, tourHighlight, type LineRange } from './tour-highlight.ts'
 import { typescriptExtensions } from './typescript-extensions.ts'
@@ -32,20 +41,26 @@ export type CodeEditorProps = {
   readonly diagnostics: ReadonlyArray<Diagnostic>
   readonly label: string
   readonly languageService: LanguageServiceSession | undefined
+  readonly reveal?: { readonly from: number; readonly to: number } | undefined
   readonly onChange: (path: string, content: string) => void
+  readonly onGoTo?: (range: SourceRange) => void
+  readonly onReferences?: (search: ReferenceSearch) => void
 }
 
 const languageServiceExtensions = (
   path: string,
   readOnly: boolean,
-  session: LanguageServiceSession | undefined
-): Extension => (session === undefined || readOnly || !isAnalyzedPath(path) ? [] : typescriptExtensions(session, path))
+  session: LanguageServiceSession | undefined,
+  handlers: NavigationHandlers
+): Extension =>
+  session === undefined || readOnly || !isAnalyzedPath(path) ? [] : typescriptExtensions(session, path, handlers)
 
 const makeState = (
   path: string,
   doc: string,
   label: string,
   readOnly: boolean,
+  phrases: Readonly<Record<string, string>>,
   languageService: Extension,
   onDocChange: (content: string) => void
 ): EditorState => {
@@ -58,7 +73,11 @@ const makeState = (
     indentOnInput(),
     bracketMatching(),
     highlightActiveLine(),
-    keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+    highlightSelectionMatches(),
+    search({ top: true }),
+    keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, indentWithTab]),
+    EditorView.clickAddsSelectionRange.of((event) => event.altKey),
+    EditorState.phrases.of(phrases),
     EditorState.readOnly.of(readOnly),
     EditorView.contentAttributes.of({ 'aria-label': label }),
     EditorView.updateListener.of((update) => {
@@ -85,21 +104,49 @@ export const CodeEditor = ({
   diagnostics,
   label,
   languageService,
+  reveal,
   onChange,
+  onGoTo,
+  onReferences,
 }: CodeEditorProps) => {
+  const { t } = useTranslation('editor')
+  const phrases = editorPhrasesOf(t)
   const container = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
   const states = useRef(new Map<string, EditorState>())
   const documents = useRef(new Map<string, OpenDocument>())
   const highlights = useRef(new Map<string, LineRange>())
   const appliedDiagnostics = useRef(new Map<string, string>())
+  const revealed = useRef(new Map<string, { readonly from: number; readonly to: number }>())
   const current = useRef<OpenDocument | null>(null)
   const latestOnChange = useRef(onChange)
   const latestLanguageService = useRef(languageService)
   const languageServiceSlot = useRef(new Compartment())
+  const latestNavigation = useRef({ onGoTo, onReferences })
 
   useEffect(() => {
     latestOnChange.current = onChange
+    latestNavigation.current = { onGoTo, onReferences }
+  })
+
+  const applyRenames = (renames: ReadonlyArray<FileRename>) => {
+    for (const renamed of renames) {
+      for (const [key, document] of documents.current) {
+        const state = states.current.get(key)
+        if (document.path !== renamed.path || document.readOnly || state === undefined) continue
+        states.current.set(
+          key,
+          state.update({ changes: { from: 0, to: state.doc.length, insert: renamed.content } }).state
+        )
+      }
+      latestOnChange.current(renamed.path, renamed.content)
+    }
+  }
+
+  const handlers = useRef<NavigationHandlers>({
+    onGoTo: (range) => latestNavigation.current.onGoTo?.(range),
+    onReferences: (search) => latestNavigation.current.onReferences?.(search),
+    onRename: (renames) => applyRenames(renames),
   })
 
   useEffect(() => {
@@ -124,17 +171,28 @@ export const CodeEditor = ({
     current.current = opened
     documents.current.set(documentKey, opened)
     const slot = languageServiceSlot.current
-    const extensions = languageServiceExtensions(path, readOnly, latestLanguageService.current)
+    const extensions = languageServiceExtensions(path, readOnly, latestLanguageService.current, handlers.current)
     const cached = states.current.get(documentKey)
     if (cached === undefined) {
       editor.setState(
-        makeState(path, content, label, readOnly, slot.of(extensions), (next) => latestOnChange.current(path, next))
+        makeState(path, content, label, readOnly, phrases, slot.of(extensions), (next) =>
+          latestOnChange.current(path, next)
+        )
       )
     } else {
       editor.setState(cached)
       editor.dispatch({ effects: slot.reconfigure(extensions) })
     }
   }, [documentKey, path, content, readOnly, label])
+
+  useEffect(() => {
+    const editor = view.current
+    if (editor === null || reveal === undefined || revealed.current.get(documentKey) === reveal) return
+    revealed.current.set(documentKey, reveal)
+    const from = Math.min(reveal.from, editor.state.doc.length)
+    editor.dispatch({ selection: { anchor: from }, effects: EditorView.scrollIntoView(from, { y: 'center' }) })
+    editor.focus()
+  }, [documentKey, reveal])
 
   useEffect(() => {
     const editor = view.current
@@ -171,7 +229,7 @@ export const CodeEditor = ({
     }
     editor.dispatch({
       effects: languageServiceSlot.current.reconfigure(
-        languageServiceExtensions(opened.path, opened.readOnly, languageService)
+        languageServiceExtensions(opened.path, opened.readOnly, languageService, handlers.current)
       ),
     })
     if (!opened.readOnly && isAnalyzedPath(opened.path) && editor.hasFocus && isCompletionPending(editor.state))

@@ -73,4 +73,46 @@ describe('useEditorTabs', () => {
     act(() => result.current.handleOpenFile('src/quote.ts'))
     expect(result.current.editorTab).toEqual(fileTab('src/quote.ts'))
   })
+
+  it('opens a file at a range to reveal, only while its tab is active', () => {
+    const { result } = renderHook(() => useEditorTabs('src/main.ts'))
+
+    act(() => result.current.handleReveal({ path: 'src/quote.ts', from: 10, to: 15 }))
+    expect(result.current.activeTab).toEqual(fileTab('src/quote.ts'))
+    expect(result.current.reveal).toEqual({ from: 10, to: 15 })
+
+    act(() => result.current.handleSelect('src/main.ts'))
+    expect(result.current.reveal).toBeUndefined()
+  })
+
+  it('reveals the same range again as a new request', () => {
+    const { result } = renderHook(() => useEditorTabs('src/main.ts'))
+
+    act(() => result.current.handleReveal({ path: 'src/main.ts', from: 1, to: 2 }))
+    const first = result.current.reveal
+    act(() => result.current.handleReveal({ path: 'src/main.ts', from: 1, to: 2 }))
+
+    expect(result.current.reveal).toEqual(first)
+    expect(result.current.reveal).not.toBe(first)
+  })
+
+  it('closes the active tab', () => {
+    const { result } = renderHook(() => useEditorTabs('src/main.ts'))
+
+    act(() => result.current.handleOpenFile('src/quote.ts'))
+    act(() => result.current.handleCloseActive())
+
+    expect(result.current.tabs).toEqual([fileTab('src/main.ts')])
+  })
+
+  it('steps to the next and the previous tab', () => {
+    const { result } = renderHook(() => useEditorTabs('src/main.ts'))
+
+    act(() => result.current.handleOpenFile('src/quote.ts'))
+    act(() => result.current.handleStep(1))
+    expect(result.current.activeTab).toEqual(fileTab('src/main.ts'))
+
+    act(() => result.current.handleStep(-1))
+    expect(result.current.activeTab).toEqual(fileTab('src/quote.ts'))
+  })
 })
