@@ -28,6 +28,7 @@ import { useEditFiles } from '../../modules/editor/ui/hooks/use-edit-files.ts'
 import { useEditorTabs } from '../../modules/editor/ui/hooks/use-editor-tabs.ts'
 import { useLanguageService } from '../../modules/editor/ui/hooks/use-language-service.ts'
 import { useWorkbenchShortcuts } from '../../modules/editor/ui/hooks/use-workbench-shortcuts.ts'
+import { useWorkbenchSizes } from '../../modules/editor/ui/hooks/use-workbench-sizes.ts'
 import { ExerciseList } from '../../modules/exercise/ui/components/ExerciseList.tsx'
 import { ExercisePanel } from '../../modules/exercise/ui/components/ExercisePanel.tsx'
 import { useExercise } from '../../modules/exercise/ui/hooks/use-exercise.ts'
@@ -115,6 +116,7 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
     testRun: runtime.testRun,
   })
   const tabs = useEditorTabs(template?.entry)
+  const layout = useWorkbenchSizes()
   useWorkbenchShortcuts({
     onCloseTab: tabs.handleCloseActive,
     onStepTab: tabs.handleStep,
@@ -150,6 +152,9 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
 
   return (
     <WorkbenchLayout
+      sizes={layout.sizes}
+      resizeLabels={{ sidebar: t('resize.sidebar'), aside: t('resize.aside'), bottom: t('resize.bottom') }}
+      onResize={layout.handleResize}
       toolbar={
         <>
           <HealthBanner health={template.health} alternatives={`/templates/${template.name}`} />

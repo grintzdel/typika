@@ -2,7 +2,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import type { ComponentProps } from 'react'
 
 const button = cva(
-  'inline-flex items-center justify-center gap-2 rounded-md border border-transparent text-base font-semibold transition-[background-color,border-color,box-shadow] duration-150 aria-pressed:border-accent aria-pressed:bg-selected-bg aria-pressed:text-selected-fg aria-pressed:shadow-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-disabled-bg disabled:text-disabled-fg disabled:shadow-none',
+  'inline-flex shrink-0 items-center justify-center gap-2 rounded-md whitespace-nowrap border border-transparent text-base font-semibold transition-[background-color,border-color,box-shadow] duration-150 aria-pressed:border-accent aria-pressed:bg-selected-bg aria-pressed:text-selected-fg aria-pressed:shadow-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-disabled-bg disabled:text-disabled-fg disabled:shadow-none',
   {
     variants: {
       variant: {
