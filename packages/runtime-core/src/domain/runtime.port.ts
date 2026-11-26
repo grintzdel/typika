@@ -14,7 +14,7 @@ import type { RuntimeProcessError } from './errors/runtime-process.error.ts'
 import type { RuntimeTimeoutError } from './errors/runtime-timeout.error.ts'
 import type { ProcessOutput, RunCommand } from './process.domain-model.ts'
 import type { FileContent, ProjectPath, ProjectSnapshot } from './project.domain-model.ts'
-import type { TestEvent } from './test-event.domain-model.ts'
+import type { Diagnostic, TestEvent } from './test-event.domain-model.ts'
 
 export interface RuntimeLoadProgress {
   readonly asset: string
@@ -51,6 +51,7 @@ export interface RuntimeSession {
   readonly run: (command: RunCommand) => Stream.Stream<ProcessOutput, RuntimeExecutionError>
   readonly test: (options: TestOptions) => Stream.Stream<TestEvent, RuntimeExecutionError>
   readonly preview: Effect.Effect<Option.Option<PreviewHandle>>
+  readonly check?: Effect.Effect<ReadonlyArray<Diagnostic>, RuntimeProcessError>
 }
 
 export interface RuntimePort {

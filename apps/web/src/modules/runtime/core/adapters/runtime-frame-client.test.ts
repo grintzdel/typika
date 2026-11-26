@@ -16,7 +16,13 @@ import * as Scope from 'effect/Scope'
 import * as Stream from 'effect/Stream'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { LOAD_PROGRESS, makeFakeRuntime, projectFixture, projectPath } from '../../__tests__/runtime.factory.ts'
+import {
+  LOAD_PROGRESS,
+  LOCATED_DIAGNOSTIC,
+  makeFakeRuntime,
+  projectFixture,
+  projectPath,
+} from '../../__tests__/runtime.factory.ts'
 import { makeHostKotlinCompiler } from '../frame-host/host-kotlin-compiler.ts'
 import { serveRuntimeFrame } from '../frame-host/serve-runtime-frame.ts'
 import { makeRuntimeFrameClient, type RuntimeFrameClientOptions } from './runtime-frame-client.ts'
@@ -53,10 +59,36 @@ const stdoutOf = (outputs: ReadonlyArray<ProcessOutput>) =>
 
 const withSession = <A, E>(use: (session: RuntimeSession) => Effect.Effect<A, E>, snapshot = projectFixture()) => {
   const { client, journal, port } = connect()
-  return { run: Effect.runPromise(Effect.scoped(Effect.flatMap(client.boot(snapshot), use))), journal, port }
+  return {
+    run: Effect.runPromise(Effect.scoped(Effect.flatMap(client.boot(snapshot), use))),
+    journal,
+    port,
+  }
+}
+
+const checkedBy = (canCheck: boolean) => {
+  const fake = makeFakeRuntime({ canCheck })
+  const { client } = connect({ 'browser-js': () => Promise.resolve(fake.port) })
+  return Effect.runPromise(
+    Effect.scoped(
+      Effect.flatMap(client.boot(projectFixture()), (session) =>
+        session.check === undefined
+          ? Effect.succeed(undefined)
+          : session.fs.writeFile(projectPath('src/main.ts'), 'syntax error').pipe(Effect.andThen(session.check))
+      )
+    )
+  )
 }
 
 describe('runtime frame channel', () => {
+  it('checks the files written in the frame when its runtime can check', async () => {
+    expect(await checkedBy(true)).toEqual([LOCATED_DIAGNOSTIC])
+  })
+
+  it('offers no check when the runtime of the frame cannot check', async () => {
+    expect(await checkedBy(false)).toBeUndefined()
+  })
+
   it('boots a session in the frame and runs the entry', async () => {
     const { run } = withSession((session) => Stream.runCollect(session.run({ command: 'src/main.ts', args: [] })))
 
@@ -223,7 +255,9 @@ describe('runtime frame channel', () => {
 
     it('passes on a compiler that is rate limited', async () => {
       const limited = new KotlinCompilerRateLimitedError({ retryAfterSeconds: 7 })
-      const { frameCompiler } = connect(undefined, { kotlinCompiler: { compile: () => Effect.fail(limited) } })
+      const { frameCompiler } = connect(undefined, {
+        kotlinCompiler: { compile: () => Effect.fail(limited) },
+      })
 
       expect(errorOf(await Effect.runPromiseExit(frameCompiler.compile('run', FILES)))).toEqual(limited)
     })

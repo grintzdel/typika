@@ -44,6 +44,9 @@ const testedFiles = (pkg: GoPackage) => [...pkg.testGoFiles, ...pkg.xtestGoFiles
 const isSelected = (pkg: GoPackage, files: ReadonlyArray<string> | undefined) =>
   testedFiles(pkg).length > 0 && (files === undefined || files.some((file) => testedFiles(pkg).includes(file)))
 
+const keyOf = ({ message, location }: Diagnostic) =>
+  `${location?.file ?? ''}:${location?.line ?? 0}:${location?.column ?? 0}:${message}`
+
 const dirOfFile = (path: string) => path.slice(0, Math.max(path.lastIndexOf('/'), 0))
 
 export const makeGoProject = (toolchain: GoToolchain) => {
@@ -116,6 +119,26 @@ export const makeGoProject = (toolchain: GoToolchain) => {
     sync: (next: ProjectFiles) => {
       files = next
       builder.sync(next)
+    },
+    check: async (): Promise<ReadonlyArray<Diagnostic>> => {
+      const plan = planGoBuild(files, std)
+      if (plan._tag === 'Invalid') return plan.diagnostics
+      const found = new Map<string, Diagnostic>()
+      const packages = [...plan.module.packages.values()].toSorted((a, b) => a.importPath.localeCompare(b.importPath))
+      for (const pkg of packages) {
+        const sources = [...pkg.goFiles, ...pkg.testGoFiles]
+        if (sources.length === 0) continue
+        const importPath = pkg.name === 'main' ? 'main' : pkg.importPath
+        const units = libraryUnits(plan.module)
+        units.set(importPath, {
+          importPath,
+          files: sources.map(inProject),
+          imports: [...new Set([...pkg.imports, ...pkg.testImports])],
+        })
+        for (const diagnostic of await builder.compile(units, importPath, plan.module.language))
+          found.set(keyOf(diagnostic), diagnostic)
+      }
+      return [...found.values()]
     },
     test: async (options: GoTestOptions, emit: (event: TestEvent) => void): Promise<void> => {
       const startedAt = Date.now()

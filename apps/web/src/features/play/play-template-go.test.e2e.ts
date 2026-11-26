@@ -94,6 +94,46 @@ test.describe('Go sandbox', () => {
     await expect(editor(page).locator('.cm-lintRange-error')).toHaveText('undefinedCall')
   })
 
+  test('completes the keywords, the names of the project and the packages to import', async ({ page }) => {
+    await open(page)
+    await page.getByRole('treeitem', { name: 'main.go' }).click()
+    await editor(page).click()
+    await page.keyboard.press('ControlOrMeta+End')
+
+    await page.keyboard.type('\nfun')
+    await expect(page.getByRole('option', { name: /^func/ }).first()).toBeVisible()
+    await page.keyboard.press('Escape')
+    await page.keyboard.type('\nQuoteShi')
+    await expect(page.getByRole('option', { name: /^QuoteShipping/ })).toBeVisible()
+    await page.keyboard.press('Escape')
+
+    await page.keyboard.press('ControlOrMeta+Home')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('End')
+    await page.keyboard.type('\n"str')
+    await expect(page.getByRole('option', { name: /^strings/ })).toBeVisible()
+  })
+
+  test('shows a build error while typing, before any run', async ({ page }) => {
+    const source = await mainSource()
+    await open(page)
+
+    await replaceFile(page, 'main.go', source.replace('func main() {', 'func main() {\n\tundefinedCall()'))
+
+    await expect(editor(page).locator('.cm-lintRange-error')).toHaveText('undefinedCall', { timeout: TIMEOUT })
+    await page.getByRole('tab', { name: /Problèmes/ }).click()
+    await expect(
+      page.getByRole('button', {
+        name: /^Erreur, cmd\/shop\/main\.go, ligne \d+, colonne \d+ : undefined: undefinedCall/,
+      })
+    ).toBeVisible()
+
+    await replaceFile(page, 'main.go', source)
+    await expect(editor(page).locator('.cm-lintRange-error')).toHaveCount(0, { timeout: TIMEOUT })
+  })
+
   test('stops an endless program, then runs again', async ({ page }) => {
     const source = await mainSource()
     await open(page)

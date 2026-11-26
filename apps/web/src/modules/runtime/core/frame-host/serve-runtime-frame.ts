@@ -29,7 +29,11 @@ import {
 import type { HostKotlinCompiler } from './host-kotlin-compiler.ts'
 
 type Files = ReadonlyArray<readonly [ProjectPath, FileContent]>
-type Current = { readonly bootId: number; readonly session: RuntimeSession; readonly scope: Scope.Closeable }
+type Current = {
+  readonly bootId: number
+  readonly session: RuntimeSession
+  readonly scope: Scope.Closeable
+}
 
 const decodeRequest = Schema.decodeUnknownOption(FrameRequestSchema)
 
@@ -84,6 +88,7 @@ export const serveRuntimeFrame = (
           Effect.onError(() => Scope.close(scope, Exit.void))
         )
         current = { bootId, session, scope }
+        return session.check !== undefined
       })
 
     const relay = <A>(id: number, stream: Stream.Stream<A, RuntimeError>, scope: Scope.Scope) =>
@@ -110,7 +115,11 @@ export const serveRuntimeFrame = (
     const forward = <A>(id: number, stream: (session: RuntimeSession) => Stream.Stream<A, RuntimeError>) =>
       Effect.suspend(() => {
         if (current === undefined) {
-          reply({ _tag: 'Failed', id, error: { _tag: 'RuntimeProcessError', cause: 'No runtime session' } })
+          reply({
+            _tag: 'Failed',
+            id,
+            error: { _tag: 'RuntimeProcessError', cause: 'No runtime session' },
+          })
           return Effect.void
         }
         return relay(id, stream(current.session), current.scope)
@@ -124,6 +133,17 @@ export const serveRuntimeFrame = (
         })
       )
 
+    const answer = <A>(id: number, effect: Effect.Effect<A, RuntimeError>, onSuccess: (value: A) => FrameResponse) =>
+      effect.pipe(
+        Effect.matchEffect({
+          onSuccess: (value) => Effect.sync(() => reply(onSuccess(value))),
+          onFailure: (error) => Effect.sync(() => reply({ _tag: 'Failed', id, error: toRuntimeErrorData(error) })),
+        })
+      )
+
+    const check = (session: RuntimeSession) =>
+      session.check ?? Effect.fail(new RuntimeProcessError({ cause: 'This runtime cannot check a project' }))
+
     const handle = (request: FrameRequest): Effect.Effect<void> => {
       switch (request._tag) {
         case 'Load':
@@ -133,7 +153,17 @@ export const serveRuntimeFrame = (
             frameScope
           )
         case 'Boot':
-          return acknowledge(request.id, boot(request.id, request.files))
+          return answer(request.id, boot(request.id, request.files), (canCheck) => ({
+            _tag: 'Booted',
+            id: request.id,
+            canCheck,
+          }))
+        case 'Check':
+          return answer(
+            request.id,
+            withSession(() => new RuntimeProcessError({ cause: 'No runtime session' }), check),
+            (diagnostics) => ({ _tag: 'Checked', id: request.id, diagnostics })
+          )
         case 'WriteFile':
           return acknowledge(
             request.id,

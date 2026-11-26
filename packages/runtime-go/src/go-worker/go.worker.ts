@@ -16,6 +16,10 @@ const handle = async (message: GoWorkerInput) => {
   }
   if (project === undefined) throw new Error('The Go worker is not initialized')
   project.sync(new Map(message.files))
+  if (message._tag === 'Check') {
+    post({ _tag: 'Checked', diagnostics: await project.check() })
+    return
+  }
   if (message._tag === 'Test') {
     await project.test(
       {

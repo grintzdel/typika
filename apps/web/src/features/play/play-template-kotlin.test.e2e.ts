@@ -112,6 +112,24 @@ test.describe('Kotlin sandbox', () => {
     expect(compilations).toEqual([])
   })
 
+  test('completes the keywords, the names of the project and the packages to import', async ({ page }) => {
+    await open(page)
+    await page.getByRole('treeitem', { name: 'Main.kt' }).click()
+    await editor(page).click()
+    await page.keyboard.press('ControlOrMeta+End')
+
+    await page.keyboard.type('\nwhe')
+    await expect(page.getByRole('option', { name: /^when/ }).first()).toBeVisible()
+    await page.keyboard.press('Escape')
+    await page.keyboard.type('\nquoteShi')
+    await expect(page.getByRole('option', { name: /^quoteShipping/ })).toBeVisible()
+    await page.keyboard.press('Escape')
+
+    await page.keyboard.press('ControlOrMeta+Home')
+    await page.keyboard.type('import kotlin.math.ab')
+    await expect(page.getByRole('option', { name: /^kotlin\.math\.abs/ })).toBeVisible()
+  })
+
   test('shows a compile error in the console and on the line in the editor', async ({ page }) => {
     const main = await source('src', 'main', 'kotlin', 'Main.kt')
     await open(page)

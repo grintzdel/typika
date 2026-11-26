@@ -68,7 +68,9 @@ const asFsError = (path: ProjectPath) => (error: RuntimeError) =>
 
 type CompileCall = Extract<FrameResponse, { readonly _tag: 'CompileKotlin' }>
 
-const KOTLIN_DISABLED = new KotlinCompilerUnavailableError({ cause: 'Kotlin is not enabled on this instance' })
+const KOTLIN_DISABLED = new KotlinCompilerUnavailableError({
+  cause: 'Kotlin is not enabled on this instance',
+})
 
 export type RuntimeFrameClientOptions = { readonly kotlinCompiler?: KotlinCompilerClient }
 
@@ -108,10 +110,11 @@ export const makeRuntimeFrameClient = (
 
   const send = (id: number, request: Request) => port.postMessage({ ...request, id })
 
-  const callAs = (id: number, request: Request) =>
-    Effect.callback<void, RuntimeError>((resume) => {
+  const requestAs = <A>(id: number, request: Request, valueOf: (response: FrameResponse) => Option.Option<A>) =>
+    Effect.callback<A, RuntimeError>((resume) => {
       listeners.set(id, (response) => {
-        if (response._tag === 'Succeeded') resume(Effect.void)
+        const value = valueOf(response)
+        if (Option.isSome(value)) resume(Effect.succeed(value.value))
         else if (response._tag === 'Failed') resume(Effect.fail(fromRuntimeErrorData(response.error)))
         else return
         listeners.delete(id)
@@ -120,7 +123,20 @@ export const makeRuntimeFrameClient = (
       return Effect.sync(() => listeners.delete(id))
     })
 
-  const call = (request: Request) => Effect.suspend(() => callAs(nextId++, request))
+  const succeeded = (response: FrameResponse) =>
+    response._tag === 'Succeeded' ? Option.some(undefined) : Option.none()
+
+  const call = (request: Request) => Effect.suspend(() => requestAs(nextId++, request, succeeded))
+
+  const check = Effect.suspend(() =>
+    requestAs(nextId++, { _tag: 'Check' }, (response) =>
+      response._tag === 'Checked' ? Option.some(response.diagnostics) : Option.none()
+    )
+  ).pipe(
+    Effect.mapError((error) =>
+      error._tag === 'RuntimeProcessError' ? error : new RuntimeProcessError({ cause: error })
+    )
+  )
 
   const stream = <A, E>(request: Request, schema: Schema.Codec<A, unknown>, asError: (error: RuntimeError) => E) => {
     const decodeItem = Schema.decodeUnknownOption(schema)
@@ -153,7 +169,7 @@ export const makeRuntimeFrameClient = (
     )
   }
 
-  const makeSession = (): RuntimeSession => ({
+  const makeSession = (canCheck: boolean): RuntimeSession => ({
     fs: {
       writeFile: (path, content) => call({ _tag: 'WriteFile', path, content }).pipe(Effect.mapError(asFsError(path))),
       deleteFile: (path) => call({ _tag: 'DeleteFile', path }).pipe(Effect.mapError(asFsError(path))),
@@ -167,6 +183,7 @@ export const makeRuntimeFrameClient = (
       stream({ _tag: 'Run', command: command.command, args: command.args }, ProcessOutputSchema, asExecutionError),
     test: (options) => stream({ _tag: 'Test', ...options }, TestEventSchema, asExecutionError),
     preview: Effect.succeed(Option.none()),
+    ...(canCheck ? { check } : {}),
   })
 
   return {
@@ -174,7 +191,9 @@ export const makeRuntimeFrameClient = (
     boot: (snapshot) => {
       const bootId = nextId++
       return Effect.acquireRelease(
-        callAs(bootId, { _tag: 'Boot', files: filesOf(snapshot) }).pipe(
+        requestAs(bootId, { _tag: 'Boot', files: filesOf(snapshot) }, (response) =>
+          response._tag === 'Booted' ? Option.some(response.canCheck) : Option.none()
+        ).pipe(
           Effect.mapError((error): RuntimeFrameBootError => {
             switch (error._tag) {
               case 'RuntimeBootError':
@@ -185,7 +204,7 @@ export const makeRuntimeFrameClient = (
                 return new RuntimeBootError({ kind: snapshot.manifest.runtime.kind, cause: error })
             }
           }),
-          Effect.as(makeSession())
+          Effect.map(makeSession)
         ),
         () => call({ _tag: 'Shutdown', boot: bootId }).pipe(Effect.ignore)
       )

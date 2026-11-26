@@ -74,6 +74,51 @@ describe('makeGoProject', () => {
     expect(uncaught).toEqual([])
   })
 
+  it('checks a valid project, its tests included, without a diagnostic', async () => {
+    const project = makeGoProject(toolchain)
+    project.sync(files)
+
+    expect(await project.check()).toEqual([])
+  })
+
+  it('checks every package, main included, and reports where each error is', async () => {
+    const project = makeGoProject(toolchain)
+    project.sync(
+      new Map([
+        ...files,
+        ['cmd/hello/main.go', 'package main\n\nfunc main() {\n\tundefinedCall()\n}\n'],
+        [
+          'greet/greet_test.go',
+          'package greet\n\nimport "testing"\n\nfunc TestHello(t *testing.T) { var unused int }\n',
+        ],
+      ])
+    )
+
+    expect(await project.check()).toEqual([
+      {
+        severity: 'error',
+        message: 'undefined: undefinedCall',
+        location: { file: 'cmd/hello/main.go', line: 4, column: 2 },
+      },
+      {
+        severity: 'error',
+        message: 'declared and not used: unused',
+        location: { file: 'greet/greet_test.go', line: 5, column: 36 },
+      },
+    ])
+  })
+
+  it('reports once the error of a package that others import', async () => {
+    const project = makeGoProject(toolchain)
+    project.sync(
+      new Map([...files, ['greet/greet.go', 'package greet\n\nfunc Hello(name string) string { return 1 }\n']])
+    )
+
+    const diagnostics = await project.check()
+
+    expect(diagnostics.map((diagnostic) => diagnostic.location?.file)).toEqual(['greet/greet.go'])
+  })
+
   it('refuses to run a package that is not main', async () => {
     const project = makeGoProject(toolchain)
     project.sync(files)

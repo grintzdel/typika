@@ -9,6 +9,7 @@ import {
 import * as Cause from 'effect/Cause'
 import * as Effect from 'effect/Effect'
 import * as Exit from 'effect/Exit'
+import * as Fiber from 'effect/Fiber'
 import * as Stream from 'effect/Stream'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
@@ -115,6 +116,25 @@ describe('go runtime', () => {
       location: { file: 'cmd/shop/main.go', line: 4 },
     })
   })
+
+  it('checks the files written after the boot without running them, while a program runs', async () => {
+    const outcome = await withSession({ 'cmd/shop/main.go': endlessMain }, (session) =>
+      Effect.gen(function* () {
+        const check = session.check
+        if (check === undefined) return yield* Effect.die('The Go runtime has no check')
+        const running = yield* Effect.forkChild(collectRun(session))
+        const clean = yield* check
+        yield* session.fs.writeFile(projectPath('cmd/shop/main.go'), brokenMain)
+        const broken = yield* check
+        yield* Fiber.interrupt(running)
+        return { clean, broken }
+      })
+    )
+    expect(outcome.clean).toEqual([])
+    expect(outcome.broken).toEqual([
+      expect.objectContaining({ location: { file: 'cmd/shop/main.go', line: 4, column: 2 } }),
+    ])
+  }, 30_000)
 
   it('stops an endless program at the time limit, then runs again', async () => {
     const outcome = await withSession({ 'cmd/shop/main.go': endlessMain }, (session) =>

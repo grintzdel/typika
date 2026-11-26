@@ -17,13 +17,16 @@ import * as Effect from 'effect/Effect'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { isCompletedLanguage } from '../../core/domain/code-completion.domain-model.ts'
 import {
   isAnalyzedPath,
   type FileRename,
   type ReferenceSearch,
   type SourceRange,
 } from '../../core/domain/language-service.domain-model.ts'
+import { languageOf } from '../../core/domain/language.domain-model.ts'
 import type { LanguageServiceSession } from '../../core/ports/language-service.port.ts'
+import { basicCompletions } from './basic-completions.ts'
 import { buildDiagnostics, setBuildDiagnostics, toLintDiagnostics } from './build-diagnostics.ts'
 import { editorPhrasesOf } from './editor-phrases.ts'
 import { editorTheme } from './editor-theme.ts'
@@ -46,15 +49,23 @@ export type CodeEditorProps = {
   readonly onChange: (path: string, content: string) => void
   readonly onGoTo?: (range: SourceRange) => void
   readonly onReferences?: (search: ReferenceSearch) => void
+  readonly projectFiles?: ReadonlyMap<string, string>
 }
+
+const NO_FILES: ReadonlyMap<string, string> = new Map()
 
 const languageServiceExtensions = (
   path: string,
   readOnly: boolean,
   session: LanguageServiceSession | undefined,
-  handlers: NavigationHandlers
-): Extension =>
-  session === undefined || readOnly || !isAnalyzedPath(path) ? [] : typescriptExtensions(session, path, handlers)
+  handlers: NavigationHandlers,
+  projectFilesOf: () => ReadonlyMap<string, string>
+): Extension => {
+  if (readOnly) return []
+  const language = languageOf(path)
+  if (isCompletedLanguage(language)) return basicCompletions(language, path, projectFilesOf)
+  return session === undefined || !isAnalyzedPath(path) ? [] : typescriptExtensions(session, path, handlers)
+}
 
 const localeExtensions = (label: string, phrases: Readonly<Record<string, string>>): Extension => [
   EditorState.phrases.of(phrases),
@@ -121,6 +132,7 @@ export const CodeEditor = ({
   onChange,
   onGoTo,
   onReferences,
+  projectFiles = NO_FILES,
 }: CodeEditorProps) => {
   const { t, i18n } = useTranslation('editor')
   const phrases = editorPhrasesOf(t)
@@ -138,8 +150,11 @@ export const CodeEditor = ({
   const languageServiceSlot = useRef(new Compartment())
   const localeSlot = useRef(new Compartment())
   const latestNavigation = useRef({ onGoTo, onReferences })
+  const latestProjectFiles = useRef(projectFiles)
+  const projectFilesOf = useRef(() => latestProjectFiles.current)
 
   useEffect(() => {
+    latestProjectFiles.current = projectFiles
     latestOnChange.current = onChange
     latestNavigation.current = { onGoTo, onReferences }
   })
@@ -186,7 +201,13 @@ export const CodeEditor = ({
     current.current = opened
     documents.current.set(documentKey, opened)
     const slot = languageServiceSlot.current
-    const extensions = languageServiceExtensions(path, readOnly, latestLanguageService.current, handlers.current)
+    const extensions = languageServiceExtensions(
+      path,
+      readOnly,
+      latestLanguageService.current,
+      handlers.current,
+      projectFilesOf.current
+    )
     const locale = localeExtensions(label, phrases)
     const cached = states.current.get(documentKey)
     if (cached === undefined || cached.doc.toString() !== content) {
@@ -249,7 +270,13 @@ export const CodeEditor = ({
     }
     editor.dispatch({
       effects: languageServiceSlot.current.reconfigure(
-        languageServiceExtensions(opened.path, opened.readOnly, languageService, handlers.current)
+        languageServiceExtensions(
+          opened.path,
+          opened.readOnly,
+          languageService,
+          handlers.current,
+          projectFilesOf.current
+        )
       ),
     })
     if (!opened.readOnly && isAnalyzedPath(opened.path) && editor.hasFocus && isCompletionPending(editor.state))
