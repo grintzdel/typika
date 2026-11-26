@@ -1,11 +1,21 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogDescription,
+  AlertDialogPopup,
+  AlertDialogTitle,
+} from '../../../../ui/AlertDialog.tsx'
+import { Button } from '../../../../ui/Button.tsx'
 import { ContextMenu } from '../../../../ui/ContextMenu.tsx'
 import {
-  isRenamable,
+  isEditable,
+  isWithin,
   nameOf,
   type FileNameIssue,
+  type FileTreeDeletion,
   type FileTreeDraft,
   type TreeItemRef,
 } from '../../core/domain/file-operations.domain-model.ts'
@@ -21,6 +31,10 @@ export type FileTreeEditing = {
   readonly onDraftSubmit: (name: string) => void
   readonly onDraftBlur: (name: string) => void
   readonly onDraftCancel: () => void
+  readonly deletion: FileTreeDeletion | undefined
+  readonly onDelete: (path: string, isFolder: boolean) => void
+  readonly onDeleteConfirm: () => void
+  readonly onDeleteCancel: () => void
 }
 
 export type FileTreeProps = {
@@ -134,6 +148,48 @@ const CreateGlyph = ({ isFolder }: { readonly isFolder: boolean }) => (
   </svg>
 )
 
+type DeleteDialogProps = {
+  readonly deletion: FileTreeDeletion | undefined
+  readonly finalFocus: () => HTMLElement | false
+  readonly onConfirm: () => void
+  readonly onCancel: () => void
+}
+
+const DeleteDialog = ({ deletion, finalFocus, onConfirm, onCancel }: DeleteDialogProps) => {
+  const { t } = useTranslation('project')
+  const [shown, setShown] = useState(deletion)
+  if (deletion !== undefined && deletion !== shown) setShown(deletion)
+  const description = (() => {
+    if (shown === undefined) return null
+    if (shown.files.length === 0) return t('tree.deletion.emptyFolder')
+    return t(shown.isFolder ? 'tree.deletion.folder' : 'tree.deletion.file')
+  })()
+  return (
+    <AlertDialog
+      open={deletion !== undefined}
+      onOpenChange={(open) => {
+        if (!open) onCancel()
+      }}
+    >
+      <AlertDialogPopup finalFocus={finalFocus}>
+        <AlertDialogTitle>{t('tree.deletion.title', { name: nameOf(shown?.path ?? '') })}</AlertDialogTitle>
+        <AlertDialogDescription>{description}</AlertDialogDescription>
+        <ul className="max-h-48 overflow-auto font-mono text-base">
+          {shown?.files.map((path) => (
+            <li key={path}>{path}</li>
+          ))}
+        </ul>
+        <div className="flex justify-end gap-2 pt-2">
+          <AlertDialogClose render={<Button />}>{t('tree.deletion.cancel')}</AlertDialogClose>
+          <Button variant="primary" onClick={onConfirm}>
+            {t('tree.deletion.confirm')}
+          </Button>
+        </div>
+      </AlertDialogPopup>
+    </AlertDialog>
+  )
+}
+
 type HeaderButtonProps = { readonly label: string; readonly onClick: () => void; readonly children: ReactNode }
 
 const HeaderButton = ({ label, onClick, children }: HeaderButtonProps) => (
@@ -240,6 +296,12 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
       case 'F2':
         if (editing === undefined) return
         editing.onRename(node.path, node._tag === 'Folder')
+        break
+      case 'Backspace':
+      case 'Delete':
+        if (editing === undefined || (event.key === 'Backspace' && !event.metaKey)) return
+        setFocusedPath(node.path)
+        editing.onDelete(node.path, node._tag === 'Folder')
         break
       default:
         return
@@ -368,6 +430,12 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
 
   if (editing === undefined) return tree
 
+  const neighbourOf = (path: string) => {
+    const index = visible.findIndex((item) => item.node.path === path)
+    const next = visible.slice(index + 1).find((item) => !isWithin(item.node.path, path))
+    return (next ?? visible[index - 1])?.node.path
+  }
+
   const chosen = (action: () => void) => () => {
     isMenuActionChosen.current = true
     action()
@@ -395,12 +463,28 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
           { label: t('tree.newFolder'), onSelect: chosen(() => editing.onCreate('folder', menuTarget)) },
           {
             label: t('tree.rename'),
-            disabled: menuTarget === undefined || !isRenamable(menuTarget.path),
+            disabled: menuTarget === undefined || !isEditable(menuTarget.path),
             onSelect: chosen(() => {
               if (menuTarget !== undefined) editing.onRename(menuTarget.path, menuTarget.isFolder)
             }),
           },
+          {
+            label: t('tree.delete'),
+            disabled: menuTarget === undefined || !isEditable(menuTarget.path),
+            onSelect: chosen(() => {
+              if (menuTarget !== undefined) editing.onDelete(menuTarget.path, menuTarget.isFolder)
+            }),
+          },
         ]}
+      />
+      <DeleteDialog
+        deletion={editing.deletion}
+        finalFocus={() => items.current.get(tabStop ?? '') ?? false}
+        onConfirm={() => {
+          if (editing.deletion !== undefined) setPendingFocus(neighbourOf(editing.deletion.path))
+          editing.onDeleteConfirm()
+        }}
+        onCancel={editing.onDeleteCancel}
       />
     </div>
   )

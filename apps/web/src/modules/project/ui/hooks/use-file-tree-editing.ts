@@ -4,11 +4,14 @@ import {
   checkNewPath,
   creationFolderOf,
   FileNameIssue,
-  isRenamable,
+  filesWithin,
+  isEditable,
+  isWithin,
   movesOf,
   parentOf,
   type FileMove,
   type FileNameCheck,
+  type FileTreeDeletion,
   type FileTreeDraft,
   type TreeItemRef,
 } from '../../core/domain/file-operations.domain-model.ts'
@@ -19,16 +22,16 @@ export type FileTreeEditingSinks = {
   readonly paths: ReadonlyArray<string>
   readonly onCreateFile: (path: string) => void
   readonly onMove: (moves: ReadonlyArray<FileMove>) => void
+  readonly onDelete: (paths: ReadonlyArray<string>) => void
 }
 
-const isWithin = (path: string, folder: string) => path === folder || path.startsWith(`${folder}/`)
-
-export const useFileTreeEditing = ({ paths, onCreateFile, onMove }: FileTreeEditingSinks) => {
+export const useFileTreeEditing = ({ paths, onCreateFile, onMove, onDelete }: FileTreeEditingSinks) => {
   const [folders, setFolders] = useState<ReadonlyArray<string>>([])
   const [draft, setDraftState] = useState<FileTreeDraft | undefined>(undefined)
   const openDraft = useRef<FileTreeDraft | undefined>(undefined)
   const [issue, setIssue] = useState<FileNameIssue | undefined>(undefined)
   const [focusRequest, setFocusRequest] = useState<{ readonly path: string } | undefined>(undefined)
+  const [deletion, setDeletion] = useState<FileTreeDeletion | undefined>(undefined)
 
   const setDraft = (next: FileTreeDraft | undefined) => {
     openDraft.current = next
@@ -64,6 +67,12 @@ export const useFileTreeEditing = ({ paths, onCreateFile, onMove }: FileTreeEdit
     close(path)
   }
 
+  const refuseReadOnly = (path: string) => {
+    const isReadOnly = !isEditable(path)
+    setIssue(isReadOnly ? FileNameIssue.READ_ONLY : undefined)
+    return isReadOnly
+  }
+
   const submit = (name: string, onIssue: (issue: FileNameIssue) => void) => {
     const current = openDraft.current
     if (current === undefined) return
@@ -81,13 +90,7 @@ export const useFileTreeEditing = ({ paths, onCreateFile, onMove }: FileTreeEdit
       setDraft({ _tag: 'Create', kind, parentPath: creationFolderOf(from) })
     },
     onRename: (path: string, isFolder: boolean) => {
-      if (!isRenamable(path)) {
-        setDraft(undefined)
-        setIssue(FileNameIssue.READ_ONLY)
-        return
-      }
-      setIssue(undefined)
-      setDraft({ _tag: 'Rename', path, isFolder })
+      setDraft(refuseReadOnly(path) ? undefined : { _tag: 'Rename', path, isFolder })
     },
     onDraftChange: (name: string) => {
       const current = openDraft.current
@@ -98,6 +101,18 @@ export const useFileTreeEditing = ({ paths, onCreateFile, onMove }: FileTreeEdit
     onDraftSubmit: (name: string) => submit(name, setIssue),
     onDraftBlur: (name: string) => submit(name, () => close(undefined)),
     onDraftCancel: () => close(undefined),
+    deletion,
+    onDelete: (path: string, isFolder: boolean) => {
+      if (refuseReadOnly(path)) return
+      setDeletion({ path, isFolder, files: filesWithin(paths, path) })
+    },
+    onDeleteConfirm: () => {
+      if (deletion === undefined) return
+      if (deletion.files.length > 0) onDelete(deletion.files)
+      setFolders((previous) => previous.filter((folder) => !isWithin(folder, deletion.path)))
+      setDeletion(undefined)
+    },
+    onDeleteCancel: () => setDeletion(undefined),
   }
 
   return {
@@ -105,6 +120,7 @@ export const useFileTreeEditing = ({ paths, onCreateFile, onMove }: FileTreeEdit
     editing,
     handleReset: () => {
       setFolders([])
+      setDeletion(undefined)
       close(undefined)
     },
   }

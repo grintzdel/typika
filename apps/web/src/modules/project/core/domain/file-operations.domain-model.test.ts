@@ -4,7 +4,8 @@ import {
   checkNewPath,
   creationFolderOf,
   FileNameIssue,
-  isRenamable,
+  filesWithin,
+  isEditable,
   movesOf,
   nameOf,
   parentOf,
@@ -59,17 +60,30 @@ describe('checkNewPath', () => {
   })
 })
 
-describe('isRenamable', () => {
+describe('isEditable', () => {
   it('accepts the project files and folders', () => {
-    expect(isRenamable('src/main.ts')).toBe(true)
-    expect(isRenamable('src/shop')).toBe(true)
+    expect(isEditable('src/main.ts')).toBe(true)
+    expect(isEditable('src/shop')).toBe(true)
   })
 
   it('refuses the Typika files, their folders and their group', () => {
-    expect(isRenamable('typika.toml')).toBe(false)
-    expect(isRenamable('tour/01-intro.md')).toBe(false)
-    expect(isRenamable('tour')).toBe(false)
-    expect(isRenamable(TYPIKA_GROUP_PATH)).toBe(false)
+    expect(isEditable('typika.toml')).toBe(false)
+    expect(isEditable('tour/01-intro.md')).toBe(false)
+    expect(isEditable('tour')).toBe(false)
+    expect(isEditable(TYPIKA_GROUP_PATH)).toBe(false)
+  })
+})
+
+describe('filesWithin', () => {
+  it('finds a single file', () => {
+    expect(filesWithin(PATHS, 'src/main.ts')).toEqual(['src/main.ts'])
+  })
+
+  it('finds every file of a folder, without its namesakes', () => {
+    expect(filesWithin([...PATHS, 'src/shop/order.ts', 'src/shopping.ts'], 'src/shop')).toEqual([
+      'src/shop/money.ts',
+      'src/shop/order.ts',
+    ])
   })
 })
 

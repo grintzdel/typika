@@ -46,14 +46,56 @@ test.describe('file tree editing', () => {
     await expect(tree(page).getByRole('treeitem', { name: /^tax\.ts/ })).toHaveCount(0)
   })
 
-  test('keeps the Typika files from being renamed', async ({ page }) => {
+  test('keeps the Typika files from being renamed or deleted', async ({ page }) => {
     await openStrategy(page)
 
     await tree(page).getByRole('treeitem', { name: 'typika.toml, lecture seule' }).focus()
     await page.keyboard.press('F2')
+    await page.keyboard.press('Delete')
 
-    await expect(page.getByText('Ce fichier est en lecture seule : il ne peut pas être renommé.')).toBeVisible()
+    await expect(
+      page.getByText('Ce fichier est en lecture seule : il ne peut être ni renommé ni supprimé.')
+    ).toBeVisible()
     await expect(page.getByRole('textbox', { name: /Nouveau nom/ })).toHaveCount(0)
+    await expect(page.getByRole('alertdialog')).toHaveCount(0)
+  })
+
+  test('deletes a file, keeps it deleted after a reload, and brings it back on reset', async ({ page }) => {
+    await openStrategy(page)
+
+    await tree(page).getByRole('treeitem', { name: 'README.md' }).click()
+    await expect(tab(page, 'README.md')).toHaveAttribute('aria-selected', 'true')
+    await page.keyboard.press('Delete')
+    const dialog = page.getByRole('alertdialog', { name: 'Supprimer « README.md » ?' })
+    await dialog.getByRole('button', { name: 'Supprimer' }).click()
+
+    await expect(tree(page).getByRole('treeitem', { name: /^README\.md/ })).toHaveCount(0)
+    await expect(tab(page, 'README.md')).toHaveCount(0)
+    await expect(status(page)).toHaveText('Modifié')
+
+    await page.reload()
+    await expect(tree(page).getByRole('treeitem', { name: 'src' })).toBeVisible()
+    await expect(tree(page).getByRole('treeitem', { name: /^README\.md/ })).toHaveCount(0)
+
+    await page.getByRole('button', { name: 'Réinitialiser' }).click()
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Réinitialiser' }).click()
+    await expect(tree(page).getByRole('treeitem', { name: 'README.md' })).toBeVisible()
+  })
+
+  test('deletes a folder and its files from the context menu', async ({ page }) => {
+    await openStrategy(page)
+
+    await tree(page)
+      .getByRole('treeitem', { name: 'shop' })
+      .click({ button: 'right', position: { x: 40, y: 8 } })
+    await page.getByRole('menuitem', { name: 'Supprimer' }).click()
+    const dialog = page.getByRole('alertdialog', { name: 'Supprimer « shop » ?' })
+    await expect(dialog).toContainText('src/shop/money.ts')
+    await expect(dialog).toContainText('src/shop/order.ts')
+    await dialog.getByRole('button', { name: 'Supprimer' }).click()
+
+    await expect(tree(page).getByRole('treeitem', { name: 'shop' })).toHaveCount(0)
+    await expect(tree(page).getByRole('treeitem', { name: 'main.ts' })).toBeFocused()
   })
 
   test('removes a created file when the project is reset', async ({ page }) => {

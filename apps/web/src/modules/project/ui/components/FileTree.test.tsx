@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { FileNameIssue } from '../../core/domain/file-operations.domain-model.ts'
@@ -95,6 +95,10 @@ const makeEditing = (overrides: Partial<FileTreeEditing> = {}): FileTreeEditing 
   onDraftSubmit: vi.fn(),
   onDraftBlur: vi.fn(),
   onDraftCancel: vi.fn(),
+  deletion: undefined,
+  onDelete: vi.fn(),
+  onDeleteConfirm: vi.fn(),
+  onDeleteCancel: vi.fn(),
   ...overrides,
 })
 
@@ -212,7 +216,7 @@ describe('FileTree editing', () => {
     renderEditable(makeEditing({ issue: FileNameIssue.READ_ONLY }))
 
     expect(screen.getByRole('status').textContent).toBe(
-      'Ce fichier est en lecture seule : il ne peut pas être renommé.'
+      'Ce fichier est en lecture seule : il ne peut être ni renommé ni supprimé.'
     )
   })
 
@@ -245,11 +249,83 @@ describe('FileTree editing', () => {
     expect(editing.onRename).toHaveBeenCalledWith('src/shop', true)
   })
 
-  it('disables the renaming of a Typika file in its context menu', async () => {
+  it('disables the renaming and the deletion of a Typika file in its context menu', async () => {
     renderEditable(makeEditing())
 
     fireEvent.contextMenu(screen.getByRole('treeitem', { name: 'typika.toml, lecture seule' }))
 
     expect((await screen.findByRole('menuitem', { name: 'Renommer' })).getAttribute('aria-disabled')).toBe('true')
+    expect(screen.getByRole('menuitem', { name: 'Supprimer' }).getAttribute('aria-disabled')).toBe('true')
+  })
+
+  it('deletes the focused item with Delete or Cmd+Backspace', () => {
+    const editing = makeEditing()
+    renderEditable(editing)
+    const shop = screen.getByRole('treeitem', { name: 'shop' })
+    const money = screen.getByRole('treeitem', { name: 'money.ts' })
+
+    shop.focus()
+    fireEvent.keyDown(shop, { key: 'Delete' })
+    money.focus()
+    fireEvent.keyDown(money, { key: 'Backspace' })
+    fireEvent.keyDown(money, { key: 'Backspace', metaKey: true })
+
+    expect(editing.onDelete).toHaveBeenCalledTimes(2)
+    expect(editing.onDelete).toHaveBeenNthCalledWith(1, 'src/shop', true)
+    expect(editing.onDelete).toHaveBeenNthCalledWith(2, 'src/shop/money.ts', false)
+  })
+
+  it('deletes an item from its context menu', async () => {
+    const editing = makeEditing()
+    renderEditable(editing)
+
+    fireEvent.contextMenu(screen.getByRole('treeitem', { name: 'money.ts' }))
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Supprimer' }))
+
+    expect(editing.onDelete).toHaveBeenCalledWith('src/shop/money.ts', false)
+  })
+
+  it('asks to confirm the deletion of a folder, listing its files', async () => {
+    const editing = makeEditing({
+      deletion: { path: 'src/shop', isFolder: true, files: ['src/shop/money.ts', 'src/shop/order.ts'] },
+    })
+    renderEditable(editing)
+
+    const dialog = await screen.findByRole('alertdialog', { name: 'Supprimer « shop » ?' })
+    expect(dialog.textContent).toContain('src/shop/money.ts')
+    expect(dialog.textContent).toContain('src/shop/order.ts')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Supprimer' }))
+
+    expect(editing.onDeleteConfirm).toHaveBeenCalledOnce()
+  })
+
+  it('cancels a deletion', async () => {
+    const editing = makeEditing({ deletion: { path: 'src/main.ts', isFolder: false, files: ['src/main.ts'] } })
+    renderEditable(editing)
+
+    const dialog = await screen.findByRole('alertdialog', { name: 'Supprimer « main.ts » ?' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Annuler' }))
+
+    await waitFor(() => expect(editing.onDeleteCancel).toHaveBeenCalledOnce())
+    expect(editing.onDeleteConfirm).not.toHaveBeenCalled()
+  })
+
+  it('moves the focus to the next item once the deleted one is gone', async () => {
+    const paths = ['src/main.ts', 'src/shop/money.ts', 'typika.toml']
+    const deletion = { path: 'src/shop', isFolder: true, files: ['src/shop/money.ts'] }
+    const { rerender } = renderEditable(makeEditing({ deletion }), paths)
+
+    fireEvent.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Supprimer' }))
+    rerender(
+      <FileTree
+        nodes={buildFileTree(['src/main.ts', 'typika.toml'])}
+        selectedPath={undefined}
+        modifiedPaths={[]}
+        onSelect={vi.fn()}
+        editing={makeEditing()}
+      />
+    )
+
+    await waitFor(() => expect(document.activeElement?.getAttribute('data-path')).toBe('src/main.ts'))
   })
 })
