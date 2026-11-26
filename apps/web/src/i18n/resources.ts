@@ -307,7 +307,7 @@ export const resources = {
         deleteDescription: 'This project and its files will be erased from this browser.',
       },
       storage: {
-        used: 'Space used: {{usage}} of {{quota}}',
+        used: 'Space used by your projects: {{usage}} of {{quota}}',
         nearlyFull: 'This browser’s storage is nearly full. Delete projects to free some space.',
       },
     },
@@ -829,7 +829,7 @@ export const resources = {
         deleteDescription: 'Ce projet et ses fichiers seront effacés de ce navigateur.',
       },
       storage: {
-        used: 'Espace utilisé : {{usage}} sur {{quota}}',
+        used: 'Espace utilisé par vos projets : {{usage}} sur {{quota}}',
         nearlyFull: 'Le stockage de ce navigateur est presque plein. Supprimez des projets pour libérer de l’espace.',
       },
     },

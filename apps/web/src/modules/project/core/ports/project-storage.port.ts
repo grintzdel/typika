@@ -18,6 +18,7 @@ export class ProjectStoragePort extends Context.Service<
   ProjectStoragePort,
   {
     readonly list: Effect.Effect<ReadonlyArray<ProjectRecord>, ProjectStorageError>
+    readonly byteSize: Effect.Effect<number, ProjectStorageError>
     readonly findById: (id: string) => Effect.Effect<Option.Option<StoredProject>, ProjectStorageError>
     readonly findByOrigin: (origin: ProjectOrigin) => Effect.Effect<Option.Option<StoredProject>, ProjectStorageError>
     // Creates `project` from `initialFiles` when no project matches it yet, atomically with the edits. `match`

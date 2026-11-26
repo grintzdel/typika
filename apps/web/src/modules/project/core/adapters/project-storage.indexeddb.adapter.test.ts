@@ -259,6 +259,19 @@ describe('makeProjectStorageIndexedDb', () => {
     expect(files).toBe(TEMPLATE.size)
   })
 
+  it('measures the stored files in UTF-8 bytes', async () => {
+    const storage = makeProjectStorageIndexedDb(new IDBFactory())
+    const record = projectRecord()
+    const files = projectFiles({ 'a.ts': 'ab', 'b.ts': 'é' })
+    await run(storage.saveTemplateEdits({ project: record, initialFiles: files, edits: new Map() }))
+
+    expect(await run(storage.byteSize)).toBe(4)
+
+    await run(storage.remove(record.id))
+
+    expect(await run(storage.byteSize)).toBe(0)
+  })
+
   it('fails with a storage error on a record it cannot read', async () => {
     const factory = new IDBFactory()
     const storage = makeProjectStorageIndexedDb(factory)
