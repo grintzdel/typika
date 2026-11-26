@@ -37,7 +37,7 @@ export const shareGistProgram = ({
       isPublic,
       files: gistFilesOf({
         name: project.name,
-        ref: project.ref,
+        ref: project.origin.kind === 'personal' ? undefined : project.ref,
         runtime: project.manifest.runtime.kind,
         exercise: project.exercise?.name,
         files,

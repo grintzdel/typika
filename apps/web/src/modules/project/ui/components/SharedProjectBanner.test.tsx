@@ -17,6 +17,13 @@ describe('SharedProjectBanner', () => {
     expect(onSave).toHaveBeenCalledOnce()
   })
 
+  it('names no template for a shared personal project', () => {
+    render(<SharedProjectBanner templateName={undefined} templateTitle="My sandbox" isSaved={false} onSave={vi.fn()} />)
+
+    expect(screen.getByRole('region', { name: 'Projet partagé' }).textContent).toContain('Projet personnel partagé')
+    expect(screen.queryByRole('link')).toBeNull()
+  })
+
   it('says when the shared project is saved', () => {
     render(<SharedProjectBanner templateName="strategy-ts" templateTitle="Strategy" isSaved onSave={vi.fn()} />)
 

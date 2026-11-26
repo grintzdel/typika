@@ -4,6 +4,7 @@ import * as Effect from 'effect/Effect'
 
 import {
   modifiedPathsOf,
+  projectRecordOf,
   textFilesOf,
   type ProjectFileEdit,
   type TemplateProject,
@@ -24,14 +25,7 @@ export const saveProjectFilesProgram = ({
     const now = yield* Clock.currentTimeMillis
     const id = project.projectId ?? (yield* Effect.sync(() => crypto.randomUUID()))
     const saved = yield* storage.saveTemplateEdits({
-      project: {
-        id,
-        name: project.name,
-        origin: project.origin,
-        ref: project.ref,
-        createdAt: now,
-        updatedAt: now,
-      },
+      project: projectRecordOf(project, id, now),
       initialFiles: textFilesOf(project.files),
       edits: new Map(edits),
       removed,

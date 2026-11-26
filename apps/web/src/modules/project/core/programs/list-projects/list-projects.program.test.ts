@@ -2,7 +2,7 @@ import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 import { describe, expect, it } from 'vitest'
 
-import { projectFiles, projectRecord } from '../../../__tests__/project.factory.ts'
+import { personalProject, projectFiles, projectRecord } from '../../../__tests__/project.factory.ts'
 import { templateFiles } from '../../../__tests__/template.factory.ts'
 import { ProjectIndexUnavailableError } from '../../domain/errors/project-index-unavailable.error.ts'
 import { TemplateIndexPort } from '../../ports/template-index.port.ts'
@@ -33,6 +33,7 @@ describe('listProjectsProgram', () => {
         templateTitle: 'Sample',
         language: 'typescript',
         exercise: 'fix-it',
+        isPersonal: false,
         updatedAt: 3_000,
       },
       {
@@ -43,6 +44,7 @@ describe('listProjectsProgram', () => {
         templateTitle: undefined,
         language: undefined,
         exercise: undefined,
+        isPersonal: false,
         updatedAt: 2_000,
       },
       {
@@ -53,6 +55,7 @@ describe('listProjectsProgram', () => {
         templateTitle: 'Sample',
         language: 'typescript',
         exercise: undefined,
+        isPersonal: false,
         updatedAt: 1_000,
       },
     ])
@@ -77,5 +80,24 @@ describe('listProjectsProgram', () => {
       ['gone-ts', undefined],
       ['My pricing', undefined],
     ])
+  })
+})
+
+describe('listProjectsProgram with a personal project', () => {
+  it('lists it with its language, apart from the catalogue', async () => {
+    const stored = personalProject()
+
+    const [listed] = await Effect.runPromise(
+      listProjectsProgram.pipe(Effect.provide(makeProjectTestLayer({}, makeProjectStorageInMemory([stored]))))
+    )
+
+    expect(listed).toMatchObject({
+      id: stored.record.id,
+      name: 'My sandbox',
+      path: `/p/${stored.record.id}`,
+      templateTitle: undefined,
+      language: 'typescript',
+      isPersonal: true,
+    })
   })
 })

@@ -2,7 +2,7 @@ import * as Effect from 'effect/Effect'
 import * as Exit from 'effect/Exit'
 import { describe, expect, it } from 'vitest'
 
-import { projectFiles, projectPath, projectRecord } from '../../../__tests__/project.factory.ts'
+import { personalProject, projectFiles, projectPath, projectRecord } from '../../../__tests__/project.factory.ts'
 import { makeProjectStorageInMemory, makeProjectTestLayer } from '../../project.test-layer.ts'
 import { duplicateProjectProgram } from './duplicate-project.program.ts'
 
@@ -38,5 +38,20 @@ describe('duplicateProjectProgram', () => {
     expect(Exit.isFailure(exit) && exit.cause.reasons[0]).toMatchObject({
       error: { _tag: 'ProjectNotFoundError', id: 'missing' },
     })
+  })
+})
+
+describe('duplicateProjectProgram on a personal project', () => {
+  it('gives the copy the same starting state', async () => {
+    const source = personalProject({ 'src/main.ts': 'mine' })
+    const storage = makeProjectStorageInMemory([source])
+
+    const id = await Effect.runPromise(
+      duplicateProjectProgram({ id: source.record.id, name: 'copy' }).pipe(
+        Effect.provide(makeProjectTestLayer({}, storage))
+      )
+    )
+
+    expect(storage.projects.get(id)?.record.baseline).toEqual(source.record.baseline)
   })
 })

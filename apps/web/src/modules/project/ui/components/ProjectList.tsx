@@ -60,7 +60,7 @@ const ProjectRow = ({ project, now, onRename, onDuplicate, onDelete, onExport }:
   const { t, i18n } = useTranslation('project')
   const [isRenaming, setRenaming] = useState(false)
   const details = [
-    project.templateTitle ?? project.templateName,
+    project.isPersonal ? t('list.personal') : (project.templateTitle ?? project.templateName),
     ...(project.language === undefined ? [] : [languageNameOf(project.language)]),
     ...(project.exercise === undefined ? [] : [t('list.exercise', { name: project.exercise })]),
     t('recent.modified', { time: relativeTime(i18n.language, now - project.updatedAt) }),

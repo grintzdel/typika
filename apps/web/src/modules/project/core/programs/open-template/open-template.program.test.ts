@@ -1,9 +1,10 @@
+import type { TemplateFiles } from '@typika/manifest'
 import * as Effect from 'effect/Effect'
 import * as Exit from 'effect/Exit'
 import * as Layer from 'effect/Layer'
 import { describe, expect, it } from 'vitest'
 
-import { projectFiles, projectRecord } from '../../../__tests__/project.factory.ts'
+import { personalProject, projectFiles, projectRecord } from '../../../__tests__/project.factory.ts'
 import { templateFiles, templateToml } from '../../../__tests__/template.factory.ts'
 import { embedProjectKeyOf, storedProjectKeyOf } from '../../domain/project.domain-model.ts'
 import type { TemplateEntry } from '../../domain/template-entry.domain-model.ts'
@@ -20,7 +21,7 @@ import { openTemplateProgram } from './open-template.program.ts'
 
 const open = (
   name: string,
-  templates = { 'sample-ts': templateFiles() },
+  templates: Readonly<Record<string, TemplateFiles>> = { 'sample-ts': templateFiles() },
   storage: ProjectStorage = makeProjectStorageInMemory()
 ) => Effect.runPromiseExit(openTemplateProgram(name).pipe(Effect.provide(makeProjectTestLayer(templates, storage))))
 
@@ -265,5 +266,36 @@ describe('openTemplateProgram', () => {
     expect(failureOf(await open(storedProjectKeyOf('missing')))).toMatchObject({
       error: { _tag: 'ProjectNotFoundError', id: 'missing' },
     })
+  })
+})
+
+describe('opening a personal project', () => {
+  it('opens it on its own starting state, without the catalogue', async () => {
+    const stored = personalProject({ 'src/main.ts': 'edited' })
+
+    const exit = await open(storedProjectKeyOf(stored.record.id), {}, makeProjectStorageInMemory([stored]))
+
+    expect(Exit.isSuccess(exit) && exit.value).toMatchObject({
+      projectId: stored.record.id,
+      name: 'My sandbox',
+      templateName: 'my-sandbox',
+      origin: stored.record.origin,
+      isShared: false,
+      isSaved: true,
+      exercise: undefined,
+      modifiedPaths: ['src/main.ts'],
+      health: undefined,
+    })
+    expect(Exit.isSuccess(exit) && exit.value.manifest.facets.language).toBe('typescript')
+    expect(Exit.isSuccess(exit) && Object.fromEntries(exit.value.templateFiles)).toEqual(stored.record.baseline)
+  })
+
+  it('fails for a personal project that lost its starting state', async () => {
+    const { baseline: _, ...record } = personalProject().record
+    const stored = { ...personalProject(), record }
+
+    const exit = await open(storedProjectKeyOf(record.id), {}, makeProjectStorageInMemory([stored]))
+
+    expect(failureOf(exit)).toMatchObject({ error: { _tag: 'ProjectManifestMissingError' } })
   })
 })

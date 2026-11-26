@@ -69,6 +69,12 @@ export const TemplateOverview = ({ page }: TemplateOverviewProps) => {
         >
           {t('template.open')}
         </a>
+        <a
+          href={`/projects?${new URLSearchParams({ new: page.name }).toString()}`}
+          className="inline-flex min-h-control-md items-center rounded-md border border-border-strong bg-surface-raised px-5 text-base font-semibold shadow-sm transition-colors duration-150 hover:bg-surface-muted"
+        >
+          {t('template.createProject')}
+        </a>
         {page.comparisons.length === 0 ? null : (
           <nav aria-label={t('template.compare')} className="flex flex-wrap gap-2">
             {page.comparisons.map(({ language }) => (

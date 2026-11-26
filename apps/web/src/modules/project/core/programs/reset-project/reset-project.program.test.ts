@@ -1,7 +1,7 @@
 import * as Effect from 'effect/Effect'
 import { describe, expect, it } from 'vitest'
 
-import { projectFiles, projectPath, projectRecord } from '../../../__tests__/project.factory.ts'
+import { personalProject, projectFiles, projectPath, projectRecord } from '../../../__tests__/project.factory.ts'
 import { templateFiles } from '../../../__tests__/template.factory.ts'
 import { storedProjectKeyOf } from '../../domain/project.domain-model.ts'
 import { makeProjectStorageInMemory, makeProjectTestLayer } from '../../project.test-layer.ts'
@@ -55,5 +55,22 @@ describe('resetProjectProgram', () => {
 
     expect(storage.projects.get(opened.record.id)?.files.get(projectPath('src/main.ts'))).toBe("console.log('hello')\n")
     expect(storage.projects.get(newer.record.id)?.files.get(projectPath('src/main.ts'))).toBe('newer')
+  })
+})
+
+describe('resetting a personal project', () => {
+  it('brings it back to the state it was created in', async () => {
+    const stored = personalProject({ 'src/main.ts': 'edited', 'src/extra.ts': 'extra' })
+    const storage = makeProjectStorageInMemory([stored])
+
+    await Effect.runPromise(
+      openTemplateProgram(storedProjectKeyOf(stored.record.id)).pipe(
+        Effect.flatMap(resetProjectProgram),
+        Effect.provide(makeProjectTestLayer({}, storage))
+      )
+    )
+
+    expect(Object.fromEntries(storage.projects.get(stored.record.id)?.files ?? [])).toEqual(stored.record.baseline)
+    expect(storage.projects.get(stored.record.id)?.record.baseline).toEqual(stored.record.baseline)
   })
 })

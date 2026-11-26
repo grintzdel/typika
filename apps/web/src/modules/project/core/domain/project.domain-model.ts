@@ -1,5 +1,6 @@
-import { withoutExercises, type ExerciseKind, type Language, type TemplateFiles, type TourStep } from '@typika/manifest'
+import { Language, withoutExercises, type ExerciseKind, type TemplateFiles, type TourStep } from '@typika/manifest'
 import { ProjectPathSchema, type FileContent, type ProjectPath, type ProjectSnapshot } from '@typika/runtime-core'
+import * as Option from 'effect/Option'
 import * as Schema from 'effect/Schema'
 
 import type { TemplateEntryHealth } from './template-entry.domain-model.ts'
@@ -17,6 +18,11 @@ export const ProjectOriginSchema = Schema.Union([
     name: Schema.String,
     gistId: Schema.String,
     exercise: Schema.optionalKey(Schema.String),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal('personal'),
+    name: Schema.String,
+    language: Schema.Literals(Object.values(Language)),
   }),
 ])
 export type ProjectOrigin = Schema.Schema.Type<typeof ProjectOriginSchema>
@@ -51,7 +57,7 @@ export const embedTemplateOfKey = (key: string): string | undefined =>
   key.startsWith(EMBED_KEY_PREFIX) ? key.slice(EMBED_KEY_PREFIX.length) : undefined
 
 export const exerciseOf = (origin: ProjectOrigin): string | undefined =>
-  origin.kind === 'template' ? undefined : origin.exercise
+  origin.kind === 'template' || origin.kind === 'personal' ? undefined : origin.exercise
 
 export const projectPathOf = (id: string): string => `/p/${id}`
 
@@ -60,10 +66,11 @@ export const originOfKey = (key: string): ProjectOrigin => {
   return exercise === undefined ? { kind: 'template', name } : { kind: 'exercise', name, exercise }
 }
 
-const isSharedOrigin = (origin: ProjectOrigin) => origin.kind === 'share-url' || origin.kind === 'gist'
+const isOwnOrigin = (origin: ProjectOrigin) =>
+  origin.kind === 'share-url' || origin.kind === 'gist' || origin.kind === 'personal'
 
 export const sameOrigin = (a: ProjectOrigin, b: ProjectOrigin): boolean =>
-  isSharedOrigin(a) || isSharedOrigin(b)
+  isOwnOrigin(a) || isOwnOrigin(b)
     ? false
     : a.kind === 'exercise'
       ? b.kind === 'exercise' && a.name === b.name && a.exercise === b.exercise
@@ -77,6 +84,7 @@ export type ProjectListItem = {
   readonly templateTitle: string | undefined
   readonly language: Language | undefined
   readonly exercise: string | undefined
+  readonly isPersonal: boolean
   readonly updatedAt: number
 }
 
@@ -93,6 +101,7 @@ export const ProjectRecordSchema = Schema.Struct({
   origin: ProjectOriginSchema,
   ref: Schema.optionalKey(Schema.String),
   gistId: Schema.optionalKey(Schema.String),
+  baseline: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
   createdAt: Schema.Number,
   updatedAt: Schema.Number,
 })
@@ -164,3 +173,22 @@ export const modifiedPathsOf = (template: ProjectFiles, current: ProjectFiles): 
   [...new Set([...template.keys(), ...current.keys()])]
     .filter((path) => template.get(path) !== current.get(path))
     .toSorted()
+
+export const projectRecordOf = (project: TemplateProject, id: string, now: number): ProjectRecord => ({
+  id,
+  name: project.name,
+  origin: project.origin,
+  ...(project.ref === '' ? {} : { ref: project.ref }),
+  ...(project.origin.kind === 'personal' ? { baseline: Object.fromEntries(project.templateFiles) } : {}),
+  createdAt: now,
+  updatedAt: now,
+})
+
+const decodePath = Schema.decodeUnknownOption(ProjectPathSchema)
+
+export const projectFilesOfRecord = (files: Readonly<Record<string, string>>): ProjectFiles =>
+  new Map(
+    Object.entries(files).flatMap(([path, content]) =>
+      Option.match(decodePath(path), { onNone: () => [], onSome: (valid) => [[valid, content] as const] })
+    )
+  )

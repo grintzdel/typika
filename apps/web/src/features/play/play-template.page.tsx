@@ -188,7 +188,7 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
           <HealthBanner health={template.health} alternatives={`/templates/${template.name}`} />
           {template.isShared ? (
             <SharedProjectBanner
-              templateName={template.name}
+              templateName={template.isPersonal ? undefined : template.name}
               templateTitle={template.title}
               isSaved={project.isSaved}
               onSave={project.handleSaveShared}
