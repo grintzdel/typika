@@ -11,15 +11,17 @@ export const listProjectsProgram = Effect.gen(function* () {
   const records = yield* storage.list
   const entries = yield* index.entries.pipe(Effect.orElseSucceed(() => []))
   return records.map(({ id, name, origin, updatedAt }): ProjectListItem => {
-    const entry = entryNamed(entries, origin.name)
+    const isPersonal = origin.kind === 'personal'
+    const entry = isPersonal ? undefined : entryNamed(entries, origin.name)
     return {
       id,
       name,
       path: projectPathOf(id),
       templateName: origin.name,
       templateTitle: entry?.title,
-      language: entry?.language,
+      language: isPersonal ? origin.language : entry?.language,
       exercise: exerciseOf(origin),
+      isPersonal,
       updatedAt,
     }
   })

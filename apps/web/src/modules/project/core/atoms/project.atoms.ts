@@ -8,11 +8,13 @@ import { gitHubStatusAtom } from '../../../github/core/atoms/github.atoms.ts'
 import { projectArchiveOf } from '../domain/project-archive.domain-model.ts'
 import type { ProjectFileChanges, TemplateProject } from '../domain/project.domain-model.ts'
 import { applySolutionProgram } from '../programs/apply-solution/apply-solution.program.ts'
+import { copyTemplateProgram, createBlankProjectProgram } from '../programs/create-project/create-project.program.ts'
 import { createShareLinkProgram } from '../programs/create-share-link/create-share-link.program.ts'
 import { deleteProjectProgram } from '../programs/delete-project/delete-project.program.ts'
 import { duplicateProjectProgram } from '../programs/duplicate-project/duplicate-project.program.ts'
 import { estimateStorageProgram } from '../programs/estimate-storage/estimate-storage.program.ts'
 import { exportStoredProjectProgram } from '../programs/export-project/export-project.program.ts'
+import { listCatalogueProgram } from '../programs/list-catalogue/list-catalogue.program.ts'
 import { listProjectsProgram } from '../programs/list-projects/list-projects.program.ts'
 import { listRecentProjectsProgram } from '../programs/list-recent-projects/list-recent-projects.program.ts'
 import { listTemplatesProgram } from '../programs/list-templates/list-templates.program.ts'
@@ -52,6 +54,16 @@ export const duplicateProjectAtom = appRuntime.fn((input: { readonly id: string;
 )
 
 export const deleteProjectAtom = appRuntime.fn((id: string, get) => refreshingProjects(deleteProjectProgram(id), get))
+
+export const catalogueAtom = appRuntime.atom(listCatalogueProgram)
+
+export const createBlankProjectAtom = appRuntime.fn((input: Parameters<typeof createBlankProjectProgram>[0], get) =>
+  refreshingProjects(createBlankProjectProgram(input), get)
+)
+
+export const copyTemplateAtom = appRuntime.fn((input: Parameters<typeof copyTemplateProgram>[0], get) =>
+  refreshingProjects(copyTemplateProgram(input), get)
+)
 
 const generationAtom = Atom.family((_name: string) => Atom.make(0))
 

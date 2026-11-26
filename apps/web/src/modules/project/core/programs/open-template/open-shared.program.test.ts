@@ -2,7 +2,7 @@ import * as Effect from 'effect/Effect'
 import * as Exit from 'effect/Exit'
 import { describe, expect, it } from 'vitest'
 
-import { projectFiles, projectPath, projectRecord } from '../../../__tests__/project.factory.ts'
+import { personalProject, projectFiles, projectPath, projectRecord } from '../../../__tests__/project.factory.ts'
 import { templateFiles } from '../../../__tests__/template.factory.ts'
 import { sharedProjectKeyOf } from '../../domain/project.domain-model.ts'
 import { encodeSharePayload, shareProjectIdOf, type SharePayload } from '../../domain/share-link.domain-model.ts'
@@ -162,5 +162,54 @@ describe('opening a shared project', () => {
 
     expect(reopened.modifiedPaths).toEqual([])
     expect(reopened.isSaved).toBe(true)
+  })
+})
+
+const personalPayload = (): SharePayload => ({
+  n: 'My sandbox',
+  r: 'browser-js',
+  f: Object.fromEntries(personalProject({ 'src/main.ts': 'shared' }).files),
+})
+
+describe('opening a shared personal project', () => {
+  it('opens a link without a catalogue origin from the files it carries', async () => {
+    const storage = makeProjectStorageInMemory()
+
+    const exit = await openShared(storage, personalPayload())
+
+    expect(Exit.isSuccess(exit) && exit.value).toMatchObject({
+      name: 'My sandbox',
+      templateName: 'my-sandbox',
+      origin: { kind: 'personal', name: 'my-sandbox', language: 'typescript' },
+      isShared: true,
+      isSaved: false,
+      modifiedPaths: [],
+    })
+    expect(fileOf(exit, 'src/main.ts')).toBe('shared')
+    expect(storage.projects.size).toBe(0)
+  })
+
+  it('saves it with the shared files as its starting state', async () => {
+    const storage = makeProjectStorageInMemory()
+
+    await Effect.runPromise(
+      openTemplateProgram(sharedProjectKeyOf(await encoded(personalPayload()))).pipe(
+        Effect.flatMap((project) => saveProjectFilesProgram({ project, edits: [[projectPath('README.md'), 'mine']] })),
+        Effect.provide(makeProjectTestLayer({}, storage))
+      )
+    )
+
+    const [saved] = storage.projects.values()
+    expect(saved?.record.origin).toEqual({ kind: 'personal', name: 'my-sandbox', language: 'typescript' })
+    expect(saved?.record.baseline).toEqual(personalPayload().f)
+    expect(saved?.files.get(projectPath('README.md'))).toBe('mine')
+  })
+
+  it('fails for a link whose files are not a project', async () => {
+    const exit = await openShared(undefined, { n: 'x', r: 'browser-js', f: { 'src/main.ts': 'only' } })
+
+    expect(Exit.isFailure(exit) && exit.cause.reasons[0]).toMatchObject({
+      error: { _tag: 'ShareLinkInvalidError', reason: 'origin' },
+    })
   })
 })

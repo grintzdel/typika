@@ -16,6 +16,9 @@ describe('TemplateOverview', () => {
     )
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Strategy: shipping options')
     expect(screen.getByRole('link', { name: 'Ouvrir dans la sandbox' }).getAttribute('href')).toBe('/play/strategy-ts')
+    expect(screen.getByRole('link', { name: 'En faire un projet' }).getAttribute('href')).toBe(
+      '/projects?new=strategy-ts'
+    )
   })
 
   it('links every language, the current one marked', () => {

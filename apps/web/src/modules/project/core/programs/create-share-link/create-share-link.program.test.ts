@@ -1,10 +1,11 @@
 import * as Effect from 'effect/Effect'
 import { describe, expect, it } from 'vitest'
 
-import { projectPath } from '../../../__tests__/project.factory.ts'
+import { personalProject, projectPath } from '../../../__tests__/project.factory.ts'
 import { templateFiles } from '../../../__tests__/template.factory.ts'
+import { storedProjectKeyOf } from '../../domain/project.domain-model.ts'
 import { decodeSharePayload } from '../../domain/share-link.domain-model.ts'
-import { makeProjectTestLayer, testRefOf } from '../../project.test-layer.ts'
+import { makeProjectStorageInMemory, makeProjectTestLayer, testRefOf } from '../../project.test-layer.ts'
 import { openTemplateProgram } from '../open-template/open-template.program.ts'
 import { createShareLinkProgram } from './create-share-link.program.ts'
 
@@ -55,5 +56,28 @@ describe('createShareLinkProgram', () => {
     const link = await shareAfter('sample-ts', { 'src/main.ts': noise })
 
     expect(link._tag).toBe('TooLong')
+  })
+})
+
+describe('createShareLinkProgram on a personal project', () => {
+  it('links every file of the project, without a catalogue origin', async () => {
+    const stored = personalProject({ 'src/main.ts': 'mine' })
+
+    const link = await Effect.runPromise(
+      openTemplateProgram(storedProjectKeyOf(stored.record.id)).pipe(
+        Effect.flatMap((project) =>
+          createShareLinkProgram({ project, files: project.files, origin: 'https://typika.dev' })
+        ),
+        Effect.provide(makeProjectTestLayer({}, makeProjectStorageInMemory([stored])))
+      )
+    )
+
+    expect(link._tag).toBe('Ready')
+    if (link._tag !== 'Ready') return
+    expect(await payloadOf(link.url)).toEqual({
+      n: 'My sandbox',
+      r: 'browser-js',
+      f: Object.fromEntries(stored.files),
+    })
   })
 })

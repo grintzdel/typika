@@ -2,7 +2,7 @@ import * as Clock from 'effect/Clock'
 import * as Effect from 'effect/Effect'
 import * as Option from 'effect/Option'
 
-import type { TemplateProject } from '../../domain/project.domain-model.ts'
+import { projectRecordOf, type TemplateProject } from '../../domain/project.domain-model.ts'
 import { ProjectStoragePort } from '../../ports/project-storage.port.ts'
 
 export const resetProjectProgram = (project: TemplateProject) =>
@@ -16,14 +16,7 @@ export const resetProjectProgram = (project: TemplateProject) =>
       return
     }
     yield* storage.saveTemplateEdits({
-      project: {
-        id: projectId,
-        name: project.name,
-        origin: project.origin,
-        ref: project.ref,
-        createdAt: now,
-        updatedAt: now,
-      },
+      project: projectRecordOf(project, projectId, now),
       initialFiles: project.templateFiles,
       edits: new Map(),
       match: 'id',

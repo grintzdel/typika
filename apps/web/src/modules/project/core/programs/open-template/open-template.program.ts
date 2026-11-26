@@ -11,6 +11,7 @@ import { ProjectTemplateInvalidError } from '../../domain/errors/project-templat
 import { ProjectTemplateNotFoundError } from '../../domain/errors/project-template-not-found.error.ts'
 import { ShareLinkInvalidError } from '../../domain/errors/share-link-invalid.error.ts'
 import { projectOfGistFiles } from '../../domain/gist-share.domain-model.ts'
+import { personalOriginOf, personalTemplateOf } from '../../domain/personal-project.domain-model.ts'
 import {
   embedTemplateOfKey,
   exerciseOf,
@@ -19,12 +20,14 @@ import {
   modifiedPathsOf,
   originOfKey,
   projectFilesOf,
+  projectFilesOfRecord,
   projectIdOfKey,
   sharedPayloadOfKey,
   textOf,
   type ProjectExercise,
   type ProjectFiles,
   type ProjectOrigin,
+  type StoredProject,
   type TemplateProject,
 } from '../../domain/project.domain-model.ts'
 import {
@@ -115,6 +118,27 @@ const loadTemplate = (
     return { manifest, tourSteps, templateFiles: opened.start, exercise: opened.exercise }
   })
 
+const openPersonalProject = ({ record, files }: StoredProject) =>
+  Effect.gen(function* () {
+    const templateFiles = projectFilesOfRecord(record.baseline ?? {})
+    const template = yield* personalTemplateOf(templateFiles, record.name)
+    return {
+      ...template,
+      templateFiles,
+      exercise: undefined,
+      projectId: record.id,
+      name: record.name,
+      templateName: template.manifest.name,
+      ref: record.ref ?? '',
+      origin: record.origin,
+      isShared: false,
+      isSaved: true,
+      files,
+      modifiedPaths: modifiedPathsOf(templateFiles, files),
+      health: undefined,
+    } satisfies TemplateProject
+  })
+
 type SharedSource = {
   readonly projectId: string
   readonly name: string
@@ -122,16 +146,46 @@ type SharedSource = {
   readonly exercise: string | undefined
   readonly originOf: (templateName: string) => ProjectOrigin
   readonly filesOf: (templateFiles: ProjectFiles) => ProjectFiles
+  readonly personalFiles: ProjectFiles | undefined
 }
 
-const openShared = <E>({ projectId, name, ref, exercise, originOf, filesOf }: SharedSource, originNotFound: E) =>
+const openSharedPersonal = <E>(projectId: string, name: string, templateFiles: ProjectFiles, notProject: E) =>
+  Effect.gen(function* () {
+    const storage = yield* ProjectStoragePort
+    const stored = yield* storage.findById(projectId).pipe(Effect.orElseSucceed(() => Option.none()))
+    const template = yield* personalTemplateOf(templateFiles, name).pipe(Effect.mapError(() => notProject))
+    const files = Option.match(stored, { onNone: () => templateFiles, onSome: (project) => project.files })
+    return {
+      ...template,
+      templateFiles,
+      exercise: undefined,
+      projectId,
+      name: Option.match(stored, { onNone: () => name, onSome: (project) => project.record.name }),
+      templateName: template.manifest.name,
+      ref: '',
+      origin: personalOriginOf(template.manifest),
+      isShared: true,
+      isSaved: Option.isSome(stored),
+      files,
+      modifiedPaths: modifiedPathsOf(templateFiles, files),
+      health: undefined,
+    } satisfies TemplateProject
+  })
+
+const openShared = <E>(
+  { projectId, name, ref, exercise, originOf, filesOf, personalFiles }: SharedSource,
+  originNotFound: E
+) =>
   Effect.gen(function* () {
     const index = yield* TemplateIndexPort
     const storage = yield* ProjectStoragePort
     const stored = yield* storage.findById(projectId).pipe(Effect.orElseSucceed(() => Option.none()))
-    const entries = yield* index.entries
+    const entries = ref === undefined ? [] : yield* index.entries
     const entry = ref === undefined ? undefined : entryForRef(entries, ref)
-    if (ref === undefined || entry === undefined) return yield* Effect.fail(originNotFound)
+    if (ref === undefined || entry === undefined)
+      return yield* personalFiles === undefined
+        ? Effect.fail(originNotFound)
+        : openSharedPersonal(projectId, name, personalFiles, originNotFound)
     const loaded = yield* loadTemplate(entry.name, ref, exercise, entries)
     const files = Option.match(stored, {
       onNone: () => filesOf(loaded.templateFiles),
@@ -164,6 +218,7 @@ const openSharedProject = (encoded: string) =>
         originOf: (name) => ({ kind: 'share-url', name, ...(payload.x === undefined ? {} : { exercise: payload.x }) }),
         filesOf: (templateFiles) =>
           payload.f === undefined ? applyShareDelta(templateFiles, payload.d ?? {}) : filesOfShare(payload.f),
+        personalFiles: payload.f === undefined ? undefined : filesOfShare(payload.f),
       },
       new ShareLinkInvalidError({ reason: 'origin' })
     )
@@ -202,6 +257,7 @@ const openGistProject = (gistId: string) =>
           ...(shared.exercise === undefined ? {} : { exercise: shared.exercise }),
         }),
         filesOf: () => shared.files,
+        personalFiles: shared.files,
       },
       new GistUnavailableError({ reason: 'origin' })
     )
@@ -217,6 +273,8 @@ export const openTemplateProgram = (key: string) =>
     const projectId = projectIdOfKey(key)
     const embedded = embedTemplateOfKey(key)
     const stored = embedded === undefined ? yield* storedProjectOf(key, projectId) : Option.none()
+    if (Option.isSome(stored) && stored.value.record.origin.kind === 'personal')
+      return yield* openPersonalProject(stored.value)
     const origin = Option.match(stored, {
       onNone: () => originOfKey(embedded ?? key),
       onSome: (project) => project.record.origin,

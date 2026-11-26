@@ -14,6 +14,7 @@ const item = (overrides: Partial<ProjectListItem> = {}): ProjectListItem => ({
   templateTitle: 'Strategy: pricing',
   language: 'typescript',
   exercise: undefined,
+  isPersonal: false,
   updatedAt: NOW - 2 * 3_600_000,
   ...overrides,
 })
@@ -48,6 +49,22 @@ describe('ProjectList', () => {
     expect(strategy?.textContent).toContain('il y a 2 heures')
     expect(observer?.textContent).toContain('observer-ts')
     expect(observer?.textContent).toContain('Exercice : fix-it')
+  })
+
+  it('marks a personal project instead of naming a template', () => {
+    render(
+      <ProjectList
+        now={NOW}
+        projects={[
+          item({ name: 'My sandbox', templateName: 'my-sandbox', templateTitle: undefined, isPersonal: true }),
+        ]}
+        {...handlers()}
+      />
+    )
+
+    const [row] = within(screen.getByRole('list', { name: 'Projets' })).getAllByRole('listitem')
+    expect(row?.textContent).toContain('Projet personnel · TypeScript')
+    expect(row?.textContent).not.toContain('my-sandbox')
   })
 
   it('explains where the projects live when there are none', () => {

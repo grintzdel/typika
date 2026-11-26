@@ -241,6 +241,13 @@ Objectif : amener l'apprenant vers un concept en deux clics.
 - Actions : ouvrir, renommer, dupliquer, exporter (zip), partager, supprimer (confirmation).
 - Indicateur d'espace utilisé et avertissement à l'approche du quota (voir [sharing-and-cli](sharing-and-cli.md)).
 - **État vide** : explication que les projets restent dans ce navigateur, lien vers le hub.
+- **Nouveau projet** : bouton en tête de page, qui ouvre un dialogue à onglets. « Vierge » : nom et langage (TypeScript,
+  JavaScript, Go, Kotlin) ; le squelette a un `typika.toml`, un point d'entrée qui s'exécute et un test qui passe.
+  « Bibliothèque » : recherche dans les templates du catalogue (rôle `template`), le nom suit le titre tant qu'il n'est
+  pas modifié. Le projet créé est une copie indépendante (origine `personal`, voir
+  [sharing-and-cli](sharing-and-cli.md)) ; il s'ouvre aussitôt sur `/p/<projectId>`.
+- La page d'un template propose « En faire un projet » : `/projects?new=<name>` ouvre le dialogue sur cet onglet, avec
+  ce template choisi.
 
 ## 12. Projets partagés — `/s#<payload>`, `/g/<gistId>`
 

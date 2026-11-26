@@ -32,12 +32,16 @@ type ProjectOrigin =
   | { kind: 'exercise'; name: string; exercise: string }
   | { kind: 'share-url'; name: string; exercise?: string }
   | { kind: 'gist'; name: string; gistId: string; exercise?: string }
-  | { kind: 'blank'; runtime: 'browser-js' | 'node' | 'go' | 'kotlin' }
+  | { kind: 'personal'; name: string; language: Language }
 ```
 
 La ref épinglée du template est à côté de l'origine, dans `projects.ref`. C'est le `parent` d'un remix, conservé à
-l'export (§4, §5). `projects.gistId` garde le gist vers lequel le projet a été partagé (§3). `blank` n'est pas encore
-implémenté.
+l'export (§4, §5). `projects.gistId` garde le gist vers lequel le projet a été partagé (§3).
+
+Un projet `personal` (« Nouveau projet », [ui](ui.md) §11) ne dépend plus du catalogue : son état de départ est gardé
+dans `projects.baseline` (chemin → contenu), et sert au reset et au diff. `name` est le `name` de son `typika.toml`, lu
+depuis cet état de départ ; ses exercices éventuels sont ignorés. Une copie d'un template du catalogue garde sa ref dans
+`projects.ref`, comme `parent` à l'export.
 
 Un template peut avoir plusieurs projets : `/p/<projectId>` ouvre l'un d'eux, et `/play/<name>` rouvre le plus récent
 de son origine.
@@ -96,8 +100,9 @@ par le navigateur.
 - Si `o` est présent et résoluble, seuls les fichiers modifiés sont encodés (`d`) ; c'est le cas courant et cela
   réduit fortement la taille.
 - Si `o` est absent ou introuvable à l'ouverture, `f` est requis ; sinon erreur explicite.
-- V1 : Typika émet toujours `o` et `d`, et n'ouvre un lien que si `o` désigne un template de l'index. `f` est lu à la
-  place de `d` quand il est présent. Un lien sans origine attend les projets `blank`.
+- Typika émet `o` et `d` pour un projet issu du catalogue, et `f` sans `o` pour un projet `personal`. Un lien dont `o`
+  désigne un template de l'index s'ouvre sur ce template (`f` est lu à la place de `d` quand il est présent). Sinon,
+  `f` doit contenir un `typika.toml` valide : le lien s'ouvre comme un projet `personal` partagé.
 - `deflate-raw` via `CompressionStream` est retenu, sans repli : les navigateurs visés l'ont tous.
 
 ### 2.4 Ouverture
@@ -134,8 +139,9 @@ par le navigateur.
   blancs, que l'API des gists refuse). Les fichiers du gist absents de `files` sont ignorés.
 - Re-partager un projet déjà partagé met à jour le même gist : son id est gardé dans `projects.gistId`. Un projet
   jamais enregistré, ou ouvert depuis le gist de quelqu'un d'autre, crée un nouveau gist.
-- V1 : comme pour un lien, `o` doit désigner un template de l'index. Un gist dont l'API a tronqué un fichier (plus de
-  1 Mo) n'est pas ouvert.
+- Comme pour un lien : un gist dont `o` désigne un template de l'index s'ouvre sur ce template, et un gist sans `o`
+  (ou d'un template inconnu) s'ouvre comme un projet `personal` si ses fichiers contiennent un `typika.toml` valide. Un
+  gist dont l'API a tronqué un fichier (plus de 1 Mo) n'est pas ouvert.
 - Ouverture de `/g/<gistId>` : lecture via l'API publique GitHub, sans connexion. Les limites de débit de l'API pour
   les requêtes anonymes s'appliquent ; en cas de dépassement, message et proposition de se connecter.
 - Un gist secret reste accessible à quiconque a le lien : l'UI le dit au moment du partage.

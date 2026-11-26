@@ -52,7 +52,7 @@ export const gistFilesOf = ({
   files,
 }: {
   readonly name: string
-  readonly ref: string
+  readonly ref: string | undefined
   readonly runtime: string
   readonly exercise: string | undefined
   readonly files: ReadonlyMap<string, string>
@@ -73,7 +73,7 @@ export const gistFilesOf = ({
   const share: GistShare = {
     v: GIST_SHARE_VERSION,
     n: name,
-    o: ref,
+    ...(ref === undefined ? {} : { o: ref }),
     r: runtime,
     ...(exercise === undefined ? {} : { x: exercise }),
     files: Object.fromEntries(names),

@@ -9,7 +9,7 @@ import {
   makeGitHubTestLayer,
   TEST_GITHUB_SESSION,
 } from '../../../../github/core/github.test-layer.ts'
-import { projectFiles, projectPath, projectRecord } from '../../../__tests__/project.factory.ts'
+import { personalProject, projectFiles, projectPath, projectRecord } from '../../../__tests__/project.factory.ts'
 import { templateFiles } from '../../../__tests__/template.factory.ts'
 import { GIST_SHARE_FILE } from '../../domain/gist-share.domain-model.ts'
 import { gistProjectKeyOf, storedProjectKeyOf } from '../../domain/project.domain-model.ts'
@@ -231,5 +231,29 @@ describe('openTemplateProgram on a gist', () => {
 
     expect(Exit.isSuccess(second) && second.value.isSaved).toBe(true)
     expect(Exit.isSuccess(second) && second.value.files.get(projectPath('src/main.ts'))).toBe('mine')
+  })
+})
+
+describe('sharing a personal project as a gist', () => {
+  it('shares it without a catalogue origin, and reopens it from its files', async () => {
+    const stored = personalProject({ 'src/main.ts': 'mine' })
+    const gists = makeGistsInMemory()
+    const github = makeGitHubTestLayer({ sessions: signedIn(), gists })
+
+    const shared = await share(
+      storedProjectKeyOf(stored.record.id),
+      {},
+      makeProjectTestLayer({}, makeProjectStorageInMemory([stored]), github)
+    )
+    const opened = await open(gistProjectKeyOf('gist1'), makeProjectTestLayer({}, makeProjectStorageInMemory(), github))
+
+    expect(Exit.isSuccess(shared)).toBe(true)
+    expect(JSON.parse(gists.gists.get('gist1')?.files.get(GIST_SHARE_FILE) ?? '')).not.toHaveProperty('o')
+    expect(Exit.isSuccess(opened) && opened.value).toMatchObject({
+      name: 'My sandbox',
+      origin: { kind: 'personal', name: 'my-sandbox', language: 'typescript' },
+      isShared: true,
+    })
+    expect(Exit.isSuccess(opened) && opened.value.files.get(projectPath('src/main.ts'))).toBe('mine')
   })
 })

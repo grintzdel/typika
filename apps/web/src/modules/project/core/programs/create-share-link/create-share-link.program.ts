@@ -13,12 +13,16 @@ export const createShareLinkProgram = ({
   readonly origin: string
 }) =>
   Effect.map(
-    encodeSharePayload({
-      n: project.name,
-      o: project.ref,
-      r: project.manifest.runtime.kind,
-      ...(project.exercise === undefined ? {} : { x: project.exercise.name }),
-      d: shareDeltaOf(project.templateFiles, files),
-    }),
+    encodeSharePayload(
+      project.origin.kind === 'personal'
+        ? { n: project.name, r: project.manifest.runtime.kind, f: Object.fromEntries(files) }
+        : {
+            n: project.name,
+            o: project.ref,
+            r: project.manifest.runtime.kind,
+            ...(project.exercise === undefined ? {} : { x: project.exercise.name }),
+            d: shareDeltaOf(project.templateFiles, files),
+          }
+    ),
     (encoded) => shareLinkOf(origin, encoded)
   )
