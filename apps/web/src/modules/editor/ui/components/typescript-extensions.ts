@@ -11,7 +11,12 @@ import { StateEffect, StateField, type Extension } from '@codemirror/state'
 import { EditorView, hoverTooltip, showTooltip, ViewPlugin, type Tooltip, type ViewUpdate } from '@codemirror/view'
 import * as Effect from 'effect/Effect'
 
-import type { CompletionItem, QuickInfo, SignatureHelp } from '../../core/domain/language-service.domain-model.ts'
+import type {
+  CompletionDetails,
+  CompletionItem,
+  QuickInfo,
+  SignatureHelp,
+} from '../../core/domain/language-service.domain-model.ts'
 import type { LanguageServiceSession } from '../../core/ports/language-service.port.ts'
 import { navigationExtensions, type NavigationHandlers } from './navigation.ts'
 
@@ -19,6 +24,7 @@ const LINT_DELAY_MS = 300
 const SIGNATURE_DELAY_MS = 50
 const IDENTIFIER = /^[\w$]*$/
 const WORD_BEFORE = /[\w$]+$/
+const TRIGGERS = new Set(['.', '/', "'", '"'])
 
 const COMPLETION_TYPES: Readonly<Record<string, string>> = {
   function: 'function',
@@ -40,6 +46,8 @@ const COMPLETION_TYPES: Readonly<Record<string, string>> = {
   setter: 'property',
   keyword: 'keyword',
   module: 'namespace',
+  directory: 'namespace',
+  script: 'namespace',
 }
 
 const run = <A>(effect: Effect.Effect<A, unknown>): Promise<A | undefined> =>
@@ -62,11 +70,16 @@ const withDocumentation = (dom: HTMLElement, documentation: string) => {
   return dom
 }
 
-const quickInfoDom = (info: QuickInfo) => {
+const detailsDom = (details: CompletionDetails) => {
   const dom = element('div', 'cm-typika-info')
+  dom.append(element('code', 'cm-typika-signature', details.signature))
+  return withDocumentation(dom, details.documentation)
+}
+
+const quickInfoDom = (info: QuickInfo) => {
+  const dom = detailsDom(info)
   dom.setAttribute('role', 'tooltip')
-  dom.append(element('code', 'cm-typika-signature', info.signature))
-  return withDocumentation(dom, info.documentation)
+  return dom
 }
 
 const signatureDom = (help: SignatureHelp) => {
@@ -98,8 +111,13 @@ const completions = (session: LanguageServiceSession, path: string) => {
       })
     }
 
-  const toCompletion = (item: CompletionItem): Completion => ({
+  const toCompletion = (item: CompletionItem, position: number): Completion => ({
     label: item.label,
+    info: async () => {
+      const details = await run(session.completionDetails(path, position, item))
+      if (details === undefined || details.signature === '') return null
+      return detailsDom(details)
+    },
     type: COMPLETION_TYPES[item.kind] ?? 'text',
     boost: boostOf(item.sortText),
     ...(item.source === undefined ? {} : { detail: item.source }),
@@ -108,11 +126,15 @@ const completions = (session: LanguageServiceSession, path: string) => {
 
   return async (context: CompletionContext): Promise<CompletionResult | null> => {
     const typing = context.matchBefore(WORD_BEFORE) !== null
-    const afterDot = context.state.sliceDoc(context.pos - 1, context.pos) === '.'
-    if (!context.explicit && !typing && !afterDot) return null
+    const afterTrigger = TRIGGERS.has(context.state.sliceDoc(context.pos - 1, context.pos))
+    if (!context.explicit && !typing && !afterTrigger) return null
     const list = await run(session.completions(path, context.pos))
-    if (list === undefined || context.aborted) return null
-    return { from: list.from, options: list.items.map(toCompletion), validFor: IDENTIFIER }
+    if (list === undefined || list.items.length === 0 || context.aborted) return null
+    return {
+      from: list.from,
+      options: list.items.map((item) => toCompletion(item, context.pos)),
+      validFor: IDENTIFIER,
+    }
   }
 }
 

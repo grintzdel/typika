@@ -15,8 +15,10 @@ const sessionOf = (project: TypeScriptProject): LanguageServiceSession => ({
   updateFile: (path, content) => Effect.sync(() => project.updateFile(path, content)),
   removeFile: (path) => Effect.sync(() => project.removeFile(path)),
   diagnostics: (path) => Effect.sync(() => project.diagnostics(path)),
+  projectDiagnostics: () => Effect.sync(() => project.projectDiagnostics()),
   completions: (path, position) => Effect.sync(() => project.completions(path, position)),
   completionChanges: (path, position, item) => Effect.sync(() => project.completionChanges(path, position, item)),
+  completionDetails: (path, position, item) => Effect.sync(() => project.completionDetails(path, position, item)),
   quickInfo: (path, position) => Effect.sync(() => project.quickInfo(path, position)),
   signatureHelp: (path, position) => Effect.sync(() => project.signatureHelp(path, position)),
   definition: (path, position) => Effect.sync(() => project.definition(path, position)),
@@ -25,6 +27,11 @@ const sessionOf = (project: TypeScriptProject): LanguageServiceSession => ({
 })
 
 let libraries: LanguageServiceFiles | undefined
+
+export const makeLanguageServiceSessionInMemory = (files: LanguageServiceFiles): LanguageServiceSession => {
+  libraries ??= collectTypeScriptLibraries()
+  return sessionOf(makeTypeScriptProject({ libraries, files }))
+}
 
 export const makeLanguageServiceInMemory = (): InMemoryLanguageService => {
   const started: Array<LanguageServiceFiles> = []

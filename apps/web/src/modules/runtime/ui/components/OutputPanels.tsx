@@ -7,19 +7,20 @@ import type { TestRunState } from '../../core/domain/test-run.domain-model.ts'
 import { ConsolePanel } from './ConsolePanel.tsx'
 import { TestsPanel } from './TestsPanel.tsx'
 
-export type OutputPanel = 'console' | 'tests' | 'references'
+export type OutputPanel = 'console' | 'tests' | 'problems' | 'references'
 
-const PANELS: ReadonlyArray<OutputPanel> = ['console', 'tests', 'references']
+const PANELS: ReadonlyArray<OutputPanel> = ['console', 'tests', 'problems', 'references']
 
 export type OutputPanelsProps = {
   readonly active: OutputPanel
   readonly onActiveChange: (panel: OutputPanel) => void
   readonly console: ConsoleState | undefined
   readonly testRun: TestRunState | undefined
+  readonly problems?: { readonly count: number; readonly content: ReactNode } | undefined
   readonly references?: { readonly count: number | undefined; readonly content: ReactNode } | undefined
 }
 
-export const OutputPanels = ({ active, onActiveChange, console, testRun, references }: OutputPanelsProps) => {
+export const OutputPanels = ({ active, onActiveChange, console, testRun, problems, references }: OutputPanelsProps) => {
   const { t } = useTranslation('runtime')
   return (
     <Tabs
@@ -37,6 +38,12 @@ export const OutputPanels = ({ active, onActiveChange, console, testRun, referen
             </span>
           )}
         </Tab>
+        {problems === undefined ? null : (
+          <Tab value="problems">
+            {t('panels.problems')}
+            <span className="ml-1.5 text-sm text-fg-subtle">{problems.count}</span>
+          </Tab>
+        )}
         {references === undefined ? null : (
           <Tab value="references">
             {t('panels.references')}
@@ -52,6 +59,7 @@ export const OutputPanels = ({ active, onActiveChange, console, testRun, referen
       <TabsPanel value="tests">
         <TestsPanel run={testRun} />
       </TabsPanel>
+      {problems === undefined ? null : <TabsPanel value="problems">{problems.content}</TabsPanel>}
       {references === undefined ? null : <TabsPanel value="references">{references.content}</TabsPanel>}
     </Tabs>
   )

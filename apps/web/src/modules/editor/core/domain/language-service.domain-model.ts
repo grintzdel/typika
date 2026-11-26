@@ -13,6 +13,17 @@ export type EditorDiagnostic = {
   readonly message: string
 }
 
+export type ProjectDiagnostic = EditorDiagnostic & {
+  readonly path: string
+  readonly line: number
+  readonly column: number
+}
+
+export type CompletionDetails = {
+  readonly signature: string
+  readonly documentation: string
+}
+
 export type CompletionItem = {
   readonly label: string
   readonly kind: string
@@ -78,8 +89,10 @@ export type TypeScriptProject = {
   readonly updateFile: (path: string, content: string) => void
   readonly removeFile: (path: string) => void
   readonly diagnostics: (path: string) => ReadonlyArray<EditorDiagnostic>
+  readonly projectDiagnostics: () => ReadonlyArray<ProjectDiagnostic>
   readonly completions: (path: string, position: number) => CompletionList | undefined
   readonly completionChanges: (path: string, position: number, item: CompletionItem) => ReadonlyArray<TextChange>
+  readonly completionDetails: (path: string, position: number, item: CompletionItem) => CompletionDetails | undefined
   readonly quickInfo: (path: string, position: number) => QuickInfo | undefined
   readonly signatureHelp: (path: string, position: number) => SignatureHelp | undefined
   readonly definition: (path: string, position: number) => ReadonlyArray<SourceRange>

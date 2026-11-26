@@ -22,11 +22,13 @@ import type { ReferenceSearch } from '../../modules/editor/core/domain/language-
 import { CodeEditor } from '../../modules/editor/ui/components/CodeEditor.tsx'
 import { EditorTabs } from '../../modules/editor/ui/components/EditorTabs.tsx'
 import { LanguageServiceStatus } from '../../modules/editor/ui/components/LanguageServiceStatus.tsx'
+import { ProblemsPanel } from '../../modules/editor/ui/components/ProblemsPanel.tsx'
 import { QuickOpenDialog } from '../../modules/editor/ui/components/QuickOpenDialog.tsx'
 import { ReferencesPanel } from '../../modules/editor/ui/components/ReferencesPanel.tsx'
 import { useEditFiles } from '../../modules/editor/ui/hooks/use-edit-files.ts'
 import { useEditorTabs } from '../../modules/editor/ui/hooks/use-editor-tabs.ts'
 import { useLanguageService } from '../../modules/editor/ui/hooks/use-language-service.ts'
+import { useProblems } from '../../modules/editor/ui/hooks/use-problems.ts'
 import { useWorkbenchShortcuts } from '../../modules/editor/ui/hooks/use-workbench-shortcuts.ts'
 import { useWorkbenchSizes } from '../../modules/editor/ui/hooks/use-workbench-sizes.ts'
 import { ExerciseList } from '../../modules/exercise/ui/components/ExerciseList.tsx'
@@ -147,6 +149,12 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
       edits.handleStructureChange({ written: [], removed: paths })
       tabs.handleRetainFiles(new Set([...currentFiles.keys()].filter((path) => !paths.includes(path))))
     },
+  })
+  const problems = useProblems({
+    session: languageService.session,
+    revision: edits.editedFiles,
+    build: runtime.diagnostics,
+    contentOf,
   })
   const layout = useWorkbenchSizes()
   useWorkbenchShortcuts({
@@ -458,6 +466,10 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
           onActiveChange={setPanel}
           console={runtime.console}
           testRun={runtime.testRun}
+          problems={{
+            count: problems.problems.length,
+            content: <ProblemsPanel problems={problems.problems} onOpen={tabs.handleReveal} />,
+          }}
           references={
             languageService.status !== 'off'
               ? {

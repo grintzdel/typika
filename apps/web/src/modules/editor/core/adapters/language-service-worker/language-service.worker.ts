@@ -18,9 +18,12 @@ const api = {
   updateFile: (path: string, content: string) => opened().updateFile(path, content),
   removeFile: (path: string) => opened().removeFile(path),
   diagnostics: (path: string) => opened().diagnostics(path),
+  projectDiagnostics: () => opened().projectDiagnostics(),
   completions: (path: string, position: number) => opened().completions(path, position),
   completionChanges: (...args: Parameters<TypeScriptProject['completionChanges']>) =>
     opened().completionChanges(...args),
+  completionDetails: (...args: Parameters<TypeScriptProject['completionDetails']>) =>
+    opened().completionDetails(...args),
   quickInfo: (path: string, position: number) => opened().quickInfo(path, position),
   signatureHelp: (path: string, position: number) => opened().signatureHelp(path, position),
   definition: (path: string, position: number) => opened().definition(path, position),

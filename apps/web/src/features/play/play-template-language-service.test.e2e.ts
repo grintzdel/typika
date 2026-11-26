@@ -64,6 +64,58 @@ test.describe('TypeScript in the editor', () => {
     await expect(editor(page)).toContainText("import { addMoney, formatMoney, money } from './shop/money.ts'")
   })
 
+  test('marks a type error in the gutter', async ({ page }) => {
+    await openStrategy(page)
+
+    await typeAtEnd(page, "\nconst total: number = 'free'")
+
+    await expect(page.locator('.cm-gutter-lint .cm-lint-marker-error')).toBeVisible()
+  })
+
+  test('shows the signature of the selected completion', async ({ page }) => {
+    await openStrategy(page)
+
+    await typeAtEnd(page, '\naddMon')
+
+    await expect(page.locator('.cm-completionInfo')).toContainText('const addMoney: (a: Money, b: Money) => Money')
+  })
+
+  test('completes the path of a relative import', async ({ page }) => {
+    await openStrategy(page)
+
+    await typeAtEnd(page, "\nimport { ZERO } from './sh")
+
+    await page.getByRole('option', { name: /^shop/ }).click()
+    await expect(editor(page)).toContainText("import { ZERO } from './shop'")
+  })
+
+  test('closes the brackets and the quotes it opens', async ({ page }) => {
+    await openStrategy(page)
+
+    await typeAtEnd(page, "\nconst names = ['")
+
+    await expect(editor(page)).toContainText("const names = ['']")
+  })
+
+  test('lists the problems of the project, open or not, and opens one', async ({ page }) => {
+    const source = await readFile(join(STRATEGY_DIR, 'src', 'checkout', 'options', 'standard.ts'), 'utf8')
+    await openStrategy(page)
+    const problems = page.getByRole('tab', { name: /Problèmes/ })
+    await expect(problems).toHaveText('Problèmes0')
+
+    await page.getByRole('treeitem', { name: 'standard.ts' }).click()
+    await editor(page).click()
+    await page.keyboard.press('ControlOrMeta+a')
+    await page.keyboard.insertText(source.replace('class StandardShipping', 'class StandardRate'))
+    await problems.click()
+
+    const problem = page.getByRole('button', { name: /^Erreur, src\/checkout\/checkout\.ts, ligne \d+/ }).first()
+    await expect(problem).toBeVisible()
+    await expect(problems).not.toHaveText('Problèmes0')
+    await problem.click()
+    await expect(page.getByRole('tab', { name: 'checkout.ts', exact: true })).toHaveAttribute('aria-selected', 'true')
+  })
+
   test('tells that TypeScript is starting until it is ready', async ({ page, context }) => {
     const release = await holdLanguageServiceWorker(context)
     await page.goto('/play/strategy-ts')

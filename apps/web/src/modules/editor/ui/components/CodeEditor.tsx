@@ -1,6 +1,7 @@
-import { startCompletion } from '@codemirror/autocomplete'
+import { closeBrackets, closeBracketsKeymap, startCompletion } from '@codemirror/autocomplete'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
 import { bracketMatching, indentOnInput } from '@codemirror/language'
+import { lintGutter, lintKeymap } from '@codemirror/lint'
 import { highlightSelectionMatches, search, searchKeymap } from '@codemirror/search'
 import { Compartment, EditorState, type Extension } from '@codemirror/state'
 import {
@@ -76,10 +77,19 @@ const makeState = (
     drawSelection(),
     indentOnInput(),
     bracketMatching(),
+    closeBrackets(),
+    lintGutter(),
     highlightActiveLine(),
     highlightSelectionMatches(),
     search({ top: true }),
-    keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap, indentWithTab]),
+    keymap.of([
+      ...closeBracketsKeymap,
+      ...defaultKeymap,
+      ...historyKeymap,
+      ...searchKeymap,
+      ...lintKeymap,
+      indentWithTab,
+    ]),
     EditorView.clickAddsSelectionRange.of((event) => event.altKey),
     locale,
     EditorState.readOnly.of(readOnly),

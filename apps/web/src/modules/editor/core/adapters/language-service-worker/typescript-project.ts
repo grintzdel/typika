@@ -8,6 +8,7 @@ import {
   type EditorDiagnostic,
   type FileRename,
   type LanguageServiceFiles,
+  type ProjectDiagnostic,
   type SourceRange,
   type SymbolReference,
   type TextChange,
@@ -94,6 +95,30 @@ const wordAt = (text: string, position: number) => {
   return text.slice(wordStart(text, position), end)
 }
 
+const childrenOf = (paths: Iterable<string>, directory: string) => {
+  const prefix = directory.endsWith('/') ? directory : `${directory}/`
+  return [...paths].filter((path) => path.startsWith(prefix)).map((path) => path.slice(prefix.length))
+}
+
+const withDirectories = (system: ts.System, files: ReadonlyMap<string, string>): ts.System => ({
+  ...system,
+  getDirectories: (directory) => [
+    ...new Set(
+      childrenOf(files.keys(), directory)
+        .filter((rest) => rest.includes('/'))
+        .map((rest) => rest.slice(0, rest.indexOf('/')))
+    ),
+  ],
+  readDirectory: (directory, extensions, _excludes, includes, depth) => {
+    const isShallow = depth === 1 || (includes?.length === 1 && includes[0] === './*')
+    const prefix = directory.endsWith('/') ? directory : `${directory}/`
+    return childrenOf(files.keys(), directory)
+      .filter((rest) => !isShallow || !rest.includes('/'))
+      .filter((rest) => extensions === undefined || extensions.some((extension) => rest.endsWith(extension)))
+      .map((rest) => `${prefix}${rest}`)
+  },
+})
+
 export const makeTypeScriptProject = ({
   libraries,
   files,
@@ -111,7 +136,7 @@ export const makeTypeScriptProject = ({
     for (const [path, content] of Object.entries(current)) fsMap.set(absolute(path), content)
     const roots = Object.keys(current).filter(isAnalyzedPath).map(absolute)
     environment = createVirtualTypeScriptEnvironment(
-      createSystem(fsMap),
+      withDirectories(createSystem(fsMap), fsMap),
       [...roots, GLOBALS],
       ts,
       compilerOptionsOf(current[TSCONFIG])
@@ -145,6 +170,27 @@ export const makeTypeScriptProject = ({
     else environment.deleteFile(absolute(path))
   }
 
+  const diagnostics = (path: string): ReadonlyArray<EditorDiagnostic> => {
+    if (!inProgram(path)) return []
+    return [...service().getSyntacticDiagnostics(absolute(path)), ...service().getSemanticDiagnostics(absolute(path))]
+      .map(toDiagnostic)
+      .filter((diagnostic) => diagnostic !== undefined)
+  }
+
+  const entryDetails = (path: string, position: number, item: CompletionItem) => {
+    const entry = lastEntries.get(entryKey(item.label, item.source))
+    if (!inProgram(path) || entry === undefined) return undefined
+    return service().getCompletionEntryDetails(
+      absolute(path),
+      position,
+      entry.name,
+      {},
+      entry.source,
+      PREFERENCES,
+      entry.data
+    )
+  }
+
   const definition = (path: string, position: number): ReadonlyArray<SourceRange> => {
     if (!inProgram(path)) return []
     return (service().getDefinitionAtPosition(absolute(path), position) ?? [])
@@ -168,12 +214,22 @@ export const makeTypeScriptProject = ({
 
     removeFile,
 
-    diagnostics: (path) => {
-      if (!inProgram(path)) return []
-      return [...service().getSyntacticDiagnostics(absolute(path)), ...service().getSemanticDiagnostics(absolute(path))]
-        .map(toDiagnostic)
-        .filter((diagnostic) => diagnostic !== undefined)
-    },
+    diagnostics,
+
+    projectDiagnostics: () =>
+      Object.keys(current)
+        .filter(isAnalyzedPath)
+        .toSorted()
+        .flatMap((path) => {
+          const source = environment.getSourceFile(absolute(path))
+          return diagnostics(path).map((diagnostic): ProjectDiagnostic => {
+            const { line, character } = source?.getLineAndCharacterOfPosition(diagnostic.from) ?? {
+              line: 0,
+              character: 0,
+            }
+            return { path, line: line + 1, column: character + 1, ...diagnostic }
+          })
+        }),
 
     completions: (path, position) => {
       if (!inProgram(path)) return undefined
@@ -181,8 +237,9 @@ export const makeTypeScriptProject = ({
       if (completions === undefined) return undefined
       const entries = completions.entries.filter((entry) => entry.kind !== ts.ScriptElementKind.warning)
       lastEntries = new Map(entries.map((entry) => [entryKey(entry.name, entry.source), entry]))
+      const replaced = entries.find((entry) => entry.replacementSpan !== undefined)?.replacementSpan
       return {
-        from: wordStart(textOf(path), position),
+        from: replaced?.start ?? wordStart(textOf(path), position),
         items: entries.map((entry): CompletionItem => ({
           label: entry.name,
           kind: entry.kind,
@@ -193,19 +250,8 @@ export const makeTypeScriptProject = ({
       }
     },
 
-    completionChanges: (path, position, item) => {
-      const entry = lastEntries.get(entryKey(item.label, item.source))
-      if (!inProgram(path) || entry === undefined) return []
-      const details = service().getCompletionEntryDetails(
-        absolute(path),
-        position,
-        entry.name,
-        {},
-        entry.source,
-        PREFERENCES,
-        entry.data
-      )
-      return (details?.codeActions ?? [])
+    completionChanges: (path, position, item) =>
+      (entryDetails(path, position, item)?.codeActions ?? [])
         .flatMap((action) => action.changes)
         .filter((change) => change.fileName === absolute(path))
         .flatMap((change) => change.textChanges)
@@ -213,7 +259,15 @@ export const makeTypeScriptProject = ({
           from: change.span.start,
           to: change.span.start + change.span.length,
           insert: change.newText,
-        }))
+        })),
+
+    completionDetails: (path, position, item) => {
+      const details = entryDetails(path, position, item)
+      if (details === undefined) return undefined
+      return {
+        signature: ts.displayPartsToString(details.displayParts),
+        documentation: ts.displayPartsToString(details.documentation),
+      }
     },
 
     quickInfo: (path, position) => {
