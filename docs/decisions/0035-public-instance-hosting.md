@@ -1,53 +1,54 @@
-# 0035 — Instance publique : Docker derrière Caddy sur un VPS
+# 0035 — Public instance: Docker behind Caddy on a VPS
 
-**Statut** : Acceptée · 2026-11-22 · lot 4 du M7 · complète [hosting §4](../guides/hosting.md)
+**Status**: Accepted · 2026-11-22 · slice 4 of M7 · complements [hosting §4](../guides/hosting.md)
 
-## Contexte
+## Context
 
-Le [guide d'hébergement](../guides/hosting.md) décrit deux cibles pour l'instance publique : Docker derrière Caddy,
-la cible principale, et Vercel avec le service Kotlin hébergé à part. Le lot 4 du M7 demande d'en retenir une.
+The [hosting guide](../guides/hosting.md) describes two targets for the public instance: Docker behind Caddy, the main
+target, and Vercel with the Kotlin service hosted separately. Slice 4 of M7 asks to pick one.
 
-Les fichiers de la première existent depuis le M1 (`Dockerfile`, `docker-compose.yml`, `deploy/Caddyfile`), et le
-profil Compose `kotlin` depuis le lot 3 du M6. La CI construit l'image et joue les E2E de production dessus. Pour
-Vercel, rien n'est écrit : les en-têtes par hôte et par chemin, le relais `/api/kotlin` et sa limite de débit, que le
-serveur Node de l'app porte aujourd'hui ([0029](0029-kotlin-relay-rate-limit.md)), seraient à réécrire en
-configuration et en fonctions Vercel, et le service Kotlin demanderait de toute façon une machine à part.
+The files of the first have existed since M1 (`Dockerfile`, `docker-compose.yml`, `deploy/Caddyfile`), and the
+`kotlin` Compose profile since slice 3 of M6. CI builds the image and runs the production E2E tests on it. For Vercel,
+nothing is written: the per-host and per-path headers, the `/api/kotlin` relay and its rate limit, which the app's Node
+server carries today ([0029](0029-kotlin-relay-rate-limit.md)), would have to be rewritten as Vercel configuration and
+functions, and the Kotlin service would need a separate machine anyway.
 
-## Décision
+## Decision
 
-- L'instance publique tourne sur **un VPS**, avec `docker compose --profile kotlin` : Caddy, `web` et
-  `kotlin-compiler` sur la même machine. Le choix est celui du mainteneur (2026-11-22).
-- L'image est **construite sur la machine**, depuis un clone complet du dépôt (`docker compose up -d --build`). Une
-  mise à jour de l'app ou une publication du registre se déploie par `git pull` suivi de la même commande.
-- Caddy publie aussi `443/udp` : il annonce HTTP/3 dans `Alt-Svc`, et sans ce port l'annonce ne mène nulle part.
-- Les deux domaines sont deux sites différents ([security §2.1](../specs/security.md)). Ils seront choisis avec le
-  nom de domaine de #92.
-- La checklist de [hosting §9](../guides/hosting.md) se répète sur une instance locale de la même pile, en HTTPS,
-  avec l'autorité interne de Caddy et deux noms en `.localhost` ([hosting §4.6](../guides/hosting.md)).
+- The public instance runs on **a VPS**, with `docker compose --profile kotlin`: Caddy, `web` and `kotlin-compiler`
+  on the same machine. The choice is the maintainer's (2026-11-22).
+- The image is **built on the machine**, from a full clone of the repository (`docker compose up -d --build`). An app
+  update or a registry publication is deployed with `git pull` followed by the same command.
+- Caddy also publishes `443/udp`: it announces HTTP/3 in `Alt-Svc`, and without this port the announcement leads
+  nowhere.
+- The two domains are two different sites ([security §2.1](../specs/security.md)). They will be chosen with the domain
+  name of #92.
+- The [hosting §9](../guides/hosting.md) checklist is rehearsed on a local instance of the same stack, over HTTPS,
+  with Caddy's internal authority and two `.localhost` names ([hosting §4.6](../guides/hosting.md)).
 
-## Conséquences
+## Consequences
 
-- Une seule cible est maintenue et testée. [hosting §5](../guides/hosting.md) reste une piste pour qui voudrait
-  héberger sa propre instance sur Vercel, sans rien de livré.
-- Le dépôt reste public : la machine clone sans identifiant.
-- Le hub prérendu suit le registre au rythme des reconstructions. Tant que personne ne reconstruit, l'accueil et la
-  liste montrent l'index du build ([0023](0023-hub-prerendering.md)). Le déclenchement automatique après une
-  publication du registre attend le lot 5, quand le dépôt du registre existera.
-- La construction partage la machine avec le service Kotlin, plafonné à 2 CPU et 1 Gio. Mesurée le 2026-11-22 dans
-  un builder limité à 2 CPU, sans swap, sur arm64 : l'image `web` demande environ 2 Gio de mémoire vive (elle se
-  construit sous 3 Gio en 2 min 20, et est tuée sous 2 Gio), l'image `kotlin-compiler` environ 1,5 Gio (elle se
-  construit sous 2 Gio en 40 s, et est tuée sous 1 Gio). Une machine de **4 Gio avec du swap** est donc le minimum
-  pour construire pendant que la pile tourne, qui occupe environ 525 Mio au repos ; 2 Gio ne suffisent pas. Les
-  durées sur un VPS x86 et la mémoire de la pile sous charge restent à relever au lot 5, sur la machine réelle.
-- Pas de retour arrière outillé : revenir à une version, c'est `git checkout <commit>` puis reconstruire.
+- A single target is maintained and tested. [hosting §5](../guides/hosting.md) remains an idea for anyone who would
+  like to host their own instance on Vercel, with nothing delivered.
+- The repository stays public: the machine clones without credentials.
+- The prerendered hub follows the registry at the pace of rebuilds. As long as nobody rebuilds, the home page and the
+  list show the build's index ([0023](0023-hub-prerendering.md)). Automatic triggering after a registry publication
+  waits for slice 5, when the registry repository exists.
+- The build shares the machine with the Kotlin service, capped at 2 CPUs and 1 GiB. Measured on 2026-11-22 in a
+  builder limited to 2 CPUs, without swap, on arm64: the `web` image needs about 2 GiB of RAM (it builds under 3 GiB
+  in 2 min 20, and is killed under 2 GiB), the `kotlin-compiler` image about 1.5 GiB (it builds under 2 GiB in 40 s,
+  and is killed under 1 GiB). A machine with **4 GiB and swap** is therefore the minimum to build while the stack
+  runs, which takes about 525 MiB at rest; 2 GiB is not enough. The durations on an x86 VPS and the stack's memory
+  under load are still to be measured at slice 5, on the real machine.
+- No tooled rollback: going back to a version means `git checkout <commit>` then rebuilding.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Vercel et le service Kotlin à part** : deux déploiements à relier, un relais et des en-têtes à réécrire et à
-  tester une seconde fois, pour une app dont le serveur fait déjà ce travail derrière n'importe quel proxy.
-- **Tirer l'image depuis un registre de conteneurs** (GHCR), construite par la CI : la machine ne construirait plus,
-  et le retour arrière serait un changement de tag. Cela publie un artefact de plus, à signer et à garder en phase
-  avec le registre des templates, dont l'index est figé dans l'image. À reconsidérer si la construction sur place
-  gêne le service, ou pour une machine de moins de 4 Gio : elle n'aurait plus que la pile à faire tourner.
-- **Une IP comme second site pour la répétition locale** (`127.0.0.1`, comme dans les essais en HTTP) : en HTTPS un
-  client n'envoie pas de SNI pour une IP, et Caddy, qui voit l'adresse du conteneur, ne trouve pas le certificat.
+- **Vercel and the Kotlin service separately**: two deployments to connect, a relay and headers to rewrite and test a
+  second time, for an app whose server already does this work behind any proxy.
+- **Pulling the image from a container registry** (GHCR), built by CI: the machine would no longer build, and rollback
+  would be a tag change. This publishes one more artifact, to sign and keep in step with the template registry, whose
+  index is frozen in the image. To reconsider if building on site hinders the service, or for a machine with less than
+  4 GiB: it would only have the stack to run.
+- **An IP as the second site for the local rehearsal** (`127.0.0.1`, as in the HTTP trials): over HTTPS a client does
+  not send SNI for an IP, and Caddy, which sees the container's address, does not find the certificate.

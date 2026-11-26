@@ -1,22 +1,22 @@
-# 0012 — Langages : TS, JS, Go, Kotlin
+# 0012 — Languages: TS, JS, Go, Kotlin
 
-**Statut** : Acceptée · 2026-10-08
+**Status**: Accepted · 2026-10-08
 
-## Contexte
+## Context
 
-Plusieurs listes ont été envisagées (Python, PHP, Java, C#…), chacune avec un coût de runtime différent.
+Several lists were considered (Python, PHP, Java, C#…), each with a different runtime cost.
 
-## Décision
+## Decision
 
-Les langages sont **TypeScript, JavaScript, Go et Kotlin**. Python, PHP, Java, C# et Rust sont hors périmètre.
+The languages are **TypeScript, JavaScript, Go and Kotlin**. Python, PHP, Java, C# and Rust are out of scope.
 
-## Conséquences
+## Consequences
 
-- Un seul runtime vraiment lourd (Go) et un service de compilation (Kotlin).
-- Kotlin porte la partie POO « classique » que Java ou C# auraient portée.
-- Ajouter un langage plus tard = un runtime + des variantes, sans changer le format de template.
+- A single really heavy runtime (Go) and a compilation service (Kotlin).
+- Kotlin carries the "classic" OOP part that Java or C# would have carried.
+- Adding a language later = a runtime + variants, without changing the template format.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Java, C#** : runtimes navigateur lourds ou incertains ; Kotlin couvre le même besoin pédagogique.
-- **PHP, Python** : runtimes WASM viables, écartés par choix de périmètre.
+- **Java, C#**: heavy or uncertain browser runtimes; Kotlin covers the same teaching need.
+- **PHP, Python**: viable WASM runtimes, rejected as a scope choice.

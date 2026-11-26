@@ -1,97 +1,97 @@
 # Vision
 
-## Le problème
+## The problem
 
-Apprendre un pattern d'architecture ou un design pattern, aujourd'hui, c'est lire un article, regarder un diagramme UML
-et un extrait de code de 30 lignes sorti de son contexte. On comprend la forme, rarement la raison d'être :
+Learning an architecture pattern or a design pattern today means reading an article, looking at a UML diagram and a
+30-line code excerpt taken out of its context. You understand the shape, rarely the reason for it:
 
-- on ne voit pas **le problème** que le pattern résout, parce que le code « avant » n'est jamais montré ;
-- on ne peut pas **toucher** : modifier, casser, ajouter une exigence et sentir où le code résiste ;
-- on ne voit pas ce que le pattern devient **dans un autre langage**, où il est parfois inutile.
+- You do not see **the problem** the pattern solves, because the "before" code is never shown.
+- You cannot **touch** it: change it, break it, add a requirement and feel where the code resists.
+- You do not see what the pattern becomes **in another language**, where it is sometimes useless.
 
-Les sandboxes existantes (CodeSandbox, StackBlitz, Replit) exécutent du code mais ne sont pas pensées pour enseigner.
-Les starters et générateurs de projets fournissent une structure sans l'expliquer.
+Existing sandboxes (CodeSandbox, StackBlitz, Replit) run code but are not designed to teach. Project starters and
+generators provide a structure without explaining it.
 
-## La proposition
+## The proposal
 
-Typika est un **hub open source et gratuit de templates exécutables**, classés par langage, framework, librairie et
-surtout **par concept** : architecture, principes, design patterns, fondamentaux de la POO.
+Typika is an **open source and free hub of runnable templates**, classified by language, framework, library and
+above all **by concept**: architecture, principles, design patterns, OOP fundamentals.
 
-Chaque template est un vrai projet qu'on ouvre et exécute dans le navigateur, accompagné de :
+Each template is a real project that you open and run in the browser, along with:
 
-- une **base** : le même code sans le pattern, pour voir le problème ;
-- une **visite guidée** ancrée dans le code ;
-- des **exercices** dont le meilleur type est le `refactor` : une nouvelle exigence pénible dans la base, triviale une
-  fois le pattern en place ;
-- des **variantes** dans d'autres langages, comparables côte à côte.
+- a **base**: the same code without the pattern, to see the problem
+- a **guided tour** anchored in the code
+- **exercises**, whose best type is the `refactor`: a new requirement that is painful in the base, trivial once the
+  pattern is in place
+- **variants** in other languages, comparable side by side
 
-Le hub est le produit ; la sandbox est le moyen de l'explorer. Un template reste utile hors de Typika :
-`typika create <template>` le copie dans un vrai projet.
+The hub is the product; the sandbox is the means to explore it. A template stays useful outside Typika:
+`typika create <template>` copies it into a real project.
 
-## Pour qui
+## For whom
 
-| Profil | Rôle | Ce qu'il attend |
+| Profile | Role | What they expect |
 |---|---|---|
-| **Développeur intermédiaire qui apprend l'architecture** | Cible primaire | Comprendre CQRS, l'hexagonal, SOLID, les patterns GoF par la pratique. |
-| **Auteur de contenu** (blog, doc, formation) | Canal | Embarquer un exemple exécutable dans un article. Chaque embed amène des apprenants. |
-| **Développeur qui prototype** | Non ciblé | StackBlitz et CodeSandbox le servent mieux. |
+| **Intermediate developer learning architecture** | Primary target | Understand CQRS, hexagonal, SOLID, the GoF patterns through practice. |
+| **Content author** (blog, docs, training) | Channel | Embed a runnable example in an article. Each embed brings learners. |
+| **Developer prototyping** | Not targeted | StackBlitz and CodeSandbox serve them better. |
 
-**Règle d'arbitrage** : en cas de conflit, la fonctionnalité qui sert l'apprenant gagne.
+**Tie-break rule**: in case of conflict, the feature that serves the learner wins.
 
-## Principes
+## Principles
 
-1. **Navigateur d'abord.** Le code s'exécute côté client. Seule exception : un service de compilation sans état quand
-   aucun compilateur ne tourne dans le navigateur (Kotlin). Le serveur compile, il n'exécute jamais.
-2. **Zéro backend métier.** Pas de base de données, pas de comptes. Le hub est un index statique généré depuis un dépôt
-   Git.
-3. **Sans compte par défaut.** GitHub OAuth uniquement pour créer un gist, publier ou pousser vers un dépôt.
-4. **Pédagogie avant exhaustivité.** Peu de templates, chacun excellent. Pas d'objectif de volume.
-5. **Santé visible.** Chaque template est testé en continu ; un template cassé se voit et finit déprécié.
-6. **Le langage fait partie de la leçon.** Une variante n'est pas une traduction : quand un pattern se dissout dans un
-   langage, la variante le montre.
-7. **Pas à pas.** Pas de date ni de lancement ; chaque jalon livre quelque chose d'utilisable.
+1. **Browser first.** Code runs on the client. Only exception: a stateless compilation service when no compiler runs
+   in the browser (Kotlin). The server compiles, it never executes.
+2. **Zero business backend.** No database, no accounts. The hub is a static index generated from a Git
+   repository.
+3. **No account by default.** GitHub OAuth only to create a gist, publish or push to a repository.
+4. **Teaching before exhaustiveness.** Few templates, each one excellent. No volume goal.
+5. **Visible health.** Each template is tested continuously; a broken template is visible and ends up deprecated.
+6. **The language is part of the lesson.** A variant is not a translation: when a pattern dissolves in a language,
+   the variant shows it.
+7. **Step by step.** No date and no launch; each milestone delivers something usable.
 
-## Périmètre
+## Scope
 
-### Inclus
+### Included
 
-- Langages : **TypeScript** (référence, tout le catalogue), **JavaScript**, **Go**, **Kotlin**.
-- Catalogue initial : 5 architectures, 5 principes SOLID, 5 design patterns GoF, 1 fondamental POO
+- Languages: **TypeScript** (reference, the whole catalogue), **JavaScript**, **Go**, **Kotlin**.
+- Initial catalogue: 5 architectures, 5 SOLID principles, 5 GoF design patterns, 1 OOP fundamental
   ([catalogue](specs/catalogue.md)).
-- Hub à facettes, page template, sandbox, visites guidées, diff depuis la base, exercices, comparaison, embed, partage,
+- Faceted hub, template page, sandbox, guided tours, diff from the base, exercises, comparison, embed, sharing,
   export, CLI.
-- Interface en anglais et en français ; contenu des templates en anglais.
+- Interface in English and French; template content in English.
 
-### Exclu (V2 ou jamais)
+### Excluded (V2 or never)
 
-| Sujet | Statut |
+| Topic | Status |
 |---|---|
-| Python, PHP, Java, C#, Rust | Hors périmètre ; réévaluable plus tard. |
-| Collaboration temps réel | V2 si besoin. |
-| Génération de templates par IA | Non : brouille le positionnement. |
-| Exécution serveur | Non sur l'instance publique ; runner auto-hébergeable en V2. |
-| Templates composables (base + add-ons) | V2, sous forme de stacks curées. |
-| Comptes utilisateurs, base de données | Non. |
+| Python, PHP, Java, C#, Rust | Out of scope; may be reconsidered later. |
+| Real-time collaboration | V2 if needed. |
+| AI-generated templates | No: blurs the positioning. |
+| Server-side execution | Not on the public instance; self-hostable runner in V2. |
+| Composable templates (base + add-ons) | V2, as curated stacks. |
+| User accounts, database | No. |
 
-## Glossaire
+## Glossary
 
-| Terme | Définition |
+| Term | Definition |
 |---|---|
-| **Template** | Projet de référence décrit par un manifeste `typika.toml`, vivant dans un dépôt Git. |
-| **Manifest** | Métadonnées, facettes, runtime, commandes, tour, exercices, variantes, base. Voir [manifest](specs/manifest.md). |
-| **Facet** | Axe de classement : `language`, `framework`, `library`, `paradigm`, `topic`, `level`, `useCase`. |
-| **Topic** | Ce que le template enseigne : `architecture/…`, `principle/…`, `design-pattern/<famille>/…`, `fundamental/…`. |
-| **Base** | Template « avant » dont le template dérive. Alimente la vue diff. |
-| **Variant** | Le même concept dans un autre langage. Alimente la comparaison. |
-| **Tour** | Suite d'étapes Markdown ancrées sur des fichiers et des lignes. |
-| **Exercise** | `fix` : faire passer des tests rouges. `refactor` : ajouter une exigence qui n'est simple qu'après restructuration. |
-| **Project** | Copie locale (IndexedDB) d'un template, modifiable. |
-| **Runtime** | Environnement d'exécution : `browser-js`, `go`, `kotlin`. Voir [runtimes](specs/runtimes.md). |
-| **Registry** | Dépôt Git qui référence les templates publiés. Voir [registry](specs/registry.md). |
-| **Health** | `healthy`, `degraded`, `broken`, `deprecated`, calculé par la CI du registre. |
+| **Template** | Reference project described by a `typika.toml` manifest, living in a Git repository. |
+| **Manifest** | Metadata, facets, runtime, commands, tour, exercises, variants, base. See [manifest](specs/manifest.md). |
+| **Facet** | Classification axis: `language`, `framework`, `library`, `paradigm`, `topic`, `level`, `useCase`. |
+| **Topic** | What the template teaches: `architecture/…`, `principle/…`, `design-pattern/<family>/…`, `fundamental/…`. |
+| **Base** | "Before" template from which the template derives. Feeds the diff view. |
+| **Variant** | The same concept in another language. Feeds the comparison. |
+| **Tour** | Sequence of Markdown steps anchored on files and lines. |
+| **Exercise** | `fix`: make red tests pass. `refactor`: add a requirement that is only simple after restructuring. |
+| **Project** | Local copy (IndexedDB) of a template, editable. |
+| **Runtime** | Execution environment: `browser-js`, `go`, `kotlin`. See [runtimes](specs/runtimes.md). |
+| **Registry** | Git repository that references the published templates. See [registry](specs/registry.md). |
+| **Health** | `healthy`, `degraded`, `broken`, `deprecated`, computed by the registry CI. |
 
-## Le nom
+## The name
 
-Typika vient du grec *typos* : l'empreinte, le modèle qu'on reproduit, d'où vient le mot « type ». Un template est
-exactement cela. Le projet s'appelait d'abord Temenos, nom abandonné à cause de Temenos AG, puis Palaestra, dont le
-nom était déjà pris sur npm ([ADR 0014](decisions/0014-name-typika.md)).
+Typika comes from the Greek *typos*: the imprint, the model that is reproduced, which is also the root of the word
+"type". A template is exactly that. The project was first called Temenos, a name dropped because of Temenos AG, then
+Palaestra, whose name was already taken on npm ([ADR 0014](decisions/0014-name-typika.md)).

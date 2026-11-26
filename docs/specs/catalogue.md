@@ -1,66 +1,65 @@
-# Spec — Catalogue initial
+# Spec — Initial catalogue
 
-Statut : brouillon · détaille les §6.1 et §6.2 de la [spec de conception](./2026-10-08-typika-v1-design.md)
+Status: draft · details §6.1 and §6.2 of the [design spec](./2026-10-08-typika-v1-design.md)
 
-Le catalogue initial couvre **16 concepts**, déclinés en environ **44 templates** et leurs bases. Ce document fixe, pour
-chaque concept, ce qu'il enseigne, sa base, le plan de son tour et ses exercices. Le format des fichiers est défini dans
-[manifest.md](./manifest.md), la manière de les écrire dans le
-[guide d'auteur](../guides/template-authoring.md).
+The initial catalogue covers **16 concepts**, available as about **44 templates** and their bases. For each concept,
+this document sets what it teaches, its base, the outline of its tour and its exercises. The file format is defined in
+[manifest.md](./manifest.md), how to write them in the
+[author guide](../guides/template-authoring.md).
 
-## 1. Fil rouge : une petite boutique en ligne
+## 1. Common thread: a small online shop
 
-Tous les templates partagent le même domaine : **une boutique qui prend des commandes, calcule des prix, encaisse,
-expédie et notifie**.
+All templates share the same domain: **a shop that takes orders, computes prices, takes payment, ships and
+notifies**.
 
-Pourquoi ce domaine :
+Why this domain:
 
-- **Compris de tous** : pas de temps passé à expliquer le métier, toute l'attention va au concept.
-- **Assez riche pour les 16 concepts** : règles de prix (OCP, Strategy), cycle de vie d'une commande (machine à états,
-  event sourcing), prestataires externes (Adapter, DIP, hexagonal), réactions à un événement (Observer, outbox),
-  lectures différentes des écritures (CQRS).
-- **Les templates se répondent** : le `PaymentGateway` de l'Adapter est le port de l'hexagonal ; les événements de
-  l'Observer sont ceux que l'outbox fiabilise et que l'event sourcing stocke. Un apprenant qui passe d'un template à
-  l'autre reconnaît le code et ne voit que ce qui change.
+- **Understood by everyone**: no time spent explaining the business, all the attention goes to the concept.
+- **Rich enough for the 16 concepts**: pricing rules (OCP, Strategy), order lifecycle (state machine, event
+  sourcing), external providers (Adapter, DIP, hexagonal), reactions to an event (Observer, outbox), reads that differ
+  from writes (CQRS).
+- **The templates echo each other**: the Adapter's `PaymentGateway` is the hexagonal port; the Observer's events are
+  the ones the outbox makes reliable and event sourcing stores. A learner who moves from one template to another
+  recognizes the code and sees only what changes.
 
-### Vocabulaire commun
+### Common vocabulary
 
-Les noms suivants DOIVENT être utilisés à l'identique dans tous les templates et toutes les langues (casse adaptée au
-langage) :
+The following names MUST be used identically in all templates and all languages (case adapted to the language):
 
-| Terme | Sens |
+| Term | Meaning |
 |---|---|
-| `Order`, `OrderLine` | Commande et ses lignes. |
+| `Order`, `OrderLine` | Order and its lines. |
 | `OrderStatus` | `pending`, `paid`, `shipped`, `delivered`, `cancelled`. |
-| `Customer` | Client ; `tier` ∈ `regular`, `member`. |
-| `Product`, `Sku` | Produit et sa référence. |
-| `Money` | Montant en centimes entiers + devise. Jamais de flottant. |
+| `Customer` | Customer; `tier` ∈ `regular`, `member`. |
+| `Product`, `Sku` | Product and its reference. |
+| `Money` | Amount in integer cents + currency. Never a float. |
 | `ShippingOption` | `standard`, `express`, `pickup-point`. |
-| `PaymentGateway` | Port d'encaissement (`charge`, `refund`). |
-| `Notifier` | Port de notification (`notify`). |
-| `OrderRepository` | Port de persistance des commandes. |
-| `OrderPlaced`, `OrderPaid`, `OrderShipped`, `OrderCancelled` | Événements du domaine. |
+| `PaymentGateway` | Payment port (`charge`, `refund`). |
+| `Notifier` | Notification port (`notify`). |
+| `OrderRepository` | Order persistence port. |
+| `OrderPlaced`, `OrderPaid`, `OrderShipped`, `OrderCancelled` | Domain events. |
 
-### Conventions de nommage du catalogue officiel
+### Naming conventions of the official catalogue
 
-| Élément | Nom | Exemple |
+| Element | Name | Example |
 |---|---|---|
 | Template | `<concept>-<lang>` | `strategy-ts`, `hexagonal-go` |
-| Base d'un principe / pattern / fondamental | `<concept>-base-<lang>` | `strategy-base-kotlin` |
-| Base des architectures (partagée) | `naive-crud-<lang>` | `naive-crud-ts` |
+| Base of a principle / pattern / fundamental | `<concept>-base-<lang>` | `strategy-base-kotlin` |
+| Base of the architectures (shared) | `naive-crud-<lang>` | `naive-crud-ts` |
 
-`<lang>` ∈ `ts`, `js`, `go`, `kotlin`. `<concept>` est le dernier segment du topic principal : `strategy-ts`
+`<lang>` ∈ `ts`, `js`, `go`, `kotlin`. `<concept>` is the last segment of the main topic: `strategy-ts`
 (`design-pattern/behavioral/strategy`), `open-closed-ts` (`principle/open-closed`),
-`composition-over-inheritance-go`. C'est aussi la cible des liens de tour (`typika:open-closed-ts`).
+`composition-over-inheritance-go`. It is also the target of tour links (`typika:open-closed-ts`).
 
-## 2. Couverture
+## 2. Coverage
 
-| # | Concept | Topic principal | Niveau | TS | JS | Go | Kotlin |
+| # | Concept | Main topic | Level | TS | JS | Go | Kotlin |
 |---|---|---|---|---|---|---|---|
 | 1 | Hexagonal | `architecture/hexagonal` | intermediate | ✓ | | ✓ | ✓ |
 | 2 | CQRS | `architecture/cqrs` | advanced | ✓ | | ✓ | ✓ |
 | 3 | Event sourcing | `architecture/event-sourcing` | advanced | ✓ | | | ✓ |
 | 4 | Outbox | `architecture/outbox` | advanced | ✓ | | ✓ | ✓ |
-| 5 | Machine à états | `architecture/state-machine` | intermediate | ✓ | | | ✓ |
+| 5 | State machine | `architecture/state-machine` | intermediate | ✓ | | | ✓ |
 | 6 | SRP | `principle/single-responsibility` | intermediate | ✓ | | | ✓ |
 | 7 | OCP | `principle/open-closed` | intermediate | ✓ | | | ✓ |
 | 8 | LSP | `principle/liskov-substitution` | intermediate | ✓ | | | ✓ |
@@ -71,171 +70,168 @@ langage) :
 | 13 | Decorator | `design-pattern/structural/decorator` | intermediate | ✓ | ✓ | ✓ | ✓ |
 | 14 | Factory Method | `design-pattern/creational/factory-method` | intermediate | ✓ | | | ✓ |
 | 15 | Adapter | `design-pattern/structural/adapter` | intermediate | ✓ | | ✓ | ✓ |
-| 16 | Composition vs héritage | `fundamental/composition-over-inheritance` | beginner | ✓ | ✓ | ✓ | ✓ |
+| 16 | Composition over inheritance | `fundamental/composition-over-inheritance` | beginner | ✓ | ✓ | ✓ | ✓ |
 
-Total : 16 TS + 16 Kotlin + 9 Go + 3 JS = **44 templates**. S'y ajoutent les bases (`role = "base"`, masquées du
-hub) : `naive-crud-<lang>` pour les architectures, et une base par concept non architectural et par langage.
+Total: 16 TS + 16 Kotlin + 9 Go + 3 JS = **44 templates**. On top of these come the bases (`role = "base"`, hidden from
+the hub): `naive-crud-<lang>` for the architectures, and one base per non-architectural concept and per language.
 
-Tous les templates : runtime `browser-js` (TS / JS), `go`, `kotlin` ; aucune dépendance hors bibliothèque standard et
-outil de test ; licence `MIT-0`.
+All templates: runtime `browser-js` (TS / JS), `go`, `kotlin`; no dependency outside the standard library and the test
+tool; license `MIT-0`.
 
-Chaque tour compte 4 à 6 étapes, commence par `overview` et finit par `trade-offs` (« quand ne pas l'utiliser »). Les `id` listés ci-dessous
-sont les `id` canoniques de la variante TS ; les autres variantes s'y alignent ([manifest.md §5.3](./manifest.md)).
+Each tour has 4 to 6 steps, starts with `overview` and ends with `trade-offs` ("when not to use it"). The `id`s listed
+below are the canonical `id`s of the TS variant; the other variants align with them ([manifest.md §5.3](./manifest.md)).
 
 ---
 
 ## 3. Architecture
 
-Base commune : **`naive-crud-<lang>`**. Un module `orders` où un même fichier valide l'entrée, calcule le total, écrit
-dans un stockage en mémoire, publie un événement à un faux broker et envoie un e-mail. Le statut est une série de
-booléens (`isPaid`, `isShipped`, `isCancelled`). Les lectures (historique client) utilisent le même modèle que les
-écritures. Cette base unique contient volontairement les cinq problèmes résolus par les cinq architectures ; chaque
-template restreint la vue diff à ses fichiers via `base.focus`.
+Common base: **`naive-crud-<lang>`**. An `orders` module where a single file validates the input, computes the total,
+writes to in-memory storage, publishes an event to a fake broker and sends an email. The status is a series of
+booleans (`isPaid`, `isShipped`, `isCancelled`). Reads (customer history) use the same model as writes. This single
+base deliberately contains the five problems solved by the five architectures; each template restricts the diff view
+to its files through `base.focus`.
 
 ### 3.1 Hexagonal — `architecture/hexagonal`
 
-- **Problème** : la logique de commande est collée au transport (handler HTTP simulé) et au stockage ; impossible de la
-  tester ou de la réutiliser depuis une autre entrée.
-- **Template** : domaine `Order` pur ; ports pilotés (`OrderRepository`, `PaymentGateway`, `Notifier`) ; port pilote
-  (cas d'usage `placeOrder`) ; adapters en mémoire et faux HTTP ; assemblage dans `main`.
-- **Tour** : `overview` · `domain` · `ports` (pilotes et pilotés) · `adapters` · `wiring` · `trade-offs`.
-- **Exercices** :
-  - `refactor` `add-csv-import` (from base) : accepter des commandes depuis un import CSV. Dans la base, il faut dupliquer
-    la logique du handler ; ici, c'est un nouvel adapter pilote.
-  - `fix` `add-email-adapter` : implémenter l'adapter `Notifier` manquant.
-- **Variantes** : Go — ports = interfaces implicites déclarées côté consommateur, packages `internal/` qui rendent la
-  frontière visible. Kotlin — `fun interface` pour les ports à une méthode, modules par package.
-- **Liens** : DIP (le même principe à l'échelle de l'application), Adapter (les adapters pilotés), CQRS.
+- **Problem**: the order logic is glued to the transport (simulated HTTP handler) and to storage; it cannot be tested
+  or reused from another entry point.
+- **Template**: pure `Order` domain; driven ports (`OrderRepository`, `PaymentGateway`, `Notifier`); driving port
+  (`placeOrder` use case); in-memory and fake HTTP adapters; wiring in `main`.
+- **Tour**: `overview` · `domain` · `ports` (driving and driven) · `adapters` · `wiring` · `trade-offs`.
+- **Exercises**:
+  - `refactor` `add-csv-import` (from base): accept orders from a CSV import. In the base, the handler logic has to be
+    duplicated; here, it is a new driving adapter.
+  - `fix` `add-email-adapter`: implement the missing `Notifier` adapter.
+- **Variants**: Go — ports = implicit interfaces declared on the consumer side, `internal/` packages that make the
+  boundary visible. Kotlin — `fun interface` for single-method ports, modules by package.
+- **Links**: DIP (the same principle at application scale), Adapter (the driven adapters), CQRS.
 
 ### 3.2 CQRS — `architecture/cqrs`
 
-- **Problème** : afficher l'historique d'un client (nombre de commandes, total dépensé, dernier statut) oblige à charger
-  et recalculer les agrégats à chaque lecture, et à tordre le modèle d'écriture pour la lecture.
-- **Template** : commandes (`PlaceOrder`, `CancelOrder`) sur le modèle d'écriture ; read model `CustomerOrderSummary`
-  dénormalisé ; projection mise à jour de façon synchrone après chaque commande ; queries qui ne lisent que le read model.
-- **Tour** : `overview` · `write-model` (commandes et handlers) · `read-model` · `projection` · `consistency` ·
+- **Problem**: showing a customer's history (number of orders, total spent, last status) forces loading and
+  recomputing the aggregates on every read, and bending the write model for reading.
+- **Template**: commands (`PlaceOrder`, `CancelOrder`) on the write model; denormalized `CustomerOrderSummary` read
+  model; projection updated synchronously after each command; queries that read only the read model.
+- **Tour**: `overview` · `write-model` (commands and handlers) · `read-model` · `projection` · `consistency` ·
   `trade-offs`.
-- **Exercices** :
-  - `refactor` `add-revenue-dashboard` (from base) : une vue « chiffre d'affaires par jour ». Dans la base, elle modifie
-    le modèle de domaine ; ici, c'est une projection de plus.
-  - `fix` `project-cancellation` : la projection ignore `OrderCancelled`, les totaux sont faux.
-- **Variantes** : Go — handlers comme fonctions, read model en `map`. Kotlin — `sealed interface Command`, `when`
-  exhaustif sur les commandes.
-- **Liens** : event sourcing (souvent combiné, pas obligatoire — le tour `consistency` le dit), outbox (projection
-  asynchrone), hexagonal.
+- **Exercises**:
+  - `refactor` `add-revenue-dashboard` (from base): a "revenue per day" view. In the base, it changes the domain
+    model; here, it is one more projection.
+  - `fix` `project-cancellation`: the projection ignores `OrderCancelled`, the totals are wrong.
+- **Variants**: Go — handlers as functions, read model as a `map`. Kotlin — `sealed interface Command`, exhaustive
+  `when` on commands.
+- **Links**: event sourcing (often combined, not required — the `consistency` tour step says so), outbox (asynchronous
+  projection), hexagonal.
 
 ### 3.3 Event sourcing — `architecture/event-sourcing`
 
-- **Problème** : la base écrase le statut ; « pourquoi cette commande a-t-elle été annulée, et quand ? » n'a pas de
-  réponse.
-- **Template** : événements (`OrderPlaced`, `OrderPaid`, `OrderShipped`, `OrderCancelled`) ; agrégat avec `decide`
-  (commande → événements) et `evolve` (état + événement → état) ; event store en mémoire, append-only, versionné ;
-  réhydratation ; une projection.
-- **Tour** : `overview` · `events` · `decide-evolve` · `event-store` · `rehydration` · `trade-offs`.
-- **Exercices** :
-  - `refactor` `order-timeline` (from base) : afficher la chronologie d'une commande. Impossible dans la base sans
-    nouvelle table ; ici, c'est une lecture des événements.
-  - `fix` `optimistic-concurrency` : deux écritures concurrentes sur la même version doivent échouer.
-- **Variantes** : Kotlin — `sealed interface OrderEvent` + `data class`, `fold` pour la réhydratation. Pas de Go en V1.
-- **Liens** : CQRS, machine à états (`evolve` est une machine à états), Observer.
+- **Problem**: the base overwrites the status; "why was this order cancelled, and when?" has no answer.
+- **Template**: events (`OrderPlaced`, `OrderPaid`, `OrderShipped`, `OrderCancelled`); aggregate with `decide`
+  (command → events) and `evolve` (state + event → state); in-memory event store, append-only, versioned;
+  rehydration; one projection.
+- **Tour**: `overview` · `events` · `decide-evolve` · `event-store` · `rehydration` · `trade-offs`.
+- **Exercises**:
+  - `refactor` `order-timeline` (from base): show the timeline of an order. Impossible in the base without a new
+    table; here, it is a read of the events.
+  - `fix` `optimistic-concurrency`: two concurrent writes on the same version must fail.
+- **Variants**: Kotlin — `sealed interface OrderEvent` + `data class`, `fold` for rehydration. No Go in V1.
+- **Links**: CQRS, state machine (`evolve` is a state machine), Observer.
 
 ### 3.4 Outbox — `architecture/outbox`
 
-- **Problème** : la base enregistre la commande puis publie `OrderPlaced` ; si la publication échoue ou si le process
-  s'arrête entre les deux, l'événement est perdu (double écriture). Le faux broker du template injecte cette panne.
-- **Template** : stockage en mémoire avec transaction simulée ; écriture de la commande et de l'entrée d'outbox dans la
-  même transaction ; relais qui publie et marque l'entrée ; consommateur idempotent (livraison au moins une fois).
-- **Tour** : `overview` · `dual-write` · `same-transaction` · `relay` · `idempotent-consumer` · `trade-offs`.
-- **Exercices** :
-  - `refactor` `survive-broker-outage` (from base) : aucune commande ne doit perdre son événement quand le broker est
-    indisponible.
-  - `fix` `deduplicate-deliveries` : le consommateur traite deux fois le même message.
-- **Variantes** : Go — relais en goroutine avec `context` pour l'arrêt. Kotlin — relais
-  synchrone piloté par le test (pas de coroutines : `kotlinx.coroutines` n'est pas dans la stdlib).
-- **Liens** : Observer (la version non fiable), CQRS (projection asynchrone), event sourcing (l'event store comme
+- **Problem**: the base saves the order then publishes `OrderPlaced`; if publishing fails or the process stops in
+  between, the event is lost (dual write). The template's fake broker injects this failure.
+- **Template**: in-memory storage with a simulated transaction; the order and the outbox entry are written in the
+  same transaction; relay that publishes and marks the entry; idempotent consumer (at-least-once delivery).
+- **Tour**: `overview` · `dual-write` · `same-transaction` · `relay` · `idempotent-consumer` · `trade-offs`.
+- **Exercises**:
+  - `refactor` `survive-broker-outage` (from base): no order may lose its event when the broker is unavailable.
+  - `fix` `deduplicate-deliveries`: the consumer processes the same message twice.
+- **Variants**: Go — relay in a goroutine with `context` for shutdown. Kotlin — synchronous relay
+  driven by the test (no coroutines: `kotlinx.coroutines` is not in the stdlib).
+- **Links**: Observer (the unreliable version), CQRS (asynchronous projection), event sourcing (the event store as an
   outbox).
 
-### 3.5 Machine à états — `architecture/state-machine`
+### 3.5 State machine — `architecture/state-machine`
 
-- **Problème** : avec des booléens, des états impossibles existent (`isShipped && isCancelled`) et les règles de
-  transition sont dispersées dans des `if`.
-- **Template** : `OrderStatus` explicite ; table de transitions (état × événement → état) ; transition invalide =
-  erreur typée ; les états impossibles ne sont plus représentables.
-- **Tour** : `overview` · `impossible-states` · `states` · `transitions` · `guards` · `trade-offs`.
-- **Exercices** :
-  - `refactor` `add-returns` (from base) : ajouter le retour d'une commande livrée, sous 14 jours.
-  - `fix` `forbid-cancel-after-shipping` : la table autorise une transition interdite.
-- **Variantes** : TS — union discriminée. Kotlin — `sealed class` + `when` exhaustif, le compilateur refuse un état
-  oublié. Pas de Go en V1.
-- **Liens** : event sourcing, State (GoF, vague 2) — la différence est explicite dans `trade-offs` : ici la machine est
-  une donnée (table), dans State le comportement vit dans chaque objet état.
+- **Problem**: with booleans, impossible states exist (`isShipped && isCancelled`) and the transition rules are
+  scattered across `if`s.
+- **Template**: explicit `OrderStatus`; transition table (state × event → state); invalid transition = typed error;
+  impossible states can no longer be represented.
+- **Tour**: `overview` · `impossible-states` · `states` · `transitions` · `guards` · `trade-offs`.
+- **Exercises**:
+  - `refactor` `add-returns` (from base): add the return of a delivered order, within 14 days.
+  - `fix` `forbid-cancel-after-shipping`: the table allows a forbidden transition.
+- **Variants**: TS — discriminated union. Kotlin — `sealed class` + exhaustive `when`, the compiler rejects a
+  forgotten state. No Go in V1.
+- **Links**: event sourcing, State (GoF, wave 2) — the difference is explicit in `trade-offs`: here the machine is
+  data (a table), in State the behavior lives in each state object.
 
 ---
 
-## 4. Principes SOLID
+## 4. SOLID principles
 
-Chaque principe a sa propre base `<concept>-base-<lang>` : le même code, qui viole le principe. Base et template
-partagent la même suite de tests (comportement identique), à l'exception des tests ajoutés par les exercices.
+Each principle has its own base `<concept>-base-<lang>`: the same code, which violates the principle. Base and template
+share the same test suite (identical behavior), except for the tests added by the exercises.
 
 ### 4.1 SRP — `principle/single-responsibility`
 
-- **Problème** : `OrderService` valide, calcule les prix, persiste, formate la facture et envoie l'e-mail. Chaque
-  changement (nouveau format de facture) risque de casser le reste.
-- **Template** : responsabilités séparées par **raison de changer** (`OrderValidator`, `PriceCalculator`,
-  `InvoiceFormatter`, `OrderService` qui orchestre).
-- **Tour** : `overview` · `reasons-to-change` · `split` · `orchestrator` · `trade-offs` (le sur-découpage).
-- **Exercices** : `refactor` `add-pdf-invoice` (from base) : un second format de facture.
-- **Variantes** : Kotlin — fonctions de premier niveau quand une classe n'a pas d'état.
-- **Liens** : DIP, hexagonal.
+- **Problem**: `OrderService` validates, computes prices, persists, formats the invoice and sends the email. Each
+  change (new invoice format) risks breaking the rest.
+- **Template**: responsibilities split by **reason to change** (`OrderValidator`, `PriceCalculator`,
+  `InvoiceFormatter`, `OrderService` which orchestrates).
+- **Tour**: `overview` · `reasons-to-change` · `split` · `orchestrator` · `trade-offs` (over-splitting).
+- **Exercises**: `refactor` `add-pdf-invoice` (from base): a second invoice format.
+- **Variants**: Kotlin — top-level functions when a class has no state.
+- **Links**: DIP, hexagonal.
 
 ### 4.2 OCP — `principle/open-closed`
 
-- **Problème** : les remises sont un `switch` sur `customer.tier` dans le calcul du total ; chaque nouvelle remise
-  modifie ce calcul.
-- **Template** : liste de règles de remise (`DiscountRule`) appliquées par le calculateur ; ajouter une règle = ajouter
-  un fichier.
-- **Tour** : `overview` · `closed-switch` · `extension-point` · `rules` · `trade-offs` (ne pas ouvrir ce qui ne varie
-  pas).
-- **Exercices** : `refactor` `add-black-friday-rule` (from base) : une remise datée, cumulable avec la remise membre.
-- **Variantes** : Kotlin — règles en `fun interface` ou lambdas.
-- **Liens** : Strategy (OCP est le principe, Strategy une de ses mises en œuvre), Decorator.
+- **Problem**: discounts are a `switch` on `customer.tier` in the total computation; each new discount changes this
+  computation.
+- **Template**: list of discount rules (`DiscountRule`) applied by the calculator; adding a rule = adding a file.
+- **Tour**: `overview` · `closed-switch` · `extension-point` · `rules` · `trade-offs` (do not open what does not
+  vary).
+- **Exercises**: `refactor` `add-black-friday-rule` (from base): a dated discount, stackable with the member discount.
+- **Variants**: Kotlin — rules as `fun interface` or lambdas.
+- **Links**: Strategy (OCP is the principle, Strategy one of its implementations), Decorator.
 
 ### 4.3 LSP — `principle/liskov-substitution`
 
-- **Problème** : `DigitalProduct extends PhysicalProduct` ; `weight()` renvoie 0 et `ship()` lève une exception. Le
-  calcul de frais de port, écrit pour `PhysicalProduct`, casse ou ment.
-- **Template** : hiérarchie corrigée — `Product` commun, capacité `Shippable` portée seulement par ce qui s'expédie ;
-  tests de contrat réutilisés sur chaque sous-type.
-- **Tour** : `overview` · `broken-promise` · `contract` · `contract-tests` · `trade-offs`.
-- **Exercices** :
-  - `refactor` `add-gift-card` (from base) : une carte cadeau, ni physique ni téléchargeable.
-  - `fix` `contract-violation` : un sous-type fourni viole un test de contrat.
-- **Variantes** : Kotlin — classes `final` par défaut, `open` explicite : le langage rend l'héritage délibéré.
-- **Liens** : composition vs héritage, ISP.
+- **Problem**: `DigitalProduct extends PhysicalProduct`; `weight()` returns 0 and `ship()` throws an exception. The
+  shipping cost computation, written for `PhysicalProduct`, breaks or lies.
+- **Template**: fixed hierarchy — common `Product`, a `Shippable` capability carried only by what ships; contract
+  tests reused on each subtype.
+- **Tour**: `overview` · `broken-promise` · `contract` · `contract-tests` · `trade-offs`.
+- **Exercises**:
+  - `refactor` `add-gift-card` (from base): a gift card, neither physical nor downloadable.
+  - `fix` `contract-violation`: a provided subtype violates a contract test.
+- **Variants**: Kotlin — classes `final` by default, explicit `open`: the language makes inheritance deliberate.
+- **Links**: composition over inheritance, ISP.
 
 ### 4.4 ISP — `principle/interface-segregation`
 
-- **Problème** : `PaymentGateway` impose `charge`, `refund`, `saveCard`, `subscribe`. Le paiement par carte cadeau ne
-  sait pas rembourser et lève des exceptions ; ses clients dépendent de méthodes qu'ils n'appellent pas.
-- **Template** : interfaces étroites (`Chargeable`, `Refundable`, `CardVault`) ; chaque client ne dépend que de ce qu'il
-  utilise.
-- **Tour** : `overview` · `fat-interface` · `split-by-client` · `compose` · `trade-offs`.
-- **Exercices** : `refactor` `add-gift-card-payment` (from base).
-- **Variantes** : Go — interfaces d'une ou deux méthodes déclarées par le consommateur : ISP est l'idiome par défaut,
-  le tour le montre comme tel. Kotlin — une classe implémente plusieurs petites interfaces.
-- **Liens** : Adapter, hexagonal.
+- **Problem**: `PaymentGateway` imposes `charge`, `refund`, `saveCard`, `subscribe`. Gift card payment cannot refund
+  and throws exceptions; its clients depend on methods they do not call.
+- **Template**: narrow interfaces (`Chargeable`, `Refundable`, `CardVault`); each client depends only on what it
+  uses.
+- **Tour**: `overview` · `fat-interface` · `split-by-client` · `compose` · `trade-offs`.
+- **Exercises**: `refactor` `add-gift-card-payment` (from base).
+- **Variants**: Go — one- or two-method interfaces declared by the consumer: ISP is the default idiom, the tour shows
+  it as such. Kotlin — one class implements several small interfaces.
+- **Links**: Adapter, hexagonal.
 
 ### 4.5 DIP — `principle/dependency-inversion`
 
-- **Problème** : `CheckoutService` instancie `SmtpMailer` et `InMemoryOrderStore` dans son constructeur ; impossible de
-  le tester sans eux ni de changer de prestataire.
-- **Template** : `CheckoutService` dépend d'abstractions (`Notifier`, `OrderRepository`) définies **à côté de lui** ;
-  injection par le constructeur ; assemblage dans `main`.
-- **Tour** : `overview` · `concrete-dependencies` · `own-the-abstraction` · `inject` · `composition-root` · `trade-offs`.
-- **Exercices** : `refactor` `test-without-smtp` (from base) : écrire un test qui vérifie la notification sans SMTP.
-- **Variantes** : Go — interface déclarée dans le package consommateur, `New…` qui reçoit les dépendances. Kotlin —
-  injection par constructeur, sans framework.
-- **Liens** : hexagonal (« le DIP appliqué à l'échelle d'une application »), Adapter.
+- **Problem**: `CheckoutService` instantiates `SmtpMailer` and `InMemoryOrderStore` in its constructor; it cannot be
+  tested without them, nor can the provider be changed.
+- **Template**: `CheckoutService` depends on abstractions (`Notifier`, `OrderRepository`) defined **next to it**;
+  constructor injection; wiring in `main`.
+- **Tour**: `overview` · `concrete-dependencies` · `own-the-abstraction` · `inject` · `composition-root` · `trade-offs`.
+- **Exercises**: `refactor` `test-without-smtp` (from base): write a test that checks the notification without SMTP.
+- **Variants**: Go — interface declared in the consumer package, `New…` that receives the dependencies. Kotlin —
+  constructor injection, without a framework.
+- **Links**: hexagonal ("DIP applied at the scale of an application"), Adapter.
 
 ---
 
@@ -243,95 +239,95 @@ partagent la même suite de tests (comportement identique), à l'exception des t
 
 ### 5.1 Strategy — `design-pattern/behavioral/strategy`
 
-- **Problème** : le coût de livraison est une chaîne `if / else` sur `ShippingOption` dans `ShippingQuote`.
-- **Template** : interface `ShippingCost` ; une implémentation par option ; `ShippingQuote` reçoit la stratégie choisie
-  par le client à l'exécution.
-- **Tour** : `overview` · `the-problem` · `strategy-interface` · `context` · `choosing-at-runtime` · `trade-offs`.
-- **Exercices** :
+- **Problem**: the shipping cost is an `if / else` chain on `ShippingOption` in `ShippingQuote`.
+- **Template**: `ShippingCost` interface; one implementation per option; `ShippingQuote` receives the strategy chosen
+  by the customer at run time.
+- **Tour**: `overview` · `the-problem` · `strategy-interface` · `context` · `choosing-at-runtime` · `trade-offs`.
+- **Exercises**:
   - `refactor` `add-pickup-point-option` (from base).
-  - `fix` `implement-express` : la stratégie express est vide.
-- **Variantes** : Go — `type ShippingCost func(Order) Money` : la stratégie est une fonction, l'interface disparaît.
-  Kotlin — lambdas ou `fun interface`. Le tour `strategy-interface` explique dans chaque variante pourquoi le code y est
-  plus court.
-- **Liens** : OCP.
+  - `fix` `implement-express`: the express strategy is empty.
+- **Variants**: Go — `type ShippingCost func(Order) Money`: the strategy is a function, the interface disappears.
+  Kotlin — lambdas or `fun interface`. In each variant, the `strategy-interface` tour step explains why the code is
+  shorter there.
+- **Links**: OCP.
 
 ### 5.2 Observer — `design-pattern/behavioral/observer`
 
-- **Problème** : `placeOrder` appelle directement le stock, l'e-mail et l'analytics ; ajouter une réaction modifie la
-  commande.
-- **Template** : `OrderEvents` (sujet) ; abonnés indépendants ; `placeOrder` publie `OrderPlaced` sans connaître les
-  abonnés ; désabonnement.
-- **Tour** : `overview` · `direct-calls` · `subject` · `subscribers` · `failure-isolation` · `trade-offs` (ordre,
-  erreurs, fuites d'abonnements).
-- **Exercices** :
+- **Problem**: `placeOrder` directly calls stock, email and analytics; adding a reaction changes the order code.
+- **Template**: `OrderEvents` (subject); independent subscribers; `placeOrder` publishes `OrderPlaced` without knowing
+  the subscribers; unsubscribing.
+- **Tour**: `overview` · `direct-calls` · `subject` · `subscribers` · `failure-isolation` · `trade-offs` (ordering,
+  errors, subscription leaks).
+- **Exercises**:
   - `refactor` `add-loyalty-points` (from base).
-  - `fix` `isolate-failing-subscriber` : un abonné qui lève une exception empêche les suivants d'être notifiés.
-- **Variantes** : JS — `EventTarget` / `CustomEvent` natifs : le pattern est dans la plateforme. Kotlin — liste de
+  - `fix` `isolate-failing-subscriber`: a subscriber that throws an exception prevents the next ones from being
+    notified.
+- **Variants**: JS — native `EventTarget` / `CustomEvent`: the pattern is in the platform. Kotlin — list of
   `fun interface` listeners.
-- **Liens** : outbox (Observer ne garantit pas la livraison), event sourcing.
+- **Links**: outbox (Observer does not guarantee delivery), event sourcing.
 
 ### 5.3 Decorator — `design-pattern/structural/decorator`
 
-- **Problème** : `EmailNotifier` mêle envoi, retry, log et limitation de débit ; activer le retry sans le log demande un
-  drapeau de plus.
-- **Template** : `Notifier` ; `EmailNotifier` minimal ; `RetryingNotifier`, `LoggingNotifier`, `ThrottledNotifier`
-  qui enveloppent un `Notifier` ; composition dans `main`.
-- **Tour** : `overview` · `flag-soup` · `same-interface` · `wrapping` · `stacking-order` · `trade-offs`.
-- **Exercices** :
-  - `refactor` `add-sms-with-retry` (from base) : un notifier SMS qui bénéficie du retry sans le dupliquer.
-  - `fix` `stacking-order` : l'ordre d'empilement fait logguer les tentatives au lieu de l'envoi final.
-- **Variantes** : JS — fonctions d'ordre supérieur qui enveloppent `notify`. Go — structs qui embarquent l'interface,
-  façon middleware `http.Handler`. Kotlin — délégation `by` : le décorateur ne réécrit que la méthode qu'il change.
-- **Liens** : OCP, Adapter (même forme, intention différente — expliqué dans `trade-offs`).
+- **Problem**: `EmailNotifier` mixes sending, retry, logging and rate limiting; enabling retry without logging takes
+  one more flag.
+- **Template**: `Notifier`; minimal `EmailNotifier`; `RetryingNotifier`, `LoggingNotifier`, `ThrottledNotifier`
+  that wrap a `Notifier`; composition in `main`.
+- **Tour**: `overview` · `flag-soup` · `same-interface` · `wrapping` · `stacking-order` · `trade-offs`.
+- **Exercises**:
+  - `refactor` `add-sms-with-retry` (from base): an SMS notifier that benefits from retry without duplicating it.
+  - `fix` `stacking-order`: the stacking order logs the attempts instead of the final send.
+- **Variants**: JS — higher-order functions that wrap `notify`. Go — structs that embed the interface, in the style of
+  `http.Handler` middleware. Kotlin — `by` delegation: the decorator rewrites only the method it changes.
+- **Links**: OCP, Adapter (same shape, different intent — explained in `trade-offs`).
 
 ### 5.4 Factory Method — `design-pattern/creational/factory-method`
 
-- **Problème** : `ship()` contient un `switch` sur le transporteur pour construire le colis (`StandardParcel`,
-  `ExpressParcel`) ; chaque nouveau transporteur modifie `ship()`.
-- **Template** : `Carrier` abstrait avec `ship(order)` (algorithme commun) qui appelle la méthode de fabrique
-  `createParcel(order)` ; une sous-classe par transporteur.
-- **Tour** : `overview` · `switch-on-type` · `creator` · `factory-method` · `concrete-creators` · `trade-offs`.
-- **Exercices** : `refactor` `add-locker-carrier` (from base) : un transporteur consigne automatique.
-- **Variantes** : Kotlin — `abstract class` + `override`, et mention de l'alternative idiomatique (fabrique passée en
-  lambda). Pas de Go : sans héritage, le pattern se réduit à des fonctions constructeurs.
-- **Liens** : Strategy (variante par composition), composition vs héritage.
+- **Problem**: `ship()` contains a `switch` on the carrier to build the parcel (`StandardParcel`, `ExpressParcel`);
+  each new carrier changes `ship()`.
+- **Template**: abstract `Carrier` with `ship(order)` (common algorithm) that calls the factory method
+  `createParcel(order)`; one subclass per carrier.
+- **Tour**: `overview` · `switch-on-type` · `creator` · `factory-method` · `concrete-creators` · `trade-offs`.
+- **Exercises**: `refactor` `add-locker-carrier` (from base): a parcel locker carrier.
+- **Variants**: Kotlin — `abstract class` + `override`, and a mention of the idiomatic alternative (factory passed as
+  a lambda). No Go: without inheritance, the pattern reduces to constructor functions.
+- **Links**: Strategy (variant by composition), composition over inheritance.
 
 ### 5.5 Adapter — `design-pattern/structural/adapter`
 
-- **Problème** : le SDK de paiement externe (`LegacyPayClient.makePayment(cents, currencyCode, cardToken)` qui renvoie
-  des codes numériques) est appelé directement dans tout le checkout.
-- **Template** : port `PaymentGateway.charge(Money, Card)` qui renvoie un résultat typé ; `LegacyPayAdapter` traduit
-  appels, unités et codes d'erreur ; le SDK simulé est fourni tel quel, non modifiable.
-- **Tour** : `overview` · `foreign-interface` · `target-interface` · `translation` · `error-mapping` · `trade-offs`.
-- **Exercices** :
-  - `refactor` `switch-provider` (from base) : brancher un second prestataire au contrat différent.
-  - `fix` `map-declined-code` : un code de refus est traduit en succès.
-- **Variantes** : Go — l'adapter est un struct qui satisfait l'interface implicitement. Kotlin — extension functions
-  comme alternative légère, et leurs limites.
-- **Liens** : hexagonal (adapters pilotés), ISP, Decorator.
+- **Problem**: the external payment SDK (`LegacyPayClient.makePayment(cents, currencyCode, cardToken)` which returns
+  numeric codes) is called directly throughout the checkout.
+- **Template**: `PaymentGateway.charge(Money, Card)` port that returns a typed result; `LegacyPayAdapter` translates
+  calls, units and error codes; the simulated SDK is provided as is, not modifiable.
+- **Tour**: `overview` · `foreign-interface` · `target-interface` · `translation` · `error-mapping` · `trade-offs`.
+- **Exercises**:
+  - `refactor` `switch-provider` (from base): plug in a second provider with a different contract.
+  - `fix` `map-declined-code`: a decline code is translated into a success.
+- **Variants**: Go — the adapter is a struct that satisfies the interface implicitly. Kotlin — extension functions
+  as a lightweight alternative, and their limits.
+- **Links**: hexagonal (driven adapters), ISP, Decorator.
 
 ---
 
-## 6. Fondamentaux POO
+## 6. OOP fundamentals
 
-### 6.1 Composition vs héritage — `fundamental/composition-over-inheritance`
+### 6.1 Composition over inheritance — `fundamental/composition-over-inheritance`
 
-- **Niveau** : `beginner` — seul template débutant de la V1, il valide l'intérêt d'une série « fondamentaux ».
-- **Problème** : `Product → PhysicalProduct → PerishableProduct → DiscountedPerishableProduct` ; ajouter « emballage
-  cadeau » double la hiérarchie.
-- **Template** : `Product` composé de politiques (`PricingPolicy`, `ShippingPolicy`, `PackagingPolicy`) combinables.
-- **Tour** : `overview` · `hierarchy` · `explosion` · `compose` · `delegate` · `trade-offs` (quand l'héritage reste le
-  bon choix).
-- **Exercices** : `refactor` `add-gift-wrap` (from base).
-- **Variantes** :
-  - JS — `class` comme sucre sur la chaîne de prototypes, puis composition par objets et fonctions fabriques.
-  - Go — pas d'héritage : l'embedding promeut des méthodes mais ne crée pas de sous-type ; le tour montre la différence.
-  - Kotlin — classes `final` par défaut, délégation `by` : le langage pousse vers la composition.
-- **Liens** : LSP, Decorator, Factory Method.
+- **Level**: `beginner` — the only beginner template of V1, it validates the value of a "fundamentals" series.
+- **Problem**: `Product → PhysicalProduct → PerishableProduct → DiscountedPerishableProduct`; adding "gift wrap"
+  doubles the hierarchy.
+- **Template**: `Product` composed of combinable policies (`PricingPolicy`, `ShippingPolicy`, `PackagingPolicy`).
+- **Tour**: `overview` · `hierarchy` · `explosion` · `compose` · `delegate` · `trade-offs` (when inheritance remains
+  the right choice).
+- **Exercises**: `refactor` `add-gift-wrap` (from base).
+- **Variants**:
+  - JS — `class` as sugar over the prototype chain, then composition with objects and factory functions.
+  - Go — no inheritance: embedding promotes methods but does not create a subtype; the tour shows the difference.
+  - Kotlin — classes `final` by default, `by` delegation: the language pushes toward composition.
+- **Links**: LSP, Decorator, Factory Method.
 
 ---
 
-## 7. Graphe des liens
+## 7. Link graph
 
 ```
 DIP ──────────────► Hexagonal ◄────── Adapter
@@ -340,46 +336,46 @@ DIP ──────────────► Hexagonal ◄─────�
 SRP                  CQRS ┘             ISP
                       │
 OCP ◄── Strategy      ▼
- │                Event sourcing ◄── Machine à états
+ │                Event sourcing ◄── State machine
  ▼                    ▲
 Decorator           Outbox ◄── Observer
 
-Composition vs héritage ── LSP ── Factory Method
+Composition over inheritance ── LSP ── Factory Method
 ```
 
-Chaque flèche est un lien `typika:<name>` dans au moins une étape de tour (souvent `trade-offs`).
+Each arrow is a `typika:<name>` link in at least one tour step (often `trade-offs`).
 
-## 8. Feuille de route du catalogue
+## 8. Catalogue roadmap
 
-Pas à pas, sans date : une vague démarre quand la précédente est complète en TS et Kotlin.
+Step by step, with no date: a wave starts when the previous one is complete in TS and Kotlin.
 
-### 8.1 Design patterns GoF restants
+### 8.1 Remaining GoF design patterns
 
-Chaque vague mélange les trois familles.
+Each wave mixes the three families.
 
-| Vague | Création | Structure | Comportement | Idée dans le fil rouge |
+| Wave | Creational | Structural | Behavioral | Idea in the common thread |
 |---|---|---|---|---|
-| 2 | Builder | Facade, Composite | Command, State | Construire une commande complexe · façade de checkout · panier de lots · annulation / rejouer des actions · statut de commande en objets état |
-| 3 | Abstract Factory | Proxy | Template Method, Chain of Responsibility, Iterator | Famille de documents (facture + bon de livraison) par pays · cache du catalogue · import de commandes · chaîne de validation · parcours paginé des commandes |
-| 4 | Prototype | Bridge | Visitor, Mediator, Memento | Duplication d'une commande · export multi-formats × multi-canaux · calculs sur un arbre de lots · coordination des widgets du checkout · brouillon de panier restaurable |
-| 5 | Singleton (avec ses pièges) | Flyweight | Interpreter | Configuration globale et pourquoi l'éviter · étiquettes partagées · mini-langage de règles promo |
+| 2 | Builder | Facade, Composite | Command, State | Build a complex order · checkout facade · bundle cart · undo / replay actions · order status as state objects |
+| 3 | Abstract Factory | Proxy | Template Method, Chain of Responsibility, Iterator | Document family (invoice + delivery note) per country · catalogue cache · order import · validation chain · paginated traversal of orders |
+| 4 | Prototype | Bridge | Visitor, Mediator, Memento | Order duplication · multi-format × multi-channel export · computations on a bundle tree · coordination of checkout widgets · restorable cart draft |
+| 5 | Singleton (with its pitfalls) | Flyweight | Interpreter | Global configuration and why to avoid it · shared labels · mini-language for promo rules |
 
-### 8.2 Hors GoF — `design-pattern/other/*`
+### 8.2 Beyond GoF — `design-pattern/other/*`
 
-Repository, Unit of Work, Specification, Null Object, Result / Either, Dependency Injection. Plusieurs sont déjà
-présents en filigrane (Repository dans l'hexagonal, DI dans le DIP) : leurs templates les isolent. Ordre décidé après la
-vague 3.
+Repository, Unit of Work, Specification, Null Object, Result / Either, Dependency Injection. Several are already
+present in the background (Repository in hexagonal, DI in DIP): their templates isolate them. Order decided after
+wave 3.
 
-### 8.3 Couverture des vagues suivantes
+### 8.3 Coverage of the next waves
 
-- TS et Kotlin : systématiques.
-- Go : seulement quand le pattern a une forme idiomatique (Command, Chain of Responsibility, Iterator via `range` sur
-  func) ; sinon absent plutôt que traduit.
-- JS : seulement quand la plateforme apporte quelque chose (Iterator avec les générateurs, Proxy avec `Proxy`).
+- TS and Kotlin: always.
+- Go: only when the pattern has an idiomatic form (Command, Chain of Responsibility, Iterator via `range` over
+  func); otherwise absent rather than translated.
+- JS: only when the platform brings something (Iterator with generators, Proxy with `Proxy`).
 
-### 8.4 Autres catégories
+### 8.4 Other categories
 
-- **Fondamentaux** (encapsulation, polymorphisme, classes abstraites vs interfaces) : décidés après retours sur le
-  premier template `beginner`.
-- **Principes** hors SOLID (loi de Déméter, Tell Don't Ask, DRY vs couplage) : après la vague 3.
-- **Architecture** (saga, CQRS + event sourcing combinés, modular monolith) : après les vagues GoF 2 et 3.
+- **Fundamentals** (encapsulation, polymorphism, abstract classes vs interfaces): decided after feedback on the
+  first `beginner` template.
+- **Principles** beyond SOLID (Law of Demeter, Tell Don't Ask, DRY vs coupling): after wave 3.
+- **Architecture** (saga, combined CQRS + event sourcing, modular monolith): after GoF waves 2 and 3.

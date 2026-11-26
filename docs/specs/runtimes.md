@@ -1,28 +1,28 @@
 # Runtimes
 
-Statut : spec · détaille le §7 de la [spec V1](./2026-10-08-typika-v1-design.md)
+Status: spec · details §7 of the [V1 spec](./2026-10-08-typika-v1-design.md)
 
-Un runtime exécute un projet dans le navigateur : il écrit les fichiers, lance une commande, exécute les tests et expose
-éventuellement une preview. Trois runtimes sont prévus :
+A runtime runs a project in the browser: it writes the files, starts a command, runs the tests and may expose a
+preview. Three runtimes are planned:
 
-| `kind` | Langages | Palier | Jalon | Spike bloquant |
+| `kind` | Languages | Tier | Milestone | Blocking spike |
 |---|---|---|---|---|
 | `browser-js` | TS, JS | 1 | M1 | — |
 | `go` | Go | 2 | M4 | [R7](../spikes.md) |
-| `kotlin` | Kotlin (cible JS) | 3 | M6 | [R9](../spikes.md) (R8 levé : [ADR 0019](../decisions/0019-kotlin-runtime.md)) |
+| `kotlin` | Kotlin (JS target) | 3 | M6 | [R9](../spikes.md) (R8 cleared: [ADR 0019](../decisions/0019-kotlin-runtime.md)) |
 
-Le format des templates, le panneau tests et les exercices ne connaissent que le contrat décrit ici. Un runtime qui
-échoue en spike est remplacé derrière ce contrat (plan de repli : runner serveur auto-hébergeable, V2) sans toucher aux
+The template format, the tests panel and the exercises only know the contract described here. A runtime that fails
+its spike is replaced behind this contract (fallback plan: self-hostable server runner, V2) without touching the
 templates.
 
-Le runtime `node` (WebContainers) est écarté de la V1 ([ADR 0017](../decisions/0017-node-runtime.md)).
+The `node` runtime (WebContainers) is dropped from V1 ([ADR 0017](../decisions/0017-node-runtime.md)).
 
-## 1. Contrat
+## 1. Contract
 
 ### 1.1 Port
 
-`packages/runtime-core` expose le contrat. Il dépend d'`effect` et de `@typika/manifest` (types du manifeste,
-`RuntimeKind`, validation des chemins).
+`packages/runtime-core` exposes the contract. It depends on `effect` and on `@typika/manifest` (manifest types,
+`RuntimeKind`, path validation).
 
 ```ts
 import * as Context from 'effect/Context'
@@ -68,32 +68,32 @@ export class RuntimeRegistry extends Context.Service<
 >()('@typika/RuntimeRegistry') {}
 ```
 
-Points de conception :
+Design points:
 
-- **`boot` est scopé.** La session vit dans le `Scope` du projet ouvert. Fermer le scope (quitter la sandbox, changer de
-  template, démonter l'embed) termine les workers, libère la mémoire WASM et coupe les processus. Aucun `dispose()`
-  manuel.
-- **`load` est séparé de `boot`.** Il télécharge les assets du runtime et émet la progression pour l'indicateur de
-  chargement ([R3](../spikes.md)). `boot` l'appelle si nécessaire ; l'UI peut l'appeler en avance (préchargement au
-  survol du bouton « Ouvrir dans la sandbox »).
-- **`run` et `test` renvoient des `Stream`.** Interrompre le fiber consommateur interrompt le processus (§4).
-- **`preview`** renvoie `Option.none()` pour les runtimes sans preview (`go`, `kotlin` en V1).
-- **`RuntimeRegistry`** résout un `kind` en `RuntimePort` par import dynamique : le code d'un runtime n'est chargé que
-  si un template de ce langage est ouvert. `makeRuntimeRegistry(loaders)` le construit à partir d'un import par `kind` ;
-  un `kind` sans import donne `RuntimeUnsupportedError`, un import qui échoue donne `RuntimeAssetLoadError` et sera
-  retenté au prochain appel. Un port chargé est gardé pour la durée de vie du registre.
-- **`RuntimeExecutionError`** regroupe tout ce qui peut interrompre un `run` ou un `test`, watchdog et service Kotlin
-  compris.
+- **`boot` is scoped.** The session lives in the `Scope` of the open project. Closing the scope (leaving the sandbox,
+  switching template, unmounting the embed) terminates the workers, frees the WASM memory and stops the processes. No
+  manual `dispose()`.
+- **`load` is separate from `boot`.** It downloads the runtime assets and emits the progress for the loading
+  indicator ([R3](../spikes.md)). `boot` calls it if needed; the UI can call it ahead of time (preloading on hover of
+  the "Open in the sandbox" button).
+- **`run` and `test` return `Stream`s.** Interrupting the consumer fiber interrupts the process (§4).
+- **`preview`** returns `Option.none()` for the runtimes without a preview (`go`, `kotlin` in V1).
+- **`RuntimeRegistry`** resolves a `kind` to a `RuntimePort` through a dynamic import: the code of a runtime is only
+  loaded if a template in that language is opened. `makeRuntimeRegistry(loaders)` builds it from one import per
+  `kind`; a `kind` without an import gives `RuntimeUnsupportedError`, an import that fails gives `RuntimeAssetLoadError`
+  and is retried on the next call. A loaded port is kept for the lifetime of the registry.
+- **`RuntimeExecutionError`** groups everything that can interrupt a `run` or a `test`, watchdog and Kotlin service
+  included.
 
-Ce contrat raffine le §7.4 de la spec V1 : `boot` renvoie une session qui porte `run`, `test`, `preview` et le système de
-fichiers, plutôt que d'exposer ces opérations au niveau du port.
+This contract refines §7.4 of the V1 spec: `boot` returns a session that carries `run`, `test`, `preview` and the file
+system, rather than exposing these operations at the port level.
 
-### 1.2 Types d'entrée
+### 1.2 Input types
 
 ```ts
-// RuntimeKind vient de @typika/manifest.
+// RuntimeKind comes from @typika/manifest.
 
-export const ProjectPathSchema = Schema.String.pipe(Schema.check(/* chemin relatif, §3.2 */), Schema.brand('ProjectPath'))
+export const ProjectPathSchema = Schema.String.pipe(Schema.check(/* relative path, §3.2 */), Schema.brand('ProjectPath'))
 export type ProjectPath = typeof ProjectPathSchema.Type
 export type FileContent = string | Uint8Array
 
@@ -126,19 +126,19 @@ export interface PreviewHandle {
 }
 ```
 
-`RunCommand` vient de `[commands]` du manifeste ([manifest.md](./manifest.md)). Chaque runtime interprète la commande
-dans son propre langage : `browser-js` attend un point d'entrée, `go` un package, `kotlin` une
-fonction `main`.
+`RunCommand` comes from the `[commands]` of the manifest ([manifest.md](./manifest.md)). Each runtime interprets the
+command in its own language: `browser-js` expects an entry point, `go` a package, `kotlin` a
+`main` function.
 
-## 2. Événements de test
+## 2. Test events
 
-Chaque runtime traduit la sortie de son outil natif vers ce schéma unique. Le panneau tests, les exercices, la CI de
-santé du registre et le mode comparaison ne consomment que lui.
+Each runtime translates the output of its native tool into this single schema. The tests panel, the exercises, the
+registry health CI and comparison mode only consume it.
 
-### 2.1 Schéma
+### 2.1 Schema
 
-Défini en Effect Schema dans `packages/runtime-core/src/domain/test-event.domain-model.ts`. Les champs facultatifs
-sont des `Schema.optionalKey` : absents, jamais `undefined`, pour traverser `postMessage` et JSON sans perte.
+Defined in Effect Schema in `packages/runtime-core/src/domain/test-event.domain-model.ts`. Optional fields are
+`Schema.optionalKey`: absent, never `undefined`, to go through `postMessage` and JSON without loss.
 
 ```ts
 export const TestLocationSchema = Schema.Struct({
@@ -215,67 +215,68 @@ export const TestEventSchema = Schema.Union(
 export type TestEvent = Schema.Schema.Type<typeof TestEventSchema>
 ```
 
-### 2.2 Règles
+### 2.2 Rules
 
-- **Identifiant stable.** `testId = makeTestId(file, chemin des suites, nom)` et `suiteId = makeSuiteId(file, chemin
-  des suites)` : FNV-1a 64 bits, 16 caractères hexadécimaux. On n'utilise pas `effect/Hash`, dont la valeur peut changer
-  d'une version d'Effect à l'autre. Le même test garde le même id d'un run à
-  l'autre et d'une session à l'autre : le panneau tests peut afficher « était rouge, maintenant vert », et un exercice
-  peut suivre sa progression.
-- **Ordre garanti** : `RunStarted` en premier, `RunFinished` en dernier, chaque `SuiteStarted` fermé par son
-  `SuiteFinished`. Un runtime qui ne fournit pas de suites (Go) n'émet que des tests sans `suiteId`.
-- **Erreur de compilation** : `Diagnostics` puis `RunFinished` avec `status: 'errored'`. Ce n'est pas un échec du
-  `Stream` : l'utilisateur doit voir ses erreurs dans le panneau tests, pas un écran d'erreur.
-- **Interruption** : le `Stream` est interrompu, aucun `RunFinished` n'est émis. Le consommateur affiche « interrompu ».
-- **`RunFinished.status`** : `passed` si `failed === 0`, `failed` sinon, `errored` si le run n'a pas pu exécuter les
-  tests (compilation, crash du worker, timeout global).
-- **Conformité** : `checkTestEventSequence(events)` vérifie ces règles sur un run complet (ordre, `runId` unique,
-  imbrication des suites, `testId` uniques, compteurs et `status` de `RunFinished`) et renvoie la liste des violations.
-  Les tests de chaque runtime et la CI de santé du registre s'en servent.
-- Un exercice est validé quand un `RunFinished` `passed` couvre tous les fichiers listés dans `failing` (voir
+- **Stable identifier.** `testId = makeTestId(file, suite path, name)` and `suiteId = makeSuiteId(file, suite
+  path)`: 64-bit FNV-1a, 16 hexadecimal characters. We do not use `effect/Hash`, whose value can change from one
+  Effect version to another. The same test keeps the same id from one run to
+  the next and from one session to the next: the tests panel can show "was red, now green", and an exercise
+  can track its progress.
+- **Guaranteed order**: `RunStarted` first, `RunFinished` last, each `SuiteStarted` closed by its
+  `SuiteFinished`. A runtime that does not provide suites (Go) only emits tests without a `suiteId`.
+- **Compilation error**: `Diagnostics` then `RunFinished` with `status: 'errored'`. This is not a failure of the
+  `Stream`: the user must see their errors in the tests panel, not an error screen.
+- **Interruption**: the `Stream` is interrupted, no `RunFinished` is emitted. The consumer shows "interrupted".
+- **`RunFinished.status`**: `passed` if `failed === 0`, `failed` otherwise, `errored` if the run could not run the
+  tests (compilation, worker crash, global timeout).
+- **Conformance**: `checkTestEventSequence(events)` checks these rules on a complete run (order, single `runId`,
+  suite nesting, unique `testId`s, counters and `status` of `RunFinished`) and returns the list of violations.
+  The tests of each runtime and the registry health CI use it.
+- An exercise is validated when a `passed` `RunFinished` covers all the files listed in `failing` (see
   [manifest.md](./manifest.md)).
 
-### 2.3 Mapping des sorties natives
+### 2.3 Mapping of native outputs
 
-| Runtime | Source native | Traduction |
+| Runtime | Native source | Translation |
 |---|---|---|
-| `browser-js` | `@typika/test-runner` émet directement des `TestEvent` | Aucune |
-| `go` | Format `test2json` (`go test -json`) : `Action` = `run` / `pass` / `fail` / `skip` / `output` | `run` → aucun événement, `pass` → `TestPassed`, `fail` → `TestFailed` (message = sorties `output` accumulées du test), `skip` → `TestSkipped`, `output` → `Output` ; sous-tests `TestX/sub` → `SuiteStarted` pour `TestX` |
-| `kotlin` | Le compilateur enregistre chaque classe de test comme suite et chaque `@Test` comme test auprès de l'adaptateur de `kotlin.test` ; le harness du runtime fournit cet adaptateur (`describe` / `it`) | Par fichier de test : suite racine = package (aucune pour le package par défaut), puis une suite par classe ; test réussi → `TestPassed`, exception → `TestFailed` (§6.4), `@Ignore` sur un test ou une classe → `TestSkipped` |
+| `browser-js` | `@typika/test-runner` emits `TestEvent`s directly | None |
+| `go` | `test2json` format (`go test -json`): `Action` = `run` / `pass` / `fail` / `skip` / `output` | `run` → no event, `pass` → `TestPassed`, `fail` → `TestFailed` (message = accumulated `output` of the test), `skip` → `TestSkipped`, `output` → `Output`; subtests `TestX/sub` → `SuiteStarted` for `TestX` |
+| `kotlin` | The compiler registers each test class as a suite and each `@Test` as a test with the `kotlin.test` adapter; the runtime harness provides this adapter (`describe` / `it`) | Per test file: root suite = package (none for the default package), then one suite per class; passed test → `TestPassed`, exception → `TestFailed` (§6.4), `@Ignore` on a test or a class → `TestSkipped` |
 
-Une ligne qui ne valide pas le schéma est transmise en `Output` `stderr` et logguée ; elle ne casse pas le run
-(`decodeTestEventLine(runId, line)`).
+A line that does not validate against the schema is passed on as `stderr` `Output` and logged; it does not break the
+run (`decodeTestEventLine(runId, line)`).
 
-## 3. Système de fichiers virtuel
+## 3. Virtual file system
 
-### 3.1 Source de vérité
+### 3.1 Source of truth
 
-Le module `project` est la source de vérité : arborescence et contenus vivent dans IndexedDB, l'éditeur écrit dans le
-projet, jamais dans le runtime. Le runtime reçoit une **copie** :
+The `project` module is the source of truth: tree and contents live in IndexedDB, the editor writes to the project,
+never to the runtime. The runtime receives a **copy**:
 
-1. `boot(snapshot)` monte l'état complet.
-2. Chaque modification du projet est relayée par `fs.writeFile` / `deleteFile` / `rename`.
-3. `fs.sync(snapshot)` réaligne tout (après un reset, un import, ou si le runtime signale une désynchronisation).
+1. `boot(snapshot)` mounts the complete state.
+2. Each change to the project is relayed through `fs.writeFile` / `deleteFile` / `rename`.
+3. `fs.sync(snapshot)` realigns everything (after a reset, an import, or if the runtime reports a desync).
 
-Les fichiers produits par le runtime (artefacts de build, binaires compilés) ne remontent **jamais** dans le projet : ils
-ne sont ni persistés, ni partagés, ni exportés.
+The files produced by the runtime (build artifacts, compiled binaries) **never** go back up into the project: they
+are neither persisted, nor shared, nor exported.
 
-### 3.2 Règles
+### 3.2 Rules
 
-- Chemins POSIX relatifs à la racine du projet, sans `..`, sans chemin absolu. Validés par le schema `ProjectPath`.
-- Texte en UTF-8 ; binaire accepté (`Uint8Array`) dans la limite du §8.
-- Les fichiers propres à Typika (`typika.toml`, `tour/`) sont présents dans le FS du runtime : un template peut les
-  lire, il ne doit pas en dépendre.
+- POSIX paths relative to the project root, without `..`, without absolute paths. Validated by the `ProjectPath`
+  schema.
+- Text in UTF-8; binary accepted (`Uint8Array`) within the limit of §8.
+- Typika-specific files (`typika.toml`, `tour/`) are present in the runtime FS: a template can read them, it must not
+  depend on them.
 
-### 3.3 Implémentation par runtime
+### 3.3 Implementation per runtime
 
-| Runtime | FS cible |
+| Runtime | Target FS |
 |---|---|
-| `browser-js` | `Map` en mémoire dans la session, qui applique les limites du §8 ; elle est transmise au worker de build à chaque build, et le plugin esbuild résout les imports dessus |
-| `go` | FS en mémoire installé sous l'API `fs` qu'attend `wasm_exec.js` ; partagé par `compile`, `link` et le programme |
-| `kotlin` | Aucun FS persistant : les sources sont envoyées au service de compilation à chaque `run` / `test` |
+| `browser-js` | In-memory `Map` in the session, which applies the limits of §8; it is passed to the build worker at each build, and the esbuild plugin resolves imports against it |
+| `go` | In-memory FS installed under the `fs` API that `wasm_exec.js` expects; shared by `compile`, `link` and the program |
+| `kotlin` | No persistent FS: the sources are sent to the compilation service at each `run` / `test` |
 
-## 4. Cycle de vie et interruption
+## 4. Lifecycle and interruption
 
 ```
          load()            boot()
@@ -283,219 +284,220 @@ Idle ──────────▶ Loaded ──────────▶ 
   ▲                                   │ run() / test()│
   │                                   ▼               │
   │                                Busy ──────────────┘
-  │                                   │ fin du Stream ou interruption
-  └──────── fermeture du Scope ───────┘
+  │                                   │ end of the Stream or interruption
+  └──────── closing the Scope ────────┘
 ```
 
-- **Une seule exécution de premier plan par session.** Lancer `test` pendant un `run` interrompt le `run`.
-- **Interruption dure.** Une boucle infinie dans du code utilisateur ne rend jamais la main : on ne compte pas sur une
-  interruption coopérative. Interrompre le fiber appelle `worker.terminate()` ; la session recrée un worker propre au
-  prochain `run` / `test`, à partir de son FS.
-- **Watchdog.** Chaque `run` / `test` a un timeout (§8). Dépassé, la session interrompt et émet `RuntimeTimeoutError`.
-- **Crash du worker** (erreur WASM, mémoire épuisée) : `RuntimeProcessError`, le worker est recréé au prochain appel.
-- **Fermeture du scope** : `acquireRelease` termine tous les workers et révoque les URL de preview.
+- **A single foreground execution per session.** Starting `test` during a `run` interrupts the `run`.
+- **Hard interruption.** An infinite loop in user code never gives control back: we do not rely on cooperative
+  interruption. Interrupting the fiber calls `worker.terminate()`; the session creates a clean worker on the next
+  `run` / `test`, from its FS.
+- **Watchdog.** Each `run` / `test` has a timeout (§8). When it is exceeded, the session interrupts and emits
+  `RuntimeTimeoutError`.
+- **Worker crash** (WASM error, out of memory): `RuntimeProcessError`, the worker is recreated on the next call.
+- **Scope closing**: `acquireRelease` terminates all the workers and revokes the preview URLs.
 
-## 5. Chargement paresseux et cache
+## 5. Lazy loading and cache
 
-- **Code** : chaque `runtime-*` est un chunk séparé, chargé par `RuntimeRegistry` à la première ouverture d'un template
-  de ce `kind`.
-- **Assets** (fichiers `.wasm`, bundle du test runner, harness) : servis par l'origine runtime, depuis l'image de l'app
-  ([0027](../decisions/0027-go-assets-delivery.md)). Chaque asset est versionné dans son URL et listé dans un manifeste
-  d'assets avec sa taille et son SHA-256, vérifié après le téléchargement. Un CDN (`TYPIKA_ASSETS_BASE_URL`) reste
-  possible : le runtime reçoit une URL de base.
-- **Cache** : le chargeur du runtime met ses assets en Cache Storage, dans un cache nommé d'après la clé des assets, et
-  supprime les caches des autres clés. URL versionnées ⇒ cache immuable, pas d'invalidation à gérer. Pas de Service
-  Worker pour ces assets ([0027](../decisions/0027-go-assets-delivery.md)).
-- **Progression** : `load` émet `RuntimeLoadProgress` (`{ asset, loadedBytes, totalBytes }`) ; l'UI affiche la taille à
-  télécharger avant le premier chargement d'un runtime lourd.
-- **Préchargement** : au survol de « Ouvrir dans la sandbox », au plus un runtime à la fois.
+- **Code**: each `runtime-*` is a separate chunk, loaded by `RuntimeRegistry` the first time a template of that
+  `kind` is opened.
+- **Assets** (`.wasm` files, test runner bundle, harness): served by the runtime origin, from the app image
+  ([0027](../decisions/0027-go-assets-delivery.md)). Each asset is versioned in its URL and listed in an asset
+  manifest with its size and SHA-256, checked after the download. A CDN (`TYPIKA_ASSETS_BASE_URL`) remains
+  possible: the runtime receives a base URL.
+- **Cache**: the runtime loader puts its assets in Cache Storage, in a cache named after the assets key, and
+  deletes the caches of the other keys. Versioned URLs ⇒ immutable cache, no invalidation to handle. No Service
+  Worker for these assets ([0027](../decisions/0027-go-assets-delivery.md)).
+- **Progress**: `load` emits `RuntimeLoadProgress` (`{ asset, loadedBytes, totalBytes }`); the UI shows the size to
+  download before the first load of a heavy runtime.
+- **Preloading**: on hover of "Open in the sandbox", at most one runtime at a time.
 
 ## 6. Runtimes
 
 ### 6.1 `browser-js`
 
-Runtime par défaut pour TS et JS. Couvre les templates d'architecture, SOLID et design patterns, qui sont de la logique
-pure.
+Default runtime for TS and JS. Covers the architecture, SOLID and design pattern templates, which are pure
+logic.
 
 **Pipeline**
 
-1. Un worker de build, créé au `boot` et gardé pour la session, exécute **esbuild-wasm** à partir du module WASM compilé
-   par `load`. Un plugin résout les imports relatifs sur le FS virtuel (extension absente, `index`, `.js` qui désigne un
-   `.ts`) et les imports de paquets vers un CDN ESM, en versions lues dans le `package.json` du projet. Le
-   `tsconfig.json` du projet est passé à esbuild : `verbatimModuleSyntax` y garde les imports inutilisés, comme `tsc`.
-2. Le bundle est exécuté dans un **worker d'exécution** dédié, recréé à chaque `run` / `test`, qui importe le code par
-   une URL `blob:`. `console.*` est capturé et émis en `Stdout` / `Stderr`.
-3. Pour `test`, la session sélectionne les fichiers selon `[tests]` (ou `TestOptions.files`) et produit **un bundle par
-   fichier de test** : chaque fichier a ses propres modules, comme l'isolation par défaut de Vitest. Le worker
-   d'exécution embarque `@typika/test-runner` ; dans les bundles, `vitest` est un module qui relit l'API du runner sur
-   le global du worker. Le runner émet directement des `TestEvent`.
-4. Preview : si le template a un `index.html`, le bundle est servi dans une iframe de preview sur l'origine runtime par
-   le Service Worker. Pas de DOM dans les workers : un template qui a besoin du DOM passe par la preview. Pas encore
-   implémenté : `preview` renvoie `Option.none()` tant qu'aucun template du catalogue n'en a besoin.
+1. A build worker, created at `boot` and kept for the session, runs **esbuild-wasm** from the WASM module compiled
+   by `load`. A plugin resolves relative imports against the virtual FS (missing extension, `index`, `.js` that
+   designates a `.ts`) and package imports to an ESM CDN, in the versions read from the project's `package.json`.
+   The project's `tsconfig.json` is passed to esbuild: `verbatimModuleSyntax` keeps unused imports there, like `tsc`.
+2. The bundle runs in a dedicated **execution worker**, recreated at each `run` / `test`, which imports the code
+   through a `blob:` URL. `console.*` is captured and emitted as `Stdout` / `Stderr`.
+3. For `test`, the session selects the files according to `[tests]` (or `TestOptions.files`) and produces **one bundle
+   per test file**: each file has its own modules, like the default isolation of Vitest. The execution worker
+   embeds `@typika/test-runner`; in the bundles, `vitest` is a module that reads the runner API back from the
+   worker global. The runner emits `TestEvent`s directly.
+4. Preview: if the template has an `index.html`, the bundle is served in a preview iframe on the runtime origin by
+   the Service Worker. No DOM in the workers: a template that needs the DOM goes through the preview. Not yet
+   implemented: `preview` returns `Option.none()` as long as no template of the catalogue needs it.
 
 **`run`**
 
-- `RunCommand.command` est le chemin du fichier à exécuter ; `args` et `env` sont ignorés en V1.
-- Comme Node, le programme se termine quand il n'a plus de timer en attente (`setTimeout`, `setInterval` non annulé) :
-  `Exit` `0`. Une erreur non rattrapée, au chargement ou plus tard, est écrite sur `Stderr` et donne `Exit` `1`.
-- Une erreur de build donne `RuntimeCompileError`. Pour `test`, elle donne `Diagnostics` puis `RunFinished` `errored`.
-- Le watchdog couvre le build et l'exécution.
+- `RunCommand.command` is the path of the file to run; `args` and `env` are ignored in V1.
+- Like Node, the program ends when it has no pending timer left (`setTimeout`, uncancelled `setInterval`):
+  `Exit` `0`. An uncaught error, at load time or later, is written to `Stderr` and gives `Exit` `1`.
+- A build error gives `RuntimeCompileError`. For `test`, it gives `Diagnostics` then `errored` `RunFinished`.
+- The watchdog covers the build and the execution.
 
-**Compatibilité Vitest**
+**Vitest compatibility**
 
-Les templates importent depuis `vitest`. Dans la sandbox, `vitest` est aliasé vers `@typika/test-runner`. Hors de la
-sandbox (après `typika create`), le même code tourne avec le vrai Vitest. Un template ne doit utiliser que l'API
-supportée ci-dessous ; la CI du registre exécute les tests dans les deux environnements pour le garantir.
+Templates import from `vitest`. In the sandbox, `vitest` is aliased to `@typika/test-runner`. Outside the
+sandbox (after `typika create`), the same code runs with the real Vitest. A template must only use the API
+supported below; the registry CI runs the tests in both environments to guarantee it.
 
-| Supporté en V1 | Non supporté en V1 |
+| Supported in V1 | Not supported in V1 |
 |---|---|
 | `describe`, `it` / `test`, `.skip`, `.only`, `.todo`, `.each`, `.skipIf`, `.runIf` | Snapshots (`toMatchSnapshot`, inline) |
-| `beforeAll`, `afterAll`, `beforeEach`, `afterEach` | `vi.mock` (mock de module) |
-| `expect` : `toBe`, `toEqual`, `toStrictEqual`, `toBeTruthy`, `toBeFalsy`, `toBeNull`, `toBeUndefined`, `toBeDefined`, `toBeNaN`, `toBeTypeOf`, `toBeInstanceOf`, `toContain`, `toContainEqual`, `toHaveLength`, `toHaveProperty`, `toMatch`, `toMatchObject`, `toThrow`, `toBeGreaterThan(OrEqual)`, `toBeLessThan(OrEqual)`, `toBeCloseTo`, `.not`, `.resolves`, `.rejects` | Couverture de code |
+| `beforeAll`, `afterAll`, `beforeEach`, `afterEach` | `vi.mock` (module mock) |
+| `expect`: `toBe`, `toEqual`, `toStrictEqual`, `toBeTruthy`, `toBeFalsy`, `toBeNull`, `toBeUndefined`, `toBeDefined`, `toBeNaN`, `toBeTypeOf`, `toBeInstanceOf`, `toContain`, `toContainEqual`, `toHaveLength`, `toHaveProperty`, `toMatch`, `toMatchObject`, `toThrow`, `toBeGreaterThan(OrEqual)`, `toBeLessThan(OrEqual)`, `toBeCloseTo`, `.not`, `.resolves`, `.rejects` | Code coverage |
 | `expect.any`, `anything`, `objectContaining`, `arrayContaining`, `stringContaining`, `stringMatching` | `expect.extend`, `expect.soft`, `expect.assertions` |
-| `vi.fn`, `vi.spyOn`, `toHaveBeenCalled*`, `toHaveReturned(With)` | Environnements DOM (`jsdom`, `happy-dom`) |
-| `vi.useFakeTimers` (minimal : `advanceTimersByTime`, `runAllTimers`, `runOnlyPendingTimers`, `setSystemTime`, `Date`) | Configuration `vitest.config.*` (ignorée) |
-| Timeout par test (`it(name, fn, ms)`) | Exécution parallèle de fichiers |
+| `vi.fn`, `vi.spyOn`, `toHaveBeenCalled*`, `toHaveReturned(With)` | DOM environments (`jsdom`, `happy-dom`) |
+| `vi.useFakeTimers` (minimal: `advanceTimersByTime`, `runAllTimers`, `runOnlyPendingTimers`, `setSystemTime`, `Date`) | `vitest.config.*` configuration (ignored) |
+| Per-test timeout (`it(name, fn, ms)`) | Parallel execution of files |
 
-**Conformité et traduction**
+**Conformance and translation**
 
-`@typika/test-runner` est vérifié contre le vrai Vitest : les fixtures de `packages/test-runner/conformance/` passent
-dans les deux, `@typika/vitest-reporter` traduit la sortie de Vitest en `TestEvent`, et les deux suites d'événements
-doivent être identiques (identifiants, ordre, statuts, première ligne des messages d'échec, sorties console des tests).
-Les tests TS des templates du dépôt tournent aussi dans le runner et doivent être verts.
+`@typika/test-runner` is checked against the real Vitest: the fixtures of `packages/test-runner/conformance/` pass
+in both, `@typika/vitest-reporter` translates the Vitest output into `TestEvent`s, and the two event sequences
+must be identical (identifiers, order, statuses, first line of the failure messages, console output of the tests).
+The TS tests of the templates in the repository also run in the runner and must be green.
 
-Là où Vitest n'a pas d'équivalent dans le schéma, la traduction est fixée ainsi, des deux côtés :
+Where Vitest has no equivalent in the schema, the translation is fixed as follows, on both sides:
 
 | Situation | Vitest | `TestEvent` |
 |---|---|---|
-| `beforeAll` en échec | Suite en échec, tests non exécutés | `TestFailed` pour chaque test, avec l'erreur du hook et `durationMs: 0` |
-| `afterAll` en échec | Suite en échec, tests passés | `Diagnostics` avant `SuiteFinished`, `RunFinished` `errored` |
-| Erreur au chargement du fichier ou dans le corps d'un `describe` | Module en échec, aucun test | `Diagnostics`, aucun test, `RunFinished` `errored` |
-| Test écarté par un `.only` | Mode `skip` | `TestSkipped` `skip` |
-| Test écarté par `TestOptions.namePattern` | — | `TestSkipped` `filtered` |
-| Valeur lancée qui n'est pas une `Error` | Message absent | `message` = la chaîne lancée, ou `Thrown value: <JSON>` |
-| `console.*` dans un `beforeAll` / `afterAll` | Rattaché à la suite | `Output` sans `testId` (hors conformité) |
+| Failing `beforeAll` | Suite failed, tests not run | `TestFailed` for each test, with the hook error and `durationMs: 0` |
+| Failing `afterAll` | Suite failed, tests passed | `Diagnostics` before `SuiteFinished`, `errored` `RunFinished` |
+| Error while loading the file or in the body of a `describe` | Module failed, no tests | `Diagnostics`, no tests, `errored` `RunFinished` |
+| Test excluded by an `.only` | `skip` mode | `skip` `TestSkipped` |
+| Test excluded by `TestOptions.namePattern` | — | `filtered` `TestSkipped` |
+| Thrown value that is not an `Error` | No message | `message` = the thrown string, or `Thrown value: <JSON>` |
+| `console.*` in a `beforeAll` / `afterAll` | Attached to the suite | `Output` without `testId` (outside conformance) |
 
-**Dépendances npm**
+**npm dependencies**
 
-Résolues depuis un CDN ESM par un gabarit d'URL (`{name}`, `{version}`, `{path}`) ; par défaut jsDelivr,
-`https://cdn.jsdelivr.net/npm/{name}@{version}{path}/+esm`, déjà utilisé pour les assets. Un paquet absent du
-`package.json` est une erreur de build ; la version est celle du `package.json`, telle quelle.
+Resolved from an ESM CDN through a URL template (`{name}`, `{version}`, `{path}`); by default jsDelivr,
+`https://cdn.jsdelivr.net/npm/{name}@{version}{path}/+esm`, already used for the assets. A package missing from the
+`package.json` is a build error; the version is the one in the `package.json`, as is.
 
-Un module importé par un worker est chargé en CORS, donc compatible avec COEP `require-corp` si le CDN répond
-`Access-Control-Allow-Origin`. Vérifié au M1 (2026-10-09) : jsDelivr (`+esm`) envoie `Access-Control-Allow-Origin: *` et
-`Cross-Origin-Resource-Policy: cross-origin` ; esm.sh envoie `Access-Control-Allow-Origin: *` et peut remplacer jsDelivr
-par le gabarit `https://esm.sh/{name}@{version}{path}`. Les imports `node:*` et les modules intégrés de Node (`fs`,
-`path`…) sont refusés au build ; les paquets qui en dépendent ne sont pas supportés en V1.
+A module imported by a worker is loaded with CORS, so it is compatible with COEP `require-corp` if the CDN answers with
+`Access-Control-Allow-Origin`. Checked in M1 (2026-10-09): jsDelivr (`+esm`) sends `Access-Control-Allow-Origin: *` and
+`Cross-Origin-Resource-Policy: cross-origin`; esm.sh sends `Access-Control-Allow-Origin: *` and can replace jsDelivr
+with the template `https://esm.sh/{name}@{version}{path}`. `node:*` imports and Node built-in modules (`fs`,
+`path`…) are refused at build time; the packages that depend on them are not supported in V1.
 
-**Poids** (mesuré le 2026-10-09, esbuild minifié) : `esbuild.wasm` 13,3 Mio (3,6 Mio en gzip, 2,6 Mio en brotli) ; worker
-d'exécution avec le test runner 32 Kio (11 Kio en gzip), dont 30 Kio (10 Kio en gzip) pour le runner ; worker de build
-4,5 Kio hors esbuild-wasm.
+**Weight** (measured on 2026-10-09, esbuild minified): `esbuild.wasm` 13.3 MiB (3.6 MiB gzipped, 2.6 MiB in brotli);
+execution worker with the test runner 32 KiB (11 KiB gzipped), of which 30 KiB (10 KiB gzipped) for the runner; build
+worker 4.5 KiB excluding esbuild-wasm.
 
-### 6.2 `node` — hors V1
+### 6.2 `node` — outside V1
 
-Écarté par le spike [R1](../spikes.md) ([ADR 0017](../decisions/0017-node-runtime.md)) : WebContainers et Nodebox
-exigent une licence commerciale pour une partie des instances et dépendent des serveurs de leur éditeur. Aucun
-template du catalogue n'en a besoin. Les templates qui exigent un serveur HTTP ou `npm install` attendent le runner
-auto-hébergeable (V2).
+Dropped by the [R1](../spikes.md) spike ([ADR 0017](../decisions/0017-node-runtime.md)): WebContainers and Nodebox
+require a commercial license for some of the instances and depend on their vendor's servers. No template of the
+catalogue needs it. The templates that require an HTTP server or `npm install` wait for the self-hostable runner
+(V2).
 
 ### 6.3 `go`
 
-**Toolchain Go officielle compilée en WASM** ([ADR 0018](../decisions/0018-go-runtime.md)) : `compile.wasm`,
-`link.wasm` et une stdlib précompilée pour `GOOS=js GOARCH=wasm`, dans le worker d'exécution, sur un FS en mémoire.
+**Official Go toolchain compiled to WASM** ([ADR 0018](../decisions/0018-go-runtime.md)): `compile.wasm`,
+`link.wasm` and a precompiled stdlib for `GOOS=js GOARCH=wasm`, in the execution worker, on an in-memory FS.
 
-- **Pilote** : le runtime fait le travail de la commande `go`. Il lit `go.mod`, ordonne les packages du module selon
-  leurs imports, écrit l'`importcfg`, compile chaque package (`-p`, `-complete`, `-pack`), puis linke.
-- `run` compile le package `main` qui contient `[commands].start` et exécute le binaire produit.
-- `test` compile le package testé avec ses tests internes, le package `_test` externe s'il existe, puis un
-  `_testmain.go` généré. Celui-ci liste les `TestXxx` découverts et fournit sa propre implémentation de `testDeps`, pour
-  ne pas tirer `testing/internal/testdeps`. Le binaire tourne avec `-test.v=test2json` ; le pilote convertit la sortie
-  au format `test2json`, puis le mapping du §2.3 s'applique.
-- **Commande `test`** : `go test` teste chaque package du module qui a des fichiers de test, comme `go test ./...` hors
-  de Typika. `TestOptions.files` restreint aux packages de ces fichiers. `TestOptions.namePattern` devient `-test.run`,
-  mais chaque niveau du motif est cherché comme sous-chaîne du nom : `regexp` n'est pas dans la stdlib embarquée. Les
-  exemples, benchmarks et cibles de fuzzing ne sont pas lancés, et `go vet` ne passe pas avant les tests.
-- **Cache** : archives compilées en mémoire, par hash des sources et des archives dont elles dépendent ; seul ce qui a
-  changé est recompilé. Un package que les tests d'un autre recompilent (fichiers `_test.go` internes) change de hash,
-  et ceux qui l'importent sont recompilés contre lui, comme le fait `go test`.
-- **Assets** : versionnés par version de Go, avec la licence BSD de Go. `pnpm --filter @typika/runtime-go build:assets`
-  les reconstruit avec le Go local, qui doit être la version épinglée : `compile.wasm`, `link.wasm`, `std.pack` (les
-  archives de la stdlib bout à bout, derrière un index JSON), `LICENSE` et `manifest.json` (taille, taille en brotli et
-  SHA-256 de chaque fichier). 11,9 Mo en brotli avec Go 1.24.5.
-- **Stdlib** : un jeu fermé, défini par ses racines dans `std-roots.constant.ts` et complété par leurs dépendances (76
-  packages avec Go 1.24.5). Un template n'importe que ces packages, hors `internal/` ; un autre import est une erreur de
-  compilation au run, et `E_GO_IMPORT_UNAVAILABLE` dans `template-check` et au registre.
-- **Dans le navigateur** : `@typika/runtime-go/browser` charge les assets (Cache Storage, progression par asset), puis
-  fait tourner le pilote dans un worker gardé pour la session, avec son cache d'archives. `run` et `test` envoient au
-  worker l'état complet du FS. Une interruption ou le watchdog termine le worker, et le prochain appel en recrée un.
-  Le serveur sert les `.br` précompressés par `build:assets` avec `Content-Encoding: br`.
-- **Hors navigateur** : `@typika/runtime-go/node` charge les assets depuis le disque et fait tourner le même pilote dans
-  Node. `template-check` s'en sert pour les exercices Go. La suite de `conformance/` compare ses résultats à ceux de
-  `go test` natif sur des fixtures et sur `strategy-go`.
-- **Isolation** : aucune exigence. Pas de `SharedArrayBuffer`, le runtime tourne aussi en embed.
-- Erreurs de compilation : `fichier:ligne:colonne: message`, chemins relatifs à la racine du projet après retrait du
-  préfixe du FS.
-- Pas de preview en V1 (pas de serveur `net/http` dans le navigateur).
-- Contrainte templates : bibliothèque standard du jeu précompilé uniquement ; pas de `cgo`, de `go:embed` ni
-  d'`os/exec`.
+- **Driver**: the runtime does the work of the `go` command. It reads `go.mod`, orders the packages of the module by
+  their imports, writes the `importcfg`, compiles each package (`-p`, `-complete`, `-pack`), then links.
+- `run` compiles the `main` package that contains `[commands].start` and runs the produced binary.
+- `test` compiles the tested package with its internal tests, the external `_test` package if there is one, then a
+  generated `_testmain.go`. It lists the discovered `TestXxx` and provides its own implementation of `testDeps`, so as
+  not to pull in `testing/internal/testdeps`. The binary runs with `-test.v=test2json`; the driver converts the output
+  to the `test2json` format, then the mapping of §2.3 applies.
+- **`test` command**: `go test` tests each package of the module that has test files, like `go test ./...` outside
+  of Typika. `TestOptions.files` restricts to the packages of those files. `TestOptions.namePattern` becomes
+  `-test.run`, but each level of the pattern is searched as a substring of the name: `regexp` is not in the embedded
+  stdlib. Examples, benchmarks and fuzzing targets are not run, and `go vet` does not run before the tests.
+- **Cache**: compiled archives in memory, by hash of the sources and of the archives they depend on; only what has
+  changed is recompiled. A package that the tests of another one recompile (internal `_test.go` files) changes hash,
+  and those that import it are recompiled against it, as `go test` does.
+- **Assets**: versioned per Go version, with the Go BSD license. `pnpm --filter @typika/runtime-go build:assets`
+  rebuilds them with the local Go, which must be the pinned version: `compile.wasm`, `link.wasm`, `std.pack` (the
+  stdlib archives end to end, behind a JSON index), `LICENSE` and `manifest.json` (size, brotli size and
+  SHA-256 of each file). 11.9 MB in brotli with Go 1.24.5.
+- **Stdlib**: a closed set, defined by its roots in `std-roots.constant.ts` and completed by their dependencies (76
+  packages with Go 1.24.5). A template only imports these packages, excluding `internal/`; any other import is a
+  compilation error at run time, and `E_GO_IMPORT_UNAVAILABLE` in `template-check` and in the registry.
+- **In the browser**: `@typika/runtime-go/browser` loads the assets (Cache Storage, progress per asset), then
+  runs the driver in a worker kept for the session, with its archive cache. `run` and `test` send the worker the
+  complete state of the FS. An interruption or the watchdog terminates the worker, and the next call creates a new one.
+  The server serves the `.br` files precompressed by `build:assets` with `Content-Encoding: br`.
+- **Outside the browser**: `@typika/runtime-go/node` loads the assets from disk and runs the same driver in
+  Node. `template-check` uses it for the Go exercises. The `conformance/` suite compares its results with those of
+  native `go test` on fixtures and on `strategy-go`.
+- **Isolation**: no requirement. No `SharedArrayBuffer`, the runtime also runs in the embed.
+- Compilation errors: `file:line:column: message`, paths relative to the project root after removing the
+  FS prefix.
+- No preview in V1 (no `net/http` server in the browser).
+- Template constraint: standard library of the precompiled set only; no `cgo`, `go:embed` or
+  `os/exec`.
 
 ### 6.4 `kotlin`
 
-Le compilateur Kotlin est un programme JVM ; aucune version officielle ne tourne dans le navigateur. Le code est
-**compilé par un service, exécuté dans le navigateur**.
+The Kotlin compiler is a JVM program; no official version runs in the browser. The code is
+**compiled by a service, run in the browser**.
 
-**Chaîne**
+**Chain**
 
 ```
-Projet (app) ──POST /compile──▶ kotlin-compiler (service) ──▶ module JS
-     │                                                          │
-     └──────────── artefact transmis à la session ◀─────────────┘
+Project (app) ──POST /compile──▶ kotlin-compiler (service) ──▶ JS module
+     │                                                           │
+     └──────────── artifact passed to the session ◀──────────────┘
                               │
-                     worker d'exécution (origine runtime)
+                     execution worker (runtime origin)
 ```
 
-- L'appel au service part de l'**app**, pas de l'origine runtime (voir [security.md](./security.md) : l'origine runtime
-  n'a pas d'accès réseau sortant). La session Kotlin de la frame demande chaque compilation à l'app par le même
-  `MessagePort` (`CompileKotlin`, réponse `KotlinCompiled` ou `KotlinCompileFailed`) ; l'app compile avec son cache et
-  renvoie la compilation. Elle appelle `/api/kotlin/compile` sur sa propre origine, que son serveur relaie vers le
-  service avec un rate limiting par IP ([0029](../decisions/0029-kotlin-relay-rate-limit.md)).
-- Le service est maison ([ADR 0019](../decisions/0019-kotlin-runtime.md)) : un serveur HTTP minimal autour de
-  `kotlin-compiler-embeddable`, avec la stdlib et `kotlin.test` de la même version comme seules bibliothèques. Il ne
-  fait que compiler ; aucun endpoint n'exécute de code.
-- Compilation en deux phases : sources vers klib, puis klib vers un module ES avec DCE et source map. En mode `test`,
-  sources et tests sont compilés ensemble et `main` n'est pas appelé.
-- **Cible : JS.** Le harness sait exécuter Wasm, mais Wasm n'apporte rien en V1 (artefact trois fois plus lourd, pas de
-  position d'échec). La cible est un choix du runtime, pas du template.
-- `run` importe le module produit : `main` s'exécute au chargement, `println` est capturé en `Stdout`.
-- `test` installe l'adaptateur `kotlin.test` du harness (`describe`, `it`, `xit`), importe le module, puis exécute les
-  tests enregistrés et émet les `TestEvent` (§2.3). Le fichier d'une classe de test vient des sources : sa déclaration
-  `package` et ses classes de premier niveau. Les tests passent dans l'ordre d'enregistrement, fichier par fichier ;
-  `TestOptions.files` restreint aux tests de ces fichiers, `TestOptions.namePattern` suit la règle de `browser-js`
-  (expression régulière sur « suites nom », sinon sous-chaîne ; un test écarté est `TestSkipped` `filtered`).
-- **Échecs.** Le message est celui de l'exception ; une exception autre qu'une `AssertionError` est préfixée de son
-  nom simple (`IllegalStateException: cannot divide 1 by zero`), comme dans le rapport de `gradle test`. `expected` et
-  `actual` sont tirés de la forme `Expected <…>, actual <…>.`. La pile est ramenée par la source map aux fichiers du
-  projet ; `location` est la première frame dans le fichier du test, sinon la première frame du projet.
-- **Messages** : ceux de l'asserter de `kotlin.test`. Sur la JVM, `kotlin-test-junit5` confie `assertEquals`,
-  `assertNotEquals`, `assertNull` et `assertNotNull` à JUnit 5, qui les formule autrement (`expected: <1> but was:
-  <2>` pour `Expected <1>, actual <2>.`) ; les autres assertions et `fail` donnent le même texte. Un message qui nomme
-  un type diffère aussi : la JVM écrit `java.lang.String`, JS `String`.
-- **Dans le navigateur** : `@typika/runtime-kotlin/browser`. La session reçoit un compilateur (celui de l'app, par la
-  frame), puis exécute l'artefact
-  dans un worker neuf par `run` ou `test`, importé depuis une URL `blob:`. Le worker est terminé à la fin, à
-  l'interruption ou au watchdog : pas d'état d'une exécution à l'autre. `load` n'a rien à télécharger.
-- **Hors navigateur** : `@typika/runtime-kotlin/node` exécute l'artefact dans un contexte `node:vm` sans `process`,
-  pour que `println` passe par la console du harness comme dans le navigateur. `template-check` s'en sert pour les
-  exercices Kotlin quand `KOTLIN_COMPILER_URL` désigne un service. La suite de `conformance/` compare ses résultats
-  à ceux de `gradle test` (statut, message après la correspondance JUnit 5 ci-dessus, `fichier:ligne` de la frame du
-  test), et la sortie de `main` à celle de `gradle run`, sur des fixtures et sur `strategy-kotlin`.
-- **Isolation** : aucune exigence. Pas de `SharedArrayBuffer`, le runtime tourne aussi en embed.
-- Contrainte templates : pas d'API spécifique JVM (`java.*`), stdlib et `kotlin.test` uniquement.
+- The call to the service starts from the **app**, not from the runtime origin (see [security.md](./security.md): the
+  runtime origin has no outgoing network access). The Kotlin session of the frame asks the app for each compilation
+  over the same `MessagePort` (`CompileKotlin`, answered by `KotlinCompiled` or `KotlinCompileFailed`); the app
+  compiles with its cache and sends the compilation back. It calls `/api/kotlin/compile` on its own origin, which its
+  server relays to the service with per-IP rate limiting ([0029](../decisions/0029-kotlin-relay-rate-limit.md)).
+- The service is in-house ([ADR 0019](../decisions/0019-kotlin-runtime.md)): a minimal HTTP server around
+  `kotlin-compiler-embeddable`, with the stdlib and `kotlin.test` of the same version as the only libraries. It only
+  compiles; no endpoint runs code.
+- Two-phase compilation: sources to klib, then klib to an ES module with DCE and a source map. In `test` mode,
+  sources and tests are compiled together and `main` is not called.
+- **Target: JS.** The harness can run Wasm, but Wasm brings nothing in V1 (artifact three times heavier, no
+  failure position). The target is a choice of the runtime, not of the template.
+- `run` imports the produced module: `main` runs on load, `println` is captured as `Stdout`.
+- `test` installs the `kotlin.test` adapter of the harness (`describe`, `it`, `xit`), imports the module, then runs the
+  registered tests and emits the `TestEvent`s (§2.3). The file of a test class comes from the sources: its `package`
+  declaration and its top-level classes. Tests run in registration order, file by file;
+  `TestOptions.files` restricts to the tests of those files, `TestOptions.namePattern` follows the `browser-js` rule
+  (regular expression on "suites name", otherwise substring; an excluded test is a `filtered` `TestSkipped`).
+- **Failures.** The message is that of the exception; an exception other than an `AssertionError` is prefixed with its
+  simple name (`IllegalStateException: cannot divide 1 by zero`), as in the `gradle test` report. `expected` and
+  `actual` are taken from the form `Expected <…>, actual <…>.`. The stack is mapped back through the source map to the
+  project files; `location` is the first frame in the test file, otherwise the first frame of the project.
+- **Messages**: those of the `kotlin.test` asserter. On the JVM, `kotlin-test-junit5` hands `assertEquals`,
+  `assertNotEquals`, `assertNull` and `assertNotNull` over to JUnit 5, which words them differently (`expected: <1> but was:
+  <2>` for `Expected <1>, actual <2>.`); the other assertions and `fail` give the same text. A message that names
+  a type also differs: the JVM writes `java.lang.String`, JS `String`.
+- **In the browser**: `@typika/runtime-kotlin/browser`. The session receives a compiler (the app's, through the
+  frame), then runs the artifact
+  in a fresh worker per `run` or `test`, imported from a `blob:` URL. The worker is terminated at the end, on
+  interruption or by the watchdog: no state from one execution to the next. `load` has nothing to download.
+- **Outside the browser**: `@typika/runtime-kotlin/node` runs the artifact in a `node:vm` context without `process`,
+  so that `println` goes through the harness console as in the browser. `template-check` uses it for the
+  Kotlin exercises when `KOTLIN_COMPILER_URL` points to a service. The `conformance/` suite compares its results
+  with those of `gradle test` (status, message after the JUnit 5 mapping above, `file:line` of the test
+  frame), and the output of `main` with that of `gradle run`, on fixtures and on `strategy-kotlin`.
+- **Isolation**: no requirement. No `SharedArrayBuffer`, the runtime also runs in the embed.
+- Template constraint: no JVM-specific API (`java.*`), stdlib and `kotlin.test` only.
 
-**Protocole**
+**Protocol**
 
-Un contrat propre à Typika, implémenté directement par le service. Le client ne dépend que de ce contrat : changer de
-compilateur ou ajouter la cible Wasm ne le touche pas.
+A Typika-specific contract, implemented directly by the service. The client only depends on this contract: changing
+the compiler or adding the Wasm target does not affect it.
 
 ```http
 POST /compile
@@ -510,82 +512,82 @@ Content-Type: application/json
 }
 ```
 
-| Réponse | Corps | Effet côté client |
+| Response | Body | Effect on the client |
 |---|---|---|
-| `200` | `{ "ok": true, "artifact": { "kind": "js", "code": "...", "sourceMap": "..." }, "diagnostics": [...] }` | Exécution ; les warnings vont en `Diagnostics` |
-| `200` | `{ "ok": false, "diagnostics": [...] }` | `Diagnostics` puis `RunFinished` `errored` (ou `RuntimeCompileError` pour `run`) |
-| `400` | `{ "error": "..." }` | Requête refusée (protocole, cible, version de Kotlin, chemin) : bug du client, `KotlinCompilerUnavailableError` |
-| `413` | `{ "error": "..." }` | Diagnostic « projet trop gros » : `RuntimeCompileError` pour `run`, run `errored` pour `test` |
+| `200` | `{ "ok": true, "artifact": { "kind": "js", "code": "...", "sourceMap": "..." }, "diagnostics": [...] }` | Execution; warnings go to `Diagnostics` |
+| `200` | `{ "ok": false, "diagnostics": [...] }` | `Diagnostics` then `errored` `RunFinished` (or `RuntimeCompileError` for `run`) |
+| `400` | `{ "error": "..." }` | Request refused (protocol, target, Kotlin version, path): client bug, `KotlinCompilerUnavailableError` |
+| `413` | `{ "error": "..." }` | "Project too large" diagnostic: `RuntimeCompileError` for `run`, `errored` run for `test` |
 | `429` | `Retry-After` | `KotlinCompilerRateLimitedError { retryAfterSeconds }` |
-| `503` | `{ "error": "..." }`, `Retry-After` si la file est pleine | File pleine, ou processus de compilation mort et relancé : `KotlinCompilerUnavailableError` |
-| `504` | `{ "error": "..." }` | Compilation interrompue au timeout du service : `KotlinCompilerUnavailableError` |
-| réseau | — | `KotlinCompilerUnavailableError` |
+| `503` | `{ "error": "..." }`, `Retry-After` if the queue is full | Queue full, or compilation process dead and restarted: `KotlinCompilerUnavailableError` |
+| `504` | `{ "error": "..." }` | Compilation interrupted at the service timeout: `KotlinCompilerUnavailableError` |
+| network | — | `KotlinCompilerUnavailableError` |
 
-`mode: "test"` compile les tests avec les sources et n'appelle pas `main` ; le harness reste côté navigateur. Les
-diagnostics suivent `DiagnosticSchema`, chemins relatifs à la racine du projet. Le service n'accepte que des fichiers
-`.kt` aux chemins relatifs, 500 au plus, et la version de Kotlin qu'il embarque (`GET /health` la donne). Le code de
-l'artefact ne contient pas de commentaire `sourceMappingURL` : la source map arrive à côté.
+`mode: "test"` compiles the tests with the sources and does not call `main`; the harness stays on the browser side.
+The diagnostics follow `DiagnosticSchema`, with paths relative to the project root. The service only accepts `.kt`
+files with relative paths, 500 at most, and the Kotlin version it embeds (`GET /health` gives it). The artifact code
+does not contain a `sourceMappingURL` comment: the source map comes alongside.
 
-**Cache de compilation**
+**Compilation cache**
 
-- Clé : `sha256(protocol + target + kotlinVersion + mode + fichiers triés par chemin)`.
-- **Cache client** : IndexedDB, LRU borné (§8), sur l'origine de l'app. Relancer les tests sans modification, même
-  après un rechargement, ne rappelle pas le service.
-  Le client de compilation prend un `CompileCache` : IndexedDB dans l'app, aucun par défaut hors navigateur. Un échec
-  de compilation est mis en cache comme un succès ; un projet trop gros, un `429` ou une erreur du service ne le sont
-  pas.
-- **Artefacts précompilés** : la CI du registre (`registry-tools build`) compile chaque template Kotlin, sans son
-  dossier `exercises/`, en modes `test` et `run`. Elle écrit chaque compilation sous sa clé de cache dans
-  `artifacts/kotlin/<clé>.json` du registre, publié à côté de l'index. L'app les lit à cette adresse, relative à
-  `TYPIKA_REGISTRY_INDEX_URL`, derrière son cache IndexedDB et en lecture seule : un artefact absent ou illisible
-  compte comme absent du cache. Ouvrir un template et lancer ses tests ne coûte aucun appel au service tant que
-  l'utilisateur n'a rien modifié : une modification change la clé. La CI compile de même l'état de départ de chaque
-  exercice, dans les deux modes ([0030](../decisions/0030-kotlin-exercise-artifacts.md)).
-- **Cache serveur** : facultatif, en mémoire uniquement (LRU), perdu au redémarrage. Le service reste sans stockage.
-- Compilation **à la demande** (`run` / `test`), jamais à la frappe. Les diagnostics de l'éditeur Kotlin viennent du
-  dernier `run` / `test`, pas d'un language server (hors V1).
+- Key: `sha256(protocol + target + kotlinVersion + mode + files sorted by path)`.
+- **Client cache**: IndexedDB, bounded LRU (§8), on the app origin. Rerunning the tests without changes, even
+  after a reload, does not call the service again.
+  The compilation client takes a `CompileCache`: IndexedDB in the app, none by default outside the browser. A failed
+  compilation is cached like a success; a project that is too large, a `429` or a service error are
+  not.
+- **Precompiled artifacts**: the registry CI (`registry-tools build`) compiles each Kotlin template, without its
+  `exercises/` folder, in `test` and `run` modes. It writes each compilation under its cache key in
+  `artifacts/kotlin/<key>.json` of the registry, published next to the index. The app reads them at that address,
+  relative to `TYPIKA_REGISTRY_INDEX_URL`, behind its IndexedDB cache and read-only: a missing or unreadable artifact
+  counts as missing from the cache. Opening a template and running its tests costs no call to the service as long as
+  the user has not changed anything: a change changes the key. The CI likewise compiles the start state of each
+  exercise, in both modes ([0030](../decisions/0030-kotlin-exercise-artifacts.md)).
+- **Server cache**: optional, in memory only (LRU), lost on restart. The service stays without storage.
+- Compilation **on demand** (`run` / `test`), never while typing. The diagnostics of the Kotlin editor come from the
+  last `run` / `test`, not from a language server (outside V1).
 
-**Désactivation** : si `KOTLIN_COMPILER_URL` n'est pas configuré, la config publique n'a pas de `kotlinCompilerUrl`,
-`RuntimeRegistry.get('kotlin')` échoue avec `RuntimeUnsupportedError` et la sandbox l'explique sans proposer de
-réessayer. Le hub est prérendu au build, avant de connaître la config : il masque les templates, variantes et
-facettes Kotlin une fois hydraté.
+**Disabling**: if `KOTLIN_COMPILER_URL` is not configured, the public config has no `kotlinCompilerUrl`,
+`RuntimeRegistry.get('kotlin')` fails with `RuntimeUnsupportedError` and the sandbox explains it without offering to
+retry. The hub is prerendered at build time, before the config is known: it hides the Kotlin templates, variants and
+facets once hydrated.
 
-## 7. Erreurs
+## 7. Errors
 
-Toutes en `Data.TaggedError`, dans `packages/runtime-core/src/domain/errors/`.
+All are `Data.TaggedError`, in `packages/runtime-core/src/domain/errors/`.
 
-| Erreur | Champs | Cause typique | Affichage |
+| Error | Fields | Typical cause | Display |
 |---|---|---|---|
-| `RuntimeUnsupportedError` | `kind` | Runtime désactivé (Kotlin sans service) ou inconnu | Template masqué ; message si ouvert par lien |
-| `RuntimeAssetLoadError` | `asset`, `cause` | Réseau, CDN, échec SRI, chunk du runtime introuvable | Bandeau avec « Réessayer » |
-| `RuntimeBootError` | `kind`, `cause` | Échec d'initialisation (WASM, worker) | Écran d'erreur de la sandbox |
-| `RuntimeFsError` | `path`, `reason` | Chemin invalide, limite dépassée | Toast, fichier non écrit |
-| `RuntimeCompileError` | `diagnostics` | Erreur de build / compilation sur `run` | Console + soulignement dans l'éditeur |
-| `RuntimeProcessError` | `cause` | Crash du worker, mémoire épuisée | Console, worker recréé |
-| `RuntimeTimeoutError` | `limitMs` | Watchdog dépassé | Console : « interrompu après N s » |
-| `KotlinCompilerRateLimitedError` | `retryAfterSeconds` | `429` | Toast avec délai |
-| `KotlinCompilerUnavailableError` | `cause` | Service injoignable | Toast, retry manuel |
+| `RuntimeUnsupportedError` | `kind` | Runtime disabled (Kotlin without a service) or unknown | Template hidden; message if opened through a link |
+| `RuntimeAssetLoadError` | `asset`, `cause` | Network, CDN, SRI failure, runtime chunk not found | Banner with "Retry" |
+| `RuntimeBootError` | `kind`, `cause` | Initialization failure (WASM, worker) | Sandbox error screen |
+| `RuntimeFsError` | `path`, `reason` | Invalid path, limit exceeded | Toast, file not written |
+| `RuntimeCompileError` | `diagnostics` | Build / compilation error on `run` | Console + underline in the editor |
+| `RuntimeProcessError` | `cause` | Worker crash, out of memory | Console, worker recreated |
+| `RuntimeTimeoutError` | `limitMs` | Watchdog exceeded | Console: "Stopped after N s" |
+| `KotlinCompilerRateLimitedError` | `retryAfterSeconds` | `429` | Toast with delay |
+| `KotlinCompilerUnavailableError` | `cause` | Service unreachable | Toast, manual retry |
 
-Une erreur de test (assertion qui échoue) n'est **jamais** une erreur Effect : c'est un `TestFailed`.
+A test error (failing assertion) is **never** an Effect error: it is a `TestFailed`.
 
-## 8. Limites
+## 8. Limits
 
-Valeurs initiales, centralisées dans `RuntimeLimit` (`packages/runtime-core/src/domain/constants/runtime-limits.constant.ts`),
-à ajuster après les spikes.
+Initial values, centralized in `RuntimeLimit` (`packages/runtime-core/src/domain/constants/runtime-limits.constant.ts`),
+to be adjusted after the spikes.
 
-| Limite | Valeur initiale | Appliquée par |
+| Limit | Initial value | Enforced by |
 |---|---|---|
-| Fichiers par projet | 500 | `project` + `RuntimeFs` |
-| Taille totale du projet | 10 Mio | `project` + `RuntimeFs` |
-| Taille d'un fichier | 1 Mio | `project` |
-| Timeout `test` (run complet) | 30 s | Watchdog de session |
-| Timeout par test | 5 s (surchargeable par test) | Test runner |
-| Timeout `run` | 30 s | Watchdog de session |
-| Mémoire WASM (`go`) | 512 Mio max par instance | `WebAssembly.Memory` `maximum` |
-| Sortie console conservée | 1 Mio par run (tampon circulaire) | UI |
-| Requête de compilation Kotlin | 256 Kio de sources | Client + service |
-| Timeout de compilation Kotlin | 15 s service, 20 s client | Service + client |
-| Cache de compilation client | 50 Mio, LRU | Adapter IndexedDB |
+| Files per project | 500 | `project` + `RuntimeFs` |
+| Total project size | 10 MiB | `project` + `RuntimeFs` |
+| Size of a file | 1 MiB | `project` |
+| `test` timeout (complete run) | 30 s | Session watchdog |
+| Per-test timeout | 5 s (can be overridden per test) | Test runner |
+| `run` timeout | 30 s | Session watchdog |
+| WASM memory (`go`) | 512 MiB max per instance | `WebAssembly.Memory` `maximum` |
+| Console output kept | 1 MiB per run (circular buffer) | UI |
+| Kotlin compilation request | 256 KiB of sources | Client + service |
+| Kotlin compilation timeout | 15 s service, 20 s client | Service + client |
+| Client compilation cache | 50 MiB, LRU | IndexedDB adapter |
 
-La mémoire d'un worker JavaScript ne se plafonne pas de façon fiable : on se protège par le watchdog et par la recréation
-du worker en cas de crash, pas par un quota.
+The memory of a JavaScript worker cannot be capped reliably: we protect ourselves with the watchdog and by recreating
+the worker on a crash, not with a quota.

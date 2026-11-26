@@ -1,81 +1,81 @@
-# Typika — Spec V1
+# Typika — V1 spec
 
-Statut : brouillon à débattre · 2026-10-08
+Status: draft for discussion · 2026-10-08
 
-> Spec de conception initiale, conservée comme trace des discussions. Les documents de [docs/](../README.md) et les
-> [ADR](../decisions/README.md) la détaillent et font foi en cas de divergence.
+> Initial design spec, kept as a record of the discussions. The documents in [docs/](../README.md) and the
+> [ADRs](../decisions/README.md) detail it and are authoritative in case of divergence.
 
 ## 1. Vision
 
-Un outil **gratuit et open source** pour explorer, exécuter et comparer des templates de code — par langage, librairie,
-framework et surtout **par pattern / concept d'architecture** (hexagonal, CQRS, event sourcing, outbox, saga…).
+A **free and open source** tool to explore, run and compare code templates — by language, library,
+framework and above all **by pattern / architecture concept** (hexagonal, CQRS, event sourcing, outbox, saga…).
 
-Le **hub de templates est le produit** ; la sandbox est le moyen de les explorer. Un template doit rester utile hors de
-la sandbox (`npx typika create <template>`, export GitHub).
+The **template hub is the product**; the sandbox is the means to explore them. A template must stay useful outside
+the sandbox (`npx typika create <template>`, GitHub export).
 
-### Cibles
+### Targets
 
-- **Primaire — le développeur intermédiaire qui apprend l'architecture.** Il maîtrise un langage, a déjà livré du
-  code, et veut comprendre CQRS ou l'hexagonal autrement qu'avec un article et un diagramme. C'est lui qui justifie les
-  tours, la comparaison, le diff depuis la base et les exercices.
-- **Secondaire — l'auteur de contenu** (blog, doc, formation). Il n'est pas la cible, c'est le **canal** : chaque embed
-  amène des apprenants.
-- **Non ciblé V1 — le prototypage rapide.** StackBlitz et CodeSandbox le font déjà mieux que nous.
+- **Primary — the intermediate developer learning architecture.** They master a language, have already shipped
+  code, and want to understand CQRS or hexagonal other than through an article and a diagram. They are the ones who
+  justify the tours, the comparison, the diff since the base and the exercises.
+- **Secondary — the content author** (blog, docs, training). They are not the target, they are the **channel**: each
+  embed brings learners.
+- **Not targeted in V1 — rapid prototyping.** StackBlitz and CodeSandbox already do it better than we do.
 
-Règle d'arbitrage : en cas de conflit, la fonctionnalité qui sert l'apprenant gagne.
+Arbitration rule: in case of conflict, the feature that serves the learner wins.
 
-## 2. Principes
+## 2. Principles
 
-1. **Navigateur d'abord** — toute exécution de code a lieu côté client. Seule exception tolérée : un service de
-   **compilation** sans état quand aucun compilateur ne tourne dans le navigateur (Kotlin, §7.2). Le serveur compile,
-   il n'exécute jamais le code.
-2. **Zéro backend métier** — pas de base de données. Le hub est un index statique généré depuis un dépôt registre.
-3. **Sans compte par défaut** — compte GitHub uniquement pour publier ou pousser vers un repo.
-4. **Pédagogie > exhaustivité** — 15 templates excellents valent mieux que 500 templates morts.
-5. **Santé visible** — chaque template est testé en continu ; un template cassé se voit.
+1. **Browser first** — all code execution happens client-side. Only tolerated exception: a stateless
+   **compilation** service when no compiler runs in the browser (Kotlin, §7.2). The server compiles,
+   it never runs the code.
+2. **Zero business backend** — no database. The hub is a static index generated from a registry repository.
+3. **No account by default** — a GitHub account only to publish or to push to a repo.
+4. **Pedagogy > exhaustiveness** — 15 excellent templates are worth more than 500 dead templates.
+5. **Visible health** — every template is tested continuously; a broken template shows.
 
-## 3. Périmètre
+## 3. Scope
 
 ### V1
 
-- Langages : TypeScript, JavaScript, Go, Kotlin — exécutés dans le navigateur (§7.1), livrés par paliers.
-- Catalogue initial (§6.1) : 5 patterns d'architecture, 5 principes SOLID, 5 design patterns GoF et 1 template de
-  fondamentaux POO. TS couvre tout le catalogue ; les autres langages en couvrent une sélection (§6.1).
-- Hub : navigation par facettes, recherche, page template, badge de santé.
-- Sandbox : éditeur, arbre de fichiers, console, preview, panneau tests.
-- Visites guidées, mode comparaison, vue « diff depuis la base », exercices (tests rouges → verts).
-- Embed iframe.
-- Partage par URL / gist, export zip / GitHub, CLI `create`.
+- Languages: TypeScript, JavaScript, Go, Kotlin — run in the browser (§7.1), delivered in stages.
+- Initial catalogue (§6.1): 5 architecture patterns, 5 SOLID principles, 5 GoF design patterns and 1 OOP
+  fundamentals template. TS covers the whole catalogue; the other languages cover a selection (§6.1).
+- Hub: faceted navigation, search, template page, health badge.
+- Sandbox: editor, file tree, console, preview, tests panel.
+- Guided tours, compare mode, "diff since the base" view, exercises (red tests → green).
+- Iframe embed.
+- Sharing by URL / gist, zip / GitHub export, `create` CLI.
 
-### Hors V1
+### Outside V1
 
-- Collaboration temps réel.
-- Génération de templates par IA.
-- Exécution serveur sur l'instance publique (le runner auto-hébergeable est V2).
-- Templates composables (base + add-ons) — V2, sous forme de *stacks* curées.
-- Python, Rust et autres langages — V2.
-- Runner serveur auto-hébergeable — V2, et plan de repli si un runtime navigateur échoue en spike.
+- Real-time collaboration.
+- AI template generation.
+- Server-side execution on the public instance (the self-hostable runner is V2).
+- Composable templates (base + add-ons) — V2, as curated *stacks*.
+- Python, Rust and other languages — V2.
+- Self-hostable server runner — V2, and fallback plan if a browser runtime fails in a spike.
 
-## 4. Glossaire du domaine
+## 4. Domain glossary
 
-| Terme | Définition |
+| Term | Definition |
 |---|---|
-| **Template** | Projet de référence décrit par un manifeste `typika.toml`, vivant dans un repo Git. |
-| **Manifest** | Métadonnées, facettes, runtime, commandes, tour, exercices, variantes, base. |
-| **Facet** | Axe de classement : `language`, `framework`, `library`, `paradigm`, `topic`, `level`, `useCase`. |
-| **Topic** | Ce que le template enseigne, rangé par catégorie : `architecture` (hexagonal, CQRS…), `design-pattern` (GoF), `principle` (SOLID, loi de Déméter…), `fundamental` (encapsulation, polymorphisme…). |
-| **Variant** | Le même concept implémenté dans un autre langage / framework. Alimente le mode comparaison. |
-| **Base** | Template de référence « naïf » dont le template dérive. Alimente la vue diff. |
-| **Tour** | Suite d'étapes Markdown ancrées sur des fichiers / plages de lignes. |
-| **Exercise** | Défi attaché à un template. `fix` : des tests sont rouges, il faut les passer au vert. `refactor` : les tests sont verts, il faut ajouter une nouvelle exigence (tests rouges fournis) qui n'est simple qu'après avoir restructuré le code. |
-| **Project** | Instance locale (IndexedDB) d'un template, modifiable par l'utilisateur. |
-| **Runtime** | Environnement d'exécution navigateur (`browser-js`, `go`, `kotlin`). |
-| **Registry** | Dépôt Git qui référence les templates publiés ; génère l'index statique du hub. |
-| **Health** | État calculé par la CI du registre : `healthy`, `degraded`, `broken`, `deprecated`. |
+| **Template** | Reference project described by a `typika.toml` manifest, living in a Git repo. |
+| **Manifest** | Metadata, facets, runtime, commands, tour, exercises, variants, base. |
+| **Facet** | Classification axis: `language`, `framework`, `library`, `paradigm`, `topic`, `level`, `useCase`. |
+| **Topic** | What the template teaches, sorted by category: `architecture` (hexagonal, CQRS…), `design-pattern` (GoF), `principle` (SOLID, law of Demeter…), `fundamental` (encapsulation, polymorphism…). |
+| **Variant** | The same concept implemented in another language / framework. Feeds the compare mode. |
+| **Base** | "Naive" reference template from which the template derives. Feeds the diff view. |
+| **Tour** | Sequence of Markdown steps anchored on files / line ranges. |
+| **Exercise** | Challenge attached to a template. `fix`: some tests are red, they must be turned green. `refactor`: the tests are green, a new requirement must be added (red tests provided) that is only simple after restructuring the code. |
+| **Project** | Local instance (IndexedDB) of a template, editable by the user. |
+| **Runtime** | Browser execution environment (`browser-js`, `go`, `kotlin`). |
+| **Registry** | Git repository that references the published templates; generates the hub's static index. |
+| **Health** | State computed by the registry CI: `healthy`, `degraded`, `broken`, `deprecated`. |
 
-## 5. Format du manifeste
+## 5. Manifest format
 
-La spec normative, figée en schéma 1, est [manifest.md](./manifest.md). Cet exemple en donne la forme.
+The normative spec, frozen at schema 1, is [manifest.md](./manifest.md). This example shows its shape.
 
 ```toml
 schema = 1
@@ -117,320 +117,323 @@ title = "Add an e-mail adapter"
 failing = ["tests/notification.test.ts"]
 ```
 
-Règles :
+Rules:
 
-- Le manifeste est validé par un schema Effect partagé entre l'app, le CLI et la CI du registre (package `manifest`).
-- Les étapes de tour ancrent du code via un front-matter `file` + `region` (marqueurs dans le code) ou `lines`.
-- Une référence de template est toujours `github:<owner>/<repo>[/<path>][@<ref>]`.
-- `schema` est versionné ; l'app refuse un manifeste de version inconnue avec un message explicite.
+- The manifest is validated by an Effect schema shared between the app, the CLI and the registry CI (`manifest`
+  package).
+- Tour steps anchor code through a `file` + `region` front matter (markers in the code) or `lines`.
+- A template reference is always `github:<owner>/<repo>[/<path>][@<ref>]`.
+- `schema` is versioned; the app rejects a manifest with an unknown version with an explicit message.
 
-## 6. Hub et registre
+## 6. Hub and registry
 
-### 6.1 Catalogue initial
+### 6.1 Initial catalogue
 
-| Catégorie | Templates | Base (vue diff) |
+| Category | Templates | Base (diff view) |
 |---|---|---|
-| Architecture | Hexagonal, CQRS, event sourcing, outbox, machine à états | CRUD naïf |
-| Principes | SRP, OCP, LSP, ISP, DIP | Le même code qui viole le principe |
-| Design patterns | Strategy, Observer, Decorator, Factory Method, Adapter | Le code avant le pattern (`switch`, couplage direct…) |
-| Fondamentaux POO | Composition vs héritage | Hiérarchie d'héritage profonde |
+| Architecture | Hexagonal, CQRS, event sourcing, outbox, state machine | Naive CRUD |
+| Principles | SRP, OCP, LSP, ISP, DIP | The same code violating the principle |
+| Design patterns | Strategy, Observer, Decorator, Factory Method, Adapter | The code before the pattern (`switch`, direct coupling…) |
+| OOP fundamentals | Composition vs inheritance | Deep inheritance hierarchy |
 
-Principes de rédaction :
+Writing principles:
 
-- Chaque template principe / design pattern a une **base** qui montre le problème : la vue diff est la leçon.
-- Chaque template a au moins un exercice `refactor` : une nouvelle exigence pénible dans la base, triviale avec le
+- Each principle / design pattern template has a **base** that shows the problem: the diff view is the lesson.
+- Each template has at least one `refactor` exercise: a new requirement that is painful in the base, trivial with the
   pattern.
-- Les variantes ne sont pas des traductions littérales. Quand le pattern se dissout dans le langage, la variante le
-  montre et le tour le dit : en Go, pas d'héritage ni de classes, les interfaces sont implicites — Strategy devient une
-  fonction, « composition vs héritage » n'a qu'une réponse. Le mode comparaison devient une leçon sur le langage.
-- Les templates se référencent entre eux : le tour DIP renvoie vers l'hexagonal (« le DIP appliqué à l'échelle d'une
-  application »).
+- Variants are not literal translations. When the pattern dissolves into the language, the variant
+  shows it and the tour says so: in Go, no inheritance or classes, interfaces are implicit — Strategy becomes a
+  function, "composition vs inheritance" has only one answer. The compare mode becomes a lesson about the language.
+- Templates reference each other: the DIP tour points to hexagonal ("the DIP applied at the scale of an
+  application").
 
-Design patterns au-delà de la V1, par vagues de 5, chaque vague mélangeant les trois familles GoF :
+Design patterns beyond V1, in waves of 5, each wave mixing the three GoF families:
 
-| Famille | V1 | Ensuite |
+| Family | V1 | Next |
 |---|---|---|
-| Création | Factory Method | Abstract Factory, Builder, Singleton (présenté avec ses pièges), Prototype |
-| Structure | Decorator, Adapter | Facade, Composite, Proxy, Bridge, Flyweight |
-| Comportement | Strategy, Observer | Command, State, Template Method, Chain of Responsibility, Iterator, Visitor, Mediator, Memento, Interpreter |
-| Hors GoF | — | Repository, Unit of Work, Specification, Null Object, Result / Either, Dependency Injection |
+| Creational | Factory Method | Abstract Factory, Builder, Singleton (presented with its pitfalls), Prototype |
+| Structural | Decorator, Adapter | Facade, Composite, Proxy, Bridge, Flyweight |
+| Behavioral | Strategy, Observer | Command, State, Template Method, Chain of Responsibility, Iterator, Visitor, Mediator, Memento, Interpreter |
+| Outside GoF | — | Repository, Unit of Work, Specification, Null Object, Result / Either, Dependency Injection |
 
-La famille est une sous-catégorie du topic : `design-pattern/behavioral/strategy`.
+The family is a subcategory of the topic: `design-pattern/behavioral/strategy`.
 
-Fondamentaux POO (encapsulation, polymorphisme, classes abstraites…) : un seul template en V1 pour valider l'intérêt ;
-ils visent un public plus débutant que la cible primaire.
+OOP fundamentals (encapsulation, polymorphism, abstract classes…): a single template in V1 to validate the interest;
+they aim at a more beginner audience than the primary target.
 
-### 6.2 Couverture par langage
+### 6.2 Coverage per language
 
-On ne décline pas tout dans tous les langages : chaque langage couvre ce qu'il enseigne le mieux.
-**TypeScript est la langue de référence** : tout le catalogue y existe, et c'est elle qui définit l'ordre des étapes des
-tours, que les variantes suivent pour que la comparaison reste alignée.
+We do not port everything to every language: each language covers what it teaches best.
+**TypeScript is the reference language**: the whole catalogue exists in it, and it defines the order of the tour
+steps, which the variants follow so that the comparison stays aligned.
 
 | Concept | TS | JS | Go | Kotlin |
 |---|---|---|---|---|
 | Architecture (5) | ✓ | — | hexagonal, CQRS, outbox | ✓ |
 | SOLID (5) | ✓ | — | DIP, ISP | ✓ |
 | GoF V1 (5) | ✓ | Observer, Decorator | Strategy, Decorator, Adapter | ✓ |
-| Composition vs héritage | ✓ | ✓ (prototypes vs classes) | ✓ | ✓ |
+| Composition vs inheritance | ✓ | ✓ (prototypes vs classes) | ✓ | ✓ |
 
-Soit environ 44 templates.
+That is about 44 templates.
 
-- **JS** n'est pas une copie de TS sans types : il n'a de variante que là où il enseigne autre chose (prototypes,
-  événements natifs).
-- **Go** n'a que les concepts qui ont un sens idiomatique (pas de classes, pas d'héritage, interfaces implicites) ; le
-  reste serait de la POO classique écrite en Go.
-- **Kotlin** est le langage POO de référence du catalogue : couverture complète. Ses fonctionnalités en font un excellent
-  sujet de comparaison — délégation `by` (Decorator, composition), `object` (Singleton), `sealed` + `when` (State,
-  Visitor), fonctions de premier ordre (Strategy), `data class` (Value Object).
+- **JS** is not a copy of TS without types: it only has a variant where it teaches something else (prototypes,
+  native events).
+- **Go** only has the concepts that make idiomatic sense (no classes, no inheritance, implicit interfaces); the
+  rest would be classic OOP written in Go.
+- **Kotlin** is the reference OOP language of the catalogue: full coverage. Its features make it an excellent
+  subject for comparison — `by` delegation (Decorator, composition), `object` (Singleton), `sealed` + `when` (State,
+  Visitor), first-class functions (Strategy), `data class` (Value Object).
 
-### 6.3 Registre et index
+### 6.3 Registry and index
 
-- **Registre** = repo `typika-app/registry`. Une PR ajoute une entrée `{ ref, maintainers }`. Revue humaine pour la
+- **Registry** = the `typika-app/registry` repo. A PR adds a `{ ref, maintainers }` entry. Human review for
   curation.
-- **Index** = `index.json` généré par la CI du registre (manifestes résolus + santé), publié en asset statique.
-- **CI de santé** hebdomadaire : pour chaque template, installer, démarrer, lancer les tests dans le même runtime
-  navigateur que l'app (Playwright headless).
-  - `healthy` : tout passe. `degraded` : warnings / deps obsolètes. `broken` : échec.
-  - `broken` depuis 90 jours → `deprecated`, masqué par défaut du hub.
-- **Renovate** activé sur les repos `typika-app/*`.
-- **Recherche** côté client (MiniSearch ou Orama) sur l'index statique. Dérogation assumée à la règle « pas de filtre
-  côté client » : il n'y a pas de backend, et l'index (quelques centaines d'entrées) tient en mémoire.
-- **Remix** : forker un template conserve un lien `parent` ; la page affiche le diff avec le parent.
+- **Index** = `index.json` generated by the registry CI (resolved manifests + health), published as a static asset.
+- Weekly **health CI**: for each template, install, start, run the tests in the same browser runtime
+  as the app (headless Playwright).
+  - `healthy`: everything passes. `degraded`: warnings / outdated deps. `broken`: failure.
+  - `broken` for 90 days → `deprecated`, hidden from the hub by default.
+- **Renovate** enabled on the `typika-app/*` repos.
+- Client-side **search** (MiniSearch or Orama) on the static index. Deliberate exception to the "no client-side
+  filtering" rule: there is no backend, and the index (a few hundred entries) fits in memory.
+- **Remix**: forking a template keeps a `parent` link; the page shows the diff with the parent.
 
-## 7. Exécution
+## 7. Execution
 
-### 7.1 Runtimes V1
+### 7.1 V1 runtimes
 
-| Runtime | Techno | Usage |
+| Runtime | Tech | Use |
 |---|---|---|
-| `browser-js` | esbuild-wasm + Web Worker, test runner maison compatible API Vitest (describe/it/expect) | Patterns en TS pur, librairies, front Vite simple. Couvre la majorité des templates d'architecture. |
-| `go` | Toolchain Go (`cmd/compile`, `cmd/link`) compilée en WASM ([ADR 0018](../decisions/0018-go-runtime.md)) | Templates Go. |
-| `kotlin` | Compilation vers Kotlin/JS par un service de compilation maison (§7.2, [ADR 0019](../decisions/0019-kotlin-runtime.md)), exécution et `kotlin.test` dans le navigateur | Templates Kotlin. |
+| `browser-js` | esbuild-wasm + Web Worker, in-house test runner compatible with the Vitest API (describe/it/expect) | Patterns in plain TS, libraries, simple Vite front end. Covers most architecture templates. |
+| `go` | Go toolchain (`cmd/compile`, `cmd/link`) compiled to WASM ([ADR 0018](../decisions/0018-go-runtime.md)) | Go templates. |
+| `kotlin` | Compilation to Kotlin/JS by an in-house compilation service (§7.2, [ADR 0019](../decisions/0019-kotlin-runtime.md)), execution and `kotlin.test` in the browser | Kotlin templates. |
 
-Paliers :
+Stages:
 
-| Palier | Runtimes | Jalon |
+| Stage | Runtimes | Milestone |
 |---|---|---|
 | 1 | `browser-js` | M1 |
 | 2 | `go` | M4 |
 | 3 | `kotlin` | M6 |
 
-Pas de runtime `node` en V1 (§7.3).
+No `node` runtime in V1 (§7.3).
 
-Tests : chaque runtime traduit la sortie de son outil natif (reporter Vitest, `go test -json`, reporter
-`kotlin.test`) vers les événements normalisés du §7.4.
+Tests: each runtime translates the output of its native tool (Vitest reporter, `go test -json`, `kotlin.test`
+reporter) into the normalized events of §7.4.
 
-Bases de données : PGlite et SQLite WASM, exposées comme dépendances de template, pas comme service de la plateforme.
+Databases: PGlite and SQLite WASM, exposed as template dependencies, not as a platform service.
 
-### 7.2 Kotlin : compiler sans compilateur navigateur
+### 7.2 Kotlin: compiling without a browser compiler
 
-Le compilateur Kotlin est un programme JVM ; il n'existe pas de version officielle exécutable dans le navigateur.
+The Kotlin compiler is a JVM program; there is no official version that runs in the browser.
 
-- **Option retenue** ([ADR 0019](../decisions/0019-kotlin-runtime.md)) : un service de compilation maison autour de
-  `kotlin-compiler-embeddable` (Apache 2.0). Il reçoit des sources et renvoie un module JS ; le navigateur exécute le
-  résultat et les tests `kotlin.test`. Sans état, sans stockage, conteneur Docker à part, rate limiting par IP, sources
-  limitées en taille. Environ 1 s par compilation à chaud sur 2 vCPU et 1 Gio.
-- **Options écartées par le spike R8** : `kotlin-compiler-server` (sans `kotlin-test` en JS, exécution JVM côté
-  serveur, image de 1,7 Go) et `kotlinc` dans le navigateur via CheerpJ (licence sans auto-hébergement).
-- **Contrainte pour les templates** : cible JS, donc pas d'API spécifique JVM (`java.*`). Sans impact pour du code
-  d'architecture et de patterns.
+- **Chosen option** ([ADR 0019](../decisions/0019-kotlin-runtime.md)): an in-house compilation service around
+  `kotlin-compiler-embeddable` (Apache 2.0). It receives sources and returns a JS module; the browser runs the
+  result and the `kotlin.test` tests. Stateless, no storage, separate Docker container, rate limiting per IP, sources
+  limited in size. About 1 s per warm compilation on 2 vCPUs and 1 GiB.
+- **Options rejected by spike R8**: `kotlin-compiler-server` (no `kotlin-test` for JS, JVM execution on the
+  server, 1.7 GB image) and `kotlinc` in the browser through CheerpJ (license without self-hosting).
+- **Constraint for templates**: JS target, so no JVM-specific API (`java.*`). No impact for architecture and
+  pattern code.
 
-### 7.3 Licence WebContainers : pas de runtime `node`
+### 7.3 WebContainers license: no `node` runtime
 
-L'API WebContainers exige une licence commerciale dès qu'une instance sert des clients ou des employés, et dépend des
-serveurs de StackBlitz. Nodebox est sous une licence non OSI réservée aux usages non commerciaux. Aucun template du
-catalogue n'a besoin de Node : le runtime `node` sort de la V1 ([ADR 0017](../decisions/0017-node-runtime.md)).
+The WebContainers API requires a commercial license as soon as an instance serves customers or employees, and depends
+on StackBlitz's servers. Nodebox is under a non-OSI license restricted to non-commercial use. No template in the
+catalogue needs Node: the `node` runtime leaves V1 ([ADR 0017](../decisions/0017-node-runtime.md)).
 
-### 7.4 Contrat de runtime
+### 7.4 Runtime contract
 
-Chaque runtime implémente le même port (`RuntimePort`, `Context.Tag`) :
+Each runtime implements the same port (`RuntimePort`, `Context.Tag`):
 
-- `boot(project)` → ressource scopée (`Effect.acquireRelease`) ; quitter le projet libère le worker.
-- `run(command)` → `Stream` de sorties stdout / stderr, interruptible.
-- `test()` → `Stream` d'événements de test normalisés (`suite`, `pass`, `fail`, `done`), utilisés par le panneau tests
-  et les exercices.
-- `preview()` → URL de preview si le runtime en expose une.
+- `boot(project)` → scoped resource (`Effect.acquireRelease`); leaving the project releases the worker.
+- `run(command)` → `Stream` of stdout / stderr output, interruptible.
+- `test()` → `Stream` of normalized test events (`suite`, `pass`, `fail`, `done`), used by the tests panel
+  and the exercises.
+- `preview()` → preview URL if the runtime exposes one.
 
-### 7.5 Isolation cross-origin
+### 7.5 Cross-origin isolation
 
-`SharedArrayBuffer` (threads WASM) impose COOP/COEP sur la page. Une iframe dans une page tierce ne
-peut pas être isolée : l'embed exécute `browser-js`, qui n'en a pas besoin, et renvoie vers l'app pour les autres
+`SharedArrayBuffer` (WASM threads) requires COOP/COEP on the page. An iframe in a third-party page cannot
+be isolated: the embed runs `browser-js`, which does not need it, and sends to the app for the other
 runtimes ([0016](../decisions/0016-isolation-and-embed.md)).
 
-## 8. Fonctionnalités UI
+## 8. UI features
 
 ### Hub
 
-- Accueil : entrées par pattern (mise en avant), par langage, par framework.
-- Facettes combinables, recherche plein texte, filtre de santé.
-- Page template : résumé, facettes, santé, variantes, base, tour, bouton « Ouvrir dans la sandbox », commande CLI.
+- Home: entries by pattern (highlighted), by language, by framework.
+- Combinable facets, full-text search, health filter.
+- Template page: summary, facets, health, variants, base, tour, "Open in the sandbox" button, CLI command.
 
 ### Sandbox
 
-- Layout : arbre de fichiers · éditeur · panneau bas (console / tests) · preview ou tour à droite.
-- Éditeur **CodeMirror 6** ; TS via un language service TypeScript en worker.
-- Reset au template d'origine, diff de mes modifications.
+- Layout: file tree · editor · bottom panel (console / tests) · preview or tour on the right.
+- **CodeMirror 6** editor; TS through a TypeScript language service in a worker.
+- Reset to the original template, diff of my changes.
 
-### Pédagogie
+### Pedagogy
 
-- **Tour** : panneau d'étapes ; chaque étape ouvre le fichier et surligne les lignes ancrées.
-- **Comparaison** : deux variantes côte à côte, navigation synchronisée par étape de tour quand les tours sont alignés.
-- **Diff depuis la base** : vue fichier par fichier de ce que le pattern ajoute par rapport au template `base`.
-- **Exercices** : charge l'état « tests rouges », affiche la progression, valide quand tout est vert.
+- **Tour**: steps panel; each step opens the file and highlights the anchored lines.
+- **Comparison**: two variants side by side, navigation synchronized by tour step when the tours are aligned.
+- **Diff since the base**: file-by-file view of what the pattern adds compared to the `base` template.
+- **Exercises**: loads the "red tests" state, shows the progress, validates when everything is green.
 
 ### Embed
 
-- Route `/embed/<template>` : UI réduite (éditeur + sortie), options par query string (`file`, `tour-step`, `readonly`,
-  `theme`).
-- Snippet iframe copiable depuis la page template.
+- `/embed/<template>` route: reduced UI (editor + output), options through the query string (`file`, `tour-step`,
+  `readonly`, `theme`).
+- Iframe snippet that can be copied from the template page.
 
-## 9. Persistance, partage, export
+## 9. Persistence, sharing, export
 
-- Projets en IndexedDB, liste « mes projets » locale.
-- Partage :
-  - petit projet → état compressé dans le fragment d'URL (pas envoyé au serveur) ;
-  - au-delà d'un seuil → gist via le token GitHub de l'utilisateur.
-- Export : zip, push vers un nouveau repo GitHub.
-- CLI `typika create <template> [dir]` : télécharge le template, retire les fichiers propres à Typika (tour,
-  exercices) sauf `--keep-tour`.
-- Composants serveur : l'échange de token OAuth GitHub (une fonction, aucun stockage) et le service de compilation
-  Kotlin (§7.2).
+- Projects in IndexedDB, local "my projects" list.
+- Sharing:
+  - small project → compressed state in the URL fragment (not sent to the server)
+  - beyond a threshold → gist through the user's GitHub token
+- Export: zip, push to a new GitHub repo.
+- `typika create <template> [dir]` CLI: downloads the template, removes the Typika-specific files (tour,
+  exercises) unless `--keep-tour`.
+- Server components: the GitHub OAuth token exchange (one function, no storage) and the Kotlin compilation
+  service (§7.2).
 
-## 10. Langues
+## 10. Languages
 
-- **Interface** : i18n dès le départ (`react-i18next`), livrée en anglais et en français.
-- **Contenu des templates** (titre, résumé, tours, énoncés d'exercices) : **anglais uniquement en V1**. Un contributeur
-  écrit une fois, et une traduction non maintenue finit par contredire le code.
-- Le format prévoit l'extension : `tour/<locale>/*.md` optionnel, repli sur l'anglais. Activé en V2 si la demande existe.
+- **Interface**: i18n from the start (`react-i18next`), delivered in English and French.
+- **Template content** (title, summary, tours, exercise statements): **English only in V1**. A contributor
+  writes once, and an unmaintained translation ends up contradicting the code.
+- The format allows for extension: optional `tour/<locale>/*.md`, falling back to English. Enabled in V2 if there is
+  demand.
 
-## 11. Hébergement
+## 11. Hosting
 
-L'app est **agnostique de l'hébergeur** : un build statique + un unique endpoint (`POST /api/github/token`, échange
-OAuth, sans stockage).
+The app is **hosting-agnostic**: a static build + a single endpoint (`POST /api/github/token`, OAuth
+exchange, no storage).
 
-- **Service de compilation Kotlin** : conteneur séparé dans le `docker-compose.yml`, désactivable (les templates Kotlin
-  sont alors masqués). Sur Vercel, déployé à part (VPS ou conteneur managé) et pointé par une variable d'env.
-- **Docker (cible principale, VPS)** : image multi-stage — build pnpm, puis runtime Node minimal qui sert le statique
-  et l'endpoint. Caddy en frontal pour le TLS automatique et les headers. `docker-compose.yml` fourni.
-- **Vercel / Cloudflare / autres** : même build ; headers déclarés dans la config de la plateforme (`vercel.ts`, etc.).
-- **Headers obligatoires sur toutes les cibles** : `Cross-Origin-Opener-Policy: same-origin` et
-  `Cross-Origin-Embedder-Policy: require-corp` sur les routes sandbox, pas sur l'embed
-  ([0016](../decisions/0016-isolation-and-embed.md)). Vérifiés par un test E2E pour qu'aucune cible de déploiement ne
-  les oublie.
-- **Assets lourds** (runtime Go, esbuild-wasm) : servis depuis un CDN public compatible COEP (jsDelivr) par défaut,
-  auto-hébergeables via une variable d'env pour les instances privées. Évite de payer la bande passante sur un VPS.
+- **Kotlin compilation service**: separate container in the `docker-compose.yml`, can be disabled (Kotlin
+  templates are then hidden). On Vercel, deployed separately (VPS or managed container) and pointed to by an env
+  variable.
+- **Docker (main target, VPS)**: multi-stage image — pnpm build, then a minimal Node runtime that serves the static
+  files and the endpoint. Caddy in front for automatic TLS and headers. `docker-compose.yml` provided.
+- **Vercel / Cloudflare / others**: same build; headers declared in the platform config (`vercel.ts`, etc.).
+- **Mandatory headers on all targets**: `Cross-Origin-Opener-Policy: same-origin` and
+  `Cross-Origin-Embedder-Policy: require-corp` on the sandbox routes, not on the embed
+  ([0016](../decisions/0016-isolation-and-embed.md)). Checked by an E2E test so that no deployment target
+  forgets them.
+- **Heavy assets** (Go runtime, esbuild-wasm): served from a COEP-compatible public CDN (jsDelivr) by default,
+  self-hostable through an env variable for private instances. Avoids paying for bandwidth on a VPS.
 
-## 12. Licences
+## 12. Licenses
 
-- **Plateforme** (app, packages, CLI) : **MIT**. Standard de l'écosystème JS, aucune friction pour contribuer ou
-  réutiliser.
-- **Templates officiels** (`typika-app/*`) : **MIT-0** (MIT sans obligation d'attribution). Un template est fait pour
-  être copié dans des projets, y compris propriétaires, via `typika create` ; exiger une notice de licence dans chaque
-  projet généré serait un frein.
-- **Templates tiers** : licence libre au choix de l'auteur, déclarée dans le manifeste et affichée sur la page template.
-  Le registre refuse les templates sans licence OSI.
+- **Platform** (app, packages, CLI): **MIT**. Standard of the JS ecosystem, no friction to contribute or
+  reuse.
+- **Official templates** (`typika-app/*`): **MIT-0** (MIT without the attribution requirement). A template is made to
+  be copied into projects, proprietary ones included, through `typika create`; requiring a license notice in every
+  generated project would be a hindrance.
+- **Third-party templates**: free license chosen by the author, declared in the manifest and shown on the template
+  page. The registry rejects templates without an OSI license.
 
 ## 13. Stack
 
-### Ce qu'on garde de la stack habituelle
+### What we keep from the usual stack
 
-| Élément | Raison |
+| Element | Reason |
 |---|---|
-| TypeScript, Effect | Schema du manifeste partagé app / CLI / CI ; cycle de vie des runtimes (Scope, interruption, Stream) — c'est exactement le terrain d'Effect. |
-| Architecture modulaire `core/` + `ui/`, `domain-model`, TaggedError, constants `as const` | Inchangé. |
-| Ports via `Context.Tag` + Layers | Runtimes, stockage, registre, GitHub sont des ports avec adapters. |
-| React 19 + Compiler, Tailwind v4, Base UI | Inchangé. |
-| TanStack Router (via TanStack Start, prérendu statique du hub) | Pages hub indexables par les moteurs de recherche ; sandbox en SPA. |
-| Composants purs + presenter hooks, features minces, routes coquilles | Inchangé. |
-| Vitest, Playwright, oxlint, oxfmt | Inchangé. Playwright sert aussi à la CI de santé du registre. |
+| TypeScript, Effect | Manifest schema shared by app / CLI / CI; runtime life cycle (Scope, interruption, Stream) — this is exactly Effect's territory. |
+| Modular `core/` + `ui/` architecture, `domain-model`, TaggedError, `as const` constants | Unchanged. |
+| Ports via `Context.Tag` + Layers | Runtimes, storage, registry, GitHub are ports with adapters. |
+| React 19 + Compiler, Tailwind v4, Base UI | Unchanged. |
+| TanStack Router (via TanStack Start, static prerendering of the hub) | Hub pages indexable by search engines; sandbox as a SPA. |
+| Pure components + presenter hooks, thin features, shell routes | Unchanged. |
+| Vitest, Playwright, oxlint, oxfmt | Unchanged. Playwright also serves the registry health CI. |
 
-### Ce qu'on retire
+### What we remove
 
-| Élément | Raison |
+| Element | Reason |
 |---|---|
-| Nitro API routes, Drizzle, Neon, commands / queries serveur | Pas de backend métier. |
-| Redux Toolkit, redux-persist, outbox, connectivity | L'état chaud (contenu de fichiers, sorties de process) change trop vite pour Redux ; l'app est hors ligne par nature, il n'y a pas de mutation serveur à mettre en file. Remplacé par **Effect Atom** (`@effect-atom/atom-react`), déjà utilisé via effect-form, branché directement sur les services Effect. |
-| Gateways HTTP + `extraArgument` | Remplacés par les Layers côté client. |
-| Auth, multi-tenant | Pas de comptes ; GitHub OAuth uniquement. |
+| Nitro API routes, Drizzle, Neon, server commands / queries | No business backend. |
+| Redux Toolkit, redux-persist, outbox, connectivity | The hot state (file contents, process output) changes too fast for Redux; the app is offline by nature, there is no server mutation to queue. Replaced by **Effect Atom** (`@effect-atom/atom-react`), already used through effect-form, plugged directly into the Effect services. |
+| HTTP gateways + `extraArgument` | Replaced by Layers on the client side. |
+| Auth, multi-tenant | No accounts; GitHub OAuth only. |
 
-## 14. Organisation du code
+## 14. Code organization
 
-Monorepo pnpm + Turborepo.
+pnpm + Turborepo monorepo.
 
 ```
 apps/
   web/                         # hub + sandbox + embed (TanStack Start)
 packages/
-  manifest/                    # schema Effect du manifeste, parser TOML, résolution des refs
-  runtime-core/                # RuntimePort, événements de test normalisés
+  manifest/                    # Effect schema of the manifest, TOML parser, ref resolution
+  runtime-core/                # RuntimePort, normalized test events
   runtime-browser-js/
   runtime-go/
   runtime-kotlin/
-  test-runner/                 # runner compatible Vitest pour browser-js
+  test-runner/                 # Vitest-compatible runner for browser-js
   cli/                         # npx typika create
-  registry-tools/              # génération d'index + CI de santé
+  registry-tools/              # index generation + health CI
 services/
-  kotlin-compiler/             # image Docker du service de compilation
+  kotlin-compiler/             # Docker image of the compilation service
 ```
 
-Modules de `apps/web/src/modules/` : `shared`, `app`, `hub`, `project`, `editor`, `runtime`, `tour`, `compare`,
+Modules of `apps/web/src/modules/`: `shared`, `app`, `hub`, `project`, `editor`, `runtime`, `tour`, `compare`,
 `exercise`, `share`, `github`.
 
-Topologie d'un module :
+Topology of a module:
 
 ```
 <module>/
 ├── core/
 │   ├── domain/        # schemas, errors, constants
 │   ├── ports/         # Context.Tag + interfaces
-│   ├── adapters/      # implémentations (IndexedDB, GitHub, workers…)
-│   ├── programs/      # opérations métier Effect (ex-commands/queries, côté client)
-│   └── atoms/         # Effect Atoms exposés à l'UI
+│   ├── adapters/      # implementations (IndexedDB, GitHub, workers…)
+│   ├── programs/      # Effect business operations (former commands/queries, client side)
+│   └── atoms/         # Effect Atoms exposed to the UI
 └── ui/
     ├── components/
     └── hooks/
 ```
 
-## 15. Risques et spikes
+## 15. Risks and spikes
 
-| # | Risque | Spike |
+| # | Risk | Spike |
 |---|---|---|
-| R1 | Licence WebContainers incompatible | Lire les conditions, tester Nodebox, mesurer la couverture de `browser-js` seul. |
-| R2 | COOP/COEP casse l'embed | Prototype iframe embarquée sur un domaine tiers. |
-| R3 | Poids des runtimes (10 à 30 Mo) | Lazy-load à l'ouverture d'un template du langage, cache Service Worker, indicateur de chargement explicite. |
-| R4 | IntelliSense TS dans CodeMirror 6 | Prototype language service en worker sur un template de 20 fichiers. |
-| R5 | Pourrissement des templates | CI de santé + Renovate dès le premier template. |
-| R6 | Nom du projet | Premier nom, Temenos, abandonné (Temenos AG, éditeur de logiciels bancaires coté). Typika retenu, recherche de marques à faire ([ADR 0014](../decisions/0014-name-typika.md)). |
-| R7 | Go dans le navigateur | Couverture du langage par Yaegi (génériques, `testing`) contre poids de la toolchain complète. |
-| R8 | Kotlin | Levé : service de compilation maison, cible JS ([ADR 0019](../decisions/0019-kotlin-runtime.md)). |
-| R9 | Abus du service de compilation | Rate limiting, taille max des sources, timeout de compilation, aucun accès réseau sortant depuis le conteneur. |
+| R1 | WebContainers license incompatible | Read the terms, test Nodebox, measure the coverage of `browser-js` alone. |
+| R2 | COOP/COEP breaks the embed | Prototype an iframe embedded on a third-party domain. |
+| R3 | Weight of the runtimes (10 to 30 MB) | Lazy-load when a template of the language is opened, Service Worker cache, explicit loading indicator. |
+| R4 | TS IntelliSense in CodeMirror 6 | Prototype a language service in a worker on a 20-file template. |
+| R5 | Template rot | Health CI + Renovate from the first template. |
+| R6 | Project name | First name, Temenos, dropped (Temenos AG, a listed banking software vendor). Typika chosen, trademark search to do ([ADR 0014](../decisions/0014-name-typika.md)). |
+| R7 | Go in the browser | Language coverage by Yaegi (generics, `testing`) versus the weight of the full toolchain. |
+| R8 | Kotlin | Resolved: in-house compilation service, JS target ([ADR 0019](../decisions/0019-kotlin-runtime.md)). |
+| R9 | Abuse of the compilation service | Rate limiting, max source size, compilation timeout, no outgoing network access from the container. |
 
-## 16. Jalons
+## 16. Milestones
 
-Progression pas à pas, sans date ni lancement : chaque jalon livre quelque chose d'utilisable, et on décide du suivant
-une fois le précédent terminé.
+Step-by-step progression, with no date and no launch: each milestone delivers something usable, and we decide on the
+next one once the previous one is done.
 
-1. **M0 — Spikes** R1, R2, R4, R7, R8. Choix techniques Go et Kotlin.
-2. **M1 — Socle** : `manifest`, `runtime-browser-js`, `test-runner`, sandbox minimale (arbre + éditeur + console + tests).
-3. **M2 — Pédagogie** : tour, diff depuis la base, exercices `fix` et `refactor`. Catalogue §6.1 en TS, variantes JS.
-4. **M3 — Hub** : registre, index, CI de santé, pages hub prérendues, recherche.
-5. **M4 — Go & comparaison** : `runtime-go`, variantes Go, mode comparaison.
-6. **M5 — Partage** : embed, partage URL / gist, export, CLI.
-7. **M6 — Kotlin** : service de compilation, `runtime-kotlin`, variantes Kotlin.
+1. **M0 — Spikes** R1, R2, R4, R7, R8. Go and Kotlin technical choices.
+2. **M1 — Foundation**: `manifest`, `runtime-browser-js`, `test-runner`, minimal sandbox (tree + editor + console + tests).
+3. **M2 — Pedagogy**: tour, diff since the base, `fix` and `refactor` exercises. §6.1 catalogue in TS, JS variants.
+4. **M3 — Hub**: registry, index, health CI, prerendered hub pages, search.
+5. **M4 — Go & comparison**: `runtime-go`, Go variants, compare mode.
+6. **M5 — Sharing**: embed, URL / gist sharing, export, CLI.
+7. **M6 — Kotlin**: compilation service, `runtime-kotlin`, Kotlin variants.
 
-## 17. Décisions prises
+## 17. Decisions made
 
-| Sujet | Décision |
+| Topic | Decision |
 |---|---|
-| Exécution | Navigateur d'abord, runner auto-hébergeable en V2 |
-| Templates | Statiques en V1, stacks composables en V2 |
-| Cible | Développeur intermédiaire qui apprend l'architecture ; auteurs de contenu comme canal |
-| Catalogue initial | 5 architectures, 5 SOLID, 5 GoF, 1 fondamental POO (§6.1) |
-| Langues | UI en + fr ; contenu des templates en anglais |
-| Hébergement | Docker sur VPS en cible principale, compatible Vercel et autres |
-| Licences | MIT pour la plateforme, MIT-0 pour les templates officiels |
-| Langages | TS, JS, Go, Kotlin ; TS langue de référence ; Kotlin compilé côté serveur, exécuté dans le navigateur |
+| Execution | Browser first, self-hostable runner in V2 |
+| Templates | Static in V1, composable stacks in V2 |
+| Target | Intermediate developer learning architecture; content authors as a channel |
+| Initial catalogue | 5 architectures, 5 SOLID, 5 GoF, 1 OOP fundamental (§6.1) |
+| Languages | UI in en + fr; template content in English |
+| Hosting | Docker on a VPS as the main target, compatible with Vercel and others |
+| Licenses | MIT for the platform, MIT-0 for the official templates |
+| Languages | TS, JS, Go, Kotlin; TS as the reference language; Kotlin compiled server-side, run in the browser |
 
-## 18. Questions ouvertes
+## 18. Open questions
 
-1. Recherche de marques sur « Typika » (R6).
+1. Trademark search on "Typika" (R6).

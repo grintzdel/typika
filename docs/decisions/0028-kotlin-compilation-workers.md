@@ -1,75 +1,73 @@
-# 0028 — Compilation Kotlin : des processus de compilation qu'on tue au timeout
+# 0028 — Kotlin compilation: compilation processes killed on timeout
 
-**Statut** : Acceptée · 2026-10-13 · lot 1 du M6 · complète [0019](0019-kotlin-runtime.md)
+**Status**: Accepted · 2026-10-13 · slice 1 of M6 · complements [0019](0019-kotlin-runtime.md)
 
-## Contexte
+## Context
 
-Le service `kotlin-compiler` compile du code non fiable avec un timeout de 15 s ([0019](0019-kotlin-runtime.md),
-[security §3.3](../specs/security.md)). Le compilateur ne regarde jamais si son thread a été interrompu, et
-`Thread.stop` n'existe plus depuis le JDK 20. 0019 laissait deux voies : un processus de compilation séparé, ou le
-redémarrage du conteneur.
+The `kotlin-compiler` service compiles untrusted code with a 15 s timeout ([0019](0019-kotlin-runtime.md),
+[security §3.3](../specs/security.md)). The compiler never checks whether its thread was interrupted, and
+`Thread.stop` no longer exists since JDK 20. 0019 left two options: a separate compilation process, or restarting the
+container.
 
-Une compilation qui dépasse le timeout se fabrique en trois lignes : `fun <T> p(t: T) = Pair(t, t)`, une valeur
-imbriquée 24 fois dans `p(...)`, puis une affectation à un `Int`. Le message d'erreur contient alors un type de 2²⁴
-nœuds. Chaque niveau double le travail : 11 s à 20 niveaux, bien au-delà de 15 s à 24. Sur le même principe, `const val` doublé 26 fois épuise la mémoire du
-compilateur.
+A compilation that exceeds the timeout takes three lines to build: `fun <T> p(t: T) = Pair(t, t)`, a value nested 24
+times in `p(...)`, then an assignment to an `Int`. The error message then contains a type of 2²⁴ nodes. Each level
+doubles the work: 11 s at 20 levels, well beyond 15 s at 24. On the same principle, `const val` doubled 26 times
+exhausts the compiler's memory.
 
-Mesures sur `strategy-kotlin` (sources et tests, cache serveur désactivé). Le conteneur est limité à 2 vCPU et 1 Gio,
-sans swap. La charge envoie 80 requêtes, 8 à la fois, sur un hôte Apple M4 Pro.
+Measurements on `strategy-kotlin` (sources and tests, server cache disabled). The container is limited to 2 vCPU and
+1 GiB, without swap. The load sends 80 requests, 8 at a time, on an Apple M4 Pro host.
 
-| Variante | Débit saturé | p95 à c = 8 | Mémoire max |
+| Variant | Saturated throughput | p95 at c = 8 | Max memory |
 |---|---|---|---|
-| Une JVM, deux threads de compilation (spike R8) | 2,2 compil./s | 5,2 s | 656 Mio |
-| Deux processus, heap de 320 Mio, C2 | 1,1 compil./s | 9,3 s | 1 Gio (saturée, un worker tué) |
-| Deux processus, heap de 192 Mio, C2, cache AOT, `MALLOC_ARENA_MAX=2` | 1,7 compil./s | 7,2 s | 850 Mio |
-| **Deux processus, heap de 192 Mio, C1 seul, cache AOT, `MALLOC_ARENA_MAX=2`** | **2,4 compil./s** | **4,1 s** | **815 Mio** |
+| One JVM, two compilation threads (spike R8) | 2.2 compil./s | 5.2 s | 656 MiB |
+| Two processes, 320 MiB heap, C2 | 1.1 compil./s | 9.3 s | 1 GiB (saturated, one worker killed) |
+| Two processes, 192 MiB heap, C2, AOT cache, `MALLOC_ARENA_MAX=2` | 1.7 compil./s | 7.2 s | 850 MiB |
+| **Two processes, 192 MiB heap, C1 only, AOT cache, `MALLOC_ARENA_MAX=2`** | **2.4 compil./s** | **4.1 s** | **815 MiB** |
 
-Avec la dernière variante, une compilation seule prend 0,7 s à chaud, et un worker est prêt 3 s après son lancement.
+With the last variant, a single compilation takes 0.7 s warm, and a worker is ready 3 s after it is launched.
 
-## Décision
+## Decision
 
-- **Un superviseur et un processus de compilation par place.** Le superviseur est le serveur HTTP. Il lance
-  `KOTLIN_COMPILER_CONCURRENCY` workers, chacun une JVM qui compile une requête à la fois. Une requête prend un
-  worker libre. Si le worker n'a pas répondu au bout de `KOTLIN_COMPILER_TIMEOUT_MS`, le superviseur le tue,
-  répond `504` et en relance un autre. Les autres workers, et la file d'attente, ne sont pas touchés.
-- **Un worker qui meurt est remplacé de la même façon.** Les workers tournent avec `-XX:+ExitOnOutOfMemoryError` :
-  une compilation qui épuise le heap tue son worker, le superviseur répond `503` et le relance.
-- **Le protocole entre le superviseur et ses workers** passe par l'entrée et la sortie standard : des trames JSON
-  préfixées par leur longueur. La JVM du worker écrit ses propres logs sur stderr (`-Xlog:disable`
-  `-Xlog:all=warning,aot*=error:stderr`). Sans cette redirection, un avertissement de la JVM sur stdout corrompt la
-  trame suivante.
-- **Chaque worker est chaud dès son lancement.** Il compile un petit projet avec un test avant de se déclarer prêt.
-  Le superviseur ne lui confie aucune requête avant.
-- **Réglage des workers, mesuré** : heap de 192 Mio, code cache de 48 Mio, C1 seul (`-XX:TieredStopAtLevel=1`),
-  SerialGC, pile de 8 Mio. Le cache AOT du JDK 25 est produit au build de l'image, en lançant un worker avec les mêmes
-  options. L'image fixe `MALLOC_ARENA_MAX=2`. `KOTLIN_COMPILER_WORKER_JAVA_OPTS` remplace ces options.
-- **Le superviseur garde le cache d'artefacts** dans un heap de 96 Mio. Le cache passe de 128 à 32 Mio par défaut, ce
-  qui fait environ 150 compilations de `strategy-kotlin`. Le cache client et les artefacts précompilés du registre
-  évitent déjà la plupart des appels.
+- **One supervisor and one compilation process per slot.** The supervisor is the HTTP server. It launches
+  `KOTLIN_COMPILER_CONCURRENCY` workers, each a JVM that compiles one request at a time. A request takes a free
+  worker. If the worker has not answered after `KOTLIN_COMPILER_TIMEOUT_MS`, the supervisor kills it, responds `504`
+  and launches another one. The other workers, and the queue, are not affected.
+- **A worker that dies is replaced the same way.** Workers run with `-XX:+ExitOnOutOfMemoryError`: a compilation that
+  exhausts the heap kills its worker, the supervisor responds `503` and relaunches it.
+- **The protocol between the supervisor and its workers** goes through standard input and output: JSON frames prefixed
+  by their length. The worker's JVM writes its own logs to stderr (`-Xlog:disable`
+  `-Xlog:all=warning,aot*=error:stderr`). Without this redirection, a JVM warning on stdout corrupts the next frame.
+- **Each worker is warm from launch.** It compiles a small project with a test before declaring itself ready. The
+  supervisor assigns it no request before that.
+- **Worker tuning, measured**: 192 MiB heap, 48 MiB code cache, C1 only (`-XX:TieredStopAtLevel=1`), SerialGC, 8 MiB
+  stack. The JDK 25 AOT cache is produced at image build, by launching a worker with the same options. The image sets
+  `MALLOC_ARENA_MAX=2`. `KOTLIN_COMPILER_WORKER_JAVA_OPTS` replaces these options.
+- **The supervisor keeps the artifact cache** in a 96 MiB heap. The cache goes from 128 to 32 MiB by default, which is
+  about 150 compilations of `strategy-kotlin`. The client cache and the registry's precompiled artifacts already avoid
+  most calls.
 
-## Conséquences
+## Consequences
 
-- Une compilation qui ne finit pas coûte au plus `TIMEOUT_MS` à une place, puis environ 3 s de relance. Le reste du
-  service continue de répondre.
-- Avec deux places, deux compilations piégées envoyées en même temps bloquent tout le service pendant environ 18 s :
-  le timeout, puis la relance. Les compilations suivantes attendent dans la file, puis reçoivent `503` quand elle est
-  pleine. Le rate limiting par IP du relais ([0029](0029-kotlin-relay-rate-limit.md)) limite la fréquence à laquelle
-  un même client peut recommencer, sans empêcher l'attaque. Un `503` dû à un processus planté porte, comme celui
-  d'une file pleine, un `Retry-After: 5`.
-- Deux JVM au lieu d'une, mais le débit dépasse celui du spike : le C1 seul compile les méthodes du compilateur plus
-  vite que le C2 ne les optimise, sur des compilations d'une seconde. La mémoire tient dans le dimensionnement de
-  référence de [0019](0019-kotlin-runtime.md) (2 vCPU, 1 Gio).
-- La mémoire grimpe avec le nombre de workers : compter environ 380 Mio par worker, plus 70 Mio pour le
-  superviseur.
-- L'image pèse 771 Mo, dont 114 Mo de cache AOT. Le cache AOT est lié à la JVM exacte de l'image et à ses options. Une JVM qui refuse le cache démarre quand même,
-  seulement plus lentement : le cache est une optimisation, pas une dépendance.
-- Les messages de diagnostic sont tronqués à 2 000 caractères. Le type géant de l'exemple ci-dessus produisait des
-  réponses de plus de 10 Mo.
+- A compilation that never finishes costs a slot at most `TIMEOUT_MS`, then about 3 s of relaunch. The rest of the
+  service keeps responding.
+- With two slots, two trapped compilations sent at the same time block the whole service for about 18 s: the timeout,
+  then the relaunch. The following compilations wait in the queue, then receive `503` when it is full. The relay's
+  per-IP rate limiting ([0029](0029-kotlin-relay-rate-limit.md)) limits how often the same client can try again,
+  without preventing the attack. A `503` caused by a crashed process carries, like the one for a full queue, a
+  `Retry-After: 5`.
+- Two JVMs instead of one, but the throughput exceeds the spike's: C1 alone compiles the compiler's methods faster than
+  C2 optimizes them, on one-second compilations. Memory fits in the reference sizing of
+  [0019](0019-kotlin-runtime.md) (2 vCPU, 1 GiB).
+- Memory climbs with the number of workers: count about 380 MiB per worker, plus 70 MiB for the supervisor.
+- The image weighs 771 MB, including 114 MB of AOT cache. The AOT cache is tied to the image's exact JVM and its
+  options. A JVM that refuses the cache still starts, only more slowly: the cache is an optimization, not a dependency.
+- Diagnostic messages are truncated to 2,000 characters. The giant type of the example above produced responses of
+  more than 10 MB.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Redémarrer le conteneur** : une seule requête piégée coupe le service pour tout le monde, file comprise, pendant
-  5 à 11 s. C'est un déni de service à la portée de n'importe qui.
-- **Une JVM par compilation** : chaque requête paierait le démarrage et le JIT, soit 5 à 11 s mesurées au spike R8.
-- **Des threads dans une seule JVM** : on ne peut pas les interrompre, et un `OutOfMemoryError` dans un thread laisse
-  toute la JVM dans un état incertain.
+- **Restarting the container**: a single trapped request cuts the service for everyone, queue included, for 5 to 11 s.
+  It is a denial of service within anyone's reach.
+- **One JVM per compilation**: each request would pay for startup and JIT, i.e. 5 to 11 s measured in spike R8.
+- **Threads in a single JVM**: they cannot be interrupted, and an `OutOfMemoryError` in a thread leaves the whole JVM
+  in an uncertain state.

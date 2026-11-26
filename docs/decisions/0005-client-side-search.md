@@ -1,23 +1,23 @@
-# 0005 — Recherche et filtres côté client
+# 0005 — Client-side search and filters
 
-**Statut** : Acceptée · 2026-10-08
+**Status**: Accepted · 2026-10-08
 
-## Contexte
+## Context
 
-Les règles habituelles du projet imposent que tout filtre passe par une requête backend. Typika n'a pas de backend
-métier ([0004](0004-git-registry-static-index.md)).
+The usual project rules require every filter to go through a backend request. Typika has no business backend
+([0004](0004-git-registry-static-index.md)).
 
-## Décision
+## Decision
 
-La recherche plein texte et les facettes du hub s'exécutent **côté client** sur `index.json` (MiniSearch ou Orama).
-Dérogation explicite à la règle « pas de filtre côté client ».
+The full-text search and the facets of the hub run **on the client side** on `index.json` (MiniSearch or Orama).
+Explicit exception to the "no client-side filter" rule.
 
-## Conséquences
+## Consequences
 
-- Recherche instantanée et disponible hors ligne.
-- Valable tant que l'index tient en mémoire (quelques centaines d'entrées). Au-delà de quelques milliers, réévaluer
-  (index découpé par facette, ou recherche serveur).
+- Instant search, available offline.
+- Valid as long as the index fits in memory (a few hundred entries). Beyond a few thousand, reevaluate (index split by
+  facet, or server search).
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Service de recherche** : réintroduit un backend pour un volume qui n'en a pas besoin.
+- **Search service**: brings back a backend for a volume that does not need one.

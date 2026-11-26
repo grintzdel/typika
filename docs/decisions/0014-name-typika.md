@@ -1,39 +1,39 @@
-# 0014 — Nom : Typika
+# 0014 — Name: Typika
 
-**Statut** : Acceptée · 2026-10-08 · recherche de marques formelle à faire au M0 ([R6](../spikes.md))
+**Status**: Accepted · 2026-10-08 · formal trademark search to do in M0 ([R6](../spikes.md))
 
-## Contexte
+## Context
 
-Le projet s'appelait Temenos. Temenos AG est un éditeur de logiciels bancaires coté en bourse : utiliser le même nom
-pour un logiciel exposait à un conflit de marque et nuisait à la recherche du projet en ligne. Le nom suivant,
-Palaestra, était déjà pris comme compte npm, ce qui interdisait le scope `@palaestra`.
+The project was called Temenos. Temenos AG is a publicly listed banking software vendor: using the same name for a
+piece of software exposed the project to a trademark conflict and hurt searching for the project online. The next
+name, Palaestra, was already taken as an npm account, which ruled out the `@palaestra` scope.
 
-## Décision
+## Decision
 
-Le projet s'appelle **Typika**, du grec *typos* : l'empreinte, le modèle qu'on reproduit, d'où vient le mot « type ».
-Un template est exactement cela : un modèle qu'on étudie, puis qu'on reproduit dans son propre projet.
+The project is called **Typika**, from the Greek *typos*: the imprint, the model one reproduces, where the word "type"
+comes from. A template is exactly that: a model one studies, then reproduces in one's own project.
 
-| Élément | Valeur | Disponibilité au 2026-10-08 |
+| Element | Value | Availability on 2026-10-08 |
 |---|---|---|
-| Paquet CLI | `typika` | Libre sur npm |
-| Scope des paquets | `@typika/*` | Aucun compte ni paquet `typika` sur npm |
-| Domaine | `typika.dev` | Libre (`typika.io` aussi) |
-| GitHub | `grintzdel/typika` pour commencer, organisation `typika` plus tard | Aucun compte ni organisation `typika` |
-| Manifeste | `typika.toml` | — |
-| Variables d'environnement | `TYPIKA_*` | — |
+| CLI package | `typika` | Free on npm |
+| Package scope | `@typika/*` | No `typika` account or package on npm |
+| Domain | `typika.dev` | Free (`typika.io` too) |
+| GitHub | `grintzdel/typika` to start, `typika` organization later | No `typika` account or organization |
+| Manifest | `typika.toml` | — |
+| Environment variables | `TYPIKA_*` | — |
 
-## Conséquences
+## Consequences
 
-- Toute la documentation est renommée ; les noms abandonnés n'apparaissent plus que dans cet ADR, la vision, les
-  spikes et la spec initiale.
-- Le dépôt vit sous le compte personnel jusqu'à ce que l'organisation `typika` soit nécessaire (registre et dépôt de
-  templates séparés, au M3).
-- Réserver le domaine et le scope npm avant toute communication.
+- All the documentation is renamed; the abandoned names only appear in this ADR, the vision, the spikes and the
+  initial spec.
+- The repository lives under the personal account until the `typika` organization is needed (separate registry and
+  template repositories, in M3).
+- Reserve the domain and the npm scope before any communication.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Temenos** : risque de marque face à Temenos AG.
-- **Palaestra** (« lieu d'entraînement ») : compte npm `palaestra` déjà pris.
-- **Paradeigma**, **Gymnasion** : comptes GitHub déjà pris ; Paradeigma est en plus long et confondu avec *paradigma*.
-- **Patternhall** : libre partout, clair, mais long et sans la profondeur du mot grec. Premier nom de repli.
-- **Deigmata** (« exemples ») : libre partout, mais trop proche de Digma et Denigma, deux outils pour développeurs.
+- **Temenos**: trademark risk against Temenos AG.
+- **Palaestra** ("training ground"): npm account `palaestra` already taken.
+- **Paradeigma**, **Gymnasion**: GitHub accounts already taken; Paradeigma is also long and confused with *paradigma*.
+- **Patternhall**: free everywhere, clear, but long and without the depth of the Greek word. First fallback name.
+- **Deigmata** ("examples"): free everywhere, but too close to Digma and Denigma, two developer tools.

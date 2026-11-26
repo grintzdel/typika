@@ -1,64 +1,63 @@
-# 0017 — Pas de runtime `node` en V1
+# 0017 — No `node` runtime in V1
 
-**Statut** : Acceptée · 2026-10-08 · issue du spike [R1](../spikes.md)
+**Status**: Accepted · 2026-10-08 · outcome of spike [R1](../spikes.md)
 
-## Contexte
+## Context
 
-Le runtime `node` devait reposer sur WebContainers, pour les templates qui ont besoin de `npm install`, d'un serveur
-HTTP ou d'un Vite complet. La plateforme est sous MIT ([0011](0011-licenses.md)) : n'importe qui peut l'héberger, y
-compris une entreprise pour ses équipes. Le spike R1 a lu les conditions en vigueur le 2026-10-08.
+The `node` runtime was to rest on WebContainers, for templates that need `npm install`, an HTTP server or a full Vite.
+The platform is under MIT ([0011](0011-licenses.md)): anyone can host it, including a company for its teams. Spike R1
+read the terms in force on 2026-10-08.
 
-**WebContainers** (`@webcontainer/api` 1.6.4) :
+**WebContainers** (`@webcontainer/api` 1.6.4):
 
-- Le paquet npm est sous MIT, mais ce n'est qu'un client. Son README précise que l'API « relies on hosted proxies and
-  server-side acceleration from StackBlitz » et que l'intégrer vaut acceptation des conditions d'utilisation de
-  StackBlitz.
-- Conditions d'utilisation, §1.5(c) : l'usage est soumis aux paliers, aux limites de session et aux autres limites
-  publiés. « Use in a production or commercial setting, or beyond the stated limits, requires an active plan or
-  separate written license. » L'accès peut être révoqué.
-- Page « Commercial Usage » : une licence est requise dès que l'API sert « your customers, prospective customers,
-  and/or employees ». L'auto-hébergement n'existe que dans l'offre Enterprise.
-- La promesse « always free for open source » de 2023 ne figure plus dans les conditions actuelles.
-- Le runtime exige `SharedArrayBuffer` : il ne démarre pas en embed ([0016](0016-isolation-and-embed.md)).
+- The npm package is under MIT, but it is only a client. Its README states that the API "relies on hosted proxies and
+  server-side acceleration from StackBlitz" and that integrating it amounts to accepting StackBlitz's terms of service.
+- Terms of service, §1.5(c): usage is subject to the published tiers, session limits and other limits. "Use in a
+  production or commercial setting, or beyond the stated limits, requires an active plan or separate written
+  license." Access can be revoked.
+- "Commercial Usage" page: a license is required as soon as the API serves "your customers, prospective customers,
+  and/or employees". Self-hosting only exists in the Enterprise offer.
+- The 2023 promise "always free for open source" no longer appears in the current terms.
+- The runtime requires `SharedArrayBuffer`: it does not start in an embed ([0016](0016-isolation-and-embed.md)).
 
-**Nodebox** (`@codesandbox/nodebox` 0.1.9) :
+**Nodebox** (`@codesandbox/nodebox` 0.1.9):
 
-- Sustainable Use License 1.0, qui n'est pas une licence OSI : usage « only for your own internal business purposes
-  or for non-commercial or personal use », distribution « only if you do so free of charge for non-commercial
-  purposes ».
-- Le runtime dépend des serveurs de CodeSandbox, et le paquet n'a plus été publié depuis avril 2025.
+- Sustainable Use License 1.0, which is not an OSI license: usage "only for your own internal business purposes or for
+  non-commercial or personal use", distribution "only if you do so free of charge for non-commercial purposes".
+- The runtime depends on CodeSandbox's servers, and the package has not been published since April 2025.
 
-**Besoin réel** : les 44 templates du [catalogue](../specs/catalogue.md) tournent sur `browser-js`, `go` ou `kotlin`,
-sans aucune dépendance hors bibliothèque standard et outil de test. Aucun n'a besoin de `node`.
+**Actual need**: the 44 templates of the [catalog](../specs/catalogue.md) run on `browser-js`, `go` or `kotlin`,
+without any dependency outside the standard library and the test tool. None needs `node`.
 
-## Décision
+## Decision
 
-- **`node` ne fait pas partie de la V1.** Le schéma 1 du manifeste ne l'accepte pas : `runtime.kind` vaut
-  `browser-js`, `go` ou `kotlin`.
-- **Pas de WebContainers ni de Nodebox comme dépendance de la plateforme.** Chacun rendrait toute instance dépendante
-  d'un service tiers. L'instance publique et les instances tierces seraient soumises à une licence qu'on ne contrôle
-  pas, et révocable.
-- **TS et JS passent par `browser-js`.** Les dépendances npm éventuelles d'un template tiers sont résolues via un CDN
-  ESM, comme prévu dans [runtimes](../specs/runtimes.md). Un paquet qui exige des API Node n'est pas supporté en V1.
-- On ne contacte pas StackBlitz. Un accord écrit couvrirait au mieux l'instance publique, jamais les instances
-  tierces, et ne lèverait ni la dépendance à leurs serveurs ni l'impossibilité de l'embed.
+- **`node` is not part of V1.** Schema 1 of the manifest does not accept it: `runtime.kind` is `browser-js`, `go` or
+  `kotlin`.
+- **No WebContainers or Nodebox as a platform dependency.** Each would make every instance depend on a third-party
+  service. The public instance and third-party instances would be subject to a license we do not control, and that can
+  be revoked.
+- **TS and JS go through `browser-js`.** The npm dependencies of a third-party template, if any, are resolved through
+  an ESM CDN, as planned in [runtimes](../specs/runtimes.md). A package that requires Node APIs is not supported in V1.
+- We do not contact StackBlitz. A written agreement would at best cover the public instance, never third-party
+  instances, and would remove neither the dependency on their servers nor the impossibility of the embed.
 
-## Conséquences
+## Consequences
 
-- R1 ne bloque plus le gel du schéma 1. Ajouter `node` plus tard sera un changement de schéma (`runtime.kind` est une
-  énumération fermée), avec une migration sans effet sur les manifestes existants.
-- Le package `runtime-node`, le terminal xterm.js et le timeout des processus longs sortent de la V1.
-  `vitest-reporter` ne sert plus qu'à la suite de conformité du `test-runner` : il devient interne et n'est plus publié
-  sur npm.
-- Les templates qui auraient besoin d'un serveur HTTP ou de `npm install` attendent le runner auto-hébergeable (V2).
-- Le `RuntimePort` reste le point d'extension. Un adaptateur WebContainers optionnel est envisageable en V2, activé
-  par l'opérateur d'une instance sous sa propre licence. Il ne serait jamais actif par défaut.
+- R1 no longer blocks the freeze of schema 1. Adding `node` later will be a schema change (`runtime.kind` is a closed
+  enumeration), with a migration without effect on existing manifests.
+- The `runtime-node` package, the xterm.js terminal and the timeout of long processes leave V1.
+  `vitest-reporter` now only serves the conformance suite of the `test-runner`: it becomes internal and is no longer
+  published on npm.
+- Templates that would need an HTTP server or `npm install` wait for the self-hostable runner (V2).
+- The `RuntimePort` stays the extension point. An optional WebContainers adapter is conceivable in V2, enabled by the
+  operator of an instance under their own license. It would never be active by default.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **WebContainers sous accord avec StackBlitz** : ne couvre pas les instances tierces, garde la dépendance réseau,
-  coupé de l'embed.
-- **Nodebox** : licence non OSI, incompatible avec une plateforme MIT hébergeable commercialement, projet à l'arrêt.
-- **Runtime Node maison** (polyfills `fs`, `http` sur `browser-js`) : coût élevé pour un besoin nul dans le catalogue.
-- **Garder `node` réservé dans le schéma 1** : fige un contrat (commandes shell, `entry` facultatif) que rien n'a
-  validé.
+- **WebContainers under an agreement with StackBlitz**: does not cover third-party instances, keeps the network
+  dependency, cut off from the embed.
+- **Nodebox**: non-OSI license, incompatible with an MIT platform that can be hosted commercially, stalled project.
+- **In-house Node runtime** (`fs`, `http` polyfills on `browser-js`): high cost for a need that is zero in the
+  catalog.
+- **Keeping `node` reserved in schema 1**: freezes a contract (shell commands, optional `entry`) that nothing has
+  validated.

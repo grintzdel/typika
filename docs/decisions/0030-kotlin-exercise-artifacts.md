@@ -1,36 +1,36 @@
-# 0030 — Exercices Kotlin : leur état de départ est précompilé
+# 0030 — Kotlin exercises: their start state is precompiled
 
-**Statut** : Acceptée · 2026-10-17 · revue du M6 · tranche #98 · complète [0019](0019-kotlin-runtime.md)
+**Status**: Accepted · 2026-10-17 · M6 review · slice #98 · complements [0019](0019-kotlin-runtime.md)
 
-## Contexte
+## Context
 
-`registry-tools build` précompile chaque template Kotlin, sans son dossier `exercises/`, en modes `test` et `run`
-([runtimes §6.4](../specs/runtimes.md)). Ouvrir un template et lancer ses tests ne coûte donc aucun appel au service
-de compilation. Un exercice part d'un autre état : celui du template ou de sa base, plus la surcouche `start/`. Sa clé
-de cache diffère, et la première action sur un exercice, lancer les tests pour les voir échouer, passait par le relais
-limité en débit ([0029](0029-kotlin-relay-rate-limit.md)).
+`registry-tools build` precompiles each Kotlin template, without its `exercises/` folder, in `test` and `run` modes
+([runtimes §6.4](../specs/runtimes.md)). Opening a template and running its tests therefore costs no call to the
+compilation service. An exercise starts from another state: that of the template or its base, plus the `start/`
+overlay. Its cache key differs, and the first action on an exercise, running the tests to see them fail, went through
+the rate-limited relay ([0029](0029-kotlin-relay-rate-limit.md)).
 
-Mesure sur le registre du 2026-10-17 : 26 exercices Kotlin, soit 52 compilations. 7 avaient déjà la clé d'un
-template, toutes en mode `run` sur un exercice parti de sa base. Un artefact pèse en moyenne 250 Ko.
+Measurement on the registry of 2026-10-17: 26 Kotlin exercises, i.e. 52 compilations. 7 already had a template's key,
+all in `run` mode on an exercise started from its base. An artifact weighs 250 KB on average.
 
-## Décision
+## Decision
 
-- **`registry-tools build` précompile aussi l'état de départ de chaque exercice Kotlin**, en modes `test` et `run`,
-  calculé par `exerciseStates` comme l'app le fait à l'ouverture, avec les globs de tests du template.
-- **Une clé partagée par un template et un exercice n'est demandée qu'une fois.**
-- **Un exercice dont la base n'est pas dans le registre est ignoré** : l'app le compile alors par le service.
-- **Les solutions ne sont pas précompilées** : appliquer une solution modifie le projet.
+- **`registry-tools build` also precompiles the start state of each Kotlin exercise**, in `test` and `run` modes,
+  computed by `exerciseStates` as the app does on opening, with the template's test globs.
+- **A key shared by a template and an exercise is requested only once.**
+- **An exercise whose base is not in the registry is skipped**: the app then compiles it through the service.
+- **Solutions are not precompiled**: applying a solution modifies the project.
 
-## Conséquences
+## Consequences
 
-- Ouvrir un exercice et lancer ses tests ou son programme ne coûte plus aucun appel au service tant que rien n'est
-  modifié, comme pour un template.
-- 45 artefacts de plus, 12 Mo dans `artifacts/kotlin/`. L'app ne lit que la clé qu'elle demande : le poids
-  téléchargé ne change pas.
-- Un état de départ doit compiler. V9 l'exigeait déjà : un départ qui ne build pas fait échouer `template-check`.
+- Opening an exercise and running its tests or its program no longer costs any call to the service as long as nothing
+  is modified, as for a template.
+- 45 more artifacts, 12 MB in `artifacts/kotlin/`. The app only reads the key it requests: the downloaded weight does
+  not change.
+- A start state must compile. V9 already required it: a start state that does not build makes `template-check` fail.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Mode `test` seul** : environ 5 Mo de moins, mais lancer le programme d'un exercice repassait par le service, une
-  exception de plus à expliquer.
-- **Ne rien précompiler** : chaque ouverture d'exercice compile, alors que son état de départ est connu dès le build.
+- **`test` mode only**: about 5 MB less, but running an exercise's program went through the service again, one more
+  exception to explain.
+- **Precompiling nothing**: each exercise opening compiles, while its start state is known at build time.

@@ -1,12 +1,12 @@
-# Registre et index
+# Registry and index
 
-Statut : brouillon · 2026-10-08 · Voir aussi : [manifest](manifest.md), [catalogue](catalogue.md),
-[security](security.md), [guide d'auteur](../guides/template-authoring.md)
+Status: draft · 2026-10-08 · See also: [manifest](manifest.md), [catalogue](catalogue.md),
+[security](security.md), [author guide](../guides/template-authoring.md)
 
-Le registre est la seule source de vérité du hub. Il ne contient pas de code de template : il référence des templates
-hébergés sur GitHub et produit l'index statique que l'app consomme.
+The registry is the hub's single source of truth. It contains no template code: it references templates
+hosted on GitHub and produces the static index that the app consumes.
 
-## 1. Le dépôt `typika-app/registry`
+## 1. The `typika-app/registry` repository
 
 ```
 registry/
@@ -16,14 +16,14 @@ registry/
 │   │   └── strategy-ts.toml
 │   └── community/
 │       └── <name>.toml
-├── maintainers.toml           # équipe de curation, rôles
-├── vocabulary.toml            # topics connus et leur libellé
-├── health/                    # état calculé, écrit uniquement par la CI
+├── maintainers.toml           # curation team, roles
+├── vocabulary.toml            # known topics and their label
+├── health/                    # computed state, written only by CI
 │   └── <name>.json
-├── artifacts/kotlin/          # compilations des templates Kotlin et de leurs exercices, écrites par la CI
-│   └── <clé>.json
+├── artifacts/kotlin/          # compilations of the Kotlin templates and their exercises, written by CI
+│   └── <key>.json
 ├── schema/
-│   └── index.schema.json      # schéma JSON de index.json
+│   └── index.schema.json      # JSON schema of index.json
 ├── CODEOWNERS
 └── .github/workflows/
     ├── validate-pr.yml
@@ -31,9 +31,9 @@ registry/
     └── health.yml
 ```
 
-### 1.1 Fichier d'entrée
+### 1.1 Entry file
 
-Un fichier par template, nommé d'après le `name` du manifeste.
+One file per template, named after the manifest's `name`.
 
 ```toml
 ref = "github:typika-app/templates/strategy/ts@3f2c9a1e7b4d"
@@ -42,31 +42,31 @@ category = "official"          # official | community
 added = 2026-10-08
 ```
 
-| Champ | Obligatoire | Règle |
+| Field | Required | Rule |
 |---|---|---|
-| `ref` | oui | Référence complète, **épinglée sur un SHA de commit** (§6). Branche ou tag refusés. |
-| `maintainers` | oui | Au moins un compte GitHub. Reçoit les notifications de santé. |
-| `category` | oui | `official` : dépôt sous `typika-app/*`, maintenu par l'équipe de curation. `community` : tout autre dépôt. |
-| `added` | oui | Date d'entrée, renseignée par la PR. |
-| `parent` | non | Ref épinglée du template dont celui-ci est un remix (§7). |
-| `deprecated` | non | `true` : décision de l'équipe de déprécier le template (§5), appliquée au run de santé suivant. |
+| `ref` | yes | Full reference, **pinned to a commit SHA** (§6). Branch or tag rejected. |
+| `maintainers` | yes | At least one GitHub account. Receives the health notifications. |
+| `category` | yes | `official`: repository under `typika-app/*`, maintained by the curation team. `community`: any other repository. |
+| `added` | yes | Entry date, filled in by the PR. |
+| `parent` | no | Pinned ref of the template this one is a remix of (§7). |
+| `deprecated` | no | `true`: team decision to deprecate the template (§5), applied at the next health run. |
 
-Le nom du fichier doit être égal au `name` du manifeste pointé. Les noms sont uniques sur tout le registre, toutes
-catégories confondues.
+The file name must equal the `name` of the manifest it points to. Names are unique across the whole registry, all
+categories combined.
 
-### 1.2 Officiel et communauté
+### 1.2 Official and community
 
 | | `official` | `community` |
 |---|---|---|
-| Hébergement | `typika-app/*` | N'importe quel dépôt GitHub public |
-| Licence | MIT-0 | Toute licence approuvée OSI, déclarée dans le manifeste |
-| Revue | Équipe de curation, 2 approbations | Équipe de curation, 1 approbation |
-| Mise en avant | Accueil, parcours, catalogue | Liste à facettes, recherche |
+| Hosting | `typika-app/*` | Any public GitHub repository |
+| License | MIT-0 | Any OSI-approved license, declared in the manifest |
+| Review | Curation team, 2 approvals | Curation team, 1 approval |
+| Featuring | Home page, paths, catalogue | Faceted list, search |
 
-### 1.3 Dépôt des templates officiels
+### 1.3 Repository of the official templates
 
-Les templates officiels vivent dans **un seul dépôt**, `typika-app/templates`, et pas un dépôt par template : avec les
-bases et les variantes, cela ferait près de 80 dépôts à configurer, surveiller et mettre à jour.
+The official templates live in **a single repository**, `typika-app/templates`, and not one repository per template:
+with the bases and the variants, that would make nearly 80 repositories to configure, monitor and update.
 
 ```
 typika-app/templates/
@@ -81,83 +81,86 @@ typika-app/templates/
 └── renovate.json
 ```
 
-- Ref d'un template officiel : `github:typika-app/templates/<concept>/<langage>@<sha>`.
-- Ref d'une base : `github:typika-app/templates/<concept>-base/<langage>@<sha>`.
-- Une PR du dépôt ne lance que les tests des dossiers modifiés.
-- Un commit change le SHA de tout le dépôt : l'automatisation du registre ne met à jour que les entrées dont le
-  dossier a changé (§6).
+- Ref of an official template: `github:typika-app/templates/<concept>/<lang>@<sha>`.
+- Ref of a base: `github:typika-app/templates/<concept>-base/<lang>@<sha>`.
+- A PR on the repository runs only the tests of the changed folders.
+- A commit changes the SHA of the whole repository: the registry automation updates only the entries whose
+  folder changed (§6).
 
-Les templates communautaires restent libres de leur organisation (un dépôt, un sous-dossier, un monorepo).
-| Dépendances | Renovate géré par l'équipe | Responsabilité du mainteneur |
+Community templates are free to organize themselves as they like (one repository, a subfolder, a monorepo).
+| Dependencies | Renovate managed by the team | Maintainer's responsibility |
 
-## 2. Processus de contribution
+## 2. Contribution process
 
-### 2.1 Ajouter un template
+### 2.1 Adding a template
 
-1. L'auteur valide en local : `typika validate` ([sharing-and-cli](sharing-and-cli.md#7-typika-validate)).
-2. Il ouvre une PR qui ajoute **un seul** fichier `templates/<category>/<name>.toml`.
-3. `validate-pr.yml` lance les validations automatiques (§2.2) et poste un commentaire de synthèse.
-4. Revue humaine (§2.3).
-5. Merge → `build-index.yml` régénère l'index ; le template apparaît au déploiement suivant.
+1. The author validates locally: `typika validate` ([sharing-and-cli](sharing-and-cli.md#7-typika-validate)).
+2. They open a PR that adds **a single** file `templates/<category>/<name>.toml`.
+3. `validate-pr.yml` runs the automatic validations (§2.2) and posts a summary comment.
+4. Human review (§2.3).
+5. Merge → `build-index.yml` regenerates the index; the template appears at the next deployment.
 
-### 2.2 Validations automatiques (bloquantes)
+### 2.2 Automatic validations (blocking)
 
-| # | Vérification | Codes |
+| # | Check | Codes |
 |---|---|---|
-| V1 | Le fichier d'entrée respecte le schéma (§1.1), `ref` épinglée sur un SHA existant. | `E_MISSING_FIELD`, `E_UNKNOWN_FIELD`, `E_INVALID_VALUE`, `E_INVALID_REF`, `E_REF_NOT_PINNED`, `E_REF_UNRESOLVABLE` |
-| V2 | Le manifeste `typika.toml` est présent à la ref et valide (schéma partagé `manifest`). | codes `manifeste` de [manifest §11](manifest.md) |
-| V3 | `name` unique ; nom de fichier = `name`. | `E_NAME_TAKEN`, `E_ENTRY_NAME_MISMATCH` |
-| V4 | Licence présente et approuvée OSI ; `official` ⇒ MIT-0, hébergé sous `typika-app/*`, et rangé dans `templates/official/`. | `E_LICENSE_NOT_OSI`, `E_LICENSE_NOT_MIT0`, `E_CATEGORY_MISMATCH`, `E_INVALID_VALUE` |
-| V5 | Toutes les refs internes (`base`, `variants`, `parent`) existent et sont elles-mêmes au registre ou dans la même PR. | `E_REF_UNRESOLVABLE`, `E_BASE_MISMATCH`, `E_VARIANT_LANGUAGE_MISMATCH` |
-| V6 | Les fichiers référencés existent : `runtime.entry`, étapes de tour, ancres `file#Lx-Ly` dans les bornes du fichier. Un tour officiel commence par `overview` et finit par `trade-offs` ([manifest §5.3](manifest.md)). | codes `workspace` de [manifest §11](manifest.md), `E_TOUR_REQUIRED_STEP` |
-| V7 | Topics connus de `vocabulary.toml` (`<category>/<slug>`) ; facettes valides. | `E_INVALID_VALUE` |
-| V8 | Run de santé complet (§4) en état `healthy`. Un template ne peut pas entrer en `degraded` ou `broken`. | — |
-| V9 | Exercices : pour `fix`, les tests listés échouent à l'état initial et tout le reste passe ; pour `refactor`, les tests de l'exigence échouent et passent sur la solution fournie. Un principe ou un design pattern a au moins un exercice `refactor` (§2.3). | `E_EXERCISE_START_STATE`, `E_EXERCISE_SOLUTION_FAILS`, `E_REFACTOR_EXERCISE_MISSING` |
-| V10 | Taille totale du template sous la limite de [security](security.md). Pas de binaire hors liste blanche. | `E_SIZE` |
-| V11 | Un template Go n'importe que la stdlib embarquée par le runtime `go` ([runtimes §6.3](runtimes.md)). | `E_GO_IMPORT_UNAVAILABLE` |
+| V1 | The entry file follows the schema (§1.1), `ref` pinned to an existing SHA. | `E_MISSING_FIELD`, `E_UNKNOWN_FIELD`, `E_INVALID_VALUE`, `E_INVALID_REF`, `E_REF_NOT_PINNED`, `E_REF_UNRESOLVABLE` |
+| V2 | The `typika.toml` manifest is present at the ref and valid (shared `manifest` schema). | Manifest-level codes of [manifest §11](manifest.md) |
+| V3 | Unique `name`; file name = `name`. | `E_NAME_TAKEN`, `E_ENTRY_NAME_MISMATCH` |
+| V4 | License present and OSI-approved; `official` ⇒ MIT-0, hosted under `typika-app/*`, and placed in `templates/official/`. | `E_LICENSE_NOT_OSI`, `E_LICENSE_NOT_MIT0`, `E_CATEGORY_MISMATCH`, `E_INVALID_VALUE` |
+| V5 | All internal refs (`base`, `variants`, `parent`) exist and are themselves in the registry or in the same PR. | `E_REF_UNRESOLVABLE`, `E_BASE_MISMATCH`, `E_VARIANT_LANGUAGE_MISMATCH` |
+| V6 | The referenced files exist: `runtime.entry`, tour steps, `file#Lx-Ly` anchors within the bounds of the file. An official tour starts with `overview` and ends with `trade-offs` ([manifest §5.3](manifest.md)). | `workspace` codes of [manifest §11](manifest.md), `E_TOUR_REQUIRED_STEP` |
+| V7 | Topics known in `vocabulary.toml` (`<category>/<slug>`); valid facets. | `E_INVALID_VALUE` |
+| V8 | Full health run (§4) in `healthy` state. A template cannot enter as `degraded` or `broken`. | — |
+| V9 | Exercises: for `fix`, the listed tests fail in the initial state and everything else passes; for `refactor`, the requirement's tests fail and pass on the provided solution. A principle or a design pattern has at least one `refactor` exercise (§2.3). | `E_EXERCISE_START_STATE`, `E_EXERCISE_SOLUTION_FAILS`, `E_REFACTOR_EXERCISE_MISSING` |
+| V10 | Total size of the template under the limit of [security](security.md). No binary outside the allowlist. | `E_SIZE` |
+| V11 | A Go template imports only the stdlib embedded by the `go` runtime ([runtimes §6.3](runtimes.md)). | `E_GO_IMPORT_UNAVAILABLE` |
 
-`packages/registry-tools` porte ces vérifications : `registry-tools build <registre> --out <index.json>` les exécute,
-puis écrit l'index. Elle lit chaque template à son SHA épinglé. Tant que `typika-app/templates` n'existe pas (lot 7 du M3),
-le dossier `registry/` du monorepo tient lieu de registre, et `github:typika-app/templates/<chemin>@<sha>` se lit dans le
-dossier `templates/` du monorepo, à ce commit. `--checkout <owner>/<repo>=<dossier>` lit à la place un dépôt dans
-un clone local, depuis sa racine : c'est ainsi que la CI de `typika-app/registry` lira `typika-app/templates`. V8 dépend du run de santé (§4), que `registry-tools health` mène. Comme `template-check`, `registry-tools` exécute
-les exercices Go et applique V11. Il exécute les exercices Kotlin (V9) quand `KOTLIN_COMPILER_URL` désigne un service
-de compilation, et signale sinon qu'il ne l'a pas fait ; le build de l'app s'en passe. Avec ce service,
-`registry-tools build` écrit aussi les artefacts précompilés des templates Kotlin et de l'état de départ de leurs
-exercices dans `artifacts/kotlin/`
-([runtimes §6.4](./runtimes.md)) ; sans lui, il signale ceux qui manquent ou sont périmés. `registry-tools health` lit
-`/config.json` de l'instance visée et ne sonde Kotlin que si elle a un compilateur. `registry-tools mirror <index.json> --out <dossier>` écrit les fichiers de chaque entrée à sa ref
-épinglée, au format de jsDelivr ([0022](../decisions/0022-template-files-source.md)) : c'est la source des fichiers
-quand l'app sert son propre registre.
+`packages/registry-tools` carries these checks: `registry-tools build <registry> --out <index.json>` runs them,
+then writes the index. It reads each template at its pinned SHA. As long as `typika-app/templates` does not exist
+(slice 7 of M3), the monorepo's `registry/` folder stands in for the registry, and
+`github:typika-app/templates/<path>@<sha>` is read from the monorepo's `templates/` folder, at that commit.
+`--checkout <owner>/<repo>=<dir>` instead reads a repository from a local clone, from its root: this is how the CI
+of `typika-app/registry` will read `typika-app/templates`. V8 depends on the health run (§4), which
+`registry-tools health` carries out. Like `template-check`, `registry-tools` runs
+the Go exercises and applies V11. It runs the Kotlin exercises (V9) when `KOTLIN_COMPILER_URL` points to a compilation
+service, and otherwise reports that it did not; the app build does without it. With this service,
+`registry-tools build` also writes the precompiled artifacts of the Kotlin templates and of the start state of their
+exercises into `artifacts/kotlin/`
+([runtimes §6.4](./runtimes.md)); without it, it reports those that are missing or stale. `registry-tools health` reads
+`/config.json` of the target instance and probes Kotlin only if it has a compiler.
+`registry-tools mirror <index.json> --out <dir>` writes the files of each entry at its pinned
+ref, in jsDelivr's format ([0022](../decisions/0022-template-files-source.md)): this is the source of the files
+when the app serves its own registry.
 
-### 2.3 Revue humaine — critères d'acceptation
+### 2.3 Human review — acceptance criteria
 
-La revue juge la valeur pédagogique, pas seulement que ça tourne.
+The review judges the educational value, not only that it runs.
 
-- **Un concept, bien expliqué.** Le template enseigne ce que ses topics annoncent, sans code hors sujet.
-- **Base pertinente** (principes et patterns) : la base montre le problème de façon crédible, le diff est lisible.
-- **Tour** : au moins 3 étapes, ancrées sur le code, en anglais, sans copier le code dans le texte.
-- **Au moins un exercice `refactor`** pour les catégories principe et design pattern.
-- **Idiomatique** dans son langage ; une variante n'est pas une traduction littérale de TS.
-- **Alignement** : une variante reprend les ids d'étapes du template TS de référence pour la comparaison.
-- **Pas de doublon** avec un template existant ; sinon proposer une amélioration de l'existant.
+- **One concept, well explained.** The template teaches what its topics announce, without off-topic code.
+- **Relevant base** (principles and patterns): the base shows the problem credibly, the diff is readable.
+- **Tour**: at least 3 steps, anchored on the code, in English, without copying the code into the text.
+- **At least one `refactor` exercise** for the principle and design pattern categories.
+- **Idiomatic** in its language; a variant is not a literal translation of TS.
+- **Alignment**: a variant reuses the step ids of the reference TS template for comparison.
+- **No duplicate** of an existing template; otherwise propose an improvement of the existing one.
 
-Délai de revue visé : non engageant. Une PR sans activité de l'auteur pendant 30 jours est fermée.
+Target review time: non-binding. A PR with no activity from the author for 30 days is closed.
 
-### 2.4 Mettre à jour un template
+### 2.4 Updating a template
 
-Une PR qui ne modifie que `ref` (nouveau SHA). Revue allégée : validations automatiques + 1 approbation, ou
-auto-merge pour les `official` si seul le `ref` change, que la PR vient de l'automatisation de l'équipe (§4.4) et que
-V1-V10 passent.
+A PR that changes only `ref` (new SHA). Lighter review: automatic validations + 1 approval, or
+auto-merge for `official` templates if only the `ref` changes, the PR comes from the team's automation (§4.4) and
+V1-V10 pass.
 
 ## 3. `index.json`
 
-Généré par `build-index.yml` à chaque merge et après chaque run de santé. Publié comme asset statique versionné avec
-l'app, et sous une URL stable pour les instances auto-hébergées. L'app ne lit jamais le registre directement. Les
-artefacts Kotlin sont publiés avec lui, dans `artifacts/kotlin/` à côté de `index.json` : l'app les y cherche
+Generated by `build-index.yml` on each merge and after each health run. Published as a static asset versioned with
+the app, and under a stable URL for self-hosted instances. The app never reads the registry directly. The
+Kotlin artifacts are published with it, in `artifacts/kotlin/` next to `index.json`: the app looks for them there
 ([runtimes §6.4](./runtimes.md)).
 
-### 3.1 Schéma
+### 3.1 Schema
 
 ```jsonc
 {
@@ -214,109 +217,109 @@ artefacts Kotlin sont publiés avec lui, dans `artifacts/kotlin/` à côté de `
 }
 ```
 
-Règles :
+Rules:
 
-- Les `variants` de l'index sont résolues en **noms** de templates du registre, pas en refs ; `base` est résolue en
-  ref épinglée de l'entrée de la base.
-- `manifest.role` est repris pour que le hub masque les bases. `facets.framework` est un tableau, comme dans le
-  manifeste.
-- `health` vaut `null` tant que la CI de santé n'a pas tourné sur le template.
-- `schema/index.schema.json` est généré depuis le schéma Effect de l'index (`registry-tools schema`).
-- `search.text` réunit, en minuscules et sans doublon, les mots du nom, du titre, du résumé, des `keywords`, des
-  libellés de topic, des titres d'étapes du tour et des titres d'exercices.
-- Le contenu des fichiers (code, tours) n'est pas dans l'index : l'app le charge à l'ouverture depuis la ref épinglée.
-- L'index ne contient que les métadonnées nécessaires au hub et à la recherche. Cible : < 500 Ko compressé.
-- `schema` est versionné ; l'app refuse un index de version majeure inconnue et affiche un message.
+- The `variants` of the index are resolved to registry template **names**, not to refs; `base` is resolved to the
+  pinned ref of the base's entry.
+- `manifest.role` is carried over so that the hub hides the bases. `facets.framework` is an array, as in the
+  manifest.
+- `health` is `null` as long as the health CI has not run on the template.
+- `schema/index.schema.json` is generated from the Effect schema of the index (`registry-tools schema`).
+- `search.text` gathers, in lowercase and without duplicates, the words of the name, the title, the summary, the
+  `keywords`, the topic labels, the tour step titles and the exercise titles.
+- The content of the files (code, tours) is not in the index: the app loads it on opening from the pinned ref.
+- The index contains only the metadata needed by the hub and search. Target: < 500 KB compressed.
+- `schema` is versioned; the app rejects an index with an unknown major version and shows a message.
 
-## 4. CI de santé
+## 4. Health CI
 
-### 4.1 Fréquence
+### 4.1 Frequency
 
-- Hebdomadaire sur tout le registre.
-- À chaque PR qui ajoute ou modifie une entrée (V8).
-- À la demande d'un mainteneur (`workflow_dispatch` sur un nom).
+- Weekly on the whole registry.
+- On each PR that adds or changes an entry (V8).
+- On request from a maintainer (`workflow_dispatch` on a name).
 
-### 4.2 Étapes par template
+### 4.2 Steps per template
 
-1. **Résolution** : télécharger la ref, valider le manifeste.
-2. **Boot** : démarrer le runtime déclaré dans le même environnement que l'app (navigateur headless piloté par
-   Playwright), lancer `commands.start` avec un timeout.
-3. **Tests** : lancer `commands.test`, collecter les événements normalisés (voir [runtimes](runtimes.md)).
-4. **Exercices** : rejouer V9 pour chaque exercice.
-5. **Dépendances** : détecter les dépendances obsolètes ou vulnérables (selon l'outillage du langage).
-6. **Écriture** : `health/<name>.json`, puis régénération de l'index.
+1. **Resolution**: download the ref, validate the manifest.
+2. **Boot**: start the declared runtime in the same environment as the app (headless browser driven by
+   Playwright), run `commands.start` with a timeout.
+3. **Tests**: run `commands.test`, collect the normalized events (see [runtimes](runtimes.md)).
+4. **Exercises**: replay V9 for each exercise.
+5. **Dependencies**: detect outdated or vulnerable dependencies (depending on the language's tooling).
+6. **Writing**: `health/<name>.json`, then regeneration of the index.
 
-### 4.3 Calcul de l'état
+### 4.3 Computing the state
 
-| État | Condition |
+| State | Condition |
 |---|---|
-| `healthy` | Boot, tests et exercices passent ; pas d'alerte de dépendance. |
-| `degraded` | Tout passe, mais avertissements : dépendance obsolète ou vulnérable, temps de boot au-delà du seuil, warnings du compilateur. |
-| `broken` | Échec au boot, aux tests ou aux exercices, ou ref introuvable. |
-| `deprecated` | `broken` sans interruption depuis 90 jours, ou décision de l'équipe (§5). |
+| `healthy` | Boot, tests and exercises pass; no dependency alert. |
+| `degraded` | Everything passes, but with warnings: outdated or vulnerable dependency, boot time over the threshold, compiler warnings. |
+| `broken` | Failure at boot, in the tests or in the exercises, or ref not found. |
+| `deprecated` | `broken` without interruption for 90 days, or team decision (§5). |
 
-- Un échec isolé est relancé une fois avant de passer `broken`, pour absorber les erreurs réseau.
-- `brokenSince` est conservé tant que l'état reste `broken` ; il repart à zéro dès un run `healthy` ou `degraded`.
-- Un template `deprecated` qui redevient sain via une nouvelle ref repasse `healthy` après revue.
+- An isolated failure is retried once before switching to `broken`, to absorb network errors.
+- `brokenSince` is kept as long as the state stays `broken`; it resets as soon as a run is `healthy` or `degraded`.
+- A `deprecated` template that becomes healthy again through a new ref goes back to `healthy` after review.
 
-`registry-tools health <registre> --app <url> [--only <noms>] [--run-url <url>]` mène ce run sur une instance de
-l'app qui sert les templates à leur ref épinglée ([0025](../decisions/0025-health-run.md)). Elle écrit
-`health/<name>.json`, que `registry-tools build` recopie dans l'index. Les templates dont l'app n'exécute pas encore
-le runtime (Go, Kotlin) sont sautés et gardent `health: null`. Le contrôle des dépendances (étape 5) vaut `skip` pour
-l'instant, et un boot de plus de 20 s rend le template `degraded`.
+`registry-tools health <registry> --app <url> [--only <names>] [--run-url <url>]` carries out this run on an instance
+of the app that serves the templates at their pinned ref ([0025](../decisions/0025-health-run.md)). It writes
+`health/<name>.json`, which `registry-tools build` copies into the index. Templates whose runtime the app does not run
+yet (Go, Kotlin) are skipped and keep `health: null`. The dependency check (step 5) is `skip` for
+now, and a boot of more than 20 s makes the template `degraded`.
 
 ### 4.4 Renovate
 
-- Activé sur tous les dépôts `typika-app/*`.
-- Les PR Renovate sur un dépôt de template déclenchent les tests du template ; une fois mergées, l'automatisation de
-  l'équipe ouvre la PR de mise à jour de `ref` dans le registre (§2.4).
-- Les templates `community` sont libres de l'activer ; le guide d'auteur fournit une configuration.
+- Enabled on all `typika-app/*` repositories.
+- Renovate PRs on a template repository trigger the template's tests; once merged, the team's automation
+  opens the `ref` update PR in the registry (§2.4).
+- `community` templates are free to enable it; the author guide provides a configuration.
 
 ### 4.5 Notifications
 
-| Événement | Action |
+| Event | Action |
 |---|---|
-| Passage à `degraded` | Issue ouverte sur le registre, mainteneurs mentionnés. |
-| Passage à `broken` | Issue (ou mise à jour de l'issue existante), mainteneurs mentionnés, échéance de dépréciation indiquée. |
-| J+60 en `broken` | Rappel sur l'issue. |
-| Passage à `deprecated` | Commentaire de clôture, template masqué par défaut. |
-| Retour à `healthy` | Issue fermée automatiquement. |
+| Switch to `degraded` | Issue opened on the registry, maintainers mentioned. |
+| Switch to `broken` | Issue (or update of the existing issue), maintainers mentioned, deprecation deadline stated. |
+| D+60 in `broken` | Reminder on the issue. |
+| Switch to `deprecated` | Closing comment, template hidden by default. |
+| Back to `healthy` | Issue closed automatically. |
 
-## 5. Dépréciation et retrait
+## 5. Deprecation and removal
 
-- **Dépréciation** : le template reste dans l'index avec `status: deprecated`. Il est masqué de l'accueil et de la
-  liste par défaut, accessible par URL directe avec un bandeau, et toujours exportable.
-- **Retrait** : suppression du fichier d'entrée, par PR. Motifs : licence invalide, contenu malveillant, demande de
-  l'auteur, `deprecated` depuis 180 jours sans mainteneur actif. Les projets locaux et les liens de partage existants
-  continuent de fonctionner : ils embarquent leurs fichiers.
-- **Retrait d'urgence** (contenu malveillant, violation de licence) : un membre de l'équipe peut merger sans délai ;
-  l'index est régénéré et redéployé immédiatement.
+- **Deprecation**: the template stays in the index with `status: deprecated`. It is hidden from the home page and the
+  list by default, reachable by direct URL with a banner, and still exportable.
+- **Removal**: deletion of the entry file, by PR. Grounds: invalid license, malicious content, request from
+  the author, `deprecated` for 180 days with no active maintainer. Existing local projects and share links
+  keep working: they embed their files.
+- **Emergency removal** (malicious content, license violation): a team member can merge without delay;
+  the index is regenerated and redeployed immediately.
 
-## 6. Versionnement
+## 6. Versioning
 
-- Une entrée pointe **toujours** sur un SHA de commit. Le contenu servi par le hub est donc immuable entre deux PR du
-  registre : un force-push ou une suppression de branche côté auteur ne change rien.
-- Le manifeste peut référencer `base` et `variants` avec n'importe quelle ref ; à l'indexation, elles sont résolues vers
-  les entrées du registre.
-- Un projet local créé depuis un template enregistre la ref épinglée d'origine : le diff « mes modifications » et le
-  reset restent possibles même après une mise à jour du template.
-- Si le SHA devient introuvable (dépôt supprimé), le template passe `broken` au run suivant.
+- An entry **always** points to a commit SHA. The content served by the hub is therefore immutable between two
+  registry PRs: a force-push or a branch deletion on the author's side changes nothing.
+- The manifest can reference `base` and `variants` with any ref; at indexing time, they are resolved to
+  the registry entries.
+- A local project created from a template records the original pinned ref: the "my changes" diff and the
+  reset stay possible even after an update of the template.
+- If the SHA can no longer be found (repository deleted), the template switches to `broken` at the next run.
 
-## 7. Remix et parent
+## 7. Remix and parent
 
-- Remixer un template dans l'app crée un projet local (voir [sharing-and-cli](sharing-and-cli.md)) dont la métadonnée
-  `parent` est la ref épinglée d'origine.
-- Si l'utilisateur pousse ce remix sur GitHub, le `typika.toml` généré conserve `parent`.
-- Si ce remix est proposé au registre, l'entrée reprend `parent`. La page template affiche alors le lien vers le parent
-  et un bouton « diff avec le parent ».
-- `parent` est informatif : il n'impose rien sur la licence au-delà de celle du parent, que l'auteur doit respecter.
+- Remixing a template in the app creates a local project (see [sharing-and-cli](sharing-and-cli.md)) whose
+  `parent` metadata is the original pinned ref.
+- If the user pushes this remix to GitHub, the generated `typika.toml` keeps `parent`.
+- If this remix is submitted to the registry, the entry carries over `parent`. The template page then shows the link to
+  the parent and a "diff with parent" button.
+- `parent` is informational: it imposes nothing on the license beyond the parent's, which the author must respect.
 
-## 8. Gouvernance
+## 8. Governance
 
-- **Équipe de curation** déclarée dans `maintainers.toml` et `CODEOWNERS`. Rôles : `curator` (revue, merge),
-  `admin` (configuration, retraits d'urgence).
-- Décisions sur le vocabulaire de topics, les règles d'acceptation et les catégories : par PR sur le registre, avec
-  discussion publique, consensus des curateurs. Les décisions structurantes sont consignées en ADR
+- **Curation team** declared in `maintainers.toml` and `CODEOWNERS`. Roles: `curator` (review, merge),
+  `admin` (configuration, emergency removals).
+- Decisions on the topic vocabulary, the acceptance rules and the categories: by PR on the registry, with
+  public discussion, by consensus of the curators. Structuring decisions are recorded as ADRs
   ([decisions](../decisions/)).
-- Un contributeur `community` régulier peut devenir curateur sur proposition d'un curateur existant.
-- Le registre a sa propre licence (CC0 pour les fichiers d'entrée et l'index) ; chaque template garde la sienne.
+- A regular `community` contributor can become a curator on the proposal of an existing curator.
+- The registry has its own license (CC0 for the entry files and the index); each template keeps its own.

@@ -1,102 +1,99 @@
-# 0019 — Runtime Kotlin : un service de compilation maison, cible JS
+# 0019 — Kotlin runtime: an in-house compilation service, JS target
 
-**Statut** : Acceptée · 2026-10-08 · issue du spike [R8](../spikes.md) · remplace [0002](0002-kotlin-compilation-service.md)
+**Status**: Accepted · 2026-10-08 · outcome of spike [R8](../spikes.md) · supersedes [0002](0002-kotlin-compilation-service.md)
 
-## Contexte
+## Context
 
-Le runtime `kotlin` doit compiler les variantes Kotlin du catalogue, puis exécuter le programme et ses tests
-`kotlin.test` dans le navigateur ([runtimes](../specs/runtimes.md)). L'ADR 0002 prévoyait un service bâti sur
-`kotlin-compiler-server` (JetBrains). Le spike R8 a écrit `strategy-kotlin` (16 fichiers, 11 tests, deux exercices) et
-l'a compilé avec Kotlin 2.4.21 de trois façons : le CLI `kotlinc-js` / `kotlinc-wasm`, `kotlin-compiler-server` (master
-du 2026-09-29, Kotlin 2.4.21-RC) en conteneur, et un service minimal d'une centaine de lignes qui appelle le compilateur en
-processus. Les artefacts ont été exécutés dans un worker sous Chromium 156 et WebKit 27.2 (Playwright).
+The `kotlin` runtime must compile the Kotlin variants of the catalog, then run the program and its `kotlin.test` tests
+in the browser ([runtimes](../specs/runtimes.md)). ADR 0002 planned a service built on `kotlin-compiler-server`
+(JetBrains). Spike R8 wrote `strategy-kotlin` (16 files, 11 tests, two exercises) and compiled it with Kotlin 2.4.21
+in three ways: the `kotlinc-js` / `kotlinc-wasm` CLI, `kotlin-compiler-server` (master of 2026-09-29, Kotlin
+2.4.21-RC) in a container, and a minimal service of about a hundred lines that calls the compiler in process. The
+artifacts were run in a worker under Chromium 156 and WebKit 27.2 (Playwright).
 
-**`kotlin.test` hors JVM fonctionne.** Le compilateur génère l'enregistrement des tests : au chargement (JS) ou à
-l'appel de `startUnitTests()` (Wasm), chaque classe de test devient une suite et chaque `@Test` un test, passés à
-l'adaptateur de `kotlin.test`. Un harness d'une quarantaine de lignes fournit `describe` / `it` (adaptateur
-« Jasmine »), exécute les tests et émet des événements. Résultat sur les quatre états d'exercice, en JS comme en Wasm,
-dans les deux navigateurs : exactement les mêmes verts et rouges que `gradle test` sur JVM, avec les mêmes messages
-(`Expected <12.90 EUR>, actual <0.00 EUR>.`). En JS, la source map situe l'échec sur la ligne exacte du test
-(`ExpressShippingTest.kt:13:9`). Exécution : 5 à 25 ms.
+**`kotlin.test` outside the JVM works.** The compiler generates the test registration: at load (JS) or on the call to
+`startUnitTests()` (Wasm), each test class becomes a suite and each `@Test` a test, passed to the `kotlin.test`
+adapter. A harness of about forty lines provides `describe` / `it` ("Jasmine" adapter), runs the tests and emits
+events. Result on the four exercise states, in JS as in Wasm, in both browsers: exactly the same greens and reds as
+`gradle test` on the JVM, with the same messages (`Expected <12.90 EUR>, actual <0.00 EUR>.`). In JS, the source map
+places the failure on the exact line of the test (`ExpressShippingTest.kt:13:9`). Run: 5 to 25 ms.
 
-**`kotlin-compiler-server` ne convient pas tel quel** :
+**`kotlin-compiler-server` does not fit as is**:
 
-- Son image ne démarre pas sur `master` : le Dockerfile omet le loader Spring Boot (`NestedFileSystemProvider not
-  found`). Corrigé en une ligne pour le spike.
-- Ses bibliothèques JS et Wasm ne contiennent que la stdlib : sans ajouter `kotlin-test-js` et `kotlin-test-wasm-js`,
-  aucun test ne compile. Son endpoint `/test` exécute JUnit **sur le serveur**, à l'opposé de [0001](0001-browser-first.md).
-- Il expose aussi `/run` (exécution JVM), la complétion et Compose : de la surface d'attaque pour des fonctions que
-  Typika n'utilise pas. Image : 1,73 Go.
-- Sa sortie est taillée pour play.kotlinlang.org : JS en UMD avec des lignes injectées à position fixe, Wasm en base64
-  dans le JS. Les chemins de fichiers avec `/` font échouer la compilation.
+- Its image does not start on `master`: the Dockerfile omits the Spring Boot loader (`NestedFileSystemProvider not
+  found`). Fixed in one line for the spike.
+- Its JS and Wasm libraries only contain the stdlib: without adding `kotlin-test-js` and `kotlin-test-wasm-js`, no
+  test compiles. Its `/test` endpoint runs JUnit **on the server**, the opposite of [0001](0001-browser-first.md).
+- It also exposes `/run` (JVM execution), completion and Compose: attack surface for features Typika does not use.
+  Image: 1.73 GB.
+- Its output is cut for play.kotlinlang.org: JS in UMD with lines injected at a fixed position, Wasm in base64 inside
+  the JS. File paths with `/` make the compilation fail.
 
-**Le service minimal** (JDK `HttpServer`, `kotlin-compiler-embeddable`, `kotlinx-serialization`) fait la même
-compilation en deux phases (klib, puis JS ou Wasm avec DCE), avec les chemins du projet, en module ES et source map,
-sans appeler `main` en mode test. Image : 628 Mo, démarrage en 0,6 s, 71 à 95 Mio au repos.
+**The minimal service** (JDK `HttpServer`, `kotlin-compiler-embeddable`, `kotlinx-serialization`) does the same
+two-phase compilation (klib, then JS or Wasm with DCE), with the project paths, as an ES module with a source map,
+without calling `main` in test mode. Image: 628 MB, startup in 0.6 s, 71 to 95 MiB at rest.
 
-Mesures sur `strategy-kotlin` (sources et tests), conteneur plafonné, hôte Apple M4 Pro. Un vCPU de VPS est plus lent :
-compter environ 1,5 à 2 fois ces latences.
+Measurements on `strategy-kotlin` (sources and tests), capped container, Apple M4 Pro host. A VPS vCPU is slower:
+count about 1.5 to 2 times these latencies.
 
-| Conteneur | 1ʳᵉ compilation | À chaud, seul | Débit saturé (c = 8) | p95 à c = 8 | Mémoire max |
+| Container | 1st compilation | Warm, alone | Saturated throughput (c = 8) | p95 at c = 8 | Max memory |
 |---|---|---|---|---|---|
-| Service minimal, 2 vCPU, 1 Gio | 5,9 s | 0,9–1,3 s | 2,2 compil./s | 5,2 s | 656 Mio |
-| Service minimal, 4 vCPU, 2 Gio | 5,0 s | 0,8–1,2 s | 4,4 compil./s | 2,2 s | 1 021 Mio |
-| Service minimal, 1 vCPU, 1 Gio | 10,8 s | 1,9–2,4 s | 1,3 compil./s | 8,6 s | 562 Mio |
-| Service minimal, 2 vCPU, 512 Mio | 5,7 s | 0,9–1,3 s | 1,0 compil./s | 12,3 s | 512 Mio (saturée) |
-| `kotlin-compiler-server`, 2 vCPU, 1 Gio | 6,2 s | 1,0–1,7 s | 1,75 compil./s | 10,0 s | 644 Mio |
+| Minimal service, 2 vCPU, 1 GiB | 5.9 s | 0.9–1.3 s | 2.2 compil./s | 5.2 s | 656 MiB |
+| Minimal service, 4 vCPU, 2 GiB | 5.0 s | 0.8–1.2 s | 4.4 compil./s | 2.2 s | 1,021 MiB |
+| Minimal service, 1 vCPU, 1 GiB | 10.8 s | 1.9–2.4 s | 1.3 compil./s | 8.6 s | 562 MiB |
+| Minimal service, 2 vCPU, 512 MiB | 5.7 s | 0.9–1.3 s | 1.0 compil./s | 12.3 s | 512 MiB (saturated) |
+| `kotlin-compiler-server`, 2 vCPU, 1 GiB | 6.2 s | 1.0–1.7 s | 1.75 compil./s | 10.0 s | 644 MiB |
 
-- Wasm compile au même prix que JS (0,9–1,4 s à chaud). Une erreur de compilation répond plus vite (0,4 s à chaud) :
-  la deuxième phase n'a pas lieu.
-- Artefact de `strategy-kotlin` en brotli : JS 20 Ko (+ 11 Ko de source map), Wasm 65 Ko.
-- Les diagnostics sortent au format `fichier:ligne:colonne`, relatifs au projet. Une API `java.*` est refusée à la
-  compilation (`unresolved reference 'java'`).
+- Wasm compiles at the same cost as JS (0.9–1.4 s warm). A compilation error responds faster (0.4 s warm): the
+  second phase does not take place.
+- `strategy-kotlin` artifact in brotli: JS 20 KB (+ 11 KB of source map), Wasm 65 KB.
+- Diagnostics come out in the `file:line:column` format, relative to the project. A `java.*` API is refused at
+  compile time (`unresolved reference 'java'`).
 
-**CheerpJ** (`kotlinc` dans une JVM WASM) est écarté sans prototype : l'édition Community interdit l'auto-hébergement et
-la redistribution, ce qui exclut les instances tierces, comme WebContainers dans R1. Le compilateur seul pèse 55 Mo en
-brotli, sans la JVM.
+**CheerpJ** (`kotlinc` in a WASM JVM) is rejected without a prototype: the Community edition forbids self-hosting and
+redistribution, which rules out third-party instances, like WebContainers in R1. The compiler alone weighs 55 MB in
+brotli, without the JVM.
 
-## Décision
+## Decision
 
-- **Un service de compilation maison**, `services/kotlin-compiler`, sur `kotlin-compiler-embeddable` (Apache 2.0). Pas
-  de `kotlin-compiler-server`. Le service ne fait que compiler : aucun endpoint n'exécute de code.
-- **Cible JS uniquement en V1.** Elle est trois fois plus légère que Wasm, a des source maps qui situent les échecs, et
-  ne demande ni Wasm GC ni exception handling au navigateur. Le harness gère déjà Wasm : l'ajouter plus tard ne
-  touche ni les templates ni le protocole.
-- **La cible n'est pas un choix du template.** Le champ `runtime.target` sort du manifeste : le code commun des
-  templates compile pour les deux cibles, c'est le runtime qui choisit.
-- **Bibliothèques fermées** : stdlib et `kotlin.test` de la version du compilateur, rien d'autre. Une version de
-  Kotlin par version du service.
-- **Mode test** : les sources et les tests sont compilés ensemble, `main` n'est pas appelé. Le harness du runtime
-  fournit l'adaptateur `kotlin.test` et traduit les résultats en `TestEvent`.
-- **Le runtime Kotlin est autorisé en embed.** Il exécute un module JS dans un worker, sans `SharedArrayBuffer` : les
-  mesures ci-dessus ont été faites dans une page sans COOP ni COEP. Comme pour Go, cela tranche la question que l'ADR
-  [0016](0016-isolation-and-embed.md) laissait ouverte.
-- **Dimensionnement de référence** : 2 vCPU, 1 Gio, 2 compilations simultanées, une compilation de chauffe au
-  démarrage. En dessous de 1 Gio, le ramasse-miettes s'effondre dès deux compilations simultanées.
+- **An in-house compilation service**, `services/kotlin-compiler`, on `kotlin-compiler-embeddable` (Apache 2.0). No
+  `kotlin-compiler-server`. The service only compiles: no endpoint runs code.
+- **JS target only in V1.** It is three times lighter than Wasm, has source maps that place failures, and requires
+  neither Wasm GC nor exception handling from the browser. The harness already handles Wasm: adding it later touches
+  neither the templates nor the protocol.
+- **The target is not a template choice.** The `runtime.target` field leaves the manifest: the common code of the
+  templates compiles for both targets, the runtime chooses.
+- **Closed libraries**: stdlib and `kotlin.test` of the compiler version, nothing else. One Kotlin version per service
+  version.
+- **Test mode**: sources and tests are compiled together, `main` is not called. The runtime harness provides the
+  `kotlin.test` adapter and translates the results into `TestEvent`.
+- **The Kotlin runtime is allowed in an embed.** It runs a JS module in a worker, without `SharedArrayBuffer`: the
+  measurements above were made in a page without COOP or COEP. As for Go, this settles the question that ADR
+  [0016](0016-isolation-and-embed.md) left open.
+- **Reference sizing**: 2 vCPU, 1 GiB, 2 concurrent compilations, a warm-up compilation at startup. Below 1 GiB, the
+  garbage collector collapses as soon as two compilations run at once.
 
-## Conséquences
+## Consequences
 
-- Le principe [0001](0001-browser-first.md) garde une seule exception : la compilation Kotlin. Le code compilé ne
-  s'exécute que dans le navigateur.
-- Un service à maintenir, mais petit : le compilateur est une dépendance, le reste tient en un fichier. Monter de
-  version de Kotlin, c'est reconstruire l'image et recompiler les artefacts précompilés du registre
-  (`pnpm registry:build --force`).
-- La première compilation après démarrage coûte 5 à 11 s (JIT de la JVM). La compilation de chauffe la fait avant la
-  première requête.
-- Un « Run » ou un test modifié coûte environ 1 s sur l'instance de référence, 2 à 4 s sous charge. Le cache par hash
-  des sources et les artefacts précompilés du registre ([runtimes](../specs/runtimes.md) §6.4) évitent la plupart des
-  appels.
-- Une compilation ne s'interrompt pas depuis un autre thread de la JVM : le timeout du service (15 s) demande soit un
-  processus de compilation séparé, soit le redémarrage du conteneur. À trancher au M6 avec R9.
-- Templates Kotlin : pas de `java.*`, pas de `kotlinx.coroutines` (hors stdlib), et des noms de tests sans `.`, que la
-  JVM refuse dans les noms de méthodes (voir le [guide d'écriture](../guides/template-authoring.md)).
-- **À vérifier à la main** : Firefox (Playwright n'a pas pu le lancer).
+- The principle of [0001](0001-browser-first.md) keeps a single exception: Kotlin compilation. The compiled code only
+  runs in the browser.
+- A service to maintain, but a small one: the compiler is a dependency, the rest fits in one file. Upgrading Kotlin
+  means rebuilding the image and recompiling the precompiled registry artifacts (`pnpm registry:build --force`).
+- The first compilation after startup costs 5 to 11 s (JVM JIT). The warm-up compilation does it before the first
+  request.
+- A "Run" or a changed test costs about 1 s on the reference instance, 2 to 4 s under load. The cache by source hash
+  and the precompiled registry artifacts ([runtimes](../specs/runtimes.md) §6.4) avoid most calls.
+- A compilation cannot be interrupted from another JVM thread: the service timeout (15 s) requires either a separate
+  compilation process or a restart of the container. To settle in M6 with R9.
+- Kotlin templates: no `java.*`, no `kotlinx.coroutines` (outside the stdlib), and test names without `.`, which the
+  JVM refuses in method names (see the [authoring guide](../guides/template-authoring.md)).
+- **To check by hand**: Firefox (Playwright could not launch it).
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **`kotlin-compiler-server`** : il marche une fois corrigé, mais il apporte l'exécution JVM, Compose et un format de
-  sortie à défaire, pour une image trois fois plus lourde et un débit plus faible.
-- **CheerpJ** : licence incompatible avec l'auto-hébergement, 55 Mo de compilateur.
-- **Cible Wasm par défaut** : aucun gain mesuré sur l'exécution, un artefact trois fois plus lourd, pas de position
-  d'échec sans DWARF, et `main` exécuté au chargement même en mode test.
-- **Retirer Kotlin de la V1** : inutile, les critères du spike sont tenus.
+- **`kotlin-compiler-server`**: it works once fixed, but it brings JVM execution, Compose and an output format to undo,
+  for an image three times heavier and a lower throughput.
+- **CheerpJ**: license incompatible with self-hosting, 55 MB of compiler.
+- **Wasm target by default**: no measured gain on execution, an artifact three times heavier, no failure position
+  without DWARF, and `main` run at load even in test mode.
+- **Removing Kotlin from V1**: unnecessary, the spike criteria are met.

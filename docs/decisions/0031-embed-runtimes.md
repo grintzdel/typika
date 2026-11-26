@@ -1,79 +1,73 @@
-# 0031 — Runtimes en embed : les trois, dans un contexte sécurisé
+# 0031 — Runtimes in the embed: all three, in a secure context
 
-**Statut** : Acceptée · 2026-10-19 · lot 4 du M5 · complète [0016](0016-isolation-and-embed.md),
-[0018](0018-go-runtime.md) et [0019](0019-kotlin-runtime.md)
+**Status**: Accepted · 2026-10-19 · slice 4 of M5 · complements [0016](0016-isolation-and-embed.md),
+[0018](0018-go-runtime.md) and [0019](0019-kotlin-runtime.md)
 
-## Contexte
+## Context
 
-L'embed `/embed/<name>` s'affiche dans la page d'un site tiers, sans isolation cross-origin
-([0016](0016-isolation-and-embed.md)). 0018 et 0019 autorisent Go et Kotlin en embed, puisqu'aucun des deux n'utilise
-`SharedArrayBuffer`. Mais aucun spike n'avait fait tourner ces runtimes dans la vraie chaîne : page hôte, puis page de
-l'app sans COOP ni COEP, puis runtime frame. Le lot 4 doit trancher avant de construire l'embed. Restent deux
-questions ouvertes : ce que coûtent les 12 Mo d'assets Go dans une page de blog, et ce que deviennent les compilations
-Kotlin quand le trafic vient de sites tiers.
+The `/embed/<name>` embed is displayed in a third-party site's page, without cross-origin isolation
+([0016](0016-isolation-and-embed.md)). 0018 and 0019 allow Go and Kotlin in the embed, since neither uses
+`SharedArrayBuffer`. But no spike had run these runtimes in the real chain: host page, then app page without COOP or
+COEP, then runtime frame. Slice 4 must decide before building the embed. Two questions remain open: what the 12 MB of
+Go assets cost in a blog page, and what happens to Kotlin compilations when the traffic comes from third-party sites.
 
-Un spike a monté cette chaîne sur le build de production : app sur `localhost:3100`, runtime sur `127.0.0.1:3100`,
-service Kotlin et registre de test. Chaque page hôte est un site distinct, `blog.localhost` ou `other.localhost`.
-Faute de route `/embed`, la page `/play/<name>` est servie dans l'iframe sans COOP ni COEP, avec
-`frame-ancestors *`. Le spike a tourné dans le Chromium et le WebKit de Playwright.
+A spike set up this chain on the production build: app on `localhost:3100`, runtime on `127.0.0.1:3100`, Kotlin
+service and test registry. Each host page is a distinct site, `blog.localhost` or `other.localhost`. Lacking an
+`/embed` route, the `/play/<name>` page is served in the iframe without COOP or COEP, with `frame-ancestors *`. The
+spike ran in Playwright's Chromium and WebKit.
 
-Résultats, identiques dans les deux moteurs sauf mention contraire :
+Results, identical in both engines unless stated otherwise:
 
-- **Les trois runtimes tournent.** `crossOriginIsolated` est faux dans les trois frames. Les 12 tests de
-  `strategy-go` et les 11 de `strategy-kotlin` passent.
-- **Go garde ses assets par site hôte.** Le premier run télécharge les trois assets, 79,3 Mo bruts, et les range dans
-  le Cache Storage de la runtime frame. Un rechargement sur le même hôte ne télécharge plus rien. Sur un autre site
-  hôte, les trois assets sont téléchargés de nouveau, parce que le navigateur partitionne le stockage par site de
-  premier niveau.
-- **Kotlin tourne sans compiler tant que rien n'est modifié.** Les tests de `strategy-kotlin` passent sur l'artefact
-  précompilé, en 85 à 108 ms, sans aucun appel au relais. Après une modification, un appel à
-  `/api/kotlin/compile` répond `200`, et les tests repassent en 1,9 à 2,4 s. La requête part de la page de l'app :
-  son `Origin` est celui de l'app, et le relais l'accepte ([0029](0029-kotlin-relay-rate-limit.md)).
-- **Une page hôte en `http` casse tout en silence.** Un contexte n'est sécurisé que si tous ses ancêtres le sont.
-  Sous un hôte `http`, l'app et la runtime frame perdent `caches` et `crypto.subtle`, dont dépend le chargeur Go
-  ([0027](0027-go-assets-delivery.md)). Go ne démarre pas, et ses boutons restent sur « Chargement du runtime… ».
-  `browser-js` et Kotlin se disent prêts, mais leurs tests ne rendent jamais de résultat. Aucune erreur n'est
-  affichée.
-- **Artefact du banc local** : sous un hôte tiers, Chromium refuse à l'app l'accès au registre servi sur une adresse
-  loopback (« Local Network Access »). Ce n'est pas le cas en production, où le registre est public. Le spike a
-  désactivé ce contrôle.
+- **All three runtimes run.** `crossOriginIsolated` is false in all three frames. The 12 tests of `strategy-go` and
+  the 11 of `strategy-kotlin` pass.
+- **Go keeps its assets per host site.** The first run downloads the three assets, 79.3 MB raw, and stores them in the
+  runtime frame's Cache Storage. A reload on the same host downloads nothing more. On another host site, the three
+  assets are downloaded again, because the browser partitions storage by top-level site.
+- **Kotlin runs without compiling as long as nothing is modified.** The tests of `strategy-kotlin` pass on the
+  precompiled artifact, in 85 to 108 ms, without any call to the relay. After a change, a call to
+  `/api/kotlin/compile` responds `200`, and the tests pass again in 1.9 to 2.4 s. The request starts from the app
+  page: its `Origin` is the app's, and the relay accepts it ([0029](0029-kotlin-relay-rate-limit.md)).
+- **An `http` host page breaks everything silently.** A context is secure only if all its ancestors are. Under an
+  `http` host, the app and the runtime frame lose `caches` and `crypto.subtle`, which the Go loader depends on
+  ([0027](0027-go-assets-delivery.md)). Go does not start, and its buttons stay on "Loading the runtime…".
+  `browser-js` and Kotlin say they are ready, but their tests never return a result. No error is displayed.
+- **Artifact of the local test bench**: under a third-party host, Chromium denies the app access to the registry
+  served on a loopback address ("Local Network Access"). This is not the case in production, where the registry is
+  public. The spike disabled this check.
 
-## Décision
+## Decision
 
-- **L'embed exécute les trois runtimes de la V1** : `browser-js`, `go` et `kotlin`. La règle de 0016 ne change pas :
-  un runtime qui exigerait l'isolation n'y démarrerait pas, mais aucun runtime de la V1 n'est dans ce cas.
-- **L'embed exige un contexte sécurisé.** Au démarrage, il vérifie `isSecureContext`. S'il est faux, aucun runtime ne
-  démarre : le code reste lisible, et la barre propose « Ouvrir dans Typika », avec la raison (la page hôte n'est pas
-  servie en HTTPS). Cette règle vaut pour tous les runtimes, puisque tous échouent sans rien afficher.
-- **Go ne démarre qu'au clic.** `run=auto` est ignoré pour un template Go. Démarrer tout seul téléchargerait 12 Mo à
-  chaque visiteur d'une page de blog qui contient l'embed, avant même qu'il le voie. Le premier clic affiche la barre
-  de progression du runtime, comme dans la sandbox.
-- **Kotlin passe par le relais existant.** Rien n'est ajouté pour l'embed : même `Origin`, même limite par IP. Le
-  cache des compilations reste en mémoire pendant la session, puisque l'embed n'a aucune persistance locale.
+- **The embed runs the three V1 runtimes**: `browser-js`, `go` and `kotlin`. The rule of 0016 does not change: a
+  runtime that required isolation would not start there, but no V1 runtime is in that case.
+- **The embed requires a secure context.** At startup, it checks `isSecureContext`. If it is false, no runtime starts:
+  the code stays readable, and the bar offers "Open in Typika", with the reason (the host page is not served over
+  HTTPS). This rule applies to all runtimes, since they all fail without displaying anything.
+- **Go starts only on click.** `run=auto` is ignored for a Go template. Starting on its own would download 12 MB for
+  every visitor of a blog page containing the embed, before they even see it. The first click shows the runtime's
+  progress bar, as in the sandbox.
+- **Kotlin goes through the existing relay.** Nothing is added for the embed: same `Origin`, same per-IP limit. The
+  compilation cache stays in memory during the session, since the embed has no local persistence.
 
-## Conséquences
+## Consequences
 
-- Un template Go embarqué coûte 11,9 Mo en brotli au premier run, une fois par site hôte et par version des assets.
-  Chaque site hôte stocke ensuite 79 Mo dans son Cache Storage. Dans ce contexte, le WebKit de Playwright annonce un
-  quota de 2 Gio, alors que [0027](0027-go-assets-delivery.md) en relevait environ 100 Mio pour la frame. Le quota de
-  Safari réel reste à mesurer, comme pour 0016.
-- Un embed Kotlin non modifié ne sollicite jamais le service. Les modifications d'un lecteur comptent dans sa limite
-  par IP, comme dans l'app.
-- Une page hôte en `http` affiche « Ouvrir dans Typika » au lieu de Run et Tests. Les blogs servis en HTTPS ne sont
-  pas concernés.
-- Les E2E du lot 4 servent la page hôte sur un site `*.localhost` : un hôte en `http` sur un autre nom ferait perdre
-  le contexte sécurisé. Sur le build de production, Chromium tourne sans le contrôle « Local Network Access », pour
-  joindre le registre de test. Un cas vérifie qu'un hôte non sécurisé affiche le repli.
-- [security §3.6](../specs/security.md) et [ui §13](../specs/ui.md) reprennent ces règles.
+- An embedded Go template costs 11.9 MB in brotli on the first run, once per host site and per assets version. Each
+  host site then stores 79 MB in its Cache Storage. In this context, Playwright's WebKit reports a 2 GiB quota, while
+  [0027](0027-go-assets-delivery.md) measured about 100 MiB for the frame. Real Safari's quota is still to be
+  measured, as for 0016.
+- An unmodified Kotlin embed never calls the service. A reader's changes count toward their per-IP limit, as in the
+  app.
+- An `http` host page displays "Open in Typika" instead of Run and Tests. Blogs served over HTTPS are not affected.
+- The E2E tests of slice 4 serve the host page on a `*.localhost` site: an `http` host on another name would lose the
+  secure context. On the production build, Chromium runs without the "Local Network Access" check, to reach the test
+  registry. One case checks that an insecure host shows the fallback.
+- [security §3.6](../specs/security.md) and [ui §13](../specs/ui.md) restate these rules.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Embed limité à `browser-js`** : Go et Kotlin tournent, mesures à l'appui. Les renvoyer vers l'app retirerait la
-  moitié du catalogue de l'embed, sans rien gagner en sécurité.
-- **Kotlin en lecture seule dans l'embed** : cela éviterait toute compilation venue de sites tiers. Mais la limite
-  par IP du relais traite déjà ce trafic comme celui de l'app, et un embed où l'on ne peut rien modifier perd son
-  intérêt.
-- **`run=auto` permis pour Go** : 12 Mo téléchargés à l'ouverture de la page, pour des lecteurs qui ne cliqueront pas
-  forcément.
-- **Laisser échouer en `http`** : le lecteur verrait un runtime bloqué ou des tests qui ne finissent jamais, sans
-  explication.
+- **Embed limited to `browser-js`**: Go and Kotlin run, as the measurements show. Sending them to the app would remove
+  half of the catalog from the embed, without any security gain.
+- **Read-only Kotlin in the embed**: this would avoid any compilation coming from third-party sites. But the relay's
+  per-IP limit already treats this traffic like the app's, and an embed where nothing can be modified loses its point.
+- **`run=auto` allowed for Go**: 12 MB downloaded when the page opens, for readers who will not necessarily click.
+- **Letting it fail over `http`**: the reader would see a stuck runtime or tests that never finish, without
+  explanation.

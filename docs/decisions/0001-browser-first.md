@@ -1,26 +1,26 @@
-# 0001 — Exécution dans le navigateur
+# 0001 — Execution in the browser
 
-**Statut** : Acceptée · 2026-10-08
+**Status**: Accepted · 2026-10-08
 
-## Contexte
+## Context
 
-Typika est gratuit et open source. Exécuter le code des utilisateurs côté serveur coûte du compute, attire les abus
-(minage, spam, scans) et impose une modération. C'est le principal risque économique d'un outil gratuit.
+Typika is free and open source. Running users' code on the server side costs compute, attracts abuse (mining, spam,
+scans) and requires moderation. It is the main economic risk of a free tool.
 
-## Décision
+## Decision
 
-Tout le code des templates s'exécute **dans le navigateur** : esbuild-wasm et test runner en worker pour TS / JS,
-runtime WASM pour Go. L'instance publique ne paie aucune exécution.
+All template code runs **in the browser**: esbuild-wasm and test runner in a worker for TS / JS, WASM runtime for Go.
+The public instance pays for no execution.
 
-## Conséquences
+## Consequences
 
-- Coût d'hébergement quasi nul, fonctionnement hors ligne, pas de surface d'abus côté exécution.
-- Runtimes lourds à télécharger (R3) : lazy-load, cache, CDN.
-- Pas de base de données réelle : PGlite et SQLite WASM comme dépendances de template.
-- Les langages sans runtime navigateur demandent soit un service de compilation ([0002](0002-kotlin-compilation-service.md)),
-  soit le runner auto-hébergeable (V2).
+- Near-zero hosting cost, offline operation, no abuse surface on the execution side.
+- Heavy runtimes to download (R3): lazy-load, cache, CDN.
+- No real database: PGlite and SQLite WASM as template dependencies.
+- Languages without a browser runtime require either a compilation service ([0002](0002-kotlin-compilation-service.md)),
+  or the self-hostable runner (V2).
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Exécution serveur (microVMs, conteneurs)** : tous les langages, mais coût et abus incompatibles avec la gratuité.
-- **Hybride avec exécution serveur publique** : même problème, à moindre échelle.
+- **Server execution (microVMs, containers)**: every language, but cost and abuse incompatible with being free.
+- **Hybrid with public server execution**: same problem, on a smaller scale.

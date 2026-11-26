@@ -1,169 +1,169 @@
 # Spikes (M0)
 
-Un spike répond à une question précise par un prototype jetable, dans un temps borné. Il produit une conclusion écrite
-(go / no-go / plan B) et, si une décision est prise, un ADR dans [decisions](decisions/README.md). Le code des spikes
-ne rejoint pas le monorepo.
+A spike answers a precise question with a throwaway prototype, in a bounded time. It produces a written conclusion
+(go / no-go / plan B) and, if a decision is made, an ADR in [decisions](decisions/README.md). The spike code does not
+join the monorepo.
 
-Jeu d'essai commun : le template **Strategy** rédigé au M0 (une dizaine de fichiers, des tests), décliné dans le
-langage du spike.
+Common test set: the **Strategy** template written in M0 (about ten files, with tests), adapted to the language of the
+spike.
 
-| # | Question | Bloque |
+| # | Question | Blocks |
 |---|---|---|
-| R1 | Peut-on utiliser WebContainers ? Sinon, que couvre `browser-js` seul ? | Runtime `node` |
-| R2 | L'embed fonctionne-t-il sur un site tiers avec COOP/COEP ? | Embed (M5), architecture des origines |
-| R4 | L'IntelliSense TS dans CodeMirror 6 est-il assez bon ? | Choix de l'éditeur |
-| R7 | Comment exécuter Go dans le navigateur ? | Runtime `go` (M4) |
-| R8 | Le service de compilation Kotlin est-il viable ? | Runtime `kotlin` (M6) |
-| R6 | « Typika » est-il libre côté marques ? | Toute communication |
+| R1 | Can we use WebContainers? If not, what does `browser-js` alone cover? | `node` runtime |
+| R2 | Does the embed work on a third-party site with COOP/COEP? | Embed (M5), origin architecture |
+| R4 | Is TS IntelliSense in CodeMirror 6 good enough? | Editor choice |
+| R7 | How to run Go in the browser? | `go` runtime (M4) |
+| R8 | Is the Kotlin compilation service viable? | `kotlin` runtime (M6) |
+| R6 | Is "Typika" free of trademarks? | All communication |
 
-R3 (poids des runtimes), R5 (pourrissement) et R9 (abus du service de compilation) ne sont pas des spikes : ils sont
-traités dans les jalons concernés ([roadmap](roadmap.md)).
+R3 (runtime weight), R5 (rot) and R9 (abuse of the compilation service) are not spikes: they are handled in the
+relevant milestones ([roadmap](roadmap.md)).
 
 ---
 
 ## R1 — WebContainers
 
-**Question** : les conditions de licence de l'API WebContainers autorisent-elles un projet open source, gratuit, auto-
-hébergeable par des tiers ? Si non, de quoi a-t-on réellement besoin d'un runtime Node ?
+**Question**: do the license terms of the WebContainers API allow an open source, free project that third parties can
+self-host? If not, what do we really need from a Node runtime?
 
-À faire :
+To do:
 
-1. Lire les conditions de licence actuelles et, si elles sont ambiguës, contacter l'éditeur. Noter précisément le cas
-   « instance auto-hébergée par un tiers ».
-2. Lister les templates du [catalogue](specs/catalogue.md) qui ont besoin de Node (serveur HTTP, `npm install` de
-   paquets natifs, Vite complet). Hypothèse : presque aucun.
-3. Évaluer les alternatives : Nodebox (conditions de licence à lire aussi), ou extension de `browser-js` avec un
-   résolveur de paquets npm via CDN ESM.
+1. Read the current license terms and, if they are ambiguous, contact the vendor. Note precisely the case
+   "instance self-hosted by a third party".
+2. List the templates of the [catalogue](specs/catalogue.md) that need Node (HTTP server, `npm install` of native
+   packages, full Vite). Hypothesis: almost none.
+3. Evaluate the alternatives: Nodebox (license terms to read as well), or extending `browser-js` with an npm package
+   resolver through an ESM CDN.
 
-Critères :
+Criteria:
 
-- **Go** : licence compatible, y compris pour les instances tierces.
-- **Plan B** : `browser-js` + résolution npm via CDN couvre tout le catalogue ; le runtime `node` est reporté.
-- **No-go** : aucune option ne couvre les templates qui en ont besoin → on les retire du catalogue V1.
+- **Go**: compatible license, including for third-party instances.
+- **Plan B**: `browser-js` + npm resolution through a CDN covers the whole catalogue; the `node` runtime is postponed.
+- **No-go**: no option covers the templates that need it → we remove them from the V1 catalogue.
 
-Sortie : ADR « Runtime Node ».
+Output: ADR "Node runtime".
 
-**Conclusion (2026-10-08) : Plan B.** WebContainers exige une licence pour tout usage en production qui sert des
-clients ou des employés, et dépend des serveurs de StackBlitz. Nodebox est sous une licence non OSI, réservée aux
-usages non commerciaux. Aucun template du catalogue n'a besoin de Node : `browser-js` couvre les 19 variantes TS et JS.
-Le runtime `node` sort de la V1 et du schéma 1. Voir [0017](decisions/0017-node-runtime.md).
+**Conclusion (2026-10-08): Plan B.** WebContainers requires a license for any production use that serves customers or
+employees, and depends on StackBlitz servers. Nodebox is under a non-OSI license, restricted to non-commercial use. No
+template of the catalogue needs Node: `browser-js` covers the 19 TS and JS variants. The `node` runtime leaves V1 and
+schema 1. See [0017](decisions/0017-node-runtime.md).
 
-## R2 — Embed sous COOP/COEP
+## R2 — Embed under COOP/COEP
 
-**Question** : un template embarqué en iframe sur un domaine tiers peut-il exécuter son runtime, sachant que
-`SharedArrayBuffer` exige l'isolation cross-origin ?
+**Question**: can a template embedded in an iframe on a third-party domain run its runtime, given that
+`SharedArrayBuffer` requires cross-origin isolation?
 
-À faire :
+To do:
 
-1. Page hôte sur un domaine tiers, sans headers particuliers, qui embarque `/embed/<name>`.
-2. Mesurer `crossOriginIsolated` dans l'iframe pour chaque combinaison : `COEP: require-corp` vs `credentialless`,
-   attribut `allow="cross-origin-isolated"` sur l'iframe.
-3. Vérifier quels runtimes ont réellement besoin de `SharedArrayBuffer` (esbuild-wasm en worker en a-t-il besoin ?).
-4. Tester Chrome, Firefox, Safari.
+1. Host page on a third-party domain, without any particular headers, that embeds `/embed/<name>`.
+2. Measure `crossOriginIsolated` in the iframe for each combination: `COEP: require-corp` vs `credentialless`,
+   `allow="cross-origin-isolated"` attribute on the iframe.
+3. Check which runtimes really need `SharedArrayBuffer` (does esbuild-wasm in a worker need it?).
+4. Test Chrome, Firefox, Safari.
 
-Critères :
+Criteria:
 
-- **Go** : l'embed exécute `browser-js` dans les trois navigateurs sans exiger de headers de la page hôte.
-- **Plan B** : l'embed n'exécute que les runtimes sans `SharedArrayBuffer` ; les autres proposent « Ouvrir dans
-  Typika ».
+- **Go**: the embed runs `browser-js` in all three browsers without requiring headers from the host page.
+- **Plan B**: the embed only runs the runtimes without `SharedArrayBuffer`; the others offer "Open in
+  Typika".
 
-Sortie : ADR « Isolation et embed », mise à jour de [security](specs/security.md) et [hosting](guides/hosting.md).
+Output: ADR "Isolation and embed", update of [security](specs/security.md) and [hosting](guides/hosting.md).
 
-**Conclusion (2026-10-08) : Go pour `browser-js`, Plan B pour les runtimes à `SharedArrayBuffer`.** Aucune isolation
-n'est possible dans une page tierce, mais `browser-js` n'en a pas besoin : bundle, tests et kill dur fonctionnent sur
-Chromium et WebKit. L'embed ne pose plus ni COOP ni COEP ; COEP `require-corp` partout ailleurs. Firefox et Safari
-réel restent à vérifier à la main. Voir [0016](decisions/0016-isolation-and-embed.md).
+**Conclusion (2026-10-08): Go for `browser-js`, Plan B for the `SharedArrayBuffer` runtimes.** No isolation is
+possible in a third-party page, but `browser-js` does not need it: bundle, tests and hard kill work on Chromium and
+WebKit. The embed no longer sets COOP or COEP; COEP `require-corp` everywhere else. Firefox and real Safari still have
+to be checked by hand. See [0016](decisions/0016-isolation-and-embed.md).
 
-## R4 — TypeScript dans CodeMirror 6
+## R4 — TypeScript in CodeMirror 6
 
-**Question** : peut-on offrir complétion, diagnostics et survol de types de qualité suffisante dans CodeMirror 6 ?
+**Question**: can we offer completion, diagnostics and type hover of sufficient quality in CodeMirror 6?
 
-À faire :
+To do:
 
-1. Language service TypeScript dans un worker, branché sur CodeMirror 6 (intégrations communautaires existantes à
-   évaluer).
-2. Template de 20 fichiers avec imports croisés.
-3. Mesurer : temps de démarrage, latence de complétion, poids téléchargé, comportement mobile.
-4. Comparer avec Monaco sur les mêmes mesures.
+1. TypeScript language service in a worker, plugged into CodeMirror 6 (existing community integrations to
+   evaluate).
+2. 20-file template with cross imports.
+3. Measure: startup time, completion latency, downloaded weight, mobile behavior.
+4. Compare with Monaco on the same measurements.
 
-Critères :
+Criteria:
 
-- **Go** : complétion < 200 ms après démarrage, diagnostics multi-fichiers corrects, poids raisonnable pour l'embed.
-- **No-go** : on bascule sur Monaco, en acceptant un embed plus lourd.
+- **Go**: completion < 200 ms after startup, correct multi-file diagnostics, reasonable weight for the embed.
+- **No-go**: we switch to Monaco, accepting a heavier embed.
 
-Sortie : ADR « Éditeur » (confirme ou remplace [0008](decisions/0008-codemirror-6.md)).
+Output: ADR "Editor" (confirms or supersedes [0008](decisions/0008-codemirror-6.md)).
 
-**Conclusion (2026-10-08) : Go.** Complétion médiane à 31 ms sur desktop (Monaco : 130 ms), diagnostics
-multi-fichiers corrects, 140 Kio pour l'éditeur seul. Adaptateur TypeScript maison au M1. Voir
+**Conclusion (2026-10-08): Go.** Median completion at 31 ms on desktop (Monaco: 130 ms), correct multi-file
+diagnostics, 140 KiB for the editor alone. In-house TypeScript adapter in M1. See
 [0015](decisions/0015-editor.md).
 
-## R7 — Go dans le navigateur
+## R7 — Go in the browser
 
-**Question** : interpréteur ou compilateur ?
+**Question**: interpreter or compiler?
 
-| Option | À mesurer |
+| Option | To measure |
 |---|---|
-| Yaegi (interpréteur Go écrit en Go) compilé en WASM | Couverture du langage utilisé par le catalogue (interfaces, génériques, goroutines, `testing`), poids, vitesse |
-| Toolchain Go complète compilée en WASM | Poids, temps de première compilation, faisabilité de `go test` |
+| Yaegi (Go interpreter written in Go) compiled to WASM | Coverage of the language used by the catalogue (interfaces, generics, goroutines, `testing`), weight, speed |
+| Full Go toolchain compiled to WASM | Weight, first compilation time, feasibility of `go test` |
 
-À faire : faire tourner la variante Go de Strategy et ses tests avec chaque option ; produire une sortie compatible
-`go test -json` pour le mapping vers les événements de test ([runtimes](specs/runtimes.md)).
+To do: run the Go variant of Strategy and its tests with each option; produce an output compatible with
+`go test -json` for the mapping to test events ([runtimes](specs/runtimes.md)).
 
-Critères :
+Criteria:
 
-- **Go** : les variantes Go du catalogue s'exécutent avec leurs tests, chargement initial acceptable avec indicateur.
-- **Plan B** : restreindre le sous-ensemble de Go utilisé par les templates aux capacités de l'option retenue, et le
-  documenter dans le [guide d'écriture](guides/template-authoring.md).
+- **Go**: the Go variants of the catalogue run with their tests, acceptable initial load with an indicator.
+- **Plan B**: restrict the subset of Go used by the templates to the capabilities of the chosen option, and
+  document it in the [authoring guide](guides/template-authoring.md).
 
-Sortie : ADR « Runtime Go ».
+Output: ADR "Go runtime".
 
-**Conclusion (2026-10-08) : Go, option B.** La toolchain Go officielle compilée en WASM reproduit `go test` à
-l'identique, sans `SharedArrayBuffer`, donc aussi en embed : build de test en 250 à 300 ms sur desktop (Chromium,
-WebKit), 1,2 s à CPU ×4, pour 11,7 Mo en brotli au premier chargement. Yaegi est écarté : quatre défauts sur
-`strategy-go`, dont une sortie fausse sans erreur. Firefox reste à vérifier à la main. Voir
+**Conclusion (2026-10-08): Go, option B.** The official Go toolchain compiled to WASM reproduces `go test`
+identically, without `SharedArrayBuffer`, so in the embed too: test build in 250 to 300 ms on desktop (Chromium,
+WebKit), 1.2 s at CPU ×4, for 11.7 MB in brotli on first load. Yaegi is rejected: four defects on
+`strategy-go`, including a wrong output without an error. Firefox still has to be checked by hand. See
 [0018](decisions/0018-go-runtime.md).
 
-## R8 — Service de compilation Kotlin
+## R8 — Kotlin compilation service
 
-**Question** : `kotlin-compiler-server` peut-il servir de service de compilation sans état, vers JS ou Wasm, à un
-coût acceptable sur un VPS ?
+**Question**: can `kotlin-compiler-server` serve as a stateless compilation service, to JS or Wasm, at an
+acceptable cost on a VPS?
 
-À faire :
+To do:
 
-1. Confirmer la licence du projet.
-2. Le déployer en conteneur ; compiler la variante Kotlin de Strategy vers Kotlin/JS et Kotlin/Wasm.
-3. Exécuter le résultat et les tests `kotlin.test` dans le navigateur.
-4. Mesurer : RAM du conteneur, latence de compilation à froid et à chaud, débit sous charge.
-5. En parallèle, tester `kotlinc` dans le navigateur via une JVM WASM (CheerpJ) : poids, temps, licence.
+1. Confirm the license of the project.
+2. Deploy it in a container; compile the Kotlin variant of Strategy to Kotlin/JS and Kotlin/Wasm.
+3. Run the result and the `kotlin.test` tests in the browser.
+4. Measure: container RAM, cold and warm compilation latency, throughput under load.
+5. In parallel, test `kotlinc` in the browser through a WASM JVM (CheerpJ): weight, time, license.
 
-Critères :
+Criteria:
 
-- **Go** : compilation < 3 s à chaud, empreinte compatible avec le VPS, licence compatible.
-- **Alternative** : `kotlinc` dans le navigateur est acceptable → plus de service, principe « navigateur d'abord »
+- **Go**: compilation < 3 s warm, footprint compatible with the VPS, compatible license.
+- **Alternative**: `kotlinc` in the browser is acceptable → no more service, "browser first" principle
   intact.
-- **No-go** : Kotlin sort du périmètre V1.
+- **No-go**: Kotlin leaves the V1 scope.
 
-Sortie : ADR « Runtime Kotlin » (confirme ou remplace [0002](decisions/0002-kotlin-compilation-service.md)).
+Output: ADR "Kotlin runtime" (confirms or supersedes [0002](decisions/0002-kotlin-compilation-service.md)).
 
-**Conclusion (2026-10-08) : Go, avec un service maison.** `kotlin.test` compilé en JS ou en Wasm tourne dans le
-navigateur avec les mêmes résultats que sur JVM ; à chaud, `strategy-kotlin` compile en 0,9 à 1,3 s sur 2 vCPU et
-1 Gio, pour 656 Mio au pic. `kotlin-compiler-server` (Apache 2.0) ne démarre pas sans correctif, n'a pas `kotlin-test`
-en JS ni en Wasm et exécute les tests JUnit sur le serveur : un service d'une centaine de lignes sur
-`kotlin-compiler-embeddable` le remplace. Cible JS seule en V1. CheerpJ est écarté par sa licence. Firefox reste à
-vérifier à la main. Voir [0019](decisions/0019-kotlin-runtime.md).
+**Conclusion (2026-10-08): Go, with an in-house service.** `kotlin.test` compiled to JS or Wasm runs in the
+browser with the same results as on the JVM; warm, `strategy-kotlin` compiles in 0.9 to 1.3 s on 2 vCPU and
+1 GiB, for 656 MiB at peak. `kotlin-compiler-server` (Apache 2.0) does not start without a patch, has no `kotlin-test`
+in JS or Wasm and runs the JUnit tests on the server: a service of about a hundred lines on
+`kotlin-compiler-embeddable` replaces it. JS target only in V1. CheerpJ is rejected because of its license. Firefox
+still has to be checked by hand. See [0019](decisions/0019-kotlin-runtime.md).
 
-## R6 — Nom
+## R6 — Name
 
-**Question** : « Typika » est-il libre côté marques ? Temenos (Temenos AG) puis Palaestra (pris sur npm)
-ont été abandonnés ([ADR 0014](decisions/0014-name-typika.md)).
+**Question**: is "Typika" free of trademarks? Temenos (Temenos AG) then Palaestra (taken on npm)
+were dropped ([ADR 0014](decisions/0014-name-typika.md)).
 
-Fait : `typika` libre sur npm, `typika.dev` libre, aucun compte ni organisation `typika` sur GitHub ;
-aucun produit logiciel homonyme trouvé par recherche web (le plus proche : Typic, éditeur photo mobile).
+Done: `typika` free on npm, `typika.dev` free, no `typika` account or organization on GitHub;
+no software product with the same name found by web search (the closest: Typic, a mobile photo editor).
 
-Le 2026-11-20, l'organisation `typika` est prise sur GitHub, depuis le 2026-10-12, par un tiers : à verser à la
-recherche. Le projet prend `typika-app` ([ADR 0033](decisions/0033-github-org-typika-app.md)).
+On 2026-11-20, the `typika` organization is found to be taken on GitHub, since 2026-10-12, by a third party: to add to
+the research. The project takes `typika-app` ([ADR 0033](decisions/0033-github-org-typika-app.md)).
 
-À faire : recherche de marques déposées dans les classes 9 et 42 (EUIPO, USPTO, INPI) ; réserver le domaine,
-l'organisation et le paquet.
+To do: search for registered trademarks in classes 9 and 42 (EUIPO, USPTO, INPI); reserve the domain,
+the organization and the package.
 
-Sortie : ADR 0014 confirmée, ou nom de repli (Patternhall, Deigmata) et renommage avant M1.
+Output: ADR 0014 confirmed, or a fallback name (Patternhall, Deigmata) and a rename before M1.

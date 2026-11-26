@@ -1,33 +1,33 @@
-# 0021 — Moteur de diff : @codemirror/merge
+# 0021 — Diff engine: @codemirror/merge
 
-**Statut** : Acceptée · 2026-10-11 · lot 3 du M2
+**Status**: Accepted · 2026-10-11 · slice 3 of M2
 
-## Contexte
+## Context
 
-L'onglet Diff ([ui §6.4 et §8](../specs/ui.md)) compare la base et le template, ou le template et le projet de
-l'utilisateur, fichier par fichier, côte à côte ou en vue unifiée. L'éditeur est CodeMirror 6
-([0015](0015-editor.md)), qui fournit déjà la coloration, le thème et la langue de chaque fichier.
+The Diff tab ([ui §6.4 and §8](../specs/ui.md)) compares the base and the template, or the template and the user's
+project, file by file, side by side or in a unified view. The editor is CodeMirror 6 ([0015](0015-editor.md)), which
+already provides the highlighting, the theme and the language of each file.
 
-## Décision
+## Decision
 
-**`@codemirror/merge` 6.12** :
+**`@codemirror/merge` 6.12**:
 
-- `MergeView` pour la vue côte à côte, `unifiedMergeView` pour la vue unifiée, avec les lignes inchangées repliées
-  au-delà de 3 lignes de contexte. Les deux vues sont en lecture seule.
-- Il ne dépend que de paquets CodeMirror déjà présents : ~28 Kio minifié, ~10 Kio gzip en plus.
-- Les ajouts et les suppressions portent un signe `+` / `-` dans une gouttière calculée à partir de `getChunks`, et
-  pas seulement une couleur ([ui §15](../specs/ui.md)).
-- Le diff « depuis la base » retire les marqueurs `// #region tour:` des deux côtés, comme l'export
-  ([manifest §5.2](../specs/manifest.md)) ; « Mes modifications » montre les fichiers tels quels.
+- `MergeView` for the side-by-side view, `unifiedMergeView` for the unified view, with unchanged lines folded beyond 3
+  lines of context. Both views are read-only.
+- It depends only on CodeMirror packages already present: ~28 KiB minified, ~10 KiB gzip extra.
+- Additions and deletions carry a `+` / `-` sign in a gutter computed from `getChunks`, and not only a color
+  ([ui §15](../specs/ui.md)).
+- The "Since the base" diff removes the `// #region tour:` markers on both sides, like the export
+  ([manifest §5.2](../specs/manifest.md)); "My changes" shows the files as they are.
 
-## Conséquences
+## Consequences
 
-- Le diff s'ouvre dans un onglet de l'éditeur, pas dans le panneau latéral, pour avoir la largeur d'une vue côte à
-  côte. L'éditeur reste monté (masqué) pendant ce temps, pour garder l'état et l'historique de chaque fichier.
-- Les étapes de tour ancrées dans le fichier comparé sont listées au-dessus du diff, comme boutons, plutôt que posées
-  dans une gouttière que le clavier n'atteint pas.
+- The diff opens in an editor tab, not in the side panel, to get the width of a side-by-side view. The editor stays
+  mounted (hidden) meanwhile, to keep the state and history of each file.
+- The tour steps anchored in the compared file are listed above the diff, as buttons, rather than placed in a gutter
+  the keyboard cannot reach.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **`diff` (jsdiff) et un rendu en tableau HTML** : plus simple à rendre accessible, mais sans coloration ni repli des
-  lignes inchangées, qu'il faudrait écrire. On aurait deux rendus de code dans l'app.
+- **`diff` (jsdiff) and an HTML table rendering**: simpler to make accessible, but without highlighting or folding of
+  unchanged lines, which we would have to write. We would have two code renderings in the app.

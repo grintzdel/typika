@@ -1,35 +1,35 @@
-# 0020 — Rendu Markdown du tour : react-markdown
+# 0020 — Tour Markdown rendering: react-markdown
 
-**Statut** : Acceptée · 2026-10-11 · lot 2 du M2
+**Status**: Accepted · 2026-10-11 · slice 2 of M2
 
-## Contexte
+## Context
 
-Le corps d'une étape de tour est du Markdown ([manifest §5.1](../specs/manifest.md)). Le panneau Tour doit l'afficher
-sans HTML brut, ouvrir les liens `typika:<name>` vers la sandbox d'un template embarqué, et ne rien exécuter qui vienne
-d'un template tiers au M3. Aucune bibliothèque Markdown n'était encore dans l'app.
+The body of a tour step is Markdown ([manifest §5.1](../specs/manifest.md)). The Tour panel must display it without
+raw HTML, open `typika:<name>` links to the sandbox of a bundled template, and run nothing that comes from a third-party
+template at M3. No Markdown library was in the app yet.
 
-## Décision
+## Decision
 
-**`react-markdown` 10**, sans plugin :
+**`react-markdown` 10**, without plugins:
 
-- Le HTML brut est retiré (`skipHtml`), les images aussi. L'arbre est rendu en éléments React : pas de
-  `dangerouslySetInnerHTML`, pas de sanitizer à maintenir.
-- Les liens passent tous par `resolveTourLink` (module `tour`) : `typika:<name>` devient `/play/<name>` si le template
-  est embarqué, `http(s)` s'ouvre dans un nouvel onglet sans `opener`, tout le reste (`javascript:`, chemins relatifs,
-  template absent) est rendu en texte. Le `urlTransform` par défaut de la bibliothèque est désactivé parce qu'il
-  effacerait `typika:` avant cette résolution.
-- Poids : ~119 Kio minifié, ~37 Kio gzip (unified, remark-parse, mdast, hast), dans le chunk de la sandbox.
+- Raw HTML is removed (`skipHtml`), and so are images. The tree is rendered as React elements: no
+  `dangerouslySetInnerHTML`, no sanitizer to maintain.
+- All links go through `resolveTourLink` (`tour` module): `typika:<name>` becomes `/play/<name>` if the template is
+  bundled, `http(s)` opens in a new tab without `opener`, everything else (`javascript:`, relative paths, missing
+  template) is rendered as text. The library's default `urlTransform` is disabled because it would strip `typika:`
+  before this resolution.
+- Weight: ~119 KiB minified, ~37 KiB gzip (unified, remark-parse, mdast, hast), in the sandbox chunk.
 
-## Conséquences
+## Consequences
 
-- Les blocs de code du tour ne sont pas colorés. Les colorer avec le highlighter de l'éditeur pourra se faire dans un
-  composant `code` sans changer de bibliothèque.
-- Si le poids pèse sur le mobile, le panneau Tour peut être chargé à la demande : seul ce module importe
+- Code blocks in the tour are not highlighted. Highlighting them with the editor's highlighter can be done in a `code`
+  component without changing libraries.
+- If the weight is a burden on mobile, the Tour panel can be loaded on demand: only this module imports
   `react-markdown`.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **`micromark` (ou `markdown-it`) avec le HTML désactivé** : plus léger (~16 Kio gzip), mais produit une chaîne HTML à
-  injecter et des liens à réécrire après coup. Plus de code à sécuriser pour une économie modeste.
-- **Un rendu maison sur `@lezer/markdown`** : déjà présent via `@codemirror/lang-markdown`, donc sans dépendance
-  nouvelle, mais il faudrait écrire et tester tout le rendu (listes, liens, blocs, emphase) nous-mêmes.
+- **`micromark` (or `markdown-it`) with HTML disabled**: lighter (~16 KiB gzip), but produces an HTML string to inject
+  and links to rewrite afterwards. More code to secure for a modest saving.
+- **A custom renderer on `@lezer/markdown`**: already present through `@codemirror/lang-markdown`, so no new
+  dependency, but we would have to write and test the whole rendering (lists, links, blocks, emphasis) ourselves.

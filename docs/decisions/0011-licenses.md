@@ -1,24 +1,24 @@
-# 0011 — Licences
+# 0011 — Licenses
 
-**Statut** : Acceptée · 2026-10-08
+**Status**: Accepted · 2026-10-08
 
-## Contexte
+## Context
 
-Le projet est open source. Les templates sont faits pour être copiés dans des projets, y compris propriétaires.
+The project is open source. Templates are made to be copied into projects, including proprietary ones.
 
-## Décision
+## Decision
 
-- **Plateforme** (app, packages, CLI, service) : **MIT**.
-- **Templates officiels** (`typika/*`) : **MIT-0**, sans obligation d'attribution.
-- **Templates tiers** : licence approuvée OSI au choix de l'auteur, déclarée dans le manifeste et affichée ; le registre
-  refuse les templates sans licence.
+- **Platform** (app, packages, CLI, service): **MIT**.
+- **Official templates** (`typika/*`): **MIT-0**, without attribution requirement.
+- **Third-party templates**: OSI-approved license chosen by the author, declared in the manifest and shown; the
+  registry refuses templates without a license.
 
-## Conséquences
+## Consequences
 
-- Aucune friction pour réutiliser un template via `typika create`.
-- Rien n'empêche un tiers d'héberger une version fermée de la plateforme.
+- No friction to reuse a template through `typika create`.
+- Nothing prevents a third party from hosting a closed version of the platform.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Apache-2.0** : clause brevets peu utile ici, texte plus lourd.
-- **AGPL** : protège contre un fork SaaS fermé mais freine contributions et intégrations.
+- **Apache-2.0**: patent clause of little use here, heavier text.
+- **AGPL**: protects against a closed SaaS fork but holds back contributions and integrations.

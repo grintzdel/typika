@@ -1,25 +1,26 @@
-# 0009 — TypeScript langue de référence, couverture sélective
+# 0009 — TypeScript as the reference language, selective coverage
 
-**Statut** : Acceptée · 2026-10-08
+**Status**: Accepted · 2026-10-08
 
-## Contexte
+## Context
 
-Décliner les 16 concepts du catalogue dans chaque langage multiplie le travail sans valeur pédagogique proportionnelle,
-et produit des templates non idiomatiques (de la POO classique écrite en Go).
+Porting the 16 concepts of the catalog to every language multiplies the work without proportional teaching value, and
+produces non-idiomatic templates (classic OOP written in Go).
 
-## Décision
+## Decision
 
-- **TypeScript** couvre tout le catalogue et définit l'ordre et les `id` des étapes de tour que les variantes suivent.
-- **Kotlin** couvre tout le catalogue.
-- **JS** et **Go** ne couvrent que les concepts où ils enseignent quelque chose de spécifique.
+- **TypeScript** covers the whole catalog and defines the order and the `id`s of the tour steps that the variants
+  follow.
+- **Kotlin** covers the whole catalog.
+- **JS** and **Go** only cover the concepts where they teach something specific.
 
-Détail dans [catalogue](../specs/catalogue.md).
+Details in [catalogue](../specs/catalogue.md).
 
-## Conséquences
+## Consequences
 
-- La comparaison est toujours possible avec TS.
-- Une variante absente est un choix éditorial, pas un manque.
+- Comparison with TS is always possible.
+- A missing variant is an editorial choice, not a gap.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Couverture complète dans tous les langages** : volume ingérable, templates artificiels.
+- **Full coverage in every language**: unmanageable volume, artificial templates.

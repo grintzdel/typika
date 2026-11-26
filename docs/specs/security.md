@@ -1,153 +1,153 @@
-# Sécurité
+# Security
 
-Statut : spec · modèle de menaces V1
+Status: spec · V1 threat model
 
-Typika exécute par conception du code qu'il n'a pas écrit : templates de tiers, liens partagés, code modifié par
-l'utilisateur. La sécurité repose sur un principe : **le code exécuté ne partage jamais d'origine avec ce qui a de la
-valeur** (token GitHub, projets locaux, session).
+By design, Typika runs code it did not write: third-party templates, share links, code changed by the user. Security
+rests on one principle: **the code that runs never shares an origin with what has value** (GitHub token, local
+projects, session).
 
-## 1. Actifs à protéger
+## 1. Assets to protect
 
-| Actif | Où il vit |
+| Asset | Where it lives |
 |---|---|
-| Token GitHub de l'utilisateur | Mémoire et `sessionStorage` de l'origine app |
-| Projets locaux | IndexedDB de l'origine app |
-| Intégrité des templates officiels | Registre `typika-app/registry`, repos `typika-app/*` |
-| Disponibilité du service de compilation Kotlin | Conteneur `kotlin-compiler` |
-| Réputation de l'instance | Domaine de l'instance (phishing, contenu hébergé) |
-| Navigateur du visiteur | Ressources CPU / réseau consommées par le code exécuté |
+| The user's GitHub token | Memory and `sessionStorage` of the app origin |
+| Local projects | IndexedDB of the app origin |
+| Integrity of the official templates | Registry `typika-app/registry`, repos `typika-app/*` |
+| Availability of the Kotlin compilation service | `kotlin-compiler` container |
+| Reputation of the instance | Domain of the instance (phishing, hosted content) |
+| The visitor's browser | CPU / network resources consumed by the code that runs |
 
-## 2. Frontières
+## 2. Boundaries
 
 ```
-Origine app            : UI, IndexedDB, token GitHub. N'exécute jamais de code utilisateur.
-Origine runtime        : workers, WASM, preview. Exécute le code utilisateur. Ne détient aucun secret.
-Service web            : statique + POST /api/github/token. Ne stocke rien.
-Service kotlin-compiler: compile du code non fiable. N'exécute pas le code compilé. Pas de réseau sortant.
+App origin             : UI, IndexedDB, GitHub token. Never runs user code.
+Runtime origin         : workers, WASM, preview. Runs user code. Holds no secret.
+Web service            : static + POST /api/github/token. Stores nothing.
+kotlin-compiler service: compiles untrusted code. Does not run the compiled code. No outbound network.
 ```
 
-### 2.1 Origine runtime dédiée
+### 2.1 Dedicated runtime origin
 
-- `TYPIKA_RUNTIME_ORIGIN` doit être une origine différente de l'app. Deux niveaux :
-  - **Instance ouverte au public** : un **site différent** (domaine enregistrable distinct, sur le modèle de
-    `googleusercontent.com`). Un sous-domaine reste « same-site » : cookies `SameSite` et certaines protections ne le
-    séparent pas de l'app.
-  - **Instance privée** (usage personnel ou équipe, accès restreint) : un sous-domaine est toléré. Le stockage de l'app
-    (IndexedDB, token GitHub) reste isolé par origine ; le risque résiduel porte sur les cookies same-site, que l'app
-    n'utilise que pour l'état OAuth. L'app affiche un avertissement au démarrage dans cette configuration.
-  - Origine runtime identique à celle de l'app : refusé au démarrage.
-- L'app charge la runtime frame (`/runtime/frame.html`) dans une iframe :
-  `<iframe sandbox="allow-scripts allow-same-origin" allow="cross-origin-isolated">`. `allow-same-origin` est sans
-  danger ici puisque l'origine de la frame est différente de celle de l'app ; il est nécessaire au Service Worker et au
-  cache d'assets.
-- La preview d'un template est une iframe imbriquée dans la runtime frame, avec `sandbox="allow-scripts allow-forms
+- `TYPIKA_RUNTIME_ORIGIN` must be an origin different from the app. Two levels:
+  - **Instance open to the public**: a **different site** (distinct registrable domain, on the model of
+    `googleusercontent.com`). A subdomain stays "same-site": `SameSite` cookies and some protections do not separate
+    it from the app.
+  - **Private instance** (personal or team use, restricted access): a subdomain is tolerated. The app storage
+    (IndexedDB, GitHub token) stays isolated by origin; the residual risk is on same-site cookies, which the app uses
+    only for the OAuth state. The app shows a warning at startup in this configuration.
+  - Runtime origin identical to the app origin: refused at startup.
+- The app loads the runtime frame (`/runtime/frame.html`) in an iframe:
+  `<iframe sandbox="allow-scripts allow-same-origin" allow="cross-origin-isolated">`. `allow-same-origin` is safe
+  here since the origin of the frame is different from the app origin; it is required by the Service Worker and the
+  asset cache.
+- The preview of a template is an iframe nested in the runtime frame, with `sandbox="allow-scripts allow-forms
   allow-modals"`.
-- La runtime frame ne reçoit **jamais** le token GitHub, ni le contenu d'autres projets que celui exécuté.
+- The runtime frame **never** receives the GitHub token, nor the content of projects other than the one that runs.
 
-### 2.2 Canal app ↔ runtime
+### 2.2 App ↔ runtime channel
 
-- Un `MessageChannel` est établi au chargement : un seul `postMessage` initial, avec `targetOrigin` explicite (jamais
-  `*`). Côté frame, vérification de `event.origin` contre la liste autorisée.
-- Tous les messages sont validés par Effect Schema des deux côtés ; un message invalide est ignoré et loggué.
-- Le protocole n'expose que les opérations de `RuntimeSession` ([runtimes.md](./runtimes.md)). Aucune opération ne
-  permet à la frame de lire l'état de l'app.
+- A `MessageChannel` is set up at load: a single initial `postMessage`, with an explicit `targetOrigin` (never `*`).
+  On the frame side, `event.origin` is checked against the allowed list.
+- All messages are validated by Effect Schema on both sides; an invalid message is ignored and logged.
+- The protocol only exposes the operations of `RuntimeSession` ([runtimes.md](./runtimes.md)). No operation lets the
+  frame read the app state.
 
-## 3. Menaces et mitigations
+## 3. Threats and mitigations
 
-### 3.1 Code non fiable dans le navigateur
+### 3.1 Untrusted code in the browser
 
-| Menace | Impact | Mitigation |
+| Threat | Impact | Mitigation |
 |---|---|---|
-| Le code exécuté lit le token ou les projets | Vol de compte GitHub, fuite de code | Origine runtime séparée (§2.1) ; le token ne quitte pas l'origine app |
-| Le code exfiltre des données ou attaque un tiers depuis le navigateur du visiteur (requêtes en masse, minage) | Abus attribué à l'instance, visiteur pénalisé | CSP de l'origine runtime : `connect-src` limité au CDN d'assets et à `'self'` ; pas d'accès réseau pour le code en V1 ; watchdog CPU ([runtimes.md](./runtimes.md) §4) |
-| Boucle infinie, allocation massive | Onglet gelé | Exécution en worker, `terminate()` sur interruption, timeouts, plafond mémoire WASM |
-| Navigation de la frame vers une page de phishing | Faux écran de connexion sur une origine Typika | Preview sans `allow-top-navigation` ; origine runtime sans aucune UI de connexion ni contenu de marque |
-| Lien partagé qui exécute du code à l'ouverture | Exécution non voulue | Pas d'exécution automatique hors templates du registre (§3.4) |
+| The code that runs reads the token or the projects | GitHub account theft, code leak | Separate runtime origin (§2.1); the token does not leave the app origin |
+| The code exfiltrates data or attacks a third party from the visitor's browser (mass requests, mining) | Abuse attributed to the instance, visitor penalized | CSP of the runtime origin: `connect-src` limited to the asset CDN and `'self'`; no network access for the code in V1; CPU watchdog ([runtimes.md](./runtimes.md) §4) |
+| Infinite loop, massive allocation | Frozen tab | Execution in a worker, `terminate()` on interruption, timeouts, WASM memory cap |
+| Frame navigates to a phishing page | Fake sign-in screen on a Typika origin | Preview without `allow-top-navigation`; runtime origin without any sign-in UI or branded content |
+| Share link that runs code on opening | Unwanted execution | No automatic execution outside registry templates (§3.4) |
 
-### 3.2 Templates malveillants dans le registre
+### 3.2 Malicious templates in the registry
 
-| Menace | Impact | Mitigation |
+| Threat | Impact | Mitigation |
 |---|---|---|
-| Un template ajoute du code malveillant après acceptation | Code exécuté chez tous les visiteurs | Le registre épingle chaque template sur un **SHA de commit**, pas une branche ; toute mise à jour passe par une PR revue |
-| Dépendance npm compromise (typosquatting, paquet piraté) | Exécution dans la sandbox et chez ceux qui font `typika create` | Lockfile obligatoire ; dépendances minimales (la revue refuse les dépendances non justifiées) ; Renovate avec délai de quarantaine sur les nouvelles versions |
-| Scripts `postinstall` | Exécution à l'installation (CLI) | Aucun `npm install` dans la sandbox ([ADR 0017](../decisions/0017-node-runtime.md)) ; le CLI n'installe rien et n'exécute rien |
-| CDN ESM compromis (`browser-js`) | Code injecté dans les dépendances | Versions épinglées ; assets propres à Typika avec SRI ; le risque résiduel du CDN pour les dépendances tierces est assumé et documenté |
-| Tour Markdown contenant du HTML ou du JavaScript | XSS sur l'origine app | Markdown rendu **sans HTML brut**, sortie assainie, liens externes en `rel="noopener noreferrer"`, pas d'URL `javascript:` |
-| Template de tiers trompeur (faux « officiel ») | Confiance abusée | Badge « officiel » réservé à `typika-app/*` ; les autres sont étiquetés « communauté » |
-| CI de santé qui exécute un template malveillant | Vol de secrets CI | La CI de santé tourne dans un job sans secret, sans token d'écriture, dans un navigateur headless |
+| A template adds malicious code after acceptance | Code run by every visitor | The registry pins each template on a **commit SHA**, not a branch; every update goes through a reviewed PR |
+| Compromised npm dependency (typosquatting, hijacked package) | Execution in the sandbox and for those who run `typika create` | Lockfile required; minimal dependencies (review rejects unjustified dependencies); Renovate with a quarantine delay on new versions |
+| `postinstall` scripts | Execution at install (CLI) | No `npm install` in the sandbox ([ADR 0017](../decisions/0017-node-runtime.md)); the CLI installs nothing and runs nothing |
+| Compromised ESM CDN (`browser-js`) | Code injected into the dependencies | Pinned versions; Typika's own assets with SRI; the residual CDN risk for third-party dependencies is accepted and documented |
+| Markdown tour containing HTML or JavaScript | XSS on the app origin | Markdown rendered **without raw HTML**, sanitized output, external links with `rel="noopener noreferrer"`, no `javascript:` URL |
+| Misleading third-party template (fake "official") | Abused trust | "Official" badge reserved for `typika-app/*`; the others are labeled "Community" |
+| Health CI that runs a malicious template | Theft of CI secrets | The health CI runs in a job without secrets, without a write token, in a headless browser |
 
-### 3.3 Service de compilation Kotlin
+### 3.3 Kotlin compilation service
 
-| Menace | Impact | Mitigation |
+| Threat | Impact | Mitigation |
 |---|---|---|
-| Déni de service (requêtes en masse, compilations longues) | Service indisponible, VPS saturé | Rate limiting par IP dans le relais `/api/kotlin` du serveur de l'app ([0029](../decisions/0029-kotlin-relay-rate-limit.md)) ; file à concurrence bornée ; timeout 15 s, au bout duquel le processus de compilation est tué et remplacé ([0028](../decisions/0028-kotlin-compilation-workers.md)) ; heap plafonné par processus ; corps limité à 256 Kio ; `429` avec `Retry-After` |
-| Code conçu pour exploiter le compilateur | Exécution dans le conteneur | Conteneur non-root, système de fichiers en lecture seule (sauf un `tmpfs` borné), `cap_drop: ALL`, `no-new-privileges`, CPU et mémoire plafonnés |
-| Exfiltration ou rebond depuis le conteneur | Le VPS sert de relais d'attaque | **Aucun réseau sortant** : réseau Docker `internal` (profil Compose `kotlin`), où seul le serveur de l'app (`web`) le rejoint |
-| Exécution de code à la compilation (plugins, processeurs d'annotations) | Exécution arbitraire | Le service passe lui-même tous les arguments du compilateur : aucun plugin, aucun argument venu de la requête, bibliothèques figées dans l'image ([0019](../decisions/0019-kotlin-runtime.md)). Aucun endpoint n'exécute le code compilé |
-| Fuite des sources dans les logs | Code privé exposé | Logs sans corps de requête : taille, durée, statut, hash |
-| Abus d'un service exposé publiquement par des tiers | Coût pour l'instance | Le service n'est joignable que par l'app, sur le réseau interne ; le relais refuse un `Origin` d'un autre site, et le rate limiting s'applique aux clients hors navigateur |
+| Denial of service (mass requests, long compilations) | Service unavailable, VPS saturated | Per-IP rate limiting in the `/api/kotlin` relay of the app server ([0029](../decisions/0029-kotlin-relay-rate-limit.md)); queue with bounded concurrency; 15 s timeout, after which the compilation process is killed and replaced ([0028](../decisions/0028-kotlin-compilation-workers.md)); heap capped per process; body limited to 256 KiB; `429` with `Retry-After` |
+| Code designed to exploit the compiler | Execution in the container | Non-root container, read-only file system (except a bounded `tmpfs`), `cap_drop: ALL`, `no-new-privileges`, CPU and memory capped |
+| Exfiltration or pivoting from the container | The VPS serves as an attack relay | **No outbound network**: Docker `internal` network (Compose profile `kotlin`), which only the app server (`web`) joins |
+| Code execution at compile time (plugins, annotation processors) | Arbitrary execution | The service passes all compiler arguments itself: no plugin, no argument from the request, libraries frozen in the image ([0019](../decisions/0019-kotlin-runtime.md)). No endpoint runs the compiled code |
+| Source leak in the logs | Private code exposed | Logs without request body: size, duration, status, hash |
+| Abuse of a publicly exposed service by third parties | Cost for the instance | The service is only reachable by the app, on the internal network; the relay rejects an `Origin` from another site, and rate limiting applies to non-browser clients |
 
-### 3.4 Partage par URL et gist
+### 3.4 Sharing by URL and gist
 
-| Menace | Impact | Mitigation |
+| Threat | Impact | Mitigation |
 |---|---|---|
-| Lien piégé avec du code malveillant | Exécution non voulue | Un projet ouvert depuis un lien ou un gist n'est **jamais exécuté automatiquement** : bandeau « code provenant d'un lien », bouton « Exécuter » explicite |
-| Bombe de décompression dans le fragment | Onglet gelé | Taille max du fragment et taille max décompressée (limites projet de [runtimes.md](./runtimes.md) §8), décompression en streaming interrompue au dépassement |
-| Contenu qui viole les limites ou le schéma | Crash, état incohérent | Validation Effect Schema avant toute écriture en IndexedDB |
-| Lien qui se fait passer pour un template officiel | Confiance abusée | Un projet partagé est affiché comme tel, jamais avec le badge du template d'origine |
+| Booby-trapped link with malicious code | Unwanted execution | A project opened from a link or a gist is **never run automatically**: "code from a link" banner, explicit "Run" button |
+| Decompression bomb in the fragment | Frozen tab | Max fragment size and max decompressed size (project limits of [runtimes.md](./runtimes.md) §8), streaming decompression stopped when exceeded |
+| Content that breaks the limits or the schema | Crash, inconsistent state | Effect Schema validation before any write to IndexedDB |
+| Link that poses as an official template | Abused trust | A shared project is shown as such, never with the badge of the original template |
 
-Le fragment (`#…`) n'est jamais envoyé au serveur : l'instance ne voit pas le code partagé.
+The fragment (`#…`) is never sent to the server: the instance does not see the shared code.
 
-### 3.5 OAuth GitHub
+### 3.5 GitHub OAuth
 
-| Menace | Impact | Mitigation |
+| Threat | Impact | Mitigation |
 |---|---|---|
-| Scopes excessifs | Token trop puissant en cas de fuite | Scopes demandés au moment du besoin : `gist` pour partager, `public_repo` pour exporter ; jamais `repo` ni accès organisation |
-| CSRF sur le callback | Liaison au compte de l'attaquant | Paramètre `state` aléatoire, vérifié au callback ; PKCE si GitHub le supporte pour le type d'app retenu |
-| Abus de `POST /api/github/token` | Endpoint utilisé par des tiers | Vérification de l'en-tête `Origin` ; CORS limité à l'origine app ; rate limiting |
-| Token stocké côté serveur | Fuite massive | L'endpoint échange `code` → token et le renvoie ; aucun stockage, aucun log du token ni du `code` |
-| Vol du token côté client | Accès au compte | Mémoire + `sessionStorage` (disparaît à la fermeture de l'onglet), jamais `localStorage` ; CSP stricte sur l'origine app ; lien de révocation dans l'UI |
+| Excessive scopes | Token too powerful if leaked | Scopes requested when needed: `gist` to share, `public_repo` to export; never `repo` nor organization access |
+| CSRF on the callback | Binding to the attacker's account | Random `state` parameter, checked at the callback; PKCE if GitHub supports it for the chosen app type |
+| Abuse of `POST /api/github/token` | Endpoint used by third parties | Check of the `Origin` header; CORS limited to the app origin; rate limiting |
+| Token stored on the server side | Mass leak | The endpoint exchanges `code` → token and returns it; no storage, no log of the token or the `code` |
+| Token theft on the client side | Account access | Memory + `sessionStorage` (gone when the tab closes), never `localStorage`; strict CSP on the app origin; revocation link in the UI |
 
-Tranché au lot 6 du M5 ([0034](../decisions/0034-github-oauth-and-gists.md)) : OAuth App, `state` et PKCE, échange
-sur le serveur de l'app, push limité aux dépôts publics. Une GitHub App aurait des permissions plus fines, mais créer
-un dépôt y demande d'installer l'app avec l'administration des dépôts.
+Settled in slice 6 of M5 ([0034](../decisions/0034-github-oauth-and-gists.md)): OAuth App, `state` and PKCE, exchange
+on the app server, push limited to public repositories. A GitHub App would have finer permissions, but creating a
+repository there requires installing the app with repository administration.
 
 ### 3.6 Embed
 
-| Menace | Impact | Mitigation |
+| Threat | Impact | Mitigation |
 |---|---|---|
-| Clickjacking sur l'app | Action involontaire (publication, gist) | `frame-ancestors 'none'` sur toutes les routes sauf `/embed/*` |
-| Clickjacking sur l'embed | Action involontaire dans l'embed | L'embed n'a aucune action sensible : pas de connexion GitHub, pas de gist, pas d'export ; « Ouvrir dans Typika » ouvre un nouvel onglet |
-| Le site hôte pilote l'embed par `postMessage` | Injection d'état | API hôte limitée à des options d'affichage (thème, fichier, étape de tour), validées par schema ; aucune lecture d'état de l'utilisateur |
-| L'embed lit l'état de l'utilisateur | Fuite de projets | En contexte tiers, le stockage est partitionné par le navigateur ; l'embed n'utilise que le template public demandé |
+| Clickjacking on the app | Unintended action (publication, gist) | `frame-ancestors 'none'` on every route except `/embed/*` |
+| Clickjacking on the embed | Unintended action in the embed | The embed has no sensitive action: no GitHub sign-in, no gist, no export; "Open in Typika" opens a new tab |
+| The host site drives the embed through `postMessage` | State injection | Host API limited to display options (theme, file, tour step), validated by schema; no read of the user's state |
+| The embed reads the user's state | Project leak | In a third-party context, storage is partitioned by the browser; the embed only uses the requested public template |
 
-Une iframe dans une page tierce non isolée ne peut pas être isolée ([0016](../decisions/0016-isolation-and-embed.md)).
-L'embed exécute `browser-js`, `go` et `kotlin` ([0031](../decisions/0031-embed-runtimes.md)), qui n'utilisent pas
-`SharedArrayBuffer` ; un runtime qui en a besoin n'y démarrerait pas, et l'embed afficherait « Ouvrir dans Typika ».
-L'embed exige un contexte sécurisé : sous une page hôte en `http`, aucun runtime ne démarre et l'embed affiche le même
-repli. Les compilations Kotlin d'un embed passent par le relais de l'app, avec la même limite par IP.
+An iframe in a non-isolated third-party page cannot be isolated ([0016](../decisions/0016-isolation-and-embed.md)).
+The embed runs `browser-js`, `go` and `kotlin` ([0031](../decisions/0031-embed-runtimes.md)), which do not use
+`SharedArrayBuffer`; a runtime that needs it would not start there, and the embed would show "Open in Typika".
+The embed requires a secure context: under a host page over `http`, no runtime starts and the embed shows the same
+fallback. The Kotlin compilations of an embed go through the app relay, with the same per-IP limit.
 
-## 4. En-têtes
+## 4. Headers
 
-| En-tête | Origine app | Origine app `/embed/*` | Origine runtime |
+| Header | App origin | App origin `/embed/*` | Runtime origin |
 |---|---|---|---|
-| `Content-Security-Policy` | stricte (ci-dessous) | stricte + `frame-ancestors *` | permissive pour les scripts, `connect-src` fermé (ci-dessous) |
-| `Cross-Origin-Opener-Policy` | `same-origin` sur les routes isolées ([architecture.md](./architecture.md) §5) | — (sans effet dans une iframe) | `same-origin` |
-| `Cross-Origin-Embedder-Policy` | `require-corp` sur les routes isolées et sur tous les scripts (`.js`) | — (aucune isolation possible dans une page tierce) | `require-corp`, y compris scripts de worker et `.wasm` |
-| `Cross-Origin-Resource-Policy` | `same-origin` | `same-origin` | `cross-origin` (chargée en iframe par l'app) |
+| `Content-Security-Policy` | strict (below) | strict + `frame-ancestors *` | permissive for scripts, `connect-src` closed (below) |
+| `Cross-Origin-Opener-Policy` | `same-origin` on the isolated routes ([architecture.md](./architecture.md) §5) | — (no effect in an iframe) | `same-origin` |
+| `Cross-Origin-Embedder-Policy` | `require-corp` on the isolated routes and on all scripts (`.js`) | — (no isolation possible in a third-party page) | `require-corp`, including worker scripts and `.wasm` |
+| `Cross-Origin-Resource-Policy` | `same-origin` | `same-origin` | `cross-origin` (loaded in an iframe by the app) |
 | `X-Content-Type-Options` | `nosniff` | `nosniff` | `nosniff` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | `strict-origin-when-cross-origin` | `no-referrer` |
-| `Strict-Transport-Security` | `max-age=31536000` | idem | idem |
+| `Strict-Transport-Security` | `max-age=31536000` | same | same |
 
-COEP vaut `require-corp`, pas `credentialless` : WebKit ignore `credentialless` et n'isole alors jamais la page
-([0016](../decisions/0016-isolation-and-embed.md)). Sans CORP `cross-origin` sur l'origine runtime, la runtime frame
-est bloquée par la COEP de l'app ; sans `allow="cross-origin-isolated"` sur l'iframe, Chromium ne l'isole pas. Une
-page isolée ne démarre un worker que si le script du worker répond lui-même avec COEP : l'app pose donc `require-corp`
-sur tous ses scripts, ce qui ne change rien pour un script chargé par une page. C'est le cas du worker du language
-service TypeScript de l'éditeur.
+COEP is `require-corp`, not `credentialless`: WebKit ignores `credentialless` and then never isolates the page
+([0016](../decisions/0016-isolation-and-embed.md)). Without CORP `cross-origin` on the runtime origin, the runtime
+frame is blocked by the app COEP; without `allow="cross-origin-isolated"` on the iframe, Chromium does not isolate it.
+An isolated page only starts a worker if the worker script itself responds with COEP: the app therefore sets
+`require-corp` on all its scripts, which changes nothing for a script loaded by a page. This is the case of the worker
+of the editor's TypeScript language service.
 
-CSP de l'origine app (cible ; au M1, `connect-src` vaut `'self'` et `script-src` ajoute les hashes des scripts inline
-du shell SPA, calculés au démarrage du serveur — les autres sources arrivent avec les fonctions qui les utilisent) :
+CSP of the app origin (target; in M1, `connect-src` is `'self'` and `script-src` adds the hashes of the inline scripts
+of the SPA shell, computed when the server starts — the other sources arrive with the features that use them):
 
 ```
 default-src 'self';
@@ -162,10 +162,10 @@ base-uri 'none';
 frame-ancestors 'none';
 ```
 
-Pas de `'wasm-unsafe-eval'` : le language service TypeScript et le parseur Lezer sont en JavaScript
-([0015](../decisions/0015-editor.md)). Le WASM ne tourne que sur l'origine runtime.
+No `'wasm-unsafe-eval'`: the TypeScript language service and the Lezer parser are in JavaScript
+([0015](../decisions/0015-editor.md)). WASM only runs on the runtime origin.
 
-CSP de l'origine runtime :
+CSP of the runtime origin:
 
 ```
 default-src 'self';
@@ -178,29 +178,29 @@ base-uri 'none';
 frame-ancestors *;
 ```
 
-`<CDN ESM>` est l'origine de `TYPIKA_PACKAGE_URL_TEMPLATE` ; par défaut jsDelivr, la même que les assets.
-`'unsafe-eval'` sert aussi au harness de `browser-js`, qui importe le bundle par un `import()` construit dynamiquement.
+`<CDN ESM>` is the origin of `TYPIKA_PACKAGE_URL_TEMPLATE`; jsDelivr by default, the same as the assets.
+`'unsafe-eval'` also serves the `browser-js` harness, which imports the bundle through a dynamically built `import()`.
 
-`frame-ancestors *` est nécessaire parce que la directive vérifie **toute** la chaîne d'ancêtres : dans un embed, la page
-du site hôte est un ancêtre de la runtime frame. La protection de la frame repose donc sur la vérification d'origine du
-canal (§2.2), pas sur `frame-ancestors`.
+`frame-ancestors *` is required because the directive checks the **whole** chain of ancestors: in an embed, the host
+site page is an ancestor of the runtime frame. The protection of the frame therefore rests on the origin check of the
+channel (§2.2), not on `frame-ancestors`.
 
-## 5. Chaîne d'approvisionnement de Typika
+## 5. Typika's supply chain
 
-- Lockfile obligatoire, `pnpm install --frozen-lockfile` en CI.
-- Délai de sept jours avant d'adopter une nouvelle version. pnpm refuse de résoudre une version plus récente
-  (`minimumReleaseAge` dans `pnpm-workspace.yaml`), et Renovate attend le même délai avant d'ouvrir sa PR
-  (`renovate.json`). Renovate épingle aussi par digest les images Docker et les actions GitHub. Les montées de Go, de
-  Kotlin, de Gradle et du JDK attendent une approbation dans son tableau de bord : elles touchent plusieurs fichiers à
-  la fois, et celle de Kotlin fait recompiler les artefacts du registre.
-- Assets de runtime (WASM d'esbuild, toolchain Go, test runner) : construits avec l'app et servis par l'instance, sous
-  une URL qui change avec leur contenu. Aucun ne vient d'un CDN tiers. Le chargeur vérifie le SHA-256 de chaque asset
-  Go avant de le mettre en cache ([0027](../decisions/0027-go-assets-delivery.md)), et le runtime `browser-js` accepte
-  un hash SRI pour le WASM d'esbuild : une instance qui les servirait depuis un CDN le fournit.
-- Paquets npm (`cli`, `test-runner`) publiés depuis la CI avec provenance.
-- Image Docker construite en CI depuis le dépôt, avec des images de base épinglées par digest.
+- Lockfile required, `pnpm install --frozen-lockfile` in CI.
+- Seven-day delay before adopting a new version. pnpm refuses to resolve a more recent version
+  (`minimumReleaseAge` in `pnpm-workspace.yaml`), and Renovate waits the same delay before opening its PR
+  (`renovate.json`). Renovate also pins Docker images and GitHub actions by digest. Upgrades of Go, Kotlin, Gradle and
+  the JDK wait for approval in its dashboard: they touch several files at once, and the Kotlin one makes the registry
+  artifacts recompile.
+- Runtime assets (esbuild WASM, Go toolchain, test runner): built with the app and served by the instance, under a URL
+  that changes with their content. None comes from a third-party CDN. The loader checks the SHA-256 of each Go asset
+  before caching it ([0027](../decisions/0027-go-assets-delivery.md)), and the `browser-js` runtime accepts an SRI hash
+  for the esbuild WASM: an instance that would serve them from a CDN provides it.
+- npm packages (`cli`, `test-runner`) published from CI with provenance.
+- Docker image built in CI from the repository, with base images pinned by digest.
 
-## 6. Signalement
+## 6. Reporting
 
-Le [`SECURITY.md`](../../SECURITY.md) à la racine indique comment signaler une vulnérabilité en privé (signalement privé
-de GitHub, activé sur le dépôt), les versions suivies et le périmètre.
+The [`SECURITY.md`](../../SECURITY.md) at the root explains how to report a vulnerability privately (GitHub private
+vulnerability reporting, enabled on the repository), the supported versions and the scope.

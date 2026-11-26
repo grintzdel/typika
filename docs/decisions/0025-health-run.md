@@ -1,52 +1,50 @@
-# 0025 — Le run de santé pilote l'app
+# 0025 — The health run drives the app
 
-**Statut** : Acceptée · 2026-10-12 · lot 6 du M3
+**Status**: Accepted · 2026-10-12 · slice 6 of M3
 
-## Contexte
+## Context
 
-[registry §4.2](../specs/registry.md) demande de démarrer chaque template « dans le même environnement que l'app »,
-puis de lancer ses tests et de rejouer ses exercices. `template-check` exécute déjà les tests d'un template dans Node
-(V9), mais ce n'est pas le chemin que suit l'apprenant : le runtime de l'iframe, l'isolation cross-origin, le
-chargement des fichiers à la ref épinglée et l'application de la solution n'y passent pas. L'app ne sait pas encore
-exécuter Go (M4) ni Kotlin (M6), et l'outillage des dépendances diffère pour chaque langage.
+[registry §4.2](../specs/registry.md) requires starting each template "in the same environment as the app", then
+running its tests and replaying its exercises. `template-check` already runs a template's tests in Node (V9), but that
+is not the path the learner follows: the iframe runtime, cross-origin isolation, loading the files at the pinned ref
+and applying the solution are not exercised. The app cannot run Go (M4) or Kotlin (M6) yet, and the dependency tooling
+differs for each language.
 
-## Décision
+## Decision
 
-- `registry-tools health <registre> --app <url>` ouvre chaque template dans Chromium piloté par Playwright, sur une
-  instance de l'app. La sonde passe par l'interface en anglais, comme un apprenant :
-  - le boot ouvre `/play/<name>`, attend le runtime, puis lance Run et attend un code de sortie 0 ;
-  - les tests attendent au moins un test réussi et aucun échec ;
-  - chaque exercice est ouvert, ses tests cibles doivent échouer, puis « Apply the solution » doit le résoudre.
-- Un échec est relancé une fois avant de conclure. Un boot qui dépasse 20 s rend le template `degraded`.
-- La commande écrit `health/<name>.json`, et `registry-tools build` le recopie dans l'index. `brokenSince` et le
-  passage à `deprecated` après 90 jours viennent de l'état précédent. `deprecated = true` dans l'entrée du registre
-  applique une décision de l'équipe au run suivant.
-- Les templates dont l'app n'exécute pas le runtime sont sautés : leur `health` reste `null`. `deps` vaut `skip`
-  tant qu'aucun outillage de dépendances n'est branché.
-- Le hub ajoute une facette de santé. `healthy` et `degraded` sont cochés par défaut, et un template jamais vérifié
-  compte comme sain pour ce filtre. Un template `deprecated` quitte l'accueil.
+- `registry-tools health <registry> --app <url>` opens each template in Chromium driven by Playwright, on an instance
+  of the app. The probe goes through the English interface, like a learner:
+  - the boot opens `/play/<name>`, waits for the runtime, then launches Run and waits for exit code 0;
+  - the tests expect at least one passing test and no failure;
+  - each exercise is opened, its target tests must fail, then "Apply the solution" must solve it.
+- A failure is retried once before concluding. A boot that exceeds 20 s makes the template `degraded`.
+- The command writes `health/<name>.json`, and `registry-tools build` copies it into the index. `brokenSince` and the
+  switch to `deprecated` after 90 days come from the previous state. `deprecated = true` in the registry entry applies
+  a team decision on the next run.
+- Templates whose runtime the app does not run are skipped: their `health` stays `null`. `deps` is `skip` as long as
+  no dependency tooling is plugged in.
+- The hub adds a health facet. `healthy` and `degraded` are checked by default, and a template never checked counts as
+  healthy for this filter. A `deprecated` template leaves the home page.
 
-## Conséquences
+## Consequences
 
-- Le run vise une app qui sert les templates à leur ref épinglée, comme le build de production. En développement,
-  l'app lit les templates sur le disque : c'est pratique pour essayer une réparation, pas pour juger une entrée.
-- V9 refuse déjà à l'indexation une ref dont les tests ou les exercices échouent dans Node. Le run de santé attrape
-  ce que V9 ne voit pas : un Run qui plante, un runtime du navigateur qui régresse, une ref devenue illisible pour
-  l'app.
-- Les sélecteurs de la sonde dépendent des libellés anglais de l'interface. Un E2E de production la lance sur
-  `strategy-ts`, et sur des variantes qui doivent échouer.
-- Un run complet prend une dizaine de secondes par template sain, cinq minutes pour les 34 templates exécutables. Un
-  template cassé prend plus longtemps : chaque étape qui échoue attend son délai, et le run est relancé une fois.
-- Les `registry/health/*.json` sont commités et relancés à la main jusqu'au lot 7. À partir de là, un run planifié en
-  CI les produira dans le dépôt du registre, et les fichiers commités ici disparaîtront.
-- Écart volontaire à [registry §5](../specs/registry.md) : le bandeau d'un template `broken` ou `deprecated`
-  s'affiche aussi dans le bac à sable `/play/<name>`, pas seulement sur sa page du hub. Un lien partagé mène
-  directement au bac à sable, et l'apprenant doit savoir qu'il ouvre un template qu'on ne maintient plus.
+- The run targets an app that serves the templates at their pinned ref, like the production build. In development, the
+  app reads the templates from disk: that is handy to try a repair, not to judge an entry.
+- V9 already refuses at indexing a ref whose tests or exercises fail in Node. The health run catches what V9 does not
+  see: a Run that crashes, a browser runtime that regresses, a ref that has become unreadable for the app.
+- The probe's selectors depend on the interface's English labels. A production E2E runs it on `strategy-ts`, and on
+  variants that must fail.
+- A full run takes about ten seconds per healthy template, five minutes for the 34 runnable templates. A broken
+  template takes longer: each failing step waits for its timeout, and the run is retried once.
+- The `registry/health/*.json` files are committed and rerun by hand until slice 7. From then on, a scheduled CI run
+  will produce them in the registry repository, and the files committed here will disappear.
+- Deliberate deviation from [registry §5](../specs/registry.md): the banner of a `broken` or `deprecated` template is
+  also shown in the `/play/<name>` sandbox, not only on its hub page. A shared link leads straight to the sandbox, and
+  the learner must know they are opening a template that is no longer maintained.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Exécuter les tests dans Node, comme `template-check`** : rapide, mais ne vérifie ni le runtime du navigateur ni
-  le chargement à la ref épinglée, qui sont justement ce qui casse sans qu'on touche au template.
-- **Une page de sonde dédiée dans l'app** : plus stable que des libellés, mais elle testerait une page que
-  l'apprenant n'ouvre jamais.
-- **Marquer `broken` les templates Go et Kotlin** : le bandeau signalerait un manque de l'app, pas du template.
+- **Running the tests in Node, like `template-check`**: fast, but checks neither the browser runtime nor loading at the
+  pinned ref, which are precisely what breaks without anyone touching the template.
+- **A dedicated probe page in the app**: more stable than labels, but it would test a page the learner never opens.
+- **Marking Go and Kotlin templates `broken`**: the banner would signal a gap in the app, not in the template.

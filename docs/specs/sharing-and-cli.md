@@ -1,30 +1,31 @@
-# Persistance, partage, export et CLI
+# Persistence, sharing, export and CLI
 
-Statut : brouillon · 2026-10-08 · Voir aussi : [ui](ui.md), [registry](registry.md), [manifest](manifest.md),
+Status: draft · 2026-10-08 · See also: [ui](ui.md), [registry](registry.md), [manifest](manifest.md),
 [security](security.md)
 
-Aucune donnée utilisateur n'est stockée par Typika. Les projets vivent dans le navigateur ; le partage passe par l'URL
-ou par le compte GitHub de l'utilisateur.
+Typika stores no user data. Projects live in the browser; sharing goes through the URL or through the user's GitHub
+account.
 
-## 1. Persistance locale
+## 1. Local persistence
 
-### 1.1 Schéma IndexedDB
+### 1.1 IndexedDB schema
 
-Base `typika`, versionnée.
+Database `typika`, versioned.
 
-| Store | Clé | Contenu |
+| Store | Key | Content |
 |---|---|---|
 | `projects` | `id` (UUID) | `{ id, name, origin, createdAt, updatedAt, exercise?, ui }` |
-| `files` | `[projectId, path]` | `{ projectId, path, content, updatedAt }` ; index sur `projectId` |
-| `templateCache` | `ref` épinglée | Fichiers d'origine d'un template : sert au reset, au diff et au mode hors ligne |
+| `files` | `[projectId, path]` | `{ projectId, path, content, updatedAt }`; index on `projectId` |
+| `templateCache` | pinned `ref` | Original files of a template: used for reset, diff and offline mode |
 | `exerciseProgress` | `[templateName, exerciseName]` | `{ status: 'started' \| 'passed', hintsRevealed, passedAt? }` |
-| `meta` | clé | Version du schéma applicatif, préférences (langue, thème, layout) |
+| `meta` | key | Version of the application schema, preferences (language, theme, layout) |
 
-Au M1, seuls `projects` et `files` existent (version 1 de la base) ; les autres stores arriveront avec leur jalon, par
-migration. Les templates sont alors intégrés à l'app et n'ont pas de ref : `origin` vaut `{ kind: 'template', name }`, et
-le reset relit le template intégré. La ref épinglée et `templateCache` arrivent avec le registre (M3).
+In M1, only `projects` and `files` exist (version 1 of the database); the other stores will arrive with their
+milestone, through migration. Templates are then built into the app and have no ref: `origin` is
+`{ kind: 'template', name }`, and reset reads the built-in template again. The pinned ref and `templateCache` arrive
+with the registry (M3).
 
-`origin` d'un projet :
+`origin` of a project:
 
 ```ts
 type ProjectOrigin =
@@ -35,147 +36,146 @@ type ProjectOrigin =
   | { kind: 'personal'; name: string; language: Language }
 ```
 
-La ref épinglée du template est à côté de l'origine, dans `projects.ref`. C'est le `parent` d'un remix, conservé à
-l'export (§4, §5). `projects.gistId` garde le gist vers lequel le projet a été partagé (§3).
+The pinned ref of the template sits next to the origin, in `projects.ref`. It is the `parent` of a remix, kept on
+export (§4, §5). `projects.gistId` keeps the gist the project was shared to (§3).
 
-Un projet `personal` (« Nouveau projet », [ui](ui.md) §11) ne dépend plus du catalogue : son état de départ est gardé
-dans `projects.baseline` (chemin → contenu), et sert au reset et au diff. `name` est le `name` de son `typika.toml`, lu
-depuis cet état de départ ; ses exercices éventuels sont ignorés. Une copie d'un template du catalogue garde sa ref dans
-`projects.ref`, comme `parent` à l'export.
+A `personal` project ("New project", [ui](ui.md) §11) no longer depends on the catalog: its start state is kept in
+`projects.baseline` (path → content), and is used for reset and diff. `name` is the `name` of its `typika.toml`, read
+from this start state; its exercises, if any, are ignored. A copy of a catalog template keeps its ref in
+`projects.ref`, as `parent` on export.
 
-Un template peut avoir plusieurs projets : `/p/<projectId>` ouvre l'un d'eux, et `/play/<name>` rouvre le plus récent
-de son origine.
+A template can have several projects: `/p/<projectId>` opens one of them, and `/play/<name>` reopens the most recent
+one of its origin.
 
-Fichiers stockés en texte UTF-8. Les binaires sont refusés à l'import (limites dans [security](security.md)).
+Files stored as UTF-8 text. Binaries are refused on import (limits in [security](security.md)).
 
-Les runtimes lourds (WASM, toolchains) ne sont pas dans IndexedDB : ils sont mis en Cache Storage par leur runtime ([0027](../decisions/0027-go-assets-delivery.md)).
+Heavy runtimes (WASM, toolchains) are not in IndexedDB: they are put in Cache Storage by their runtime ([0027](../decisions/0027-go-assets-delivery.md)).
 
 ### 1.2 Quotas
 
-- Au démarrage, `navigator.storage.persist()` est demandé lors de la création du premier projet, pour réduire le
-  risque d'éviction par le navigateur. Le résultat dépend du navigateur et n'est pas garanti.
-- `navigator.storage.estimate()` alimente l'indicateur d'espace de `/projects`.
-- Au-delà de 80 % du quota estimé : avertissement, suggestion d'exporter ou de supprimer des projets.
-- Écriture refusée (quota dépassé) : l'édition continue en mémoire, bandeau persistant « non enregistré », actions
-  proposées : exporter, libérer de l'espace.
-- `templateCache` est purgé en premier (LRU) : il se reconstruit depuis le réseau.
-- L'UI rappelle que les données locales disparaissent si l'utilisateur efface les données du site.
+- At startup, `navigator.storage.persist()` is requested when the first project is created, to reduce the risk of
+  eviction by the browser. The result depends on the browser and is not guaranteed.
+- `navigator.storage.estimate()` feeds the space indicator of `/projects`.
+- Above 80% of the estimated quota: warning, suggestion to export or delete projects.
+- Write refused (quota exceeded): editing goes on in memory, persistent "not saved" banner, suggested actions: export,
+  free up space.
+- `templateCache` is purged first (LRU): it is rebuilt from the network.
+- The UI reminds that local data disappears if the user clears the site data.
 
 ### 1.3 Migration
 
-- Chaque changement de schéma incrémente la version IndexedDB ; la migration s'exécute dans l'événement
-  `upgradeneeded`, étape par étape (v1→v2→v3), jamais de saut.
-- Une migration est testée avec un jeu de données de la version précédente.
-- Migration en échec : la base est laissée intacte, l'app propose d'exporter tous les projets en zip avant toute autre
+- Each schema change increments the IndexedDB version; the migration runs in the `upgradeneeded` event, step by step
+  (v1→v2→v3), never skipping.
+- A migration is tested with a data set from the previous version.
+- Failed migration: the database is left intact, the app offers to export all projects as a zip before any other
   action.
-- Plusieurs onglets ouverts : un onglet sur une version ancienne reçoit `versionchange`, ferme sa connexion et demande
-  un rechargement.
+- Several open tabs: a tab on an old version receives `versionchange`, closes its connection and asks for a reload.
 
-## 2. Partage par URL — `/s#<payload>`
+## 2. Sharing by URL — `/s#<payload>`
 
-Pour les petits projets, sans serveur ni compte. Le payload est dans le **fragment** : il n'est pas envoyé au serveur
-par le navigateur.
+For small projects, without server or account. The payload is in the **fragment**: the browser does not send it to the
+server.
 
 ### 2.1 Format
 
 ```
-<version>.<données>
+<version>.<data>
 ```
 
-- `version` : entier, actuellement `1`.
-- `données` : base64url de la compression du JSON suivant. Algorithme : `deflate-raw` via `CompressionStream` si
-  disponible ; choix définitif et repli à confirmer en implémentation.
+- `version`: integer, currently `1`.
+- `data`: base64url of the compression of the following JSON. Algorithm: `deflate-raw` through `CompressionStream`
+  if available; final choice and fallback to be confirmed during implementation.
 
 ```jsonc
 {
-  "n": "strategy-ts (remix)",            // nom
-  "o": "github:typika-app/templates/strategy/ts@3f2c9a1e7b4d", // origine, optionnelle
+  "n": "strategy-ts (remix)",            // name
+  "o": "github:typika-app/templates/strategy/ts@3f2c9a1e7b4d", // origin, optional
   "r": "browser-js",                     // runtime
-  "x": "implement-express",              // exercice, optionnel : le delta part de son état de départ
-  "f": { "src/main.ts": "…" },           // fichiers complets si pas d'origine
-  "d": { "src/pricing/strategy.ts": "…", "src/old.ts": null } // ou delta vs origine : contenu complet ou null = supprimé
+  "x": "implement-express",              // exercise, optional: the delta starts from its start state
+  "f": { "src/main.ts": "…" },           // full files if no origin
+  "d": { "src/pricing/strategy.ts": "…", "src/old.ts": null } // or delta vs origin: full content or null = deleted
 }
 ```
 
-- Si `o` est présent et résoluble, seuls les fichiers modifiés sont encodés (`d`) ; c'est le cas courant et cela
-  réduit fortement la taille.
-- Si `o` est absent ou introuvable à l'ouverture, `f` est requis ; sinon erreur explicite.
-- Typika émet `o` et `d` pour un projet issu du catalogue, et `f` sans `o` pour un projet `personal`. Un lien dont `o`
-  désigne un template de l'index s'ouvre sur ce template (`f` est lu à la place de `d` quand il est présent). Sinon,
-  `f` doit contenir un `typika.toml` valide : le lien s'ouvre comme un projet `personal` partagé.
-- `deflate-raw` via `CompressionStream` est retenu, sans repli : les navigateurs visés l'ont tous.
+- If `o` is present and resolvable, only the changed files are encoded (`d`); this is the common case and it greatly
+  reduces the size.
+- If `o` is absent or cannot be found on opening, `f` is required; otherwise an explicit error.
+- Typika emits `o` and `d` for a project from the catalog, and `f` without `o` for a `personal` project. A link whose
+  `o` names a template of the index opens on that template (`f` is read instead of `d` when it is present). Otherwise,
+  `f` must contain a valid `typika.toml`: the link opens as a shared `personal` project.
+- `deflate-raw` through `CompressionStream` is chosen, without fallback: the targeted browsers all have it.
 
-### 2.4 Ouverture
+### 2.4 Opening
 
-- Le lien s'ouvre dans une sandbox éphémère. Le projet local est créé à la première modification, ou sur « Enregistrer
-  dans mes projets », avec l'origine `share-url` et la ref de `o`.
-- Son id est dérivé du payload (SHA-256, au format UUID) : rouvrir le même lien dans le même navigateur rouvre la copie
-  enregistrée, au lieu d'en créer une autre.
-- Reset ramène aux fichiers du template d'origine (ou de l'état de départ de l'exercice), comme pour un projet de
+- The link opens in an ephemeral sandbox. The local project is created on the first change, or on "Save in my
+  projects", with the origin `share-url` and the ref of `o`.
+- Its id is derived from the payload (SHA-256, in UUID format): reopening the same link in the same browser reopens the
+  saved copy, instead of creating another one.
+- Reset brings back the files of the original template (or of the start state of the exercise), as for a template
+  project.
+
+### 2.2 Threshold
+
+- Limit: full URL ≤ 8,000 characters (margin under the common limits of browsers, messaging apps and URL shorteners;
+  to adjust according to tests).
+- Above: the URL option is disabled with the reason, and sharing by gist is offered.
+
+### 2.3 Versioning
+
+- Any incompatible change of the JSON increments `version`.
+- The app decodes every version it has known; an unknown version (payload more recent than the app) shows
+  "This link was made with a newer version of Typika."
+
+## 3. Sharing by gist — `/g/<gistId>`
+
+- Requires a GitHub OAuth sign-in (scope `gist` only). The token is obtained through the exchange endpoint of the
+  instance, kept in session memory (`sessionStorage`), never on the server side. The sign-in is a full-page redirect,
+  with `state` and PKCE ([0034](../decisions/0034-github-oauth-and-gists.md)); on return, the share dialog reopens.
+- Creation: a **secret** gist by default (public option), one file per project file. A gist is flat: `/` becomes `__`
+  in the file name, with a `~2` suffix in case of collision.
+- `typika.share.json` describes the project: `v` (version, `1`), `n` (name), `o` (origin ref), `r` (runtime), `x`
+  (exercise, optional), `files` (name in the gist → path) and `blank` (path → content of the empty or blank files,
+  which the gists API refuses). Gist files absent from `files` are ignored.
+- Sharing again a project already shared updates the same gist: its id is kept in `projects.gistId`. A project never
+  saved, or opened from someone else's gist, creates a new gist.
+- As for a link: a gist whose `o` names a template of the index opens on that template, and a gist without `o` (or of
+  an unknown template) opens as a `personal` project if its files contain a valid `typika.toml`. A gist with a file the
+  API truncated (more than 1 MB) is not opened.
+- Opening `/g/<gistId>`: read through the public GitHub API, without sign-in. The API rate limits for anonymous
+  requests apply; when exceeded, a message and an offer to sign in.
+- A secret gist stays reachable by anyone who has the link: the UI says so at sharing time.
+
+## 4. Zip export
+
+- From the sandbox and `/projects`, without sign-in.
+- Content: the project files, including `typika.toml` (with `parent` if remix) and `tour/`.
+- Option "without the Typika files": same rule as `typika create` without `--keep-tour` (§6.4). It lives in
+  `@typika/manifest` (`withoutTypikaFiles`), which the CLI reuses.
+- With the Typika files, `typika.toml` receives `parent` (the pinned ref of the template) if it does not already
+  declare one.
+- Name: `<project-name>.zip`, without the characters a file name cannot carry.
+
+## 5. Push to GitHub
+
+- OAuth sign-in with the `public_repo` scope, requested at push time only. V1 only creates public repositories: `repo`
+  is never requested ([0034](../decisions/0034-github-oauth-and-gists.md)).
+- Form: repository name, description, include the Typika files (yes by default).
+- Creates the repository, then a single initial commit on the default branch. No push to an existing repository in V1.
+  The GitHub Git API refuses an empty repository: the repository is created with `auto_init`, then its branch is moved
+  onto a commit without parent that carries the files.
+- The pushed `typika.toml` keeps `parent`; a minimal README is added if none exists, with a link to the original
   template.
-
-### 2.2 Seuil
-
-- Limite : URL complète ≤ 8 000 caractères (marge sous les limites courantes des navigateurs, messageries et
-  raccourcisseurs ; à ajuster selon les tests).
-- Au-dessus : l'option URL est désactivée avec la raison, et le partage par gist est proposé.
-
-### 2.3 Versionnement
-
-- Toute évolution incompatible du JSON incrémente `version`.
-- L'app décode toutes les versions qu'elle a connues ; une version inconnue (payload plus récent que l'app) affiche
-  « ce lien a été créé avec une version plus récente de Typika ».
-
-## 3. Partage par gist — `/g/<gistId>`
-
-- Nécessite une connexion GitHub OAuth (scope `gist` uniquement). Le jeton est obtenu via l'endpoint d'échange de
-  l'instance, conservé en mémoire de session (`sessionStorage`), jamais côté serveur. La connexion est une redirection
-  pleine page, avec `state` et PKCE ([0034](../decisions/0034-github-oauth-and-gists.md)) ; au retour, le dialogue de
-  partage se rouvre.
-- Création : un gist **secret** par défaut (option public), un fichier par fichier du projet. Un gist est plat : `/`
-  devient `__` dans le nom du fichier, avec un suffixe `~2` en cas de collision.
-- `typika.share.json` décrit le projet : `v` (version, `1`), `n` (nom), `o` (ref d'origine), `r` (runtime), `x`
-  (exercice, optionnel), `files` (nom dans le gist → chemin) et `blank` (chemin → contenu des fichiers vides ou
-  blancs, que l'API des gists refuse). Les fichiers du gist absents de `files` sont ignorés.
-- Re-partager un projet déjà partagé met à jour le même gist : son id est gardé dans `projects.gistId`. Un projet
-  jamais enregistré, ou ouvert depuis le gist de quelqu'un d'autre, crée un nouveau gist.
-- Comme pour un lien : un gist dont `o` désigne un template de l'index s'ouvre sur ce template, et un gist sans `o`
-  (ou d'un template inconnu) s'ouvre comme un projet `personal` si ses fichiers contiennent un `typika.toml` valide. Un
-  gist dont l'API a tronqué un fichier (plus de 1 Mo) n'est pas ouvert.
-- Ouverture de `/g/<gistId>` : lecture via l'API publique GitHub, sans connexion. Les limites de débit de l'API pour
-  les requêtes anonymes s'appliquent ; en cas de dépassement, message et proposition de se connecter.
-- Un gist secret reste accessible à quiconque a le lien : l'UI le dit au moment du partage.
-
-## 4. Export zip
-
-- Depuis la sandbox et `/projects`, sans connexion.
-- Contenu : les fichiers du projet, dont `typika.toml` (avec `parent` si remix) et `tour/`.
-- Option « sans les fichiers Typika » : même règle que `typika create` sans `--keep-tour` (§6.4). Elle vit dans
-  `@typika/manifest` (`withoutTypikaFiles`), que le CLI reprend.
-- Avec les fichiers Typika, `typika.toml` reçoit `parent` (la ref épinglée du template) s'il n'en déclare pas déjà un.
-- Nom : `<nom-du-projet>.zip`, sans les caractères qu'un nom de fichier ne peut pas porter.
-
-## 5. Push vers GitHub
-
-- Connexion OAuth avec le scope `public_repo`, demandé au moment du push seulement. V1 ne crée que des dépôts
-  publics : `repo` n'est jamais demandé ([0034](../decisions/0034-github-oauth-and-gists.md)).
-- Formulaire : nom du dépôt, description, inclure les fichiers Typika (oui par défaut).
-- Crée le dépôt, puis un commit initial unique sur la branche par défaut. Pas de push vers un dépôt existant en V1.
-  L'API Git de GitHub refuse un dépôt vide : le dépôt est créé avec `auto_init`, puis sa branche est replacée sur un
-  commit sans parent qui porte les fichiers.
-- Le `typika.toml` poussé conserve `parent` ; un README minimal est ajouté s'il n'existe pas, avec un lien vers le
-  template d'origine.
-- Résultat : lien vers le dépôt et suggestion « proposer au registre » ([registry](registry.md#2-processus-de-contribution)).
-- Erreurs (nom déjà pris, scope refusé, limite d'API) : message avec la cause, formulaire conservé. Si le dépôt est
-  créé mais que l'envoi des fichiers échoue, le message demande de le supprimer avant de réessayer.
-- Le formulaire vit dans le dialogue Exporter. La suggestion « proposer au registre » n'a pas de lien tant que le
-  registre n'est pas public (#92).
+- Result: link to the repository and suggestion "propose to the registry" ([registry](registry.md#2-contribution-process)).
+- Errors (name already taken, scope refused, API limit): message with the cause, form kept. If the repository is
+  created but sending the files fails, the message asks to delete it before trying again.
+- The form lives in the Export dialog. The "propose to the registry" suggestion has no link as long as the registry is
+  not public (#92).
 
 ## 6. CLI `typika create`
 
-Package npm `typika`, utilisable via `npx typika`. Node ≥ 22.
+npm package `typika`, usable through `npx typika`. Node ≥ 22.
 
-### 6.1 Commandes
+### 6.1 Commands
 
 ```
 typika create <template> [dir] [options]
@@ -183,73 +183,73 @@ typika validate [dir] [options]
 typika --version | --help
 ```
 
-### 6.2 Arguments et options de `create`
+### 6.2 Arguments and options of `create`
 
-| Élément | Description |
+| Element | Description |
 |---|---|
-| `<template>` | Nom du registre (`strategy-ts`) ou ref (`github:owner/repo/path@ref`). |
-| `[dir]` | Dossier cible. Défaut : nom du template. Doit être absent ou vide. |
-| `--variant <lang>` | Prendre la variante dans ce langage (`go`, `kotlin`…). Erreur si elle n'existe pas. |
-| `--exercise <name>` | Créer le projet dans l'état initial de cet exercice, énoncé inclus. |
-| `--keep-tour` | Garder `typika.toml` et `tour/`. |
-| `--no-install` | Ne pas installer les dépendances. Par défaut, l'installation n'est pas lancée non plus en V1 ; la commande est affichée. |
-| `--registry <url>` | URL d'un `index.json` alternatif (instance auto-hébergée). |
-| `--archive-url <gabarit>` | Gabarit d'URL des archives (`{owner}`, `{repo}`, `{ref}`). Défaut : `https://codeload.github.com/{owner}/{repo}/tar.gz/{ref}` ([0032](../decisions/0032-cli-archives-and-validate.md)). |
-| `--force` | Autoriser un dossier non vide. |
-| `--json` | Sortie machine (une ligne JSON finale). |
+| `<template>` | Registry name (`strategy-ts`) or ref (`github:owner/repo/path@ref`). |
+| `[dir]` | Target folder. Default: template name. Must be absent or empty. |
+| `--variant <lang>` | Take the variant in this language (`go`, `kotlin`…). Error if it does not exist. |
+| `--exercise <name>` | Create the project in the initial state of this exercise, statement included. |
+| `--keep-tour` | Keep `typika.toml` and `tour/`. |
+| `--no-install` | Do not install the dependencies. By default, the install is not started either in V1; the command is shown. |
+| `--registry <url>` | URL of an alternative `index.json` (self-hosted instance). |
+| `--archive-url <url-template>` | URL pattern of the archives (`{owner}`, `{repo}`, `{ref}`). Default: `https://codeload.github.com/{owner}/{repo}/tar.gz/{ref}` ([0032](../decisions/0032-cli-archives-and-validate.md)). |
+| `--force` | Allow a non-empty folder. |
+| `--json` | Machine output (one final JSON line). |
 
-### 6.3 Résolution
+### 6.3 Resolution
 
-1. `<template>` contient `github:` → ref directe, sans passer par le registre ; avertissement si la ref n'est pas
-   épinglée sur un SHA.
-2. Sinon → recherche par nom dans l'index (défaut : index de l'instance publique). Template `deprecated` : avertissement,
-   création quand même ; `broken` : avertissement.
-3. `--variant` → résolution via `variants` de l'entrée trouvée.
-4. Téléchargement de l'archive de la ref épinglée depuis GitHub ; extraction du sous-dossier `path` si présent.
-5. Validation du manifeste ; version de `schema` inconnue → erreur.
+1. `<template>` contains `github:` → direct ref, without going through the registry; warning if the ref is not pinned
+   on a SHA.
+2. Otherwise → search by name in the index (default: index of the public instance). `deprecated` template: warning,
+   created anyway; `broken`: warning.
+3. `--variant` → resolution through `variants` of the entry found.
+4. Download of the archive of the pinned ref from GitHub; extraction of the `path` subfolder if present.
+5. Validation of the manifest; unknown `schema` version → error.
 
-### 6.4 Sortie
+### 6.4 Output
 
-- Par défaut, retire : `typika.toml`, `tour/`, la définition des exercices et leurs solutions.
-- Avec `--keep-tour` : garde `typika.toml`, `tour/` et `exercises/`, et ajoute `parent` à `typika.toml`, comme l'export
-  zip avec les fichiers Typika (§4). Avec `--exercise`, `exercises/` est retiré.
-- Avec `--exercise` : garde l'énoncé de l'exercice dans `EXERCISE.md`, retire indices et solution.
-- Ajoute un `README.md` s'il n'existe pas, avec titre, résumé, lien vers la page du template.
-- Affiche les prochaines étapes : `cd <dir>`, commande d'installation et de test selon le langage.
+- By default, removes: `typika.toml`, `tour/`, the definition of the exercises and their solutions.
+- With `--keep-tour`: keeps `typika.toml`, `tour/` and `exercises/`, and adds `parent` to `typika.toml`, like the zip
+  export with the Typika files (§4). With `--exercise`, `exercises/` is removed.
+- With `--exercise`: keeps the statement of the exercise in `EXERCISE.md`, removes hints and solution.
+- Adds a `README.md` if none exists, with title, summary, link to the template page.
+- Shows the next steps: `cd <dir>`, install and test command according to the language.
 
-### 6.5 Codes de sortie
+### 6.5 Exit codes
 
-| Code | Cas |
+| Code | Case |
 |---|---|
-| `0` | Succès |
-| `1` | Erreur inattendue |
-| `2` | Arguments invalides |
-| `3` | Template introuvable (nom ou ref) |
-| `4` | Variante ou exercice introuvable |
-| `5` | Manifeste invalide ou version de schéma non supportée |
-| `6` | Dossier cible non vide (sans `--force`) |
-| `7` | Erreur réseau ou limite d'API GitHub |
+| `0` | Success |
+| `1` | Unexpected error |
+| `2` | Invalid arguments |
+| `3` | Template not found (name or ref) |
+| `4` | Variant or exercise not found |
+| `5` | Invalid manifest or unsupported schema version |
+| `6` | Target folder not empty (without `--force`) |
+| `7` | Network error or GitHub API limit |
 
 ## 7. `typika validate`
 
-Pour les auteurs de templates, avant une PR au registre. Exécute en local les validations automatiques du registre qui
-ne dépendent pas du registre lui-même ([registry §2.2](registry.md#22-validations-automatiques-bloquantes)).
+For template authors, before a PR to the registry. Runs locally the automatic registry validations that do not depend
+on the registry itself ([registry §2.2](registry.md#22-automatic-validations-blocking)).
 
 ```
 typika validate [dir] [--run] [--json]
 ```
 
-| Vérification | Sans `--run` | Avec `--run` |
+| Check | Without `--run` | With `--run` |
 |---|---|---|
-| Manifeste valide (schéma, facettes, topics connus) | ✓ | ✓ |
-| Licence présente | ✓ | ✓ |
-| Fichiers référencés présents, ancres de tour dans les bornes | ✓ | ✓ |
-| Ids d'étapes uniques ; alignement avec la variante TS de référence si elle est accessible | ✓ | ✓ |
-| Taille et types de fichiers dans les limites | ✓ | ✓ |
-| Tests du template et exercices (V9), avec les runners de `template-check` dans Node | — | ✓ |
+| Valid manifest (schema, facets, known topics) | ✓ | ✓ |
+| License present | ✓ | ✓ |
+| Referenced files present, tour anchors within bounds | ✓ | ✓ |
+| Unique step ids; alignment with the reference TS variant if it is reachable | ✓ | ✓ |
+| File size and types within limits | ✓ | ✓ |
+| Template tests and exercises (V9), with the `template-check` runners in Node | — | ✓ |
 
-- `--run` n'exécute pas l'entrée : le boot reste au run de santé (V8). Kotlin nécessite l'URL d'un service de
-  compilation (`--kotlin-compiler <url>`), sans valeur par défaut : le relais de l'instance publique n'accepte que l'app
+- `--run` does not run the entry: the boot stays in the health run (V8). Kotlin requires the URL of a compilation
+  service (`--kotlin-compiler <url>`), without a default value: the relay of the public instance only accepts the app
   ([0032](../decisions/0032-cli-archives-and-validate.md)).
-- Sortie : liste des erreurs et avertissements avec le fichier ou le champ concerné ; code `0` si aucune erreur, `5` sinon.
-- Les topics connus sont lus depuis l'index du registre (même option `--registry`).
+- Output: list of errors and warnings with the file or field concerned; code `0` if no error, `5` otherwise.
+- Known topics are read from the registry index (same `--registry` option).

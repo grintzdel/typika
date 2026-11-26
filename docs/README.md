@@ -1,39 +1,39 @@
 # Documentation
 
-## Par où commencer
+## Where to start
 
-1. [Vision](vision.md) — pourquoi, pour qui, ce qui est dans le périmètre et ce qui n'y est pas.
-2. [Roadmap](roadmap.md) — les jalons et leur critère de fin.
-3. [Décisions](decisions/README.md) — les choix structurants et leurs raisons.
+1. [Vision](vision.md) — why, for whom, what is in scope and what is not.
+2. [Roadmap](roadmap.md) — the milestones and their done criterion.
+3. [Decisions](decisions/README.md) — the structural choices and their reasons.
 
-## Produit
+## Product
 
-| Document | Contenu |
+| Document | Content |
 |---|---|
-| [Catalogue](specs/catalogue.md) | Les 16 concepts initiaux, leur base, tour, exercices et couverture par langage |
-| [UI](specs/ui.md) | Écrans, routes, interactions, accessibilité |
-| [Registre](specs/registry.md) | Publication, index, CI de santé, gouvernance |
-| [Partage et CLI](specs/sharing-and-cli.md) | Persistance locale, partage, export, `typika create` |
+| [Catalogue](specs/catalogue.md) | The 16 initial concepts, their base, tour, exercises and coverage per language |
+| [UI](specs/ui.md) | Screens, routes, interactions, accessibility |
+| [Registry](specs/registry.md) | Publication, index, health CI, governance |
+| [Sharing and CLI](specs/sharing-and-cli.md) | Local persistence, sharing, export, `typika create` |
 
-## Technique
+## Technical
 
-| Document | Contenu |
+| Document | Content |
 |---|---|
-| [Manifeste](specs/manifest.md) | Spec normative de `typika.toml` |
-| [Runtimes](specs/runtimes.md) | Contrat `RuntimePort`, runtimes `browser-js`, `go`, `kotlin` |
-| [Architecture](specs/architecture.md) | Monorepo, modules, flux de données, tests |
-| [Sécurité](specs/security.md) | Modèle de menaces et mitigations |
-| [Spikes](spikes.md) | Questions ouvertes à trancher au M0 |
+| [Manifest](specs/manifest.md) | Normative spec of `typika.toml` |
+| [Runtimes](specs/runtimes.md) | `RuntimePort` contract, `browser-js`, `go`, `kotlin` runtimes |
+| [Architecture](specs/architecture.md) | Monorepo, modules, data flow, tests |
+| [Security](specs/security.md) | Threat model and mitigations |
+| [Spikes](spikes.md) | Open questions to settle in M0 |
 
 ## Guides
 
-| Document | Pour |
+| Document | For |
 |---|---|
-| [Écrire un template](guides/template-authoring.md) | Auteurs de templates |
-| [Héberger Typika](guides/hosting.md) | Déploiement Docker, Vercel, autres |
-| [Contribuer](../CONTRIBUTING.md) | Contributeurs |
+| [Writing a template](guides/template-authoring.md) | Template authors |
+| [Hosting Typika](guides/hosting.md) | Docker, Vercel and other deployments |
+| [Contributing](../CONTRIBUTING.md) | Contributors |
 
-## Historique
+## History
 
-[Spec de conception initiale](specs/2026-10-08-typika-v1-design.md) : trace des discussions qui ont mené aux documents
-ci-dessus. En cas de divergence, les documents dédiés et les ADR font foi.
+[Initial design spec](specs/2026-10-08-typika-v1-design.md): record of the discussions that led to the documents
+above. If they diverge, the dedicated documents and the ADRs prevail.

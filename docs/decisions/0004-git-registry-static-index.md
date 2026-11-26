@@ -1,22 +1,23 @@
-# 0004 — Registre Git et index statique
+# 0004 — Git registry and static index
 
-**Statut** : Acceptée · 2026-10-08
+**Status**: Accepted · 2026-10-08
 
-## Contexte
+## Context
 
-Le hub doit lister, classer et décrire les templates. Une base de données et une API seraient le réflexe habituel.
+The hub must list, classify and describe the templates. A database and an API would be the usual reflex.
 
-## Décision
+## Decision
 
-Le registre est un **dépôt Git** : une PR ajoute une entrée. Sa CI résout les manifestes, calcule la santé et publie un
-`index.json` statique. Le contenu des templates reste dans leurs propres dépôts. Voir [registry](../specs/registry.md).
+The registry is a **Git repository**: a PR adds an entry. Its CI resolves the manifests, computes the health and
+publishes a static `index.json`. The content of the templates stays in their own repositories. See
+[registry](../specs/registry.md).
 
-## Conséquences
+## Consequences
 
-- Pas de base de données ni d'API à héberger ; gouvernance transparente (historique Git, revue de PR).
-- Publier un template demande une PR : friction voulue, qui sert la curation.
-- La fraîcheur de l'index dépend de la fréquence de la CI.
+- No database or API to host; transparent governance (Git history, PR review).
+- Publishing a template requires a PR: intended friction, which serves curation.
+- The freshness of the index depends on the frequency of the CI.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Base de données + API de publication** : coût, comptes, modération, sans bénéfice pour un catalogue curé.
+- **Database + publication API**: cost, accounts, moderation, with no benefit for a curated catalog.

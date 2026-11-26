@@ -1,80 +1,80 @@
-# Héberger Typika
+# Hosting Typika
 
-Statut : guide · aligné sur les fichiers du dépôt (`Dockerfile`, `docker-compose.yml`, `deploy/Caddyfile`,
-`.env.example`) depuis le M1, et sur le profil Compose `kotlin` depuis le lot 3 du M6. L'instance publique suit le §4
-([0035](../decisions/0035-public-instance-hosting.md)) ; Vercel (§5) reste à faire.
+Status: guide · in line with the repository files (`Dockerfile`, `docker-compose.yml`, `deploy/Caddyfile`,
+`.env.example`) since M1, and with the `kotlin` Compose profile since slice 3 of M6. The public instance follows §4
+([0035](../decisions/0035-public-instance-hosting.md)); Vercel (§5) is still to do.
 
-Contexte : [architecture.md](../specs/architecture.md) pour les composants, [security.md](../specs/security.md) pour les
-en-têtes et l'isolation.
+Context: [architecture.md](../specs/architecture.md) for the components, [security.md](../specs/security.md) for the
+headers and isolation.
 
-## 1. Ce qu'il faut héberger
+## 1. What to host
 
-| Composant | Obligatoire | Rôle |
+| Component | Required | Role |
 |---|---|---|
-| `web` | oui | Statique (hub prérendu, sandbox SPA, runtime frame) + `POST /api/github/token` |
-| Deux origines | oui | App et runtime. Instance publique : deux **sites différents** ; instance privée : un sous-domaine suffit ([security.md](../specs/security.md) §2.1) |
-| `kotlin-compiler` | non | Compilation Kotlin ; sans lui, les templates Kotlin sont masqués |
-| Application OAuth GitHub | non | Sans elle, partage par gist et export GitHub désactivés |
-| CDN d'assets | non | Assets lourds (WASM) ; par défaut un CDN public, auto-hébergeable |
+| `web` | yes | Static (prerendered hub, sandbox SPA, runtime frame) + `POST /api/github/token` |
+| Two origins | yes | App and runtime. Public instance: two **different sites**; private instance: a subdomain is enough ([security.md](../specs/security.md) §2.1) |
+| `kotlin-compiler` | no | Kotlin compilation; without it, Kotlin templates are hidden |
+| GitHub OAuth application | no | Without it, gist sharing and GitHub export are disabled |
+| Asset CDN | no | Heavy assets (WASM); a public CDN by default, self-hostable |
 
-**Mode statique pur** : sans endpoint ni service Kotlin, l'app reste utilisable (hub, sandbox TS / JS / Go, partage
-par URL, export zip). Toute plateforme qui sert du statique avec des en-têtes personnalisés suffit.
+**Pure static mode**: without the endpoint or the Kotlin service, the app stays usable (hub, TS / JS / Go sandbox,
+sharing by URL, zip export). Any platform that serves static files with custom headers is enough.
 
-## 2. Variables d'environnement
+## 2. Environment variables
 
-Lues **au démarrage du conteneur**, pas au build : une même image sert plusieurs instances. Le serveur expose les
-valeurs publiques au client via `/config.json`.
+Read **when the container starts**, not at build time: one image serves several instances. The server exposes the
+public values to the client through `/config.json`.
 
-| Variable | Obligatoire | Publique | Exemple | Rôle |
+| Variable | Required | Public | Example | Role |
 |---|---|---|---|---|
-| `TYPIKA_PUBLIC_URL` | oui | oui | `https://typika.example.org` | Origine de l'app |
-| `TYPIKA_RUNTIME_ORIGIN` | oui | oui | `https://typika-run.example.net` | Origine de la runtime frame, site différent de l'app |
-| `TYPIKA_REGISTRY_INDEX_URL` | non | oui | `https://…/index.json` | Index du registre ; défaut : `/registry/index.json`, servi par l'app jusqu'au lot 7 du M3. Les artefacts Kotlin sont lus à côté, dans `artifacts/kotlin/` |
-| `TYPIKA_TEMPLATE_FILE_URL_TEMPLATE` | non | oui | `https://cdn.jsdelivr.net/gh/{owner}/{repo}@{ref}/{path}` | Fichier d'un template à sa ref épinglée ([0022](../decisions/0022-template-files-source.md)) ; défaut : le miroir de l'app |
-| `TYPIKA_TEMPLATE_LISTING_URL_TEMPLATE` | non | oui | `https://data.jsdelivr.com/v1/packages/gh/{owner}/{repo}@{ref}?structure=flat` | Liste des fichiers d'un dépôt à un commit, au format de jsDelivr ; défaut : le miroir de l'app |
-| `TYPIKA_ASSETS_BASE_URL` | non | oui | `https://cdn.jsdelivr.net/npm/@typika/runtime-assets@1.0.0/` | Base des assets de runtime. Pas encore lue : l'image sert ses propres assets ([0027](../decisions/0027-go-assets-delivery.md)) |
-| `TYPIKA_PACKAGE_URL_TEMPLATE` | non | oui | `https://esm.sh/{name}@{version}{path}` | CDN ESM des dépendances npm des templates `browser-js` ; défaut : jsDelivr ([runtimes](../specs/runtimes.md) §6.1) |
-| `TYPIKA_EMBED_ENABLED` | non | oui | `true` | Active `/embed/*` |
-| `KOTLIN_COMPILER_URL` | non | non | `http://kotlin-compiler:8080` | Adresse interne du service de compilation, que l'app relaie sous `/api/kotlin` ([0029](../decisions/0029-kotlin-relay-rate-limit.md)) ; absent ⇒ Kotlin désactivé |
-| `TYPIKA_KOTLIN_RATE_PER_MINUTE` | non | non | `20` | Compilations par minute et par IP ; au-delà, `429` |
-| `TYPIKA_KOTLIN_RATE_BURST` | non | non | `10` | Compilations d'avance qu'une IP peut enchaîner |
-| `TYPIKA_TRUST_PROXY` | non | non | `true` | L'IP du client est le dernier `X-Forwarded-For` ; seulement derrière un proxy qui réécrit cet en-tête (Caddy). `docker-compose.yml` le fixe à `true` |
-| `GITHUB_CLIENT_ID` | non | oui | `Ov23li…` | Application OAuth ; absent ⇒ fonctions GitHub désactivées |
-| `GITHUB_CLIENT_SECRET` | si `GITHUB_CLIENT_ID` | **non** | — | Échange `code` → token, jamais exposé au client |
-| `TYPIKA_GITHUB_URL` | non | oui | `https://github.example.com` | Remplace `https://github.com` : GitHub Enterprise, ou le faux GitHub des E2E ([0034](../decisions/0034-github-oauth-and-gists.md)) |
-| `TYPIKA_GITHUB_RATE_PER_MINUTE` | non | non | `10` | Échanges `code` → token par minute et par IP ; au-delà, `429` |
-| `TYPIKA_GITHUB_RATE_BURST` | non | non | `5` | Échanges d'avance qu'une IP peut enchaîner |
-| `TYPIKA_GITHUB_API_URL` | non | oui | `https://github.example.com/api/v3` | Remplace `https://api.github.com` ; son origine entre dans `connect-src` |
-| `PORT` | non | non | `3000` | Port d'écoute du service `web` |
-| `NODE_ENV` | non | non | `production` | — |
+| `TYPIKA_PUBLIC_URL` | yes | yes | `https://typika.example.org` | App origin |
+| `TYPIKA_RUNTIME_ORIGIN` | yes | yes | `https://typika-run.example.net` | Origin of the runtime frame, a different site from the app |
+| `TYPIKA_REGISTRY_INDEX_URL` | no | yes | `https://…/index.json` | Registry index; default: `/registry/index.json`, served by the app until slice 7 of M3. The Kotlin artifacts are read next to it, in `artifacts/kotlin/` |
+| `TYPIKA_TEMPLATE_FILE_URL_TEMPLATE` | no | yes | `https://cdn.jsdelivr.net/gh/{owner}/{repo}@{ref}/{path}` | File of a template at its pinned ref ([0022](../decisions/0022-template-files-source.md)); default: the app's mirror |
+| `TYPIKA_TEMPLATE_LISTING_URL_TEMPLATE` | no | yes | `https://data.jsdelivr.com/v1/packages/gh/{owner}/{repo}@{ref}?structure=flat` | List of the files of a repository at a commit, in jsDelivr's format; default: the app's mirror |
+| `TYPIKA_ASSETS_BASE_URL` | no | yes | `https://cdn.jsdelivr.net/npm/@typika/runtime-assets@1.0.0/` | Base of the runtime assets. Not read yet: the image serves its own assets ([0027](../decisions/0027-go-assets-delivery.md)) |
+| `TYPIKA_PACKAGE_URL_TEMPLATE` | no | yes | `https://esm.sh/{name}@{version}{path}` | ESM CDN for the npm dependencies of `browser-js` templates; default: jsDelivr ([runtimes](../specs/runtimes.md) §6.1) |
+| `TYPIKA_EMBED_ENABLED` | no | yes | `true` | Enables `/embed/*` |
+| `KOTLIN_COMPILER_URL` | no | no | `http://kotlin-compiler:8080` | Internal address of the compilation service, which the app relays under `/api/kotlin` ([0029](../decisions/0029-kotlin-relay-rate-limit.md)); absent ⇒ Kotlin disabled |
+| `TYPIKA_KOTLIN_RATE_PER_MINUTE` | no | no | `20` | Compilations per minute and per IP; beyond that, `429` |
+| `TYPIKA_KOTLIN_RATE_BURST` | no | no | `10` | Compilations in advance that an IP can chain |
+| `TYPIKA_TRUST_PROXY` | no | no | `true` | The client IP is the last `X-Forwarded-For`; only behind a proxy that rewrites this header (Caddy). `docker-compose.yml` sets it to `true` |
+| `GITHUB_CLIENT_ID` | no | yes | `Ov23li…` | OAuth application; absent ⇒ GitHub features disabled |
+| `GITHUB_CLIENT_SECRET` | if `GITHUB_CLIENT_ID` | **no** | — | `code` → token exchange, never exposed to the client |
+| `TYPIKA_GITHUB_URL` | no | yes | `https://github.example.com` | Replaces `https://github.com`: GitHub Enterprise, or the E2E fake GitHub ([0034](../decisions/0034-github-oauth-and-gists.md)) |
+| `TYPIKA_GITHUB_RATE_PER_MINUTE` | no | no | `10` | `code` → token exchanges per minute and per IP; beyond that, `429` |
+| `TYPIKA_GITHUB_RATE_BURST` | no | no | `5` | Exchanges in advance that an IP can chain |
+| `TYPIKA_GITHUB_API_URL` | no | yes | `https://github.example.com/api/v3` | Replaces `https://api.github.com`; its origin goes into `connect-src` |
+| `PORT` | no | no | `3000` | Listening port of the `web` service |
+| `NODE_ENV` | no | no | `production` | — |
 
-Variables du service `kotlin-compiler` :
+Variables of the `kotlin-compiler` service:
 
-| Variable | Défaut | Rôle |
+| Variable | Default | Role |
 |---|---|---|
-| `KOTLIN_COMPILER_ALLOWED_ORIGIN` | — | Origine autorisée en CORS (l'app) ; inutile si le service est derrière le même domaine |
-| `KOTLIN_COMPILER_MAX_BODY_KB` | `256` | Taille max des sources |
-| `KOTLIN_COMPILER_TIMEOUT_MS` | `15000` | Timeout de compilation ; au-delà, le processus de compilation est tué et la réponse est `504` |
-| `KOTLIN_COMPILER_CONCURRENCY` | `2` | Processus de compilation, donc compilations simultanées ; les suivantes attendent |
-| `KOTLIN_COMPILER_QUEUE_MAX` | `20` | Compilations en attente ; au-delà, réponse `503` |
-| `KOTLIN_COMPILER_CACHE_MB` | `32` | Cache mémoire des artefacts (`0` pour désactiver) |
-| `KOTLIN_COMPILER_WORKER_JAVA_OPTS` | voir [0028](../decisions/0028-kotlin-compilation-workers.md) | Options JVM des processus de compilation |
+| `KOTLIN_COMPILER_ALLOWED_ORIGIN` | — | Origin allowed in CORS (the app); unneeded if the service is behind the same domain |
+| `KOTLIN_COMPILER_MAX_BODY_KB` | `256` | Max size of the sources |
+| `KOTLIN_COMPILER_TIMEOUT_MS` | `15000` | Compilation timeout; beyond it, the compilation process is killed and the response is `504` |
+| `KOTLIN_COMPILER_CONCURRENCY` | `2` | Compilation processes, hence simultaneous compilations; the next ones wait |
+| `KOTLIN_COMPILER_QUEUE_MAX` | `20` | Waiting compilations; beyond that, response `503` |
+| `KOTLIN_COMPILER_CACHE_MB` | `32` | In-memory cache of the artifacts (`0` to disable) |
+| `KOTLIN_COMPILER_WORKER_JAVA_OPTS` | see [0028](../decisions/0028-kotlin-compilation-workers.md) | JVM options of the compilation processes |
 
-Avec Compose, ces variables se règlent dans `.env`, d'où `docker-compose.yml` reprend `CONCURRENCY`, `QUEUE_MAX`,
-`TIMEOUT_MS` et `CACHE_MB` ; le service ne lit pas le reste de `.env`, qui peut contenir des secrets de `web`.
-`KOTLIN_COMPILER_MEMORY` (`1g`) et `KOTLIN_COMPILER_CPUS` (`2`) plafonnent le conteneur : les monter avec la
-concurrence.
+With Compose, these variables are set in `.env`, from which `docker-compose.yml` takes `CONCURRENCY`, `QUEUE_MAX`,
+`TIMEOUT_MS` and `CACHE_MB`; the service does not read the rest of `.env`, which may contain secrets of `web`.
+`KOTLIN_COMPILER_MEMORY` (`1g`) and `KOTLIN_COMPILER_CPUS` (`2`) cap the container: raise them along with the
+concurrency.
 
-Une file pleine et un processus de compilation planté répondent tous deux `503` avec `Retry-After: 5`, que le relais
-transmet. Le relais répond lui-même `503` avec `Retry-After: 5` quand le service est injoignable ou ne répond pas en
+A full queue and a crashed compilation process both respond `503` with `Retry-After: 5`, which the relay passes on.
+The relay itself responds `503` with `Retry-After: 5` when the service is unreachable or does not respond within
 25 s.
 
-Valeurs alignées sur [runtimes.md](../specs/runtimes.md) §8. Dimensionnement mesuré au lot 1 du M6
-([0028](../decisions/0028-kotlin-compilation-workers.md)) : avec 2 vCPU et 1 Gio, 2 processus de compilation tiennent
-2,4 compilations par seconde de `strategy-kotlin`, avec un pic à 815 Mio. Chaque processus de plus coûte environ
-380 Mio.
+Values in line with [runtimes.md](../specs/runtimes.md) §8. Sizing measured in slice 1 of M6
+([0028](../decisions/0028-kotlin-compilation-workers.md)): with 2 vCPU and 1 GiB, 2 compilation processes sustain
+2.4 compilations per second of `strategy-kotlin`, with a peak at 815 MiB. Each additional process costs about
+380 MiB.
 
-L'image se lance comme ceci hors de Compose, avec les protections de [security §3.3](../specs/security.md) :
+Outside Compose, the image runs like this, with the protections of [security §3.3](../specs/security.md):
 
 ```sh
 docker build -t typika-kotlin-compiler services/kotlin-compiler
@@ -89,104 +89,108 @@ pnpm install --frozen-lockfile
 pnpm --filter @typika/web build
 ```
 
-Le build produit `apps/web/dist/` : `client/` (assets, shell SPA `_shell.html` et pages du hub prérendues), `runtime/` (runtime frame), `server/` (handler
-TanStack Start des routes serveur) et `node/main.js`, le serveur de production. Les deux bundles serveur embarquent
-leurs dépendances : `dist/` suffit pour lancer l'app avec `node dist/node/main.js`, sans `node_modules`.
+The build produces `apps/web/dist/`: `client/` (assets, SPA shell `_shell.html` and prerendered hub pages), `runtime/`
+(runtime frame), `server/` (TanStack Start handler for the server routes) and `node/main.js`, the production server.
+Both server bundles embed their dependencies: `dist/` is enough to run the app with `node dist/node/main.js`, without
+`node_modules`.
 
-Le build écrit aussi l'index du registre (plugin Vite `registry-index`) et le miroir des templates à leur ref épinglée
-(`pnpm --filter @typika/web build:registry`) dans `dist/client/registry/`. Tous deux lisent l'historique Git : le build
-demande un clone complet et `git`. Les
-fichiers sous `/registry/gh/` et `/registry/listing/` sont servis comme immuables, l'index en `no-cache`. Si les trois
-URL du registre pointent sur une autre origine, elle doit répondre avec CORS ou `Cross-Origin-Resource-Policy:
-cross-origin`, et la CSP de l'app l'ajoute à `connect-src`.
+The build also writes the registry index (Vite plugin `registry-index`) and the mirror of the templates at their pinned
+ref (`pnpm --filter @typika/web build:registry`) into `dist/client/registry/`. Both read the Git history: the build
+needs a full clone and `git`. The
+files under `/registry/gh/` and `/registry/listing/` are served as immutable, the index as `no-cache`. If the three
+registry URLs point to another origin, it must respond with CORS or `Cross-Origin-Resource-Policy:
+cross-origin`, and the app's CSP adds it to `connect-src`.
 
-Le prérendu du hub lit l'index du registre **au build**. Pour que les pages du hub suivent le registre :
+The hub prerendering reads the registry index **at build time**. For the hub pages to follow the registry:
 
-- reconstruire l'image à chaque publication de l'index (webhook du registre ou build planifié) ;
-- en attendant, l'accueil et la liste montrent l'index du build. La page d'un template absent du build est servie par
-  le shell, et le client la rend à partir de `TYPIKA_REGISTRY_INDEX_URL` ([0023](../decisions/0023-hub-prerendering.md)).
+- Rebuild the image on each publication of the index (registry webhook or scheduled build).
+- In the meantime, the home page and the list show the index of the build. The page of a template absent from the
+  build is served by the shell, and the client renders it from `TYPIKA_REGISTRY_INDEX_URL`
+  ([0023](../decisions/0023-hub-prerendering.md)).
 
-Le serveur sert `<chemin>/index.html` quand le build l'a prérendu, avec une CSP qui autorise les scripts inline de
-cette page, et le shell sinon.
+The server serves `<path>/index.html` when the build prerendered it, with a CSP that allows the inline scripts of
+that page, and the shell otherwise.
 
-## 4. Docker (cible principale)
+## 4. Docker (main target)
 
-### 4.1 Le serveur `web` pose les en-têtes
+### 4.1 The `web` server sets the headers
 
-Le serveur de production (`apps/web/server/`) sert les deux origines depuis un seul port et choisit selon l'en-tête
-`Host` :
+The production server (`apps/web/server/`) serves both origins from a single port and picks one based on the `Host`
+header:
 
-- **hôte runtime** (celui de `TYPIKA_RUNTIME_ORIGIN`) : uniquement `/runtime/*` (runtime frame, assets,
-  `/runtime/config.json`). Toute autre URL répond `404` : aucune page de l'app n'est servie sur l'origine runtime.
-- **tout autre hôte** : l'app. `/config.json` et `/api/*` vont au handler TanStack Start, les fichiers de
-  `dist/client/` sont servis tels quels, les autres chemins reçoivent le shell SPA. `/runtime/*` répond `404`.
+- **runtime host** (the one of `TYPIKA_RUNTIME_ORIGIN`): only `/runtime/*` (runtime frame, assets,
+  `/runtime/config.json`). Any other URL responds `404`: no app page is served on the runtime origin.
+- **any other host**: the app. `/config.json` and `/api/*` go to the TanStack Start handler, the files of
+  `dist/client/` are served as is, the other paths receive the SPA shell. `/runtime/*` responds `404`.
 
-Il pose lui-même COOP, COEP, CORP, CSP, `Referrer-Policy` et `X-Content-Type-Options` selon l'hôte et le chemin
-([security.md](../specs/security.md) §4). Les scripts inline du shell sont autorisés par leur hash, calculé au
-démarrage. Tous les scripts de l'app portent `Cross-Origin-Embedder-Policy: require-corp`, sans quoi une page isolée
-refuse d'y démarrer un worker (celui du language service de l'éditeur). L'image est donc correcte derrière n'importe quel reverse proxy ; celui-ci n'ajoute que TLS, HSTS et la
-compression. Les assets hashés (`/assets/*`, `/runtime/assets/*`) sont servis avec
-`Cache-Control: public, max-age=31536000, immutable`, le reste avec `no-cache`.
+It sets COOP, COEP, CORP, CSP, `Referrer-Policy` and `X-Content-Type-Options` itself, based on the host and the path
+([security.md](../specs/security.md) §4). The inline scripts of the shell are allowed by their hash, computed at
+startup. All the app's scripts carry `Cross-Origin-Embedder-Policy: require-corp`, otherwise an isolated page
+refuses to start a worker from them (the one of the editor's language service). The image is therefore correct behind
+any reverse proxy; the proxy only adds TLS, HSTS and
+compression. Hashed assets (`/assets/*`, `/runtime/assets/*`) are served with
+`Cache-Control: public, max-age=31536000, immutable`, the rest with `no-cache`.
 
 ### 4.2 Dockerfile
 
-Multi-stage, image de base `node:24-slim` épinglée par digest :
+Multi-stage, base image `node:24-slim` pinned by digest:
 
-1. **`build`** : installe `git` (le miroir des templates lit l'historique, d'où `.git` dans le contexte), active pnpm via Corepack, `pnpm fetch` sur le lockfile (couche mise en cache tant que le lockfile ne
-   change pas), copie les sources, `pnpm install --offline --frozen-lockfile`, `pnpm --filter @typika/web build`.
-2. **`runtime`** : copie uniquement `apps/web/dist/`, utilisateur `node` (uid 1000), `EXPOSE 3000`, `HEALTHCHECK` sur
-   `GET /`. Environ 370 Mo, dont l'essentiel est l'image Node.
+1. **`build`**: installs `git` (the template mirror reads the history, hence `.git` in the context), enables pnpm
+   through Corepack, `pnpm fetch` on the lockfile (layer cached as long as the lockfile does not
+   change), copies the sources, `pnpm install --offline --frozen-lockfile`, `pnpm --filter @typika/web build`.
+2. **`runtime`**: copies only `apps/web/dist/`, user `node` (uid 1000), `EXPOSE 3000`, `HEALTHCHECK` on
+   `GET /`. About 370 MB, most of it the Node image.
 
-Le conteneur ne lit ni n'écrit rien d'autre que `dist/` : il tourne avec `read_only: true` et sans capabilities.
+The container reads and writes nothing but `dist/`: it runs with `read_only: true` and without capabilities.
 
-### 4.3 docker-compose.yml et Caddyfile
+### 4.3 docker-compose.yml and Caddyfile
 
-`docker-compose.yml` lance `web` (construit depuis le `Dockerfile`) derrière Caddy, qui attend que `web` soit
-`healthy`. `deploy/Caddyfile` déclare les deux domaines (`TYPIKA_APP_DOMAIN`, `TYPIKA_RUNTIME_DOMAIN`), obtient les
-certificats, ajoute HSTS, compresse, retire l'en-tête `Server` et transmet tout à `web:3000` en conservant `Host`.
-Compose publie les ports 80 et 443, ce dernier en TCP et en UDP pour HTTP/3.
+`docker-compose.yml` runs `web` (built from the `Dockerfile`) behind Caddy, which waits for `web` to be
+`healthy`. `deploy/Caddyfile` declares the two domains (`TYPIKA_APP_DOMAIN`, `TYPIKA_RUNTIME_DOMAIN`), obtains the
+certificates, adds HSTS, compresses, removes the `Server` header and forwards everything to `web:3000`, keeping `Host`.
+Compose publishes ports 80 and 443, the latter over TCP and UDP for HTTP/3.
 
-Le service Kotlin est dans le profil Compose `kotlin`. Il n'est branché qu'au réseau `kotlin`, déclaré `internal` :
-aucun accès sortant, et seul `web`, branché aux deux réseaux, le joint. Caddy ne le voit pas. `web` le relaie sous
-`/api/kotlin` et limite le débit par IP ([0029](../decisions/0029-kotlin-relay-rate-limit.md)) ; Compose fixe
-`TYPIKA_TRUST_PROXY=true`, puisque Caddy remplace le `X-Forwarded-For` reçu par l'adresse qu'il voit. Le conteneur du
-service reprend les protections de [security §3.3](../specs/security.md) : FS en lecture seule, `tmpfs` de 64 Mio
-sur `/tmp`, sans capabilities, 1 Gio sans swap, 2 CPU, 256 processus.
+The Kotlin service is in the `kotlin` Compose profile. It is attached only to the `kotlin` network, declared
+`internal`: no outbound access, and only `web`, attached to both networks, reaches it. Caddy does not see it. `web`
+relays it under `/api/kotlin` and rate limits by IP ([0029](../decisions/0029-kotlin-relay-rate-limit.md)); Compose sets
+`TYPIKA_TRUST_PROXY=true`, since Caddy replaces the received `X-Forwarded-For` with the address it sees. The service
+container takes over the protections of [security §3.3](../specs/security.md): read-only FS, 64 MiB `tmpfs`
+on `/tmp`, no capabilities, 1 GiB without swap, 2 CPUs, 256 processes.
 
-### 4.4 Démarrage
+### 4.4 Starting
 
 ```sh
-cp .env.example .env            # renseigner les variables du §2 et les deux domaines
+cp .env.example .env            # fill in the variables of §2 and the two domains
 docker compose up -d --build
 ```
 
-Avec Kotlin, décommenter `KOTLIN_COMPILER_URL=http://kotlin-compiler:8080` dans `.env`, puis :
+With Kotlin, uncomment `KOTLIN_COMPILER_URL=http://kotlin-compiler:8080` in `.env`, then:
 
 ```sh
 docker compose --profile kotlin up -d --build
 ```
 
-Sans le profil, laisser `KOTLIN_COMPILER_URL` commenté : sinon l'app propose Kotlin et chaque compilation répond
-`503`.
+Without the profile, leave `KOTLIN_COMPILER_URL` commented out: otherwise the app offers Kotlin and every compilation
+responds `503`.
 
-### 4.5 Test de charge du service Kotlin
+### 4.5 Load test of the Kotlin service
 
-`services/kotlin-compiler/scripts/load-test.ts` mesure le service à travers Caddy et le relais, sur la pile Compose
-lancée avec le profil `kotlin`. Deux scénarios :
+`services/kotlin-compiler/scripts/load-test.ts` measures the service through Caddy and the relay, on the Compose stack
+started with the `kotlin` profile. Two scenarios:
 
 ```sh
-# limites par défaut : une rafale d'un même client reçoit des 429 avec Retry-After
+# default limits: a burst from a single client receives 429s with Retry-After
 pnpm --filter @typika/kotlin-compiler load-test --app http://localhost --scenario rate --requests 30
-# relancer web avec TYPIKA_KOTLIN_RATE_BURST=1000 : 60 compilations simultanées et deux compilations piégées
+# restart web with TYPIKA_KOTLIN_RATE_BURST=1000: 60 simultaneous compilations and two trapped compilations
 pnpm --filter @typika/kotlin-compiler load-test --app http://localhost --scenario saturate --requests 60
 ```
 
-Le second scénario échoue si une compilation répond autre chose que `200` ou `503`, si la file pleine ne répond pas
-`503` avec `Retry-After`, si les compilations piégées ne reçoivent pas `504`, si le conteneur dépasse sa limite
-mémoire, est tué pour mémoire ou redémarre, ou si le service ne compile plus après la charge. Pour l'essai en local,
-`TYPIKA_APP_DOMAIN=http://localhost` et `TYPIKA_RUNTIME_DOMAIN=http://127.0.0.1` font servir Caddy en HTTP.
+The second scenario fails if a compilation responds anything other than `200` or `503`, if the full queue does not
+respond `503` with `Retry-After`, if the trapped compilations do not receive `504`, if the container exceeds its memory
+limit, is killed for memory or restarts, or if the service no longer compiles after the load. For a local trial,
+`TYPIKA_APP_DOMAIN=http://localhost` and `TYPIKA_RUNTIME_DOMAIN=http://127.0.0.1` make Caddy serve over HTTP.
 
-Essai local sans Caddy, deux sites sur le même port :
+Local trial without Caddy, two sites on the same port:
 
 ```sh
 docker build -t typika-web .
@@ -194,31 +198,31 @@ docker run --rm -p 3200:3000 --read-only --cap-drop ALL \
   -e TYPIKA_PUBLIC_URL=http://localhost:3200 -e TYPIKA_RUNTIME_ORIGIN=http://127.0.0.1:3200 typika-web
 ```
 
-`localhost` et `127.0.0.1` sont des sites différents et des contextes sécurisés : la runtime frame y est isolée comme
-en production.
+`localhost` and `127.0.0.1` are different sites and secure contexts: the runtime frame is isolated there as in
+production.
 
-### 4.6 Sur un VPS, et la répétition locale
+### 4.6 On a VPS, and the local rehearsal
 
-L'instance publique tourne ainsi ([0035](../decisions/0035-public-instance-hosting.md)). Sur la machine :
+The public instance runs this way ([0035](../decisions/0035-public-instance-hosting.md)). On the machine:
 
-- Docker avec Compose, et un **clone complet** du dépôt : le build lit l'historique Git (§3).
-- Au moins **4 Gio de mémoire, avec du swap** : construire l'image `web` demande environ 2 Gio et celle de
-  `kotlin-compiler` environ 1,5 Gio, pendant que la pile continue de tourner. Sous 2 Gio, la construction de `web`
-  est tuée faute de mémoire ([0035](../decisions/0035-public-instance-hosting.md)).
-- Les deux domaines pointent sur la machine (`A`, et `AAAA` si elle a une IPv6) avant le premier démarrage : Caddy
-  demande les certificats dès qu'il se lance.
-- Le pare-feu laisse entrer 80/tcp, 443/tcp et 443/udp, et rien d'autre que SSH.
-- `.env` à partir de `.env.example`, lisible par le seul compte qui lance Compose : il porte `GITHUB_CLIENT_SECRET`.
+- Docker with Compose, and a **full clone** of the repository: the build reads the Git history (§3).
+- At least **4 GiB of memory, with swap**: building the `web` image takes about 2 GiB and the `kotlin-compiler` one
+  about 1.5 GiB, while the stack keeps running. Below 2 GiB, the `web` build
+  is killed for lack of memory ([0035](../decisions/0035-public-instance-hosting.md)).
+- Both domains point to the machine (`A`, and `AAAA` if it has an IPv6) before the first start: Caddy
+  requests the certificates as soon as it starts.
+- The firewall lets in 80/tcp, 443/tcp and 443/udp, and nothing else but SSH.
+- `.env` from `.env.example`, readable only by the account that runs Compose: it holds `GITHUB_CLIENT_SECRET`.
 
-Une mise à jour de l'app, ou une publication du registre à faire apparaître dans le hub :
+An update of the app, or a registry publication to show in the hub:
 
 ```sh
 git pull --ff-only
 docker compose --profile kotlin up -d --build
 ```
 
-La pile se répète en local, en HTTPS, sans domaine ni VPS. Caddy signe les noms en `.localhost` avec son autorité
-interne, et `localhost` et `typika-run.localhost` sont deux sites différents. Dans `.env` :
+The stack can be rehearsed locally, over HTTPS, without a domain or a VPS. Caddy signs `.localhost` names with its
+internal authority, and `localhost` and `typika-run.localhost` are two different sites. In `.env`:
 
 ```sh
 TYPIKA_PUBLIC_URL=https://localhost
@@ -234,106 +238,106 @@ docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt /tmp/caddy-ro
 curl -I --cacert /tmp/caddy-root.crt https://localhost/play/strategy-ts
 ```
 
-Le test de charge (§4.5) lit cette autorité avec `NODE_EXTRA_CA_CERTS=/tmp/caddy-root.crt` et
-`--app https://localhost`. La suite E2E de production (§9) ne la connaît pas : `TYPIKA_E2E_IGNORE_HTTPS_ERRORS=1` lui
-fait accepter le certificat. Une IP ne convient pas comme second site en HTTPS : sans SNI, Caddy ne trouve pas son
-certificat.
+The load test (§4.5) reads this authority with `NODE_EXTRA_CA_CERTS=/tmp/caddy-root.crt` and
+`--app https://localhost`. The production E2E suite (§9) does not know it: `TYPIKA_E2E_IGNORE_HTTPS_ERRORS=1` makes
+it accept the certificate. An IP does not work as the second site over HTTPS: without SNI, Caddy does not find its
+certificate.
 
-### 4.7 Derrière le proxy d'une plateforme (Coolify)
+### 4.7 Behind a platform's proxy (Coolify)
 
-Sur une machine dont un proxy tient déjà les ports 80 et 443, `docker-compose.coolify.yml` lance `web` et
-`kotlin-compiler` sans Caddy et sans publier de port : la plateforme termine TLS et route les deux domaines vers le
-port 3000 de `web`. Écrit pour Coolify (ressource « Docker Compose » pointée sur ce fichier), il convient à tout proxy
-qui rejoint le réseau du projet.
+On a machine where a proxy already holds ports 80 and 443, `docker-compose.coolify.yml` runs `web` and
+`kotlin-compiler` without Caddy and without publishing a port: the platform terminates TLS and routes both domains to
+port 3000 of `web`. Written for Coolify ("Docker Compose" resource pointed at this file), it suits any proxy
+that joins the project's network.
 
-- Les deux domaines se rattachent au service `web`, port 3000. `kotlin-compiler` n'en reçoit aucun.
-- `TYPIKA_PUBLIC_URL` et `TYPIKA_RUNTIME_ORIGIN` sont obligatoires ; `GITHUB_CLIENT_ID` et `GITHUB_CLIENT_SECRET`
-  se règlent au même endroit. Kotlin est toujours activé.
-- La machine ne construit rien : elle tire `ghcr.io/typika-app/typika-web` et
-  `ghcr.io/typika-app/typika-kotlin-compiler`, que le workflow `images` publie pour amd64 et arm64 à chaque commit de
-  `main`, sous `latest` et sous le SHA du commit. Les deux services ont `pull_policy: always` : chaque redéploiement retélécharge
-  `latest`, sans quoi la plateforme relance l'image déjà présente. `TYPIKA_IMAGE_TAG` épingle un SHA. Construire les deux images à la
-  fois demande environ 3,5 Gio (§4.6), ce qu'une machine de 4 Gio partagée n'a pas.
-- Les images ne sont pas signées.
-- `Strict-Transport-Security`, que le Caddyfile pose ici, revient au proxy de la plateforme.
-- À vérifier après le premier déploiement : que la plateforme n'a pas branché `kotlin-compiler` à un réseau qui sort
-  (`docker inspect`), et que le proxy remplace bien le `X-Forwarded-For` reçu, sans quoi la limite de débit par IP se
-  contourne.
+- Both domains are attached to the `web` service, port 3000. `kotlin-compiler` gets none.
+- `TYPIKA_PUBLIC_URL` and `TYPIKA_RUNTIME_ORIGIN` are required; `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`
+  are set in the same place. Kotlin is always enabled.
+- The machine builds nothing: it pulls `ghcr.io/typika-app/typika-web` and
+  `ghcr.io/typika-app/typika-kotlin-compiler`, which the `images` workflow publishes for amd64 and arm64 on each commit
+  to `main`, under `latest` and under the commit SHA. Both services have `pull_policy: always`: each redeployment pulls
+  `latest` again, otherwise the platform restarts the image already present. `TYPIKA_IMAGE_TAG` pins a SHA. Building
+  both images at once takes about 3.5 GiB (§4.6), which a shared 4 GiB machine does not have.
+- The images are not signed.
+- `Strict-Transport-Security`, which the Caddyfile sets here, falls to the platform's proxy.
+- To check after the first deployment: that the platform has not attached `kotlin-compiler` to a network with outbound
+  access (`docker inspect`), and that the proxy does replace the received `X-Forwarded-For`, otherwise the per-IP rate
+  limit can be bypassed.
 
 ## 5. Vercel
 
-- Projet Vercel sur `apps/web`, deux domaines rattachés : celui de l'app et celui du runtime.
-- Les en-têtes doivent être déclarés dans `vercel.ts` avec des règles par hôte (`has: [{ type: 'host', value: … }]`)
-  et par chemin, avec les mêmes valeurs que le serveur `web` (§4.1, `apps/web/server/security-headers.ts`). Non fait
-  au M1 ; la syntaxe exacte est à vérifier contre `@vercel/config`.
-- `POST /api/github/token` tourne en fonction Vercel (runtime Node par défaut).
-- **Le service Kotlin ne tourne pas sur Vercel** : c'est un conteneur JVM avec une file et des limites réseau. Le
-  déployer sur un VPS ou un service de conteneurs managé. Le relais `/api/kotlin` et son rate limiting vivent dans le
-  serveur Node de l'app ([0029](../decisions/0029-kotlin-relay-rate-limit.md)) : à porter en fonction Vercel, à
-  faire avec le reste de ce §5.
-- Variables d'env via `vercel env` ; `GITHUB_CLIENT_SECRET` uniquement en environnement serveur.
+- Vercel project on `apps/web`, two domains attached: the app's and the runtime's.
+- The headers must be declared in `vercel.ts` with per-host rules (`has: [{ type: 'host', value: … }]`)
+  and per-path rules, with the same values as the `web` server (§4.1, `apps/web/server/security-headers.ts`). Not done
+  in M1; the exact syntax is to be checked against `@vercel/config`.
+- `POST /api/github/token` runs as a Vercel function (Node runtime by default).
+- **The Kotlin service does not run on Vercel**: it is a JVM container with a queue and network limits. Deploy it on a
+  VPS or a managed container service. The `/api/kotlin` relay and its rate limiting live in the app's Node server
+  ([0029](../decisions/0029-kotlin-relay-rate-limit.md)): to be ported to a Vercel function, to be done with the rest
+  of this §5.
+- Env variables through `vercel env`; `GITHUB_CLIENT_SECRET` only in the server environment.
 
-## 6. Autres plateformes
+## 6. Other platforms
 
-Exigences pour toute plateforme :
+Requirements for any platform:
 
-1. Servir le statique avec des **en-têtes différents par hôte et par chemin** (COOP, COEP, CORP, CSP).
-2. Rattacher deux domaines de sites différents.
-3. Optionnel : exécuter une fonction pour `POST /api/github/token`.
+1. Serve static files with **different headers per host and per path** (COOP, COEP, CORP, CSP).
+2. Attach two domains on different sites.
+3. Optional: run a function for `POST /api/github/token`.
 
-| Plateforme | En-têtes | Endpoint | Remarque |
+| Platform | Headers | Endpoint | Note |
 |---|---|---|---|
-| Cloudflare Pages | fichier `_headers` | Pages Functions | À tester : règles d'en-têtes par hôte |
-| Netlify | fichier `_headers` ou `netlify.toml` | Netlify Functions | Idem |
-| Hébergement statique simple (S3 + CDN, GitHub Pages) | selon le CDN | non | Mode statique pur ; GitHub Pages ne permet pas d'en-têtes personnalisés, donc **ne convient pas** |
+| Cloudflare Pages | `_headers` file | Pages Functions | To test: per-host header rules |
+| Netlify | `_headers` file or `netlify.toml` | Netlify Functions | Same |
+| Simple static hosting (S3 + CDN, GitHub Pages) | depends on the CDN | no | Pure static mode; GitHub Pages does not allow custom headers, so it is **not suitable** |
 
-## 7. Assets lourds
+## 7. Heavy assets
 
-Les assets de runtime (WASM d'esbuild, toolchain Go) sont dans l'image et servis par le domaine runtime
+The runtime assets (esbuild WASM, Go toolchain) are in the image and served by the runtime domain
 ([0027](../decisions/0027-go-assets-delivery.md)).
 
-- **Build** : l'étape de build du `Dockerfile` copie Go 1.24.5 depuis l'image `golang` épinglée par digest et
-  reconstruit les assets Go (`pnpm --filter @typika/runtime-go build:assets`, environ 100 s). Hors Docker, le Go
-  installé sur la machine doit être exactement la version épinglée.
-- **Service** : `/runtime/assets/go/<clé>/` en `Cache-Control: public, max-age=31536000, immutable`. Chaque fichier
-  a sa version `.br`, servie avec `Content-Encoding: br` quand le navigateur l'accepte (11,9 Mo au lieu de 79 Mo). Un
-  proxy placé devant ne doit pas recompresser une réponse qui a déjà un `Content-Encoding` ; Caddy ne le fait pas.
-- **Cache** : le navigateur garde les assets Go en Cache Storage sur le domaine runtime ; un rechargement ne les
-  retélécharge pas.
-- La version des assets est figée par la version de l'app : ne pas mélanger.
+- **Build**: the build stage of the `Dockerfile` copies Go 1.24.5 from the `golang` image pinned by digest and
+  rebuilds the Go assets (`pnpm --filter @typika/runtime-go build:assets`, about 100 s). Outside Docker, the Go
+  installed on the machine must be exactly the pinned version.
+- **Serving**: `/runtime/assets/go/<key>/` with `Cache-Control: public, max-age=31536000, immutable`. Each file
+  has its `.br` version, served with `Content-Encoding: br` when the browser accepts it (11.9 MB instead of 79 MB). A
+  proxy placed in front must not recompress a response that already has a `Content-Encoding`; Caddy does not.
+- **Cache**: the browser keeps the Go assets in Cache Storage on the runtime domain; a reload does not download them
+  again.
+- The version of the assets is fixed by the version of the app: do not mix them.
 
 ## 8. GitHub OAuth
 
-1. Créer une OAuth App ([0034](../decisions/0034-github-oauth-and-gists.md)) : *Settings → Developer settings → OAuth
-   Apps* du compte ou de l'organisation.
-2. URL de callback : `<TYPIKA_PUBLIC_URL>/auth/github/callback`.
-3. Renseigner `GITHUB_CLIENT_ID` et `GITHUB_CLIENT_SECRET`. L'échange `POST /api/github/token` est limité par IP
-   (`TYPIKA_GITHUB_RATE_*`), et refuse un `Origin` autre que l'app.
+1. Create an OAuth App ([0034](../decisions/0034-github-oauth-and-gists.md)): *Settings → Developer settings → OAuth
+   Apps* of the account or the organization.
+2. Callback URL: `<TYPIKA_PUBLIC_URL>/auth/github/callback`.
+3. Fill in `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`. The `POST /api/github/token` exchange is rate limited per IP
+   (`TYPIKA_GITHUB_RATE_*`), and rejects an `Origin` other than the app.
 
-En développement, le callback est `http://localhost:3000/auth/github/callback`, et les deux variables vont dans
-`apps/web/.env.local`, que `pnpm --filter @typika/web dev` lit au démarrage. Ce fichier est ignoré par git, et une
-variable déjà définie dans le shell l'emporte sur lui.
+In development, the callback is `http://localhost:3000/auth/github/callback`, and both variables go in
+`apps/web/.env.local`, which `pnpm --filter @typika/web dev` reads at startup. This file is ignored by git, and a
+variable already defined in the shell takes precedence over it.
 
-## 9. Checklist après déploiement
+## 9. Post-deployment checklist
 
-- [ ] Les deux domaines répondent en HTTPS, certificats valides.
-- [ ] Instance publique : le domaine runtime est un **site différent** de l'app (pas un sous-domaine).
-- [ ] `curl -I <app>/play/strategy-ts` montre `Cross-Origin-Opener-Policy: same-origin` et
+- [ ] Both domains respond over HTTPS, with valid certificates.
+- [ ] Public instance: the runtime domain is a **different site** from the app (not a subdomain).
+- [ ] `curl -I <app>/play/strategy-ts` shows `Cross-Origin-Opener-Policy: same-origin` and
       `Cross-Origin-Embedder-Policy: require-corp`.
-- [ ] Dans la sandbox, une erreur de type tapée dans l'éditeur est soulignée : le worker du language service démarre.
-- [ ] `curl -I <app>/` montre `frame-ancestors 'none'` ; `curl -I <app>/embed/<template>` montre `frame-ancestors *`,
-      sans COOP ni COEP.
-- [ ] Dans la sandbox, la console de la runtime frame renvoie `self.crossOriginIsolated === true`.
-- [ ] Une page de l'app demandée sur le domaine runtime n'est pas servie.
-- [ ] Un template TS s'ouvre, ses tests passent.
-- [ ] `/play/strategy-go` télécharge la toolchain Go en brotli (`Content-Encoding: br` sur `compile.wasm`), ses tests
-      passent, et un rechargement ne la retélécharge pas.
-- [ ] `/config.json` ne contient aucun secret.
-- [ ] Avec Kotlin : un template Kotlin compile ; le scénario `rate` du test de charge (§4.5) passe ; une connexion
-      sortante depuis le conteneur `kotlin-compiler` échoue.
-- [ ] Sans Kotlin : aucun template Kotlin n'apparaît dans le hub.
-- [ ] Avec GitHub : connexion, création de gist, puis déconnexion qui vide `sessionStorage`.
-- [ ] La suite E2E de production passe contre l'instance, lancée sans Kotlin, puisque ses tests du hub attendent une
-      instance qui ne compile pas :
+- [ ] In the sandbox, a type error typed in the editor is underlined: the language service worker starts.
+- [ ] `curl -I <app>/` shows `frame-ancestors 'none'`; `curl -I <app>/embed/<template>` shows `frame-ancestors *`,
+      without COOP or COEP.
+- [ ] In the sandbox, the runtime frame console returns `self.crossOriginIsolated === true`.
+- [ ] An app page requested on the runtime domain is not served.
+- [ ] A TS template opens, its tests pass.
+- [ ] `/play/strategy-go` downloads the Go toolchain in brotli (`Content-Encoding: br` on `compile.wasm`), its tests
+      pass, and a reload does not download it again.
+- [ ] `/config.json` contains no secret.
+- [ ] With Kotlin: a Kotlin template compiles; the `rate` scenario of the load test (§4.5) passes; an outbound
+      connection from the `kotlin-compiler` container fails.
+- [ ] Without Kotlin: no Kotlin template appears in the hub.
+- [ ] With GitHub: sign-in, gist creation, then sign-out that clears `sessionStorage`.
+- [ ] The production E2E suite passes against the instance, started without Kotlin, since its hub tests expect an
+      instance that does not compile:
       `TYPIKA_E2E_APP_URL=<app> TYPIKA_E2E_RUNTIME_URL=<runtime> pnpm --filter @typika/web test:e2e:production headers sandbox hub compare embed`.
-      `registry` et `health` demandent le registre de test du build local, et `github` son faux GitHub.
+      `registry` and `health` need the test registry of the local build, and `github` its fake GitHub.

@@ -1,29 +1,29 @@
-# Architecture du code
+# Code architecture
 
-Statut : spec · détaille les §13 et §14 de la [spec V1](./2026-10-08-typika-v1-design.md)
+Status: spec · details §13 and §14 of the [V1 spec](./2026-10-08-typika-v1-design.md)
 
-## 1. Vue d'ensemble
+## 1. Overview
 
-Typika est une app presque entièrement côté client. Le serveur sert du statique et un seul endpoint, plus un service de
-compilation Kotlin facultatif.
+Typika is an app that runs almost entirely on the client. The server serves static files and a single endpoint, plus
+an optional Kotlin compilation service.
 
 ```
-┌───────────────────────────── navigateur ──────────────────────────────┐
-│ Origine app (TYPIKA_PUBLIC_URL)          Origine runtime              │
+┌─────────────────────────────── browser ───────────────────────────────┐
+│ App origin (TYPIKA_PUBLIC_URL)           Runtime origin               │
 │ ┌──────────────────────────────┐          (TYPIKA_RUNTIME_ORIGIN)    │
 │ │ hub · sandbox · embed        │ postMsg  ┌──────────────────────────┐ │
 │ │ React + Effect Atom          │◀────────▶│ runtime frame            │ │
-│ │ IndexedDB (projets)          │          │ workers · WASM · preview │ │
+│ │ IndexedDB (projects)         │          │ workers · WASM · preview │ │
 │ └──────────────────────────────┘          └──────────────────────────┘ │
 └────────┬──────────────────────────┬───────────────────────────────────┘
-         │ statique + index.json    │ POST /compile (Kotlin uniquement)
+         │ static + index.json      │ POST /compile (Kotlin only)
          │ POST /api/github/token   ▼
    ┌─────┴──────┐          ┌──────────────────┐        ┌──────────────┐
-   │ web (Node) │          │ kotlin-compiler  │        │ CDN d'assets │
+   │ web (Node) │          │ kotlin-compiler  │        │  Asset CDN   │
    └────────────┘          └──────────────────┘        └──────────────┘
 ```
 
-Le code utilisateur ne s'exécute jamais sur l'origine app : voir [security.md](./security.md).
+User code never runs on the app origin: see [security.md](./security.md).
 
 ## 2. Monorepo
 
@@ -33,279 +33,280 @@ pnpm workspaces + Turborepo.
 apps/
   web/                    # hub + sandbox + embed + runtime frame (TanStack Start)
 packages/
-  config/                 # tsconfig de base, config oxlint / oxfmt partagée
-  manifest/               # schema Effect de typika.toml, parser TOML, résolution des refs github:
-  runtime-core/           # RuntimePort, RuntimeSession, TestEvent, erreurs et limites des runtimes
+  config/                 # base tsconfig, shared oxlint / oxfmt config
+  manifest/               # Effect schema of typika.toml, TOML parser, resolution of github: refs
+  runtime-core/           # RuntimePort, RuntimeSession, TestEvent, runtime errors and limits
   runtime-browser-js/     # esbuild-wasm + workers
-  runtime-go/             # toolchain Go (compile, link) en WASM et pilote de build
-  runtime-kotlin/         # client du service de compilation + exécution
-  test-runner/            # runner compatible Vitest pour browser-js, sans dépendance
-  vitest-reporter/        # reporter Vitest → TestEvent, pour la conformité du test-runner (privé)
+  runtime-go/             # Go toolchain (compile, link) in WASM and build driver
+  runtime-kotlin/         # compilation service client + execution
+  test-runner/            # Vitest-compatible runner for browser-js, without dependencies
+  vitest-reporter/        # Vitest reporter → TestEvent, for test-runner conformance (private)
   cli/                    # npx typika create
-  registry-tools/         # génération de l'index, CI de santé, précompilation Kotlin
+  registry-tools/         # index generation, health CI, Kotlin precompilation
 services/
-  kotlin-compiler/        # image Docker : service de compilation (kotlin-compiler-embeddable), protocole Typika
+  kotlin-compiler/        # Docker image: compilation service (kotlin-compiler-embeddable), Typika protocol
 ```
 
-Note : la spec V1 (§14) range par erreur `test-runner`, `cli` et `registry-tools` sous `services/`. Ce sont des
-packages TypeScript ; `services/` ne contient que des services déployables.
+Note: the V1 spec (§14) mistakenly puts `test-runner`, `cli` and `registry-tools` under `services/`. They are
+TypeScript packages; `services/` contains only deployable services.
 
-### 2.1 Dépendances autorisées
+### 2.1 Allowed dependencies
 
-| Package | Peut dépendre de |
+| Package | May depend on |
 |---|---|
 | `config` | — |
-| `manifest` | `effect`, `smol-toml` (parser TOML), `spdx-license-ids` (liste SPDX) |
+| `manifest` | `effect`, `smol-toml` (TOML parser), `spdx-license-ids` (SPDX list) |
 | `runtime-core` | `effect`, `manifest` |
-| `runtime-*` | `runtime-core`, `manifest`, ses dépendances techniques |
-| `runtime-browser-js` | en plus : `test-runner` (embarqué dans le worker d'exécution), `esbuild-wasm` |
-| `test-runner` | rien (il est injecté dans le bundle de code utilisateur : zéro dépendance, taille minimale) |
+| `runtime-*` | `runtime-core`, `manifest`, its technical dependencies |
+| `runtime-browser-js` | in addition: `test-runner` (embedded in the execution worker), `esbuild-wasm` |
+| `test-runner` | nothing (it is injected into the user code bundle: zero dependencies, minimal size) |
 | `vitest-reporter` | `vitest` (peer), `runtime-core` |
 | `cli` | `manifest`, `effect` |
 | `registry-tools` | `manifest`, `runtime-core`, `runtime-*` |
-| `apps/web` | tous les packages sauf `cli` et `registry-tools` |
+| `apps/web` | all packages except `cli` and `registry-tools` |
 
-Interdits :
+Forbidden:
 
-- un package qui dépend d'une app ;
-- un `runtime-x` qui dépend d'un `runtime-y` ;
-- `manifest` ou `runtime-core` qui dépend de React ou du DOM : ils tournent aussi dans le CLI et la CI.
+- a package that depends on an app
+- a `runtime-x` that depends on a `runtime-y`
+- `manifest` or `runtime-core` depending on React or the DOM: they also run in the CLI and in CI
 
-Vérification : `turbo boundaries` si la fonctionnalité convient à ces règles (à évaluer au M1), sinon un script CI
-`scripts/check-package-boundaries.ts` qui lit les `package.json`.
+Check: `turbo boundaries` if the feature fits these rules (to evaluate in M1), otherwise a CI script
+`scripts/check-package-boundaries.ts` that reads the `package.json` files.
 
 ## 3. `apps/web`
 
-### 3.1 Arborescence
+### 3.1 Tree
 
 ```
 apps/web/
-├── server/                # serveur de production : routage par hôte, fichiers statiques, en-têtes (hosting §4.1)
+├── server/                # production server: routing by host, static files, headers (hosting §4.1)
 └── src/
-    ├── modules/           # logique et UI par domaine (§3.2)
-    ├── features/          # pages : orchestrent presenter hooks + composants, aucun composant propre
-    ├── routes/            # coquilles TanStack (§5)
-    ├── ui/                # design system (Base UI + cva), sans logique métier
-    └── i18n/              # ressources react-i18next (en, fr)
+    ├── modules/           # logic and UI per domain (§3.2)
+    ├── features/          # pages: orchestrate presenter hooks + components, no components of their own
+    ├── routes/            # TanStack shells (§5)
+    ├── ui/                # design system (Base UI + cva), without business logic
+    └── i18n/              # react-i18next resources (en, fr)
 ```
 
 ### 3.2 Modules
 
-| Module | Responsabilité | Ports principaux |
+| Module | Responsibility | Main ports |
 |---|---|---|
-| `shared` | Helpers Effect, erreurs de base, client HTTP, configuration runtime (`/config.json`) | `AppConfig` |
-| `app` | Composition : `AppLayer`, runtime d'atoms, providers React | — |
-| `hub` | Chargement de l'index, concepts, facettes, pages template ; recherche au lot 4 du M3 | `RegistryIndexPort`, `SearchIndexPort` |
-| `project` | Projets locaux : création depuis un template, fichiers, état modifié, reset, persistance | `ProjectStoragePort`, `TemplateIndexPort`, `TemplateFilesPort` |
-| `editor` | CodeMirror 6, onglets, langages, adaptateur du language service TS en worker ([0015](../decisions/0015-editor.md)), décorations (tour, diagnostics) | `LanguageServicePort` |
-| `runtime` | Pont entre un projet et une `RuntimeSession` : boot, synchro FS, run, tests, console, preview | `RuntimeRegistry`, `RuntimeFramePort` |
-| `tour` | Étapes de tour, rendu Markdown sûr, ancrage sur fichiers et lignes | `MarkdownRendererPort` |
-| `compare` | Deux variantes côte à côte en lecture seule, alignement des étapes par id | — |
-| `exercise` | Chargement d'un exercice, suivi des tests, validation | — |
-| `share` | Partage par fragment d'URL ou gist, export zip, import d'un lien | `ShareCodecPort`, `ArchivePort` |
-| `github` | OAuth, gists, création de repo, push | `GitHubPort`, `GitHubTokenPort` |
+| `shared` | Effect helpers, base errors, HTTP client, runtime configuration (`/config.json`) | `AppConfig` |
+| `app` | Composition: `AppLayer`, atom runtime, React providers | — |
+| `hub` | Index loading, concepts, facets, template pages; search in slice 4 of M3 | `RegistryIndexPort`, `SearchIndexPort` |
+| `project` | Local projects: creation from a template, files, modified state, reset, persistence | `ProjectStoragePort`, `TemplateIndexPort`, `TemplateFilesPort` |
+| `editor` | CodeMirror 6, tabs, languages, adapter for the TS language service in a worker ([0015](../decisions/0015-editor.md)), decorations (tour, diagnostics) | `LanguageServicePort` |
+| `runtime` | Bridge between a project and a `RuntimeSession`: boot, FS sync, run, tests, console, preview | `RuntimeRegistry`, `RuntimeFramePort` |
+| `tour` | Tour steps, safe Markdown rendering, anchoring on files and lines | `MarkdownRendererPort` |
+| `compare` | Two variants side by side, read-only, steps aligned by id | — |
+| `exercise` | Loading an exercise, tracking the tests, validation | — |
+| `share` | Sharing through URL fragment or gist, zip export, import of a link | `ShareCodecPort`, `ArchivePort` |
+| `github` | OAuth, gists, repo creation, push | `GitHubPort`, `GitHubTokenPort` |
 
-Dépendances entre modules : `editor` → `project` ; `exercise` → `runtime`, `project` ; `compare` → `project`, `editor`, `tour` ; `share` → `project`,
-`github` ; `runtime` → `project`. Tout module peut utiliser `shared`. Pas de cycle.
+Dependencies between modules: `editor` → `project`; `exercise` → `runtime`, `project`; `compare` → `project`, `editor`,
+`tour`; `share` → `project`,
+`github`; `runtime` → `project`. Any module may use `shared`. No cycle.
 
-### 3.3 Topologie d'un module
+### 3.3 Module topology
 
 ```
 <module>/
 ├── core/
 │   ├── domain/
-│   │   ├── <module>.domain-model.ts      # schemas Effect + types dérivés
-│   │   ├── errors/<contexte>.error.ts    # TaggedError <Module><Contexte>Error
-│   │   └── constants/<nom>.constant.ts   # objets as const
+│   │   ├── <module>.domain-model.ts      # Effect schemas + derived types
+│   │   ├── errors/<context>.error.ts     # TaggedError <Module><Context>Error
+│   │   └── constants/<name>.constant.ts  # as const objects
 │   ├── ports/
-│   │   └── <nom>.port.ts                 # interface + Context.Tag
+│   │   └── <name>.port.ts                # interface + Context.Tag
 │   ├── adapters/
-│   │   ├── <nom>.<techno>.adapter.ts     # ex. project-storage.indexeddb.adapter.ts
-│   │   └── <nom>.<techno>.adapter.test.ts
+│   │   ├── <name>.<techno>.adapter.ts    # e.g. project-storage.indexeddb.adapter.ts
+│   │   └── <name>.<techno>.adapter.test.ts
 │   ├── programs/
 │   │   └── <action>/
-│   │       ├── <action>.program.ts       # opération Effect.gen
+│   │       ├── <action>.program.ts       # Effect.gen operation
 │   │       └── <action>.program.test.ts
 │   ├── atoms/
 │   │   ├── <module>.atoms.ts
 │   │   └── <module>.atoms.test.ts
-│   ├── <module>.layer.ts                 # Layer des adapters du module
-│   └── <module>.test-layer.ts            # adapters en mémoire pour les tests
+│   ├── <module>.layer.ts                 # Layer of the module's adapters
+│   └── <module>.test-layer.ts            # in-memory adapters for tests
 └── ui/
-    ├── components/<Name>.tsx             # purs : props in, events out
+    ├── components/<Name>.tsx             # pure: props in, events out
     └── hooks/use-<action>-<module>.ts    # presenter hooks
 ```
 
-Écarts assumés par rapport à la topologie habituelle (`commands/`, `queries/`, `repository/`, `gateway/`, `store/`) :
+Deliberate departures from the usual topology (`commands/`, `queries/`, `repository/`, `gateway/`, `store/`):
 
-| Habituel | Ici | Raison |
+| Usual | Here | Reason |
 |---|---|---|
-| `commands/` + `queries/` serveur | `programs/` client | Pas de backend métier ; la séparation lecture / écriture reste visible dans le nom (`open-project`, `list-projects`) |
-| `repository/` + `gateway/` | `ports/` + `adapters/` | Les dépendances sont variées (IndexedDB, workers, GitHub, CDN) ; un seul vocabulaire |
-| `store/` Redux | `atoms/` Effect Atom | Décision de la spec V1 §13 |
+| Server `commands/` + `queries/` | Client `programs/` | No business backend; the read / write split stays visible in the name (`open-project`, `list-projects`) |
+| `repository/` + `gateway/` | `ports/` + `adapters/` | The dependencies are varied (IndexedDB, workers, GitHub, CDN); a single vocabulary |
+| Redux `store/` | Effect Atom `atoms/` | Decision of the V1 spec §13 |
 
-Nouveaux suffixes : `.port.ts`, `.adapter.ts`, `.program.ts`, `.atoms.ts`, `.layer.ts`. Les autres suivent les
-conventions habituelles (`.domain-model.ts`, `.error.ts`, `.constant.ts`, `.test-layer.ts`, `.test.ts`,
-`.test.e2e.ts`, composants en PascalCase).
+New suffixes: `.port.ts`, `.adapter.ts`, `.program.ts`, `.atoms.ts`, `.layer.ts`. The others follow the usual
+conventions (`.domain-model.ts`, `.error.ts`, `.constant.ts`, `.test-layer.ts`, `.test.ts`,
+`.test.e2e.ts`, components in PascalCase).
 
-### 3.4 Flux de données
+### 3.4 Data flow
 
 ```
-composant pur ──event──▶ presenter hook ──useAtomSet──▶ atom (fn) ──▶ program ──▶ port ──▶ adapter
-      ▲                        │                                                          │
-      └──────props────── useAtomValue ◀──────────── atom (valeur / Result) ◀───────────────┘
+pure component ──event──▶ presenter hook ──useAtomSet──▶ atom (fn) ──▶ program ──▶ port ──▶ adapter
+      ▲                         │                                                          │
+      └──────props─────── useAtomValue ◀──────────── atom (value / Result) ◀───────────────┘
 ```
 
-- **`AppLayer`** (`modules/app/app.layer.ts`) fusionne les `<module>.layer.ts` avec `Layer.mergeAll`. Un seul runtime
-  d'atoms est créé à partir de lui (`Atom.runtime(AppLayer)`).
-- **Atoms** : un atom de lecture expose un `Result` (chargement, succès, échec) ; un atom fonction déclenche un program.
-  Les atoms ne contiennent pas de logique : ils appellent des programs.
-- **Presenter hooks** : lisent les atoms, exposent une API simple (`{ files, isDirty, save, reset }`). Pas de
-  `useMemo` / `useCallback` : React Compiler s'en charge.
-- **Composants** : props et callbacks uniquement. Aucun import d'atom, de port ou d'adapter.
-- **Features** : seul endroit où hooks et composants se rencontrent.
+- **`AppLayer`** (`modules/app/app.layer.ts`) merges the `<module>.layer.ts` files with `Layer.mergeAll`. A single atom
+  runtime is created from it (`Atom.runtime(AppLayer)`).
+- **Atoms**: a read atom exposes a `Result` (loading, success, failure); a function atom triggers a program.
+  Atoms contain no logic: they call programs.
+- **Presenter hooks**: read the atoms, expose a simple API (`{ files, isDirty, save, reset }`). No
+  `useMemo` / `useCallback`: React Compiler takes care of it.
+- **Components**: props and callbacks only. No import of an atom, a port or an adapter.
+- **Features**: the only place where hooks and components meet.
 
-**Pages du hub** : elles sont prérendues, donc leurs données passent par les loaders de route et non par des atoms.
-Le loader, exporté par `features/hub/hub.loaders.ts`, lance un program du module `hub` avec `runHubProgram`, un
-`ManagedRuntime` construit sur `HubLayer`. Côté serveur, `RegistryIndexPort` lit l'index du build (module virtuel
-`virtual:typika/registry-index`). Côté client, il le télécharge. Le loader ne renvoie que le modèle de sa page
+**Hub pages**: they are prerendered, so their data goes through route loaders and not through atoms.
+The loader, exported by `features/hub/hub.loaders.ts`, runs a program of the `hub` module with `runHubProgram`, a
+`ManagedRuntime` built on `HubLayer`. On the server, `RegistryIndexPort` reads the index of the build (virtual module
+`virtual:typika/registry-index`). On the client, it downloads it. The loader returns only the model of its page
 ([0023](../decisions/0023-hub-prerendering.md)).
 
-**État chaud** : le contenu du fichier en cours d'édition vit dans l'état CodeMirror, pas dans un atom. Le module
-`editor` émet les modifications ; `project` les persiste (écriture IndexedDB regroupée, ~300 ms) et `runtime` les relaie
-au `RuntimeFs`. Un atom ne reçoit jamais une frappe clavier.
+**Hot state**: the content of the file being edited lives in the CodeMirror state, not in an atom. The `editor`
+module emits the changes; `project` persists them (batched IndexedDB write, ~300 ms) and `runtime` relays them
+to the `RuntimeFs`. An atom never receives a keystroke.
 
-**Language service** : `languageServiceAtom` démarre, par template, un worker sur l'origine app qui tient un projet
-TypeScript 6 en mémoire (`@typescript/vfs`), avec les fichiers du projet ouvert, `lib.es2022`, les globales du runtime
-et les déclarations de `vitest` émises depuis `@typika/test-runner` (module virtuel du plugin
-`vite/typescript-libraries.ts`). L'éditeur reçoit la session en prop et active ses extensions (complétion avec
-auto-import, diagnostics, survol, signatures) par un `Compartment` dès qu'elle est prête : il est utilisable avant.
-Chaque modification est poussée au worker par l'extension, pas par un atom. Les fichiers d'`exercises/` restent hors
-du projet analysé. Le worker est arrêté avec la portée de l'atom, donc au reset.
+**Language service**: `languageServiceAtom` starts, per template, a worker on the app origin that holds a TypeScript 6
+project in memory (`@typescript/vfs`), with the files of the open project, `lib.es2022`, the runtime globals
+and the `vitest` declarations emitted from `@typika/test-runner` (virtual module of the
+`vite/typescript-libraries.ts` plugin). The editor receives the session as a prop and enables its extensions
+(completion with auto-import, diagnostics, hover, signatures) through a `Compartment` as soon as it is ready: it is
+usable before that. Each change is pushed to the worker by the extension, not by an atom. The files of `exercises/`
+stay out of the analyzed project. The worker is stopped with the atom's scope, hence on reset.
 
-**Runtime frame** : `RuntimeFramePort` encapsule l'iframe de l'origine runtime et un `MessageChannel`. Côté app, une
-`RuntimeSession` est un proxy qui sérialise les appels ; côté frame, les vrais runtimes s'exécutent. Messages validés
-par Effect Schema des deux côtés.
+**Runtime frame**: `RuntimeFramePort` wraps the iframe of the runtime origin and a `MessageChannel`. On the app side,
+a `RuntimeSession` is a proxy that serializes the calls; on the frame side, the real runtimes run. Messages are
+validated by Effect Schema on both sides.
 
-La frame annonce `RuntimeFrameReady` à l'origine de l'app (lue dans sa propre `config.json`) ; l'app répond `Connect`
-avec un port de `MessageChannel`, et la frame n'accepte ce message que de son parent et de cette origine. Ensuite, le
-protocole (`runtime-frame-protocol.domain-model.ts`) suit `RuntimeSession` : une requête par opération, identifiée par
-un entier ; les flux renvoient `Emitted` puis `Ended` ou `Failed`, et l'app envoie `Interrupt` quand son consommateur
-s'arrête. Les erreurs traversent le canal sous forme de données (`RuntimeErrorData`) et redeviennent des
-`TaggedError` côté app.
+The frame announces `RuntimeFrameReady` to the app origin (read from its own `config.json`); the app replies `Connect`
+with a `MessageChannel` port, and the frame accepts this message only from its parent and from that origin. After that,
+the protocol (`runtime-frame-protocol.domain-model.ts`) follows `RuntimeSession`: one request per operation,
+identified by an integer; streams send `Emitted` then `Ended` or `Failed`, and the app sends `Interrupt` when its
+consumer stops. Errors cross the channel as data (`RuntimeErrorData`) and become
+`TaggedError`s again on the app side.
 
-La frame est une entrée Vite séparée (`vite.runtime.config.ts`, base `/runtime/`, sortie `dist/runtime/`). En dev,
-`pnpm dev` lance l'app sur `http://localhost:3000` et la frame sur `http://127.0.0.1:3001` : deux sites distincts,
-avec les en-têtes d'isolation de [hosting](../guides/hosting.md).
+The frame is a separate Vite entry (`vite.runtime.config.ts`, base `/runtime/`, output `dist/runtime/`). In dev,
+`pnpm dev` runs the app on `http://localhost:3000` and the frame on `http://127.0.0.1:3001`: two distinct sites,
+with the isolation headers of [hosting](../guides/hosting.md).
 
-### 3.5 Serveur
+### 3.5 Server
 
-`POST /api/github/token` échange le `code` OAuth contre un jeton. Il vit dans le serveur Node de l'app
-(`server/github-token.ts`), à côté du relais Kotlin, et dans le même middleware en dev : il a besoin du limiteur de
-débit et de l'IP du client ([0034](../decisions/0034-github-oauth-and-gists.md)). `/config.json` reste une server
-route TanStack Start.
+`POST /api/github/token` exchanges the OAuth `code` for a token. It lives in the app's Node server
+(`server/github-token.ts`), next to the Kotlin relay, and in the same middleware in dev: it needs the rate
+limiter and the client IP ([0034](../decisions/0034-github-oauth-and-gists.md)). `/config.json` stays a TanStack Start
+server route.
 
-Le service Kotlin est hors de `apps/web` (`services/kotlin-compiler`).
+The Kotlin service is outside `apps/web` (`services/kotlin-compiler`).
 
-## 4. Rendu
+## 4. Rendering
 
-| Zone | Mode | Raison |
+| Area | Mode | Reason |
 |---|---|---|
-| Hub (`/`, `/templates`, `/templates/$name`) | Prérendu statique | Indexation par les moteurs de recherche, coût serveur nul |
-| Sandbox, comparaison, projets, embed | SPA (`ssr: false`) | IndexedDB, workers et iframe runtime : rien à rendre côté serveur |
-| Runtime frame | Page statique minimale, hors React | Charge vite, ne partage rien avec l'app |
+| Hub (`/`, `/templates`, `/templates/$name`) | Static prerendering | Indexing by search engines, zero server cost |
+| Sandbox, comparison, projects, embed | SPA (`ssr: false`) | IndexedDB, workers and runtime iframe: nothing to render on the server |
+| Runtime frame | Minimal static page, outside React | Loads fast, shares nothing with the app |
 
-Le prérendu du hub dépend de l'index au moment du build : une mise à jour de l'index déclenche un rebuild (voir
-[hosting.md](../guides/hosting.md)). Le build rend `/` et `/templates`, puis suit leurs liens vers les pages template.
-Le shell SPA est rendu sur `/play/_shell` et écrit dans `_shell.html`. Une page template absente du build est servie
-par le shell, et son loader télécharge l'index. Le HTML prérendu est en anglais, et la langue du navigateur s'applique
-après l'hydratation ([0023](../decisions/0023-hub-prerendering.md)). Le lot `health` du M3 rechargera l'index côté client
-pour afficher la santé à jour.
+The hub prerendering depends on the index at build time: an index update triggers a rebuild (see
+[hosting.md](../guides/hosting.md)). The build renders `/` and `/templates`, then follows their links to the template
+pages. The SPA shell is rendered on `/play/_shell` and written to `_shell.html`. A template page absent from the build
+is served by the shell, and its loader downloads the index. The prerendered HTML is in English, and the browser
+language applies after hydration ([0023](../decisions/0023-hub-prerendering.md)). The `health` slice of M3 will reload
+the index on the client to show up-to-date health.
 
 ## 5. Routes
 
-| Route | Feature | Rendu | En-têtes d'isolation |
+| Route | Feature | Rendering | Isolation headers |
 |---|---|---|---|
-| `/` | `hub/home.page.tsx` | prérendu | non |
-| `/templates` (facettes en search params) | `hub/templates/templates.page.tsx` | prérendu + client | non |
-| `/templates/$name` | `hub/templates/$name/template.page.tsx` | prérendu | non |
-| `/play/$templateName` (`?exercise=…`, `?panel=diff`) | `play/play-template.page.tsx` | SPA | oui |
-| `/p/$projectId` | `projects/project.page.tsx` | SPA | oui |
-| `/compare/$name` (`?a=<langage>&b=<langage>`) | `compare/compare.page.tsx` | SPA | oui |
-| `/projects` | `projects/projects.page.tsx` | SPA | non |
-| `/s` (état dans le fragment `#…`) | `share/open-shared.page.tsx` | SPA | oui |
-| `/g/$gistId` | `play/play-template.page.tsx` | SPA | oui |
-| `/embed/$templateName` | `embed/embed.page.tsx` | SPA | non ([0016](../decisions/0016-isolation-and-embed.md)) |
-| `/auth/github/callback` | `auth/github-callback.page.tsx` | SPA | non |
-| `/api/github/token` | serveur Node (`server/github-token.ts`) | — | — |
+| `/` | `hub/home.page.tsx` | prerendered | no |
+| `/templates` (facets in search params) | `hub/templates/templates.page.tsx` | prerendered + client | no |
+| `/templates/$name` | `hub/templates/$name/template.page.tsx` | prerendered | no |
+| `/play/$templateName` (`?exercise=…`, `?panel=diff`) | `play/play-template.page.tsx` | SPA | yes |
+| `/p/$projectId` | `projects/project.page.tsx` | SPA | yes |
+| `/compare/$name` (`?a=<lang>&b=<lang>`) | `compare/compare.page.tsx` | SPA | yes |
+| `/projects` | `projects/projects.page.tsx` | SPA | no |
+| `/s` (state in the `#…` fragment) | `share/open-shared.page.tsx` | SPA | yes |
+| `/g/$gistId` | `play/play-template.page.tsx` | SPA | yes |
+| `/embed/$templateName` | `embed/embed.page.tsx` | SPA | no ([0016](../decisions/0016-isolation-and-embed.md)) |
+| `/auth/github/callback` | `auth/github-callback.page.tsx` | SPA | no |
+| `/api/github/token` | Node server (`server/github-token.ts`) | — | — |
 | `/config.json` | server route | — | — |
-| `/runtime/frame.html` (origine runtime) | hors router | statique | oui |
+| `/runtime/frame.html` (runtime origin) | outside the router | static | yes |
 
-« En-têtes d'isolation » = `Cross-Origin-Opener-Policy` + `Cross-Origin-Embedder-Policy` (détail dans
-[security.md](./security.md) et [hosting.md](../guides/hosting.md)). Les routes coquilles importent la page et ne font
-rien d'autre.
+"Isolation headers" = `Cross-Origin-Opener-Policy` + `Cross-Origin-Embedder-Policy` (details in
+[security.md](./security.md) and [hosting.md](../guides/hosting.md)). The shell routes import the page and do
+nothing else.
 
-## 6. Règles d'import
+## 6. Import rules
 
-Vérifiées par `import/no-restricted-paths` (oxlint) ou, à défaut, par `scripts/check-import-rules.ts` en CI.
+Checked by `import/no-restricted-paths` (oxlint) or, failing that, by `scripts/check-import-rules.ts` in CI.
 
-- `modules/*/ui/components/**` n'importe ni `core/atoms`, ni `core/ports`, ni `core/adapters`, ni `core/programs`.
-- `modules/*/core/domain/**` n'importe rien d'autre que `effect` et `shared/core/domain`.
-- `modules/*/core/programs/**` n'importe pas `core/adapters` : il ne connaît que les ports.
-- `modules/*/core/**` n'importe ni React ni `ui/`.
-- `features/**` ne contient aucun composant ; `routes/**` n'importe que des features.
-- Un module importe un autre module uniquement via ses ports, ses atoms ou ses types de domaine, jamais ses adapters.
-- Effect s'importe par module : `import * as Effect from 'effect/Effect'`.
+- `modules/*/ui/components/**` imports neither `core/atoms`, nor `core/ports`, nor `core/adapters`, nor `core/programs`.
+- `modules/*/core/domain/**` imports nothing other than `effect` and `shared/core/domain`.
+- `modules/*/core/programs/**` does not import `core/adapters`: it knows only the ports.
+- `modules/*/core/**` imports neither React nor `ui/`.
+- `features/**` contains no component; `routes/**` imports only features.
+- A module imports another module only through its ports, its atoms or its domain types, never its adapters.
+- Effect is imported per module: `import * as Effect from 'effect/Effect'`.
 
 ## 7. Conventions
 
-- Fichiers et dossiers en kebab-case avec suffixe de rôle ; composants React en PascalCase (fichier et export).
-- TaggedError : `<Module><Contexte>Error` (`ProjectNotFoundError`, `GitHubTokenExchangeError`).
-- Schemas : `<Entity>Schema`, type dérivé `<Entity>` sans suffixe.
-- Constantes : objets `as const` + type dérivé ; jamais d'`enum`.
-- Ports : interface `<Nom>Port` + tag du même nom. Adapters : `make<Nom><Techno>(deps)` + `<Nom><Techno>Layer`.
-- Programs : `<action><Entité>Program` (`openProjectProgram`, `listProjectsProgram`).
-- Presenter hooks : `use<Action><Module>` (`useOpenProject`).
-- Commentaires : aucun par défaut, voir les règles globales.
+- Files and folders in kebab-case with a role suffix; React components in PascalCase (file and export).
+- TaggedError: `<Module><Context>Error` (`ProjectNotFoundError`, `GitHubTokenExchangeError`).
+- Schemas: `<Entity>Schema`, derived type `<Entity>` without a suffix.
+- Constants: `as const` objects + derived type; never an `enum`.
+- Ports: `<Name>Port` interface + tag of the same name. Adapters: `make<Name><Techno>(deps)` + `<Name><Techno>Layer`.
+- Programs: `<action><Entity>Program` (`openProjectProgram`, `listProjectsProgram`).
+- Presenter hooks: `use<Action><Module>` (`useOpenProject`).
+- Comments: none by default, see the global rules.
 
 ## 8. Tests
 
-TDD : E2E Playwright rouges, puis tests unitaires rouges couche par couche, puis implémentation.
+TDD: red Playwright E2E tests, then red unit tests layer by layer, then implementation.
 
-| Cible | Outil | Dépendances |
+| Target | Tool | Dependencies |
 |---|---|---|
-| Schemas (`manifest`, domaines, messages runtime) | Vitest | aucune |
-| Programs | Vitest + `Effect.runPromiseExit` | `<module>.test-layer.ts` (adapters en mémoire) |
-| Adapters IndexedDB | Vitest | `fake-indexeddb` |
-| Runtimes (`runtime-*`), workers, WASM | Vitest en mode navigateur (provider Playwright) | vrais workers, assets servis localement |
-| `test-runner` | Vitest | suite de conformité : les mêmes fichiers de test donnent les mêmes `TestEvent` qu'avec le vrai Vitest + `@typika/vitest-reporter` |
-| Atoms | Vitest | registre d'atoms de test + test layer |
-| Presenter hooks | Vitest + Testing Library (`renderHook`) | registre d'atoms de test |
-| Composants | Vitest + Testing Library | props uniquement |
-| Parcours utilisateur | Playwright, `.test.e2e.ts` colocalisés dans `features/` | app buildée, templates de fixture locaux |
-| Service Kotlin | Tests HTTP (Vitest) contre le conteneur | Docker |
+| Schemas (`manifest`, domains, runtime messages) | Vitest | none |
+| Programs | Vitest + `Effect.runPromiseExit` | `<module>.test-layer.ts` (in-memory adapters) |
+| IndexedDB adapters | Vitest | `fake-indexeddb` |
+| Runtimes (`runtime-*`), workers, WASM | Vitest in browser mode (Playwright provider) | real workers, assets served locally |
+| `test-runner` | Vitest | conformance suite: the same test files give the same `TestEvent`s as with the real Vitest + `@typika/vitest-reporter` |
+| Atoms | Vitest | test atom registry + test layer |
+| Presenter hooks | Vitest + Testing Library (`renderHook`) | test atom registry |
+| Components | Vitest + Testing Library | props only |
+| User journeys | Playwright, `.test.e2e.ts` colocated in `features/` | built app, local fixture templates |
+| Kotlin service | HTTP tests (Vitest) against the container | Docker |
 
-Tests transverses obligatoires :
+Required cross-cutting tests:
 
-- **En-têtes** : un E2E vérifie les en-têtes de chaque route du §5 et que `self.crossOriginIsolated === true` dans la
-  runtime frame, et lance les tests d'un template sous la CSP réelle (`src/e2e/production/`, `pnpm test:e2e:production`).
-  Il tourne contre le serveur de production construit localement, l'image Docker et chaque déploiement de preview. Le
-  serveur de dev pose les mêmes en-têtes d'isolation, sans la CSP, que Vite et son HMR ne respectent pas.
-- **Isolation** : un E2E exécute un template de fixture qui tente de lire IndexedDB et `localStorage` de l'origine app
-  et de faire un `fetch` externe ; tout doit échouer.
-- **Templates de fixture** : `apps/web/e2e/fixtures/templates/` contient un template minimal par runtime ; pas de
-  dépendance au registre réel dans la CI de l'app.
+- **Headers**: an E2E test checks the headers of each route of §5 and that `self.crossOriginIsolated === true` in the
+  runtime frame, and runs the tests of a template under the real CSP (`src/e2e/production/`, `pnpm test:e2e:production`).
+  It runs against the locally built production server, the Docker image and each preview deployment. The
+  dev server sets the same isolation headers, without the CSP, which Vite and its HMR do not respect.
+- **Isolation**: an E2E test runs a fixture template that tries to read IndexedDB and `localStorage` of the app origin
+  and to make an external `fetch`; everything must fail.
+- **Fixture templates**: `apps/web/e2e/fixtures/templates/` contains a minimal template per runtime; no
+  dependency on the real registry in the app's CI.
 
-## 9. Outillage
+## 9. Tooling
 
-- **Lint / format** : oxlint et oxfmt, config partagée dans `packages/config`.
-- **Types** : `tsc --noEmit` par package via Turborepo.
-- **CI (GitHub Actions)**, à chaque PR et à chaque push sur `main` qui touchent autre chose que la documentation
-  (`.github/workflows/ci.yml`) :
-  un job `check` (lint, format, `turbo run typecheck test`, `template-check`, `registry:build`, avec Go, Gradle et le
-  service Kotlin) et un job `e2e` (E2E de dev, E2E de production, puis `docker build` et les E2E de production sans
-  registre de test contre l'image). L'action `.github/actions/setup` installe l'outillage commun.
-- **Dépendances** : lockfile obligatoire, Renovate (`renovate.json`) et sept jours avant d'adopter une nouvelle
+- **Lint / format**: oxlint and oxfmt, shared config in `packages/config`.
+- **Types**: `tsc --noEmit` per package through Turborepo.
+- **CI (GitHub Actions)**, on each PR and each push to `main` that touch something other than the documentation
+  (`.github/workflows/ci.yml`):
+  a `check` job (lint, format, `turbo run typecheck test`, `template-check`, `registry:build`, with Go, Gradle and the
+  Kotlin service) and an `e2e` job (dev E2E, production E2E, then `docker build` and the production E2E without the
+  test registry against the image). The `.github/actions/setup` action installs the common tooling.
+- **Dependencies**: lockfile required, Renovate (`renovate.json`) and seven days before adopting a new
   version ([security §5](./security.md)).
-- **Publication** : `cli` et `test-runner` publiés sur npm avec provenance ; noms de paquets sous le
-  scope `@typika` ([ADR 0014](../decisions/0014-name-typika.md)).
+- **Publishing**: `cli` and `test-runner` published on npm with provenance; package names under the
+  `@typika` scope ([ADR 0014](../decisions/0014-name-typika.md)).
