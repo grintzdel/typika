@@ -7,15 +7,15 @@ import { editor, LANGUAGE_SERVICE_TIMEOUT, openStrategy } from '../../e2e/fixtur
 
 const STRATEGY_DIR = join(import.meta.dirname, '..', '..', '..', '..', '..', 'templates', 'strategy', 'ts')
 
+const isLanguageServiceWorker = (url: URL) =>
+  url.pathname.endsWith('/language-service.worker.ts') && url.searchParams.has('worker_file')
+
 const holdLanguageServiceWorker = async (context: BrowserContext) => {
   const { promise: released, resolve: release } = Promise.withResolvers<void>()
-  await context.route(
-    (url) => url.pathname.endsWith('/language-service.worker.ts'),
-    async (route) => {
-      await released
-      await route.continue()
-    }
-  )
+  await context.route(isLanguageServiceWorker, async (route) => {
+    await released
+    await route.continue()
+  })
   return release
 }
 
@@ -148,14 +148,13 @@ test.describe('TypeScript in the editor', () => {
   })
 
   test('offers to reload when a redeploy removed the TypeScript worker', async ({ page, context }) => {
-    const isWorker = (url: URL) => url.pathname.endsWith('/language-service.worker.ts')
-    await context.route(isWorker, (route) => route.fulfill({ status: 404 }))
+    await context.route(isLanguageServiceWorker, (route) => route.fulfill({ status: 404 }))
     await page.goto('/play/strategy-ts')
 
     await expect(languageServiceStatus(page)).toHaveText('Nouvelle version de Typika', {
       timeout: LANGUAGE_SERVICE_TIMEOUT,
     })
-    await context.unroute(isWorker)
+    await context.unroute(isLanguageServiceWorker)
     await page.getByRole('button', { name: 'Recharger' }).click()
 
     await expect(languageServiceStatus(page)).toHaveText('', { timeout: LANGUAGE_SERVICE_TIMEOUT })
