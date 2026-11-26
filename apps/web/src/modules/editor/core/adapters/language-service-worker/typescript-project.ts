@@ -158,16 +158,17 @@ export const makeTypeScriptProject = ({
     const isNew = !(path in current)
     current[path] = content
     if (path === TSCONFIG || (isNew && !isAnalyzedPath(path))) build(current)
-    else if (isNew) environment.createFile(absolute(path), content)
-    else if (isAnalyzedPath(path)) environment.updateFile(absolute(path), content)
-    else environment.sys.writeFile(absolute(path), content)
+    else if (!isAnalyzedPath(path)) environment.sys.writeFile(absolute(path), content)
+    else if (inProgram(path)) environment.updateFile(absolute(path), content)
+    else environment.createFile(absolute(path), content)
   }
 
   const removeFile = (path: string) => {
     if (!(path in current)) return
     current = Object.fromEntries(Object.entries(current).filter(([known]) => known !== path))
     if (path === TSCONFIG || !isAnalyzedPath(path)) build(current)
-    else environment.deleteFile(absolute(path))
+    else if (inProgram(path)) environment.deleteFile(absolute(path))
+    else environment.sys.deleteFile?.(absolute(path))
   }
 
   const diagnostics = (path: string): ReadonlyArray<EditorDiagnostic> => {

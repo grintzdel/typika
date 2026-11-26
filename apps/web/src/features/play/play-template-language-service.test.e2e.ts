@@ -64,6 +64,27 @@ test.describe('TypeScript in the editor', () => {
     await expect(editor(page)).toContainText("import { addMoney, formatMoney, money } from './shop/money.ts'")
   })
 
+  test('analyses a file created in the tree and imports its exports', async ({ page }) => {
+    await openStrategy(page)
+    await page
+      .getByRole('tree', { name: 'Fichiers' })
+      .getByRole('treeitem', { name: 'shop' })
+      .click({ button: 'right' })
+    await page.getByRole('menuitem', { name: 'Nouveau fichier' }).click()
+    const name = page.getByRole('textbox', { name: 'Nom du nouveau fichier' })
+    await name.fill('product-type.const.ts')
+    await name.press('Enter')
+    await editor(page).click()
+    await page.keyboard.insertText("export const PRODUCT_TYPE = 'book'\n")
+
+    await page.getByRole('treeitem', { name: 'main.ts' }).click()
+    await typeAtEnd(page, '\nconsole.log(PRODUCT_T')
+    await page.getByRole('option', { name: /PRODUCT_TYPE/ }).click()
+
+    await expect(editor(page)).toContainText("import { PRODUCT_TYPE } from './shop/product-type.const.ts'")
+    await expect(page.locator('.cm-lintRange-error')).toHaveCount(0)
+  })
+
   test('marks a type error in the gutter', async ({ page }) => {
     await openStrategy(page)
 
