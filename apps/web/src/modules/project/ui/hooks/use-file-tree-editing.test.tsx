@@ -10,8 +10,9 @@ const PATHS = ['src/main.ts', 'src/shop/money.ts', 'src/shop/order.ts', 'typika.
 const renderEditing = (paths: ReadonlyArray<string> = PATHS) => {
   const onCreateFile = vi.fn()
   const onMove = vi.fn()
-  const rendered = renderHook(() => useFileTreeEditing({ paths, onCreateFile, onMove }))
-  return { ...rendered, onCreateFile, onMove }
+  const onDelete = vi.fn()
+  const rendered = renderHook(() => useFileTreeEditing({ paths, onCreateFile, onMove, onDelete }))
+  return { ...rendered, onCreateFile, onMove, onDelete }
 }
 
 describe('useFileTreeEditing', () => {
@@ -120,6 +121,59 @@ describe('useFileTreeEditing', () => {
     act(() => result.current.editing.onRename('typika.toml', false))
 
     expect(result.current.editing.draft).toBeUndefined()
+    expect(result.current.editing.issue).toBe(FileNameIssue.READ_ONLY)
+  })
+
+  it('asks to confirm a deletion before deleting the file', () => {
+    const { result, onDelete } = renderEditing()
+
+    act(() => result.current.editing.onDelete('src/main.ts', false))
+    expect(result.current.editing.deletion).toEqual({ path: 'src/main.ts', isFolder: false, files: ['src/main.ts'] })
+    expect(onDelete).not.toHaveBeenCalled()
+    act(() => result.current.editing.onDeleteConfirm())
+
+    expect(onDelete).toHaveBeenCalledExactlyOnceWith(['src/main.ts'])
+    expect(result.current.editing.deletion).toBeUndefined()
+  })
+
+  it('deletes every file of a deleted folder', () => {
+    const { result, onDelete } = renderEditing()
+
+    act(() => result.current.editing.onDelete('src/shop', true))
+    expect(result.current.editing.deletion?.files).toEqual(['src/shop/money.ts', 'src/shop/order.ts'])
+    act(() => result.current.editing.onDeleteConfirm())
+
+    expect(onDelete).toHaveBeenCalledExactlyOnceWith(['src/shop/money.ts', 'src/shop/order.ts'])
+  })
+
+  it('deletes an empty folder from the tree alone', () => {
+    const { result, onDelete } = renderEditing()
+    act(() => result.current.editing.onCreate('folder', { path: 'src', isFolder: true }))
+    act(() => result.current.editing.onDraftSubmit('docs'))
+
+    act(() => result.current.editing.onDelete('src/docs', true))
+    act(() => result.current.editing.onDeleteConfirm())
+
+    expect(onDelete).not.toHaveBeenCalled()
+    expect(result.current.nodes).toEqual(buildFileTree(PATHS))
+  })
+
+  it('keeps the files when a deletion is cancelled', () => {
+    const { result, onDelete } = renderEditing()
+
+    act(() => result.current.editing.onDelete('src/main.ts', false))
+    act(() => result.current.editing.onDeleteCancel())
+
+    expect(onDelete).not.toHaveBeenCalled()
+    expect(result.current.editing.deletion).toBeUndefined()
+  })
+
+  it('refuses to delete a read-only file', () => {
+    const { result } = renderEditing()
+
+    act(() => result.current.editing.onDelete('typika.toml', false))
+
+    expect(result.current.editing.deletion).toBeUndefined()
     expect(result.current.editing.issue).toBe(FileNameIssue.READ_ONLY)
   })
 

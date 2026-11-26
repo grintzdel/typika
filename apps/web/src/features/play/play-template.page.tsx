@@ -143,6 +143,10 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
       })
       tabs.handleRenamePaths(moves)
     },
+    onDelete: (paths) => {
+      edits.handleStructureChange({ written: [], removed: paths })
+      tabs.handleRetainFiles(new Set([...currentFiles.keys()].filter((path) => !paths.includes(path))))
+    },
   })
   const layout = useWorkbenchSizes()
   useWorkbenchShortcuts({
