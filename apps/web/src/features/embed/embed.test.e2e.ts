@@ -77,7 +77,7 @@ test.describe('Embed', () => {
   test('loads IntelliSense only once the reader edits the code', async ({ page }) => {
     const workers: Array<string> = []
     page.on('request', (request) => {
-      if (/language-service\.worker(\.ts|-[\w-]+\.js)/.test(request.url())) workers.push(request.url())
+      if (/language-service\.worker(\.ts\?worker_file|-[\w-]+\.js)/.test(request.url())) workers.push(request.url())
     })
     const embed = await openHostPage(page, SECURE_HOST, '/embed/strategy-ts')
     await expect(editor(embed)).toContainText('quoteShipping')
