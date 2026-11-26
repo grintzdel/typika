@@ -130,6 +130,49 @@ describe('makeTypeScriptProject', () => {
     ])
   })
 
+  it('describes a completion with its signature and its documentation', () => {
+    const project = makeProject()
+    const { content, end } = append(MAIN, 'mon')
+    project.updateFile('src/main.ts', content)
+    const item = project.completions('src/main.ts', end)?.items.find((found) => found.label === 'money')
+
+    expect(item === undefined ? undefined : project.completionDetails('src/main.ts', end, item)).toEqual({
+      signature: '(alias) const money: (cents: number) => Money\nimport money',
+      documentation: 'Builds an amount from cents.',
+    })
+  })
+
+  it('completes the path of a relative import from the start of the typed segment', () => {
+    const project = makeProject()
+    const content = `import { money } from './mo'\n`
+    const end = content.indexOf("mo'") + 'mo'.length
+    project.updateFile('src/main.ts', content)
+
+    const completions = project.completions('src/main.ts', end)
+
+    expect(completions?.from).toBe(end - 'mo'.length)
+    expect(completions?.items.map((item) => item.label)).toContain('money.ts')
+  })
+
+  it('lists the problems of every project file with their line and column', () => {
+    const project = makeProject()
+    const { content } = append(MAIN, "const total: number = 'free'\n")
+    project.updateFile('src/main.ts', content)
+    project.updateFile('exercises/split/solution/src/split.ts', 'const broken: number = "x"\n')
+
+    expect(project.projectDiagnostics()).toEqual([
+      {
+        path: 'src/main.ts',
+        line: 4,
+        column: 7,
+        from: content.indexOf('total'),
+        to: content.indexOf('total') + 'total'.length,
+        severity: 'error',
+        message: "Type 'string' is not assignable to type 'number'.",
+      },
+    ])
+  })
+
   it('describes the symbol under the cursor', () => {
     const project = makeProject()
     const position = MAIN.lastIndexOf('money')

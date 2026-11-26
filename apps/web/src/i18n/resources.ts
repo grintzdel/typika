@@ -333,6 +333,13 @@ export const resources = {
         item: '{{path}}, line {{line}}: {{text}}',
         declaration: 'declaration',
       },
+      problems: {
+        label: 'Problems',
+        empty: 'No problems found in the project.',
+        item: '{{severity}}, {{path}}, line {{line}}, column {{column}}: {{message}}',
+        position: 'line {{line}}, col. {{column}}',
+        severity: { error: 'Error', warning: 'Warning', info: 'Information' },
+      },
       rename: {
         label: 'New name',
         hint: 'Enter to rename, Escape to cancel',
@@ -460,7 +467,7 @@ export const resources = {
       insecure: 'The code runs only in a page served over HTTPS: open it in Typika to run it.',
       retry: 'Retry',
       stop: 'Stop',
-      panels: { console: 'Console', tests: 'Tests', references: 'References' },
+      panels: { console: 'Console', tests: 'Tests', problems: 'Problems', references: 'References' },
       console: {
         label: 'Console',
         empty: 'Click “Run” to see the output of the program.',
@@ -843,6 +850,13 @@ export const resources = {
         item: '{{path}}, ligne {{line}} : {{text}}',
         declaration: 'déclaration',
       },
+      problems: {
+        label: 'Problèmes',
+        empty: 'Aucun problème trouvé dans le projet.',
+        item: '{{severity}}, {{path}}, ligne {{line}}, colonne {{column}} : {{message}}',
+        position: 'ligne {{line}}, col. {{column}}',
+        severity: { error: 'Erreur', warning: 'Avertissement', info: 'Information' },
+      },
       rename: {
         label: 'Nouveau nom',
         hint: 'Entrée pour renommer, Échap pour annuler',
@@ -971,7 +985,7 @@ export const resources = {
       insecure: 'Le code ne s’exécute que dans une page servie en HTTPS : ouvrez-le dans Typika pour l’exécuter.',
       retry: 'Réessayer',
       stop: 'Arrêter',
-      panels: { console: 'Console', tests: 'Tests', references: 'Références' },
+      panels: { console: 'Console', tests: 'Tests', problems: 'Problèmes', references: 'Références' },
       console: {
         label: 'Console',
         empty: 'Lancez « Exécuter » pour voir la sortie du programme.',
