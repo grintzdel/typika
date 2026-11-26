@@ -238,6 +238,41 @@ describe('makeTypeScriptProject', () => {
     expect(project.diagnostics('src/money.ts')).toEqual([])
   })
 
+  it('analyses a file created empty once it is written, and resolves its imports', () => {
+    const project = makeProject()
+    const importer = "import { PRODUCT_TYPE } from './product-type.const.ts'\n\nconsole.log(PRODUCT_TYPE)\n"
+
+    project.updateFile('src/product-type.const.ts', '')
+    project.updateFile('src/product-type.const.ts', "export const PRODUCT_TYPE = 'book'\n")
+    project.updateFile('src/main.ts', importer)
+
+    expect(project.diagnostics('src/main.ts')).toEqual([])
+    expect(project.quickInfo('src/product-type.const.ts', 'export const PR'.length)?.signature).toBe(
+      'const PRODUCT_TYPE: "book"'
+    )
+  })
+
+  it('keeps analysing a file emptied, then written again', () => {
+    const project = makeProject()
+
+    project.updateFile('src/money.ts', '')
+    project.updateFile('src/money.ts', MONEY)
+
+    expect(project.diagnostics('src/main.ts')).toEqual([])
+  })
+
+  it('forgets a file removed while it was empty', () => {
+    const project = makeProject()
+    const content = `import { money } from './'\n`
+    project.updateFile('src/draft.ts', '')
+    project.removeFile('src/draft.ts')
+    project.updateFile('src/main.ts', content)
+
+    const completions = project.completions('src/main.ts', content.indexOf("'\n"))
+
+    expect(completions?.items.map((item) => item.label)).not.toContain('draft.ts')
+  })
+
   it('ignores the removal of a file it does not know', () => {
     const project = makeProject()
 
