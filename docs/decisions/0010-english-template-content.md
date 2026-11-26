@@ -1,22 +1,22 @@
-# 0010 — Contenu des templates en anglais, interface bilingue
+# 0010 — Template content in English, bilingual interface
 
-**Statut** : Acceptée · 2026-10-08
+**Status**: Accepted · 2026-10-08
 
-## Contexte
+## Context
 
-Le contenu des templates (tours, énoncés) représente l'essentiel du texte et est écrit par des contributeurs.
+The content of the templates (tours, statements) is most of the text and is written by contributors.
 
-## Décision
+## Decision
 
-- **Interface** : i18n dès le départ, anglais et français.
-- **Contenu des templates** : anglais uniquement en V1. Le format prévoit `tour/<locale>/` optionnel avec repli sur
-  l'anglais, activable plus tard.
+- **Interface**: i18n from the start, English and French.
+- **Template content**: English only in V1. The format provides for an optional `tour/<locale>/` with fallback to
+  English, which can be enabled later.
 
-## Conséquences
+## Consequences
 
-- Un contributeur écrit une fois ; pas de traductions qui divergent du code.
-- Barrière pour les apprenants non anglophones, à réévaluer selon la demande.
+- A contributor writes once; no translations that drift from the code.
+- Barrier for non-English-speaking learners, to reevaluate depending on demand.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Tours traduits dès la V1** : double la charge de chaque template, traductions qui pourrissent.
+- **Translated tours from V1**: doubles the load of each template, translations that rot.

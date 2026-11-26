@@ -1,769 +1,763 @@
 # Roadmap
 
-On avance pas à pas : pas de date, pas de lancement. Chaque jalon livre quelque chose d'utilisable et se termine par
-une revue qui décide du suivant. L'ordre ci-dessous est le plan actuel, pas un engagement.
+We move step by step: no dates, no launch. Each milestone delivers something usable and ends with a review that decides
+the next one. The order below is the current plan, not a commitment.
 
-## Vue d'ensemble
+## Overview
 
-| Jalon | Thème | Résultat utilisable |
+| Milestone | Theme | Usable result |
 |---|---|---|
-| **M0** | Spikes | Les choix techniques risqués sont tranchés et consignés en ADR. |
-| **M1** | Socle | Ouvrir un template TS local, l'éditer, l'exécuter, lancer ses tests. |
-| **M2** | Pédagogie | Le catalogue en TS avec bases, tours et exercices. |
-| **M3** | Hub | Parcourir, chercher et ouvrir les templates depuis le registre, avec leur santé. |
-| **M4** | Go & comparaison | Variantes Go et mode comparaison TS / Go. |
-| **M5** | Partage | Embed, partage par URL et gist, export, CLI. |
-| **M6** | Kotlin | Variantes Kotlin via le service de compilation. |
-| **M7** | Publication | Les dépôts, l'instance et le package `typika` sont publics. |
+| **M0** | Spikes | The risky technical choices are settled and recorded in ADRs. |
+| **M1** | Foundation | Open a local TS template, edit it, run it, run its tests. |
+| **M2** | Pedagogy | The catalogue in TS with bases, tours and exercises. |
+| **M3** | Hub | Browse, search and open the templates from the registry, with their health. |
+| **M4** | Go & comparison | Go variants and TS / Go comparison mode. |
+| **M5** | Sharing | Embed, sharing by URL and gist, export, CLI. |
+| **M6** | Kotlin | Kotlin variants through the compilation service. |
+| **M7** | Publication | The repositories, the instance and the `typika` package are public. |
 
 ```
 M0 ──► M1 ──► M2 ──► M3 ──┬──► M4 ──► M6 ──┬──► M7
                           └──► M5 ─────────┘
 ```
 
-M4 et M5 sont indépendants ; M6 dépend de M4 (mode comparaison). M7 publie ce que les autres ont livré.
+M4 and M5 are independent; M6 depends on M4 (comparison mode). M7 publishes what the others delivered.
 
 ---
 
 ## M0 — Spikes
 
-**Objectif** : lever les inconnues qui pourraient invalider l'architecture avant d'écrire du code durable.
+**Goal**: remove the unknowns that could invalidate the architecture before writing lasting code.
 
-Livrables :
+Deliverables:
 
-- Spikes R1, R2, R4, R7, R8 menés selon [spikes](spikes.md) — prototypes jetables, hors du monorepo.
-- Un ADR par décision prise ([decisions](decisions/README.md)).
-- Le premier template rédigé **sur papier** (Strategy en TS : base, tour, exercice `refactor`) pour valider le format
-  du [manifeste](specs/manifest.md) sur un cas réel. Il sert de jeu d'essai aux spikes et au M1.
-- Recherche de marques formelle sur « Typika » (R6, [ADR 0014](decisions/0014-name-typika.md)).
+- Spikes R1, R2, R4, R7, R8 run according to [spikes](spikes.md): throwaway prototypes, outside the monorepo.
+- One ADR per decision made ([decisions](decisions/README.md)).
+- The first template written **on paper** (Strategy in TS: base, tour, `refactor` exercise) to validate the
+  [manifest](specs/manifest.md) format on a real case. It serves as test data for the spikes and for M1.
+- Formal trademark search on "Typika" (R6, [ADR 0014](decisions/0014-name-typika.md)).
 
-Terminé quand : chaque spike a une conclusion écrite (go / no-go / plan B) et le manifeste est figé en `schema = 1`.
+Done when: each spike has a written conclusion (go / no-go / plan B) and the manifest is frozen at `schema = 1`.
 
-État (2026-10-08) : R1, R2, R4, R7 et R8 sont conclus, et le [manifeste](specs/manifest.md) est figé en `schema = 1`.
-Il reste R6.
+Status (2026-10-08): R1, R2, R4, R7 and R8 are concluded, and the [manifest](specs/manifest.md) is frozen at
+`schema = 1`. R6 remains.
 
-## M1 — Socle
+## M1 — Foundation
 
-**Objectif** : la boucle de base fonctionne de bout en bout pour un template TS.
+**Goal**: the basic loop works end to end for a TS template.
 
-Livrables :
+Deliverables:
 
-- Monorepo (pnpm, Turborepo, oxlint, oxfmt, Vitest, Playwright) — voir [architecture](specs/architecture.md).
-- `packages/manifest` : schéma Effect, parser TOML, résolution des refs, erreurs de validation.
-- `packages/runtime-core` : `RuntimePort` et événements de test normalisés — voir [runtimes](specs/runtimes.md).
-- `packages/runtime-browser-js` et `packages/test-runner`.
-- `apps/web` : sandbox minimale (arbre de fichiers, éditeur CodeMirror 6, console, panneau tests), projets en
-  IndexedDB, reset.
-- Image Docker et configuration des headers COOP/COEP, vérifiés par un test E2E — voir [hosting](guides/hosting.md).
-- Le template Strategy du M0, réel et vert.
+- Monorepo (pnpm, Turborepo, oxlint, oxfmt, Vitest, Playwright): see [architecture](specs/architecture.md).
+- `packages/manifest`: Effect schema, TOML parser, ref resolution, validation errors.
+- `packages/runtime-core`: `RuntimePort` and normalized test events: see [runtimes](specs/runtimes.md).
+- `packages/runtime-browser-js` and `packages/test-runner`.
+- `apps/web`: minimal sandbox (file tree, CodeMirror 6 editor, console, tests panel), projects in IndexedDB, reset.
+- Docker image and COOP/COEP header configuration, checked by an E2E test: see [hosting](guides/hosting.md).
+- The Strategy template from M0, real and green.
 
-Terminé quand : on ouvre le template Strategy, on le modifie, on lance ses tests, on recharge la page et les
-modifications sont toujours là.
+Done when: we open the Strategy template, change it, run its tests, reload the page, and the changes are still there.
 
-État (2026-10-09) : le monorepo, `packages/manifest`, `packages/runtime-core`, `packages/test-runner` (avec sa suite
-de conformité contre Vitest) et `packages/runtime-browser-js` (testé dans Chromium avec le template Strategy) sont
-livrés. La preview de `browser-js` attend un template qui en a besoin.
+Status (2026-10-09): the monorepo, `packages/manifest`, `packages/runtime-core`, `packages/test-runner` (with its
+conformance suite against Vitest) and `packages/runtime-browser-js` (tested in Chromium with the Strategy template) are
+delivered. The `browser-js` preview waits for a template that needs it.
 
-État (2026-10-10) : `apps/web` ouvre un template du dépôt sur `/play/<name>` : arbre de fichiers, éditeur CodeMirror,
-Run et Tests exécutés dans la runtime frame, sur une origine séparée et isolée. Restent : la persistance des projets
-en IndexedDB et le reset, l'image Docker avec le test E2E des en-têtes, et le language service TypeScript de
-l'éditeur.
+Status (2026-10-10): `apps/web` opens a template from the repository at `/play/<name>`: file tree, CodeMirror editor,
+Run and Tests executed in the runtime frame, on a separate, isolated origin. Remaining: persisting projects in
+IndexedDB and reset, the Docker image with the headers E2E test, and the editor's TypeScript language service.
 
-État (2026-10-11) : les projets sont persistés en IndexedDB. Une modification d'un template crée son projet local,
-recharger la page le rouvre, et Reset rend les fichiers du template après confirmation : le critère de fin du M1 est
-rempli. Restent l'image Docker avec le test E2E des en-têtes, et le language service TypeScript de l'éditeur.
+Status (2026-10-11): projects are persisted in IndexedDB. Changing a template creates its local project, reloading the
+page reopens it, and Reset restores the template's files after confirmation: the M1 completion criterion is met.
+Remaining: the Docker image with the headers E2E test, and the editor's TypeScript language service.
 
-État (2026-10-11) : l'image Docker sert l'app et la runtime frame depuis un serveur Node qui pose les en-têtes par hôte
-et par chemin, derrière Caddy pour TLS et HSTS. La suite E2E de production vérifie les en-têtes de chaque route et
-exécute un template sous la CSP réelle, contre le build local comme contre l'image. Reste le language service
-TypeScript de l'éditeur.
+Status (2026-10-11): the Docker image serves the app and the runtime frame from a Node server that sets the headers per
+host and per path, behind Caddy for TLS and HSTS. The production E2E suite checks the headers of each route and runs a
+template under the real CSP, against the local build as well as against the image. Remaining: the editor's TypeScript
+language service.
 
-État (2026-10-11) : l'éditeur a son language service TypeScript dans un worker : complétion avec auto-import,
-diagnostics multi-fichiers, survol et aide aux signatures, activés dès que le worker est prêt. Le M1 est livré.
+Status (2026-10-11): the editor has its TypeScript language service in a worker: completion with auto-import,
+multi-file diagnostics, hover and signature help, enabled as soon as the worker is ready. M1 is delivered.
 
-Revue (2026-10-11) : on passe au M2 comme prévu. Le M3 n'a de sens qu'avec un catalogue à publier, et le M4 comme
-le M5 viennent après le M3. Ce qui reste ouvert après le M1 :
+Review (2026-10-11): we move to M2 as planned. M3 only makes sense with a catalogue to publish, and M4 as well as M5
+come after M3. What remains open after M1:
 
-- Si l'on tape avant que le worker TypeScript soit prêt, la complétion ne s'ouvre qu'à la frappe suivante, et aucun
-  indicateur ne montre que le worker démarre. Ces deux points sont corrigés au premier lot du M2, puisque tours et
-  exercices font taper dès l'ouverture.
-- La recherche de marques sur « Typika » (R6) n'est pas faite. Elle doit l'être avant toute mise en ligne publique.
-- L'isolation n'a été vérifiée que dans Chromium (R2, R7, R8). Firefox et Safari sont à vérifier au plus tard au M4.
-- La configuration Vercel, `SECURITY.md` et la CI GitHub restent en attente : le contrôle avant merge est local.
+- If you type before the TypeScript worker is ready, completion only opens on the next keystroke, and no indicator
+  shows that the worker is starting. Both points are fixed in the first slice of M2, since tours and exercises make
+  people type as soon as they open.
+- The trademark search on "Typika" (R6) is not done. It must be done before any public release.
+- Isolation has only been checked in Chromium (R2, R7, R8). Firefox and Safari are to be checked by M4 at the latest.
+- The Vercel configuration, `SECURITY.md` and GitHub CI are still pending: the pre-merge check is local.
 
-## M2 — Pédagogie
+## M2 — Pedagogy
 
-**Objectif** : ce qui distingue Typika d'une sandbox existe.
+**Goal**: what sets Typika apart from a sandbox exists.
 
-Livrables :
+Deliverables:
 
-- Visites guidées (panneau, surlignage, synchronisation avec l'éditeur).
-- Vue « diff depuis la base ».
-- Exercices `fix` et `refactor` : état de départ, progression, validation, solution.
-- Les 16 concepts du [catalogue](specs/catalogue.md) en TS, et les variantes JS prévues.
-- [Guide d'écriture de templates](guides/template-authoring.md) éprouvé sur ces 16 templates.
+- Guided tours (panel, highlighting, sync with the editor).
+- "Diff since the base" view.
+- `fix` and `refactor` exercises: start state, progress, validation, solution.
+- The 16 concepts of the [catalogue](specs/catalogue.md) in TS, and the planned JS variants.
+- [Template authoring guide](guides/template-authoring.md) proven on these 16 templates.
 
-Terminé quand : chaque template TS du catalogue a une base, un tour complet et au moins un exercice `refactor`, et
-ses tests sont verts.
+Done when: each TS template of the catalogue has a base, a complete tour and at least one `refactor` exercise, and its
+tests are green.
 
-### Découpage
+### Breakdown
 
-Un lot = une branche `m2/<lot>` et une PR. Les lots 2 à 4 construisent l'interface sur `strategy-ts`, qui a déjà
-son tour et ses deux exercices. Le lot 5 outille la vérification des templates. Le lot 6 écrit le reste du catalogue
-en s'appuyant sur cet outil.
+One slice = one `m2/<slice>` branch and one PR. Slices 2 to 4 build the interface on `strategy-ts`, which already has
+its tour and its two exercises. Slice 5 provides tooling to check templates. Slice 6 writes the rest of the catalogue
+relying on that tool.
 
-| # | Lot | Contenu | Terminé quand |
+| # | Slice | Content | Done when |
 |---|---|---|---|
-| 1 | `language-service-startup` | Une complétion demandée avant que le worker soit prêt s'ouvre quand il l'est. Un indicateur discret montre que TypeScript démarre. | Un test E2E tape dès l'ouverture et obtient la complétion sans seconde frappe. |
-| 2 | `tour` | Panneau Tour ([ui §7](specs/ui.md)) : rendu Markdown sans HTML brut, navigation Préc. / Suiv. et par la liste, ouverture du fichier ancré, surlignage `lines` ou `region` sans les marqueurs, onglets `also`, `#step=<id>` dans l'URL, `Alt+←` / `Alt+→`, annonce `aria-live`. Si le code a changé, l'étape le signale et ouvre l'original en lecture seule. `tour/` et `typika.toml` sont regroupés et en lecture seule dans l'arbre. Un lien `typika:<name>` ouvre `/play/<name>` quand le template est embarqué. | Le tour de `strategy-ts` se parcourt en entier au clavier, et une étape rechargée par son URL rouvre le bon fichier sur la bonne plage. |
-| 3 | `diff` | Onglet Diff ([ui §6.4 et §8](specs/ui.md)) : « Depuis la base », restreint à `base.focus`, et « Mes modifications ». Vues côte à côte et unifiée, signes `+` / `-`, marqueurs vers les étapes du tour, bouton « Ouvrir la base ». La source de templates résout les refs `[base]` vers les templates embarqués. | Le diff `strategy-base-ts` → `strategy-ts` montre les fichiers de `src/checkout/` et renvoie vers les étapes ancrées. |
-| 4 | `exercises` | `/play/<name>?exercise=<id>` ([ui §10](specs/ui.md), [manifest §6](specs/manifest.md)) : état de départ (`from`, surcouche `start/`, `.typika-remove`), un projet local par exercice, panneau Exercice (énoncé, tests cibles, progression), validation à chaque run de tests, réussite mémorisée localement, indices un par un, solution (selon `solutionFrom`) montrée en diff puis appliquée sur demande, Recommencer. Le calcul des états de départ et de solution vit dans un package, pour être réutilisé par le lot 5. | Les deux exercices de `strategy-ts` se résolvent de bout en bout en E2E. |
-| 5 | `template-check` | Une commande vérifie chaque template de `templates/` : manifeste valide, refs `[base]` et `[variants]` résolues, ancres de tour présentes, puis les règles de [manifest §6.4](specs/manifest.md) (départ rouge sur les seuls fichiers `failing`, solution entièrement verte). Elle fait partie du contrôle local et préfigure `packages/registry-tools` du M3. | `strategy-ts` passe, et un exercice volontairement cassé fait échouer la commande. |
-| 6 | `catalogue-*` | Les 15 concepts restants en TS, leurs bases et les 3 variantes JS, en vagues : (a) Observer, Decorator, Factory Method, Adapter, composition vs héritage ; (b) les cinq principes SOLID ; (c) `naive-crud-ts` puis les cinq architectures ; (d) `observer-js`, `decorator-js`, `composition-over-inheritance-js`. La première vague remplace la redirection de `/` par une liste simple des templates embarqués, en attendant le hub du M3. Chaque vague met à jour le [guide d'écriture](guides/template-authoring.md) avec ce qu'elle a appris. | Le critère de fin du M2 ci-dessus, vérifié par la commande du lot 5. |
+| 1 | `language-service-startup` | A completion requested before the worker is ready opens when it is. A discreet indicator shows that TypeScript is starting. | An E2E test types right after opening and gets the completion without a second keystroke. |
+| 2 | `tour` | Tour panel ([ui §7](specs/ui.md)): Markdown rendering without raw HTML, Previous / Next navigation and navigation through the list, opening the anchored file, `lines` or `region` highlighting without the markers, `also` tabs, `#step=<id>` in the URL, `Alt+←` / `Alt+→`, `aria-live` announcement. If the code has changed, the step says so and opens the original read-only. `tour/` and `typika.toml` are grouped and read-only in the tree. A `typika:<name>` link opens `/play/<name>` when the template is bundled. | The `strategy-ts` tour can be walked through entirely with the keyboard, and a step reloaded from its URL reopens the right file on the right range. |
+| 3 | `diff` | Diff tab ([ui §6.4 and §8](specs/ui.md)): "Since the base", restricted to `base.focus`, and "My changes". Side-by-side and unified views, `+` / `-` signs, markers toward the tour steps, "Open the base" button. The template source resolves `[base]` refs to the bundled templates. | The `strategy-base-ts` → `strategy-ts` diff shows the files of `src/checkout/` and links to the anchored steps. |
+| 4 | `exercises` | `/play/<name>?exercise=<id>` ([ui §10](specs/ui.md), [manifest §6](specs/manifest.md)): start state (`from`, `start/` overlay, `.typika-remove`), one local project per exercise, Exercise panel (instructions, target tests, progress), validation on each test run, success remembered locally, hints one at a time, solution (per `solutionFrom`) shown as a diff then applied on request, Start over. The computation of start and solution states lives in a package, to be reused by slice 5. | The two `strategy-ts` exercises are solved end to end in E2E. |
+| 5 | `template-check` | A command checks each template of `templates/`: valid manifest, `[base]` and `[variants]` refs resolved, tour anchors present, then the rules of [manifest §6.4](specs/manifest.md) (start red on the `failing` files only, solution entirely green). It is part of the local check and prefigures the `packages/registry-tools` of M3. | `strategy-ts` passes, and a deliberately broken exercise makes the command fail. |
+| 6 | `catalogue-*` | The 15 remaining concepts in TS, their bases and the 3 JS variants, in waves: (a) Observer, Decorator, Factory Method, Adapter, composition vs inheritance; (b) the five SOLID principles; (c) `naive-crud-ts` then the five architectures; (d) `observer-js`, `decorator-js`, `composition-over-inheritance-js`. The first wave replaces the `/` redirect with a simple list of the bundled templates, until the M3 hub. Each wave updates the [authoring guide](guides/template-authoring.md) with what it learned. | The M2 completion criterion above, checked by the slice 5 command. |
 
-À trancher pendant les lots, avec un ADR si une dépendance entre : le rendu Markdown du tour (lot 2) et le moteur de
-diff (lot 3, `@codemirror/merge` en premier candidat puisque l'éditeur est CodeMirror 6). Au lot 6, il faut aussi
-vérifier que le language service et la runtime `browser-js` traitent un template JS aussi bien qu'un template TS.
+To be decided during the slices, with an ADR if a dependency comes in: the tour's Markdown rendering (slice 2) and the
+diff engine (slice 3, `@codemirror/merge` as the first candidate since the editor is CodeMirror 6). In slice 6, we also
+need to check that the language service and the `browser-js` runtime handle a JS template as well as a TS template.
 
-État (2026-10-11) : lots 1 à 5 livrés. La barre d'outils indique que TypeScript démarre, ou qu'il est
-indisponible, et un mot tapé avant que le worker soit prêt ouvre sa complétion dès qu'il l'est. Le panneau Tour
-parcourt les étapes de `strategy-ts`, ouvre les fichiers ancrés dans des onglets d'éditeur et surligne leur plage ; le
-rendu Markdown est tranché par [0020](decisions/0020-tour-markdown.md). `Alt+←` / `Alt+→` changent d'étape hors de
-l'éditeur seulement, parce que CodeMirror les utilise déjà sur macOS (mot précédent / suivant). L'onglet Diff du
-panneau latéral liste les fichiers modifiés depuis la base (restreints à `base.focus`) ou depuis le template, et les
-ouvre en diff côte à côte ou unifié dans l'éditeur ([0021](decisions/0021-diff-engine.md)).
-`/play/<name>?exercise=<id>` ouvre un projet local propre à l'exercice, sur son état de départ, calculé par
-`exerciseStates` dans `@typika/manifest` pour que le lot 5 le réutilise. Le panneau Exercice suit les tests cibles à
-chaque run, mémorise la réussite dans le `localStorage` du navigateur, dévoile les indices un par un, montre la
-solution dans l'onglet Diff puis l'applique sur demande. « Recommencer » est le bouton Réinitialiser de la barre
-d'outils, qui ramène à l'état de départ de l'exercice.
-`pnpm template-check` (package `@typika/template-check`) valide chaque template de `templates/`, résout les refs
-`[base]` et `[variants]` officielles vers les dossiers locaux et exécute les exercices `browser-js` dans Node avec le
-bundler et le runner de la sandbox, pour que la commande et la sandbox jugent un template de la même façon. Les
-exercices Go et Kotlin ne sont pas encore exécutés : leurs runtimes ne tournent que dans le navigateur ou derrière le
-service de compilation.
+Status (2026-10-11): slices 1 to 5 delivered. The toolbar shows that TypeScript is starting, or that it is
+unavailable, and a word typed before the worker is ready opens its completion as soon as it is. The Tour panel walks
+through the `strategy-ts` steps, opens the anchored files in editor tabs and highlights their range; the Markdown
+rendering is settled by [0020](decisions/0020-tour-markdown.md). `Alt+←` / `Alt+→` change step outside the editor
+only, because CodeMirror already uses them on macOS (previous / next word). The Diff tab of the side panel lists the
+files changed since the base (restricted to `base.focus`) or since the template, and opens them in a side-by-side or
+unified diff in the editor ([0021](decisions/0021-diff-engine.md)).
+`/play/<name>?exercise=<id>` opens a local project specific to the exercise, on its start state, computed by
+`exerciseStates` in `@typika/manifest` so that slice 5 reuses it. The Exercise panel tracks the target tests on each
+run, remembers success in the browser's `localStorage`, reveals hints one at a time, shows the solution in the Diff
+tab, then applies it on request. "Start over" is the toolbar's Reset button, which returns to the exercise's start
+state.
+`pnpm template-check` (package `@typika/template-check`) validates each template of `templates/`, resolves the official
+`[base]` and `[variants]` refs to the local folders, and runs the `browser-js` exercises in Node with the sandbox's
+bundler and runner, so that the command and the sandbox judge a template the same way. Go and Kotlin exercises are not
+run yet: their runtimes only run in the browser or behind the compilation service.
 
-Lot 6, vague (a) livrée : `observer-ts`, `decorator-ts`, `factory-method-ts`, `adapter-ts` et
-`composition-over-inheritance-ts`, avec leur base, leur tour et leurs exercices. `/` liste les templates embarqués
-(titre, résumé, langage, niveau ; les bases sont masquées) en attendant le hub du M3. `template-check` exécute
-désormais chaque fichier de test à chaque run : un fichier au code inchangé disparaissait des runs suivants.
+Slice 6, wave (a) delivered: `observer-ts`, `decorator-ts`, `factory-method-ts`, `adapter-ts` and
+`composition-over-inheritance-ts`, with their base, their tour and their exercises. `/` lists the bundled templates
+(title, summary, language, level; bases are hidden) until the M3 hub. `template-check` now runs every test file on
+every run: a file with unchanged code used to disappear from subsequent runs.
 
-Vague (b) livrée : les cinq principes SOLID (`single-responsibility-ts`, `open-closed-ts`, `liskov-substitution-ts`,
-`interface-segregation-ts`, `dependency-inversion-ts`), chacun avec sa base, son tour et ses exercices. Chaque base
-partage sa suite de tests avec son template ; le template n'ajoute que des tests qui ciblent sa structure.
+Wave (b) delivered: the five SOLID principles (`single-responsibility-ts`, `open-closed-ts`, `liskov-substitution-ts`,
+`interface-segregation-ts`, `dependency-inversion-ts`), each with its base, its tour and its exercises. Each base shares
+its test suite with its template; the template only adds tests that target its structure.
 
-Vague (c) livrée : `naive-crud-ts`, la base commune, et les cinq architectures (`hexagonal-ts`, `cqrs-ts`,
-`event-sourcing-ts`, `outbox-ts`, `state-machine-ts`), chacune avec son tour et ses deux exercices. La base expose dans
-`openShop` un gestionnaire HTTP simulé et les faux d'infrastructure (`cards`, `broker`, `mailer`, `clock`) ; ses tests
-passent par eux, si bien que chaque architecture les reprend tels quels.
+Wave (c) delivered: `naive-crud-ts`, the common base, and the five architectures (`hexagonal-ts`, `cqrs-ts`,
+`event-sourcing-ts`, `outbox-ts`, `state-machine-ts`), each with its tour and its two exercises. The base exposes in
+`openShop` a simulated HTTP handler and the infrastructure fakes (`cards`, `broker`, `mailer`, `clock`); its tests go
+through them, so each architecture reuses them as is.
 
-Vague (d) livrée, et avec elle le lot 6 : `observer-js` et sa base, où `EventTarget` tient le rôle du sujet et un
-`AbortSignal` celui du désabonnement ; `decorator-js`, où un notifier est une fonction et chaque décorateur une
-fonction d'ordre supérieur ; `composition-over-inheritance-js`, dont la base montre `class` comme sucre sur la chaîne
-de prototypes et le template une fonction fabrique qui garde ses parties dans sa portée. Le language service analyse
-désormais les `.js` d'un projet sans `tsconfig.json`, et `template-check` ignore les erreurs non interceptées d'un
-test, comme le worker de test.
+Wave (d) delivered, and with it slice 6: `observer-js` and its base, where `EventTarget` plays the role of the subject
+and an `AbortSignal` that of unsubscription; `decorator-js`, where a notifier is a function and each decorator a
+higher-order function; `composition-over-inheritance-js`, whose base shows `class` as sugar over the prototype chain
+and whose template shows a factory function that keeps its parts in its scope. The language service now analyzes the
+`.js` files of a project without `tsconfig.json`, and `template-check` ignores a test's uncaught errors, like the test
+worker.
 
-Revue (2026-10-12) : le M2 est livré. Les 16 concepts du catalogue ont leur template TS, chacun avec sa base, un tour
-de 5 ou 6 étapes et un exercice `refactor`, plus un exercice `fix` pour 10 d'entre eux. `pnpm template-check` passe sur
-les 38 templates, exercices compris. La commande ne vérifie pas qu'un exercice `refactor` existe : ce point a été
-relevé à la main, et passe dans V9 au M3. Les trois variantes JS sont livrées. Le guide d'écriture a été repris à
-chaque vague. On passe au M3 comme prévu, parce que le M4 et le M5 supposent un registre. Ce qui reste ouvert :
+Review (2026-10-12): M2 is delivered. The 16 concepts of the catalogue have their TS template, each with its base, a
+tour of 5 or 6 steps and a `refactor` exercise, plus a `fix` exercise for 10 of them. `pnpm template-check` passes on
+the 38 templates, exercises included. The command does not check that a `refactor` exercise exists: this point was
+checked by hand, and moves into V9 in M3. The three JS variants are delivered. The authoring guide was revised at each
+wave. We move to M3 as planned, because M4 and M5 assume a registry. What remains open:
 
-- La recherche de marques sur « Typika » (R6) n'est pas faite. Le M3 crée les premiers dépôts publics : elle doit
-  être faite avant.
-- L'isolation n'a été vérifiée que dans Chromium (R2, R7, R8). Firefox et Safari restent à vérifier au plus tard au M4.
-- La configuration Vercel, `SECURITY.md` et la CI GitHub sont toujours en attente. La CI devient nécessaire au M3,
-  puisque le registre valide les PR et calcule la santé dans GitHub Actions.
-- `ui.md` nomme la page template `/templates/<name>`, et `architecture.md` la nomme `/t/$templateId`. Le lot 3 du M3
-  tranche.
+- The trademark search on "Typika" (R6) is not done. M3 creates the first public repositories: it must be done
+  before.
+- Isolation has only been checked in Chromium (R2, R7, R8). Firefox and Safari remain to be checked by M4 at the latest.
+- The Vercel configuration, `SECURITY.md` and GitHub CI are still pending. CI becomes necessary in M3, since the
+  registry validates PRs and computes health in GitHub Actions.
+- `ui.md` names the template page `/templates/<name>`, and `architecture.md` names it `/t/$templateId`. Slice 3 of M3
+  decides.
 
 ## M3 — Hub
 
-**Objectif** : les templates vivent dans un registre, pas dans le code de l'app.
+**Goal**: templates live in a registry, not in the app's code.
 
-Livrables :
+Deliverables:
 
-- Dépôt registre, `packages/registry-tools` (génération de `index.json`, CI de santé) — voir [registry](specs/registry.md).
-- Renovate sur les dépôts `typika-app/*`.
-- Pages hub prérendues : accueil, liste à facettes, page template — voir [ui](specs/ui.md).
-- Recherche côté client sur l'index.
-- Interface en anglais et en français.
+- Registry repository, `packages/registry-tools` (`index.json` generation, health CI): see
+  [registry](specs/registry.md).
+- Renovate on the `typika-app/*` repositories.
+- Prerendered hub pages: home, faceted list, template page: see [ui](specs/ui.md).
+- Client-side search over the index.
+- Interface in English and French.
 
-Terminé quand : ajouter un template se fait par une PR au registre, sans toucher à l'app, et son état de santé
-apparaît sur le hub.
+Done when: adding a template is done through a PR to the registry, without touching the app, and its health status
+appears on the hub.
 
-### Découpage
+### Breakdown
 
-Un lot = une branche `m3/<lot>` et une PR. Les lots 1 à 6 restent dans ce dépôt : `templates/` y joue le rôle de
-`typika-app/templates`, et un dossier de registre local celui de `typika-app/registry`. Seul le lot 7 crée des dépôts
-sur GitHub. Il demande des décisions qui ne sont pas techniques : l'organisation GitHub
-([0033](decisions/0033-github-org-typika-app.md)), la visibilité publique, et la recherche de marques (R6).
+One slice = one `m3/<slice>` branch and one PR. Slices 1 to 6 stay in this repository: `templates/` plays the role of
+`typika-app/templates` there, and a local registry folder that of `typika-app/registry`. Only slice 7 creates
+repositories on GitHub. It requires decisions that are not technical: the GitHub organization
+([0033](decisions/0033-github-org-typika-app.md)), public visibility, and the trademark search (R6).
 
-| # | Lot | Contenu | Terminé quand |
+| # | Slice | Content | Done when |
 |---|---|---|---|
-| 1 | `registry-tools` | `packages/registry-tools` ([registry §1 à §3](specs/registry.md)) : schéma des fichiers d'entrée, validations V1 à V10 (en reprenant `@typika/template-check`, plus la règle « au moins un exercice `refactor` » des principes et des design patterns), génération de `index.json` et de son schéma JSON. Les variantes sont résolues en noms. Les refs `@<sha>` sont résolues vers un dossier local, en attendant le lot 7. | Un registre local qui référence les 38 templates produit un `index.json` valide, sous 500 Ko compressé. Une entrée cassée (nom en double, ref non épinglée, exercice `refactor` manquant) fait échouer la commande. |
-| 2 | `index-source` | L'app lit l'index à l'URL `TYPIKA_REGISTRY_INDEX_URL` ([hosting](guides/hosting.md)) et charge les fichiers d'un template depuis sa ref épinglée, avec un cache. Un adaptateur GitHub remplace l'adaptateur `bundled` en production. L'adaptateur `bundled` reste pour les tests et le développement. États transverses de chargement et d'erreur ([ui §2](specs/ui.md)). Un projet local garde la ref d'origine ([registry §6](specs/registry.md)). | `/play/<name>` ouvre un template servi par un registre de test (index et fichiers sur un serveur local), sans que le template soit embarqué dans le bundle. |
-| 3 | `hub-pages` | Pages du hub prérendues depuis l'index ([ui §3 à §5](specs/ui.md), [architecture §4](specs/architecture.md)) : l'accueil avec une carte par concept et « Reprendre », la liste à facettes dont les filtres vivent dans la query string, et la page template avec son sélecteur de langage, son tour, sa base, ses exercices et ses variantes. Le lot tranche la route de la page template, puis aligne `ui.md` et `architecture.md`. | Les trois pages sont lisibles sans JavaScript dans le build de production. Une URL de liste filtrée, rechargée, restaure ses filtres. |
-| 4 | `search` | Recherche plein texte côté client sur `search.text` de l'index, combinée aux facettes, avec compteurs par valeur, tri et état vide ([ui §4](specs/ui.md)). Raccourci `/`. Une ADR si une dépendance entre. | Un test E2E cherche « switch », filtre sur `typescript` et trouve `strategy-ts`. Un filtre sans résultat affiche l'état vide et retire ses filtres un par un. |
-| 5 | `i18n` | Les ressources `en` et `fr` existent déjà, et la langue est détectée depuis le navigateur. Le lot ajoute le menu de langue, la mémorisation locale, le formatage des dates et des nombres selon la langue, et le libellé « contenu en anglais » sur la page template ([ui §17](specs/ui.md)). Aucune chaîne en dur dans les nouvelles pages du hub. | Changer de langue dans le menu traduit le hub et la sandbox, et le choix survit au rechargement. Un test vérifie que chaque clé `en` existe en `fr`. |
-| 6 | `health` | Le run de santé de [registry §4.2 et §4.3](specs/registry.md) devient une commande de `registry-tools`. Il démarre chaque template dans Chromium piloté par Playwright, lance ses tests, rejoue ses exercices et écrit `health/<name>.json`, que l'index intègre. Le hub affiche les badges `degraded`, et les bandeaux `broken` et `deprecated` ([ui §2](specs/ui.md)). | Un template volontairement cassé passe `broken` et son bandeau s'affiche. Un template rétabli redevient `healthy`. |
-| 7 | `registry-repos` | Il faut d'abord la recherche de marques (R6) et l'accord sur l'organisation GitHub. Ensuite : création de `typika-app/templates`, où `templates/` part avec son historique, et de `typika-app/registry`, avec les workflows `validate-pr`, `build-index` et `health`, `CODEOWNERS` et `maintainers.toml`. Renovate est activé sur les deux dépôts. La publication de l'index déclenche la reconstruction de l'app ([hosting](guides/hosting.md)). | Le critère de fin du M3 : une PR au registre ajoute un template sans toucher à l'app, et sa santé apparaît sur le hub après le déploiement. |
+| 1 | `registry-tools` | `packages/registry-tools` ([registry §1 to §3](specs/registry.md)): schema of the entry files, validations V1 to V10 (reusing `@typika/template-check`, plus the "at least one `refactor` exercise" rule for principles and design patterns), generation of `index.json` and of its JSON schema. Variants are resolved to names. `@<sha>` refs are resolved to a local folder, until slice 7. | A local registry that references the 38 templates produces a valid `index.json`, under 500 KB compressed. A broken entry (duplicate name, unpinned ref, missing `refactor` exercise) makes the command fail. |
+| 2 | `index-source` | The app reads the index at the `TYPIKA_REGISTRY_INDEX_URL` URL ([hosting](guides/hosting.md)) and loads a template's files from its pinned ref, with a cache. A GitHub adapter replaces the `bundled` adapter in production. The `bundled` adapter stays for tests and development. Cross-cutting loading and error states ([ui §2](specs/ui.md)). A local project keeps its origin ref ([registry §6](specs/registry.md)). | `/play/<name>` opens a template served by a test registry (index and files on a local server), without the template being bundled. |
+| 3 | `hub-pages` | Hub pages prerendered from the index ([ui §3 to §5](specs/ui.md), [architecture §4](specs/architecture.md)): the home page with one card per concept and "Resume", the faceted list whose filters live in the query string, and the template page with its language selector, its tour, its base, its exercises and its variants. The slice decides the template page route, then aligns `ui.md` and `architecture.md`. | The three pages are readable without JavaScript in the production build. A filtered list URL, reloaded, restores its filters. |
+| 4 | `search` | Client-side full-text search on the index's `search.text`, combined with the facets, with counts per value, sorting and empty state ([ui §4](specs/ui.md)). `/` shortcut. An ADR if a dependency comes in. | An E2E test searches for "switch", filters on `typescript` and finds `strategy-ts`. A filter with no result shows the empty state and removes its filters one by one. |
+| 5 | `i18n` | The `en` and `fr` resources already exist, and the language is detected from the browser. The slice adds the language menu, local persistence, date and number formatting per language, and the "content in English" label on the template page ([ui §17](specs/ui.md)). No hard-coded string in the new hub pages. | Changing the language in the menu translates the hub and the sandbox, and the choice survives a reload. A test checks that each `en` key exists in `fr`. |
+| 6 | `health` | The health run of [registry §4.2 and §4.3](specs/registry.md) becomes a `registry-tools` command. It starts each template in Chromium driven by Playwright, runs its tests, replays its exercises and writes `health/<name>.json`, which the index includes. The hub shows the `degraded` badges, and the `broken` and `deprecated` banners ([ui §2](specs/ui.md)). | A deliberately broken template turns `broken` and its banner shows. A restored template becomes `healthy` again. |
+| 7 | `registry-repos` | The trademark search (R6) and agreement on the GitHub organization come first. Then: creation of `typika-app/templates`, where `templates/` moves with its history, and of `typika-app/registry`, with the `validate-pr`, `build-index` and `health` workflows, `CODEOWNERS` and `maintainers.toml`. Renovate is enabled on both repositories. Publishing the index triggers the app rebuild ([hosting](guides/hosting.md)). | The M3 completion criterion: a PR to the registry adds a template without touching the app, and its health appears on the hub after deployment. |
 
-État (2026-10-12) : lot 1 livré. `packages/registry-tools` vérifie le registre local `registry/`, qui a une entrée
-par template (38) et le vocabulaire des 16 topics. Il lit chaque template à son commit épinglé, applique V1 à V7, V9 et
-V10, puis écrit `index.json` (`pnpm registry:build`, 7 Ko compressé) et son schéma JSON. Les codes d'erreur du
-registre sont ajoutés à `@typika/manifest`. Une modification d'un template n'entre dans l'index qu'une fois son
-entrée réépinglée, comme le prévoit [registry §2.4](specs/registry.md). Au lot 7, extraire `templates/` change les
-SHA : toutes les entrées seront réépinglées.
+Status (2026-10-12): slice 1 delivered. `packages/registry-tools` checks the local registry `registry/`, which has one
+entry per template (38) and the vocabulary of the 16 topics. It reads each template at its pinned commit, applies V1 to
+V7, V9 and V10, then writes `index.json` (`pnpm registry:build`, 7 KB compressed) and its JSON schema. The registry
+error codes are added to `@typika/manifest`. A change to a template only enters the index once its entry is re-pinned,
+as [registry §2.4](specs/registry.md) specifies. In slice 7, extracting `templates/` changes the SHAs: all entries will
+be re-pinned.
 
-Lot 2 livré. L'app lit l'index à `TYPIKA_REGISTRY_INDEX_URL`, puis la liste et les fichiers d'un template à sa ref
-épinglée, par deux gabarits d'URL au format de jsDelivr ([0022](decisions/0022-template-files-source.md)), avec un cache
-mémoire par ref. Jusqu'au lot 7, le build écrit l'index et un miroir des templates (`registry-tools mirror`) dans
-`dist/client/registry/`, et les valeurs par défaut pointent dessus : `.git` entre dans le contexte Docker. L'adaptateur
-`bundled` ne sert plus qu'en développement et dans les tests unitaires ; il est absent du bundle de production. Un
-projet local enregistre la ref d'où il vient, et son diff et son reset la gardent quand l'index avance. L'accueil et la
-sandbox affichent des squelettes pendant le chargement, et une erreur qui nomme sa cause, avec « Réessayer » quand elle
-est passagère. L'E2E de production sert le miroir depuis une autre origine, ouvre `/play/strategy-ts` et vérifie
-qu'aucun template n'est dans le bundle.
+Slice 2 delivered. The app reads the index at `TYPIKA_REGISTRY_INDEX_URL`, then a template's file list and files at its
+pinned ref, through two URL patterns in the jsDelivr format ([0022](decisions/0022-template-files-source.md)), with an
+in-memory cache per ref. Until slice 7, the build writes the index and a mirror of the templates
+(`registry-tools mirror`) into `dist/client/registry/`, and the default values point to it: `.git` enters the Docker
+context. The `bundled` adapter is now only used in development and in unit tests; it is absent from the production
+bundle. A local project records the ref it comes from, and its diff and its reset keep it when the index moves forward.
+The home page and the sandbox show skeletons while loading, and an error that names its cause, with "Retry" when it is
+transient. The production E2E serves the mirror from another origin, opens `/play/strategy-ts` and checks that no
+template is in the bundle.
 
-Lot 3 livré. La page template est à `/templates/$name`, et `ui.md` et `architecture.md` sont alignés
-([0023](decisions/0023-hub-prerendering.md)). Le build prérend l'accueil, la liste et les 21 pages template depuis
-l'index du build. Un plugin Vite le construit avec `registry-tools` et le fournit au serveur comme module virtuel :
-aucun index n'entre dans le bundle client. L'accueil montre une carte par concept, groupée par catégorie, et
-« Reprendre » liste les trois derniers projets locaux. La liste filtre par topic (catégorie puis famille), langage,
-paradigme, niveau, framework, bibliothèque, cas d'usage et catégorie ; ses filtres vivent dans la query string et
-s'appliquent après l'hydratation. Elle a un état vide qui retire ses filtres un par un. La page template montre son
-tour, sa base avec un lien vers le diff (`/play/<name>?panel=diff`), ses exercices et ses variantes. Le serveur sert
-chaque page prérendue avec une CSP qui autorise ses propres scripts inline. Le HTML est en anglais, et la langue du
-navigateur s'applique après l'hydratation. L'E2E de production lit les trois pages sans JavaScript, recharge une liste
-filtrée et vérifie que l'hydratation ne lève aucune erreur.
+Slice 3 delivered. The template page is at `/templates/$name`, and `ui.md` and `architecture.md` are aligned
+([0023](decisions/0023-hub-prerendering.md)). The build prerenders the home page, the list and the 21 template pages
+from the build's index. A Vite plugin builds it with `registry-tools` and provides it to the server as a virtual module:
+no index enters the client bundle. The home page shows one card per concept, grouped by category, and "Resume" lists
+the three most recent local projects. The list filters by topic (category then family), language, paradigm, level,
+framework, library, use case and category; its filters live in the query string and apply after hydration. It has an
+empty state that removes its filters one by one. The template page shows its tour, its base with a link to the diff
+(`/play/<name>?panel=diff`), its exercises and its variants. The server serves each prerendered page with a CSP that
+allows its own inline scripts. The HTML is in English, and the browser language applies after hydration. The
+production E2E reads the three pages without JavaScript, reloads a filtered list and checks that hydration raises no
+error.
 
-Lot 4 livré, en deux PR. La première ajoute au manifeste un champ optionnel `keywords`, repris dans `search.text`,
-sans changer de version de schéma tant que rien n'est publié ([0024](decisions/0024-manifest-keywords.md)) : les trois
-templates Strategy y reçoivent `switch`. La seconde réépingle leurs entrées et ajoute la recherche au hub. Le champ de
-l'en-tête cherche depuis toutes les pages, `/` y place le focus, et sans JavaScript il envoie un formulaire vers la
-liste. Chaque mot tapé doit commencer un mot de `search.text`. La liste montre, pour chaque valeur de facette, le
-nombre de résultats qu'elle donnerait, désactive celles à 0, et trie par pertinence, ordre du catalogue ou date de mise
-à jour (`?q=` et `?sort=`). L'état vide retire aussi la recherche. Aucune dépendance n'est entrée : 21 templates se
-cherchent en parcourant l'index.
+Slice 4 delivered, in two PRs. The first adds an optional `keywords` field to the manifest, included in `search.text`,
+without changing the schema version as long as nothing is published ([0024](decisions/0024-manifest-keywords.md)): the
+three Strategy templates get `switch` in it. The second re-pins their entries and adds search to the hub. The header
+field searches from every page, `/` puts focus on it, and without JavaScript it submits a form to the list. Each typed
+word must start a word of `search.text`. The list shows, for each facet value, the number of results it would give,
+disables those at 0, and sorts by relevance, catalogue order or update date (`?q=` and `?sort=`). The empty state also
+removes the search. No dependency came in: 21 templates are searched by walking the index.
 
-Lot 5 livré. Un menu de langue est dans l'en-tête du hub et dans la barre d'outils de la sandbox. Le choix est gardé
-localement et l'emporte sur la langue du navigateur au rechargement. Le menu est désactivé jusqu'à l'hydratation, pour
-qu'un choix fait trop tôt ne soit pas perdu. Les pages prérendues restent en anglais, et la langue choisie s'applique
-après l'hydratation. Les compteurs et les durées sont formatés selon la langue. La page template affiche sa date de mise
-à jour et, dans une autre langue que l'anglais, indique que le contenu des templates est en anglais. Un test vérifie que
-chaque clé `en` existe en `fr`, et un E2E change de langue sur le hub et dans la sandbox, puis recharge la page.
+Slice 5 delivered. A language menu is in the hub header and in the sandbox toolbar. The choice is kept locally and takes
+precedence over the browser language on reload. The menu is disabled until hydration, so that a choice made too early
+is not lost. Prerendered pages stay in English, and the chosen language applies after hydration. Counts and durations
+are formatted per language. The template page shows its update date and, in a language other than English, says that
+template content is in English. A test checks that each `en` key exists in `fr`, and an E2E changes the language on
+the hub and in the sandbox, then reloads the page.
 
-Lot 6 livré ([0025](decisions/0025-health-run.md)). `pnpm registry:health --app <url>` ouvre chaque template
-dans Chromium sur une instance de l'app. Il lance Run, puis les tests, et rejoue chaque exercice jusqu'à « Apply the
-solution ». Un échec est relancé une fois, puis l'état est écrit dans `registry/health/<name>.json`, et
-`registry:build` le met dans l'index. Les 34 templates TypeScript et JavaScript sont `healthy` ; les quatre templates
-Go et Kotlin sont sautés tant que l'app n'a pas leur runtime. Le hub montre un badge sur les cartes et la page
-template, un bandeau rouge `broken` sur la page et dans la sandbox, et un bandeau `deprecated` avec « Voir des
-alternatives ». La liste a une facette de santé, et un template `deprecated` quitte l'accueil. Le critère a été joué
-sur le build de production : `strategy-ts` épinglé sur un commit jetable dont le Run plante passe `broken` et affiche
-ses bandeaux, puis redevient `healthy` une fois le pin rétabli. Un tel commit passe V9, puisque ses tests restent
-verts : c'est ce que le run de santé ajoute à l'indexation. L'E2E de production lance la sonde sur `strategy-ts`, puis
-sur un exercice et un template introuvables.
+Slice 6 delivered ([0025](decisions/0025-health-run.md)). `pnpm registry:health --app <url>` opens each template in
+Chromium on an instance of the app. It starts Run, then the tests, and replays each exercise up to "Apply the
+solution". A failure is retried once, then the status is written to `registry/health/<name>.json`, and
+`registry:build` puts it in the index. The 34 TypeScript and JavaScript templates are `healthy`; the four Go and Kotlin
+templates are skipped as long as the app does not have their runtime. The hub shows a badge on the cards and the
+template page, a red `broken` banner on the page and in the sandbox, and a `deprecated` banner with "See
+alternatives". The list has a health facet, and a `deprecated` template leaves the home page. The criterion was played
+on the production build: `strategy-ts` pinned on a throwaway commit whose Run crashes turns `broken` and shows its
+banners, then becomes `healthy` again once the pin is restored. Such a commit passes V9, since its tests stay green:
+that is what the health run adds to indexing. The production E2E runs the probe on `strategy-ts`, then on an exercise
+and a template that cannot be found.
 
-Lot 7 prêt, publication en attente. `registry-tools` lit un dépôt de templates depuis un clone local (`--checkout`).
-L'extraction de `templates/` et `registry/` en dépôts, leurs workflows et la branche qui les branche en sous-modules
-sont préparés en local, gate vert, sans rien publier. La publication attend la recherche de marques (R6) et la
-réservation de `typika.dev` ; l'organisation `typika-app` existe depuis le 2026-11-20
-([0033](decisions/0033-github-org-typika-app.md)). Le critère de fin du M3 passe par ce registre public : le M3
-reste ouvert jusque-là. Rien ne bloque le M4, qui garde les templates dans ce dépôt. Un template modifié d'ici là se
-reporte en relançant l'extraction et en rebasant la branche.
+Slice 7 ready, publication pending. `registry-tools` reads a templates repository from a local clone (`--checkout`).
+The extraction of `templates/` and `registry/` into repositories, their workflows and the branch that wires them in as
+submodules are prepared locally, with the gate green, without publishing anything. Publication waits for the trademark
+search (R6) and the reservation of `typika.dev`; the `typika-app` organization has existed since 2026-11-20
+([0033](decisions/0033-github-org-typika-app.md)). The M3 completion criterion goes through this public registry: M3
+stays open until then. Nothing blocks M4, which keeps the templates in this repository. A template changed in the
+meantime is carried over by rerunning the extraction and rebasing the branch.
 
-## M4 — Go & comparaison
+## M4 — Go & comparison
 
-**Objectif** : la deuxième langue et la comparaison, cœur de la leçon « le langage fait partie du pattern ».
+**Goal**: the second language and comparison, the core of the lesson "the language is part of the pattern".
 
-Livrables :
+Deliverables:
 
-- `packages/runtime-go` : toolchain Go en WASM et pilote de build ([0018](decisions/0018-go-runtime.md)).
-- Variantes Go prévues au catalogue.
-- Mode comparaison : deux variantes côte à côte, synchronisées par étape de tour.
+- `packages/runtime-go`: Go toolchain in WASM and build driver ([0018](decisions/0018-go-runtime.md)).
+- Go variants planned in the catalogue.
+- Comparison mode: two variants side by side, synchronized by tour step.
 
-Terminé quand : on compare Strategy en TS et en Go étape par étape, et la variante Go montre pourquoi le pattern s'y
-réduit à une fonction.
+Done when: we compare Strategy in TS and in Go step by step, and the Go variant shows why the pattern comes down to a
+function there.
 
-### Découpage
+### Breakdown
 
-Un lot = une branche `m4/<lot>` et une PR. Les lots 1 et 2 amènent le runtime `go` : d'abord le pilote de build, testé
-contre `go test` natif, puis son intégration dans l'app. Le lot 3 n'a pas besoin du runtime : la comparaison montre
-du code en lecture seule et un tour, et `strategy-go` existe déjà. Le lot 4 écrit les variantes Go du catalogue en
-s'appuyant sur les trois premiers.
+One slice = one `m4/<slice>` branch and one PR. Slices 1 and 2 bring the `go` runtime: first the build driver, tested
+against native `go test`, then its integration into the app. Slice 3 does not need the runtime: comparison shows
+read-only code and a tour, and `strategy-go` already exists. Slice 4 writes the Go variants of the catalogue relying on
+the first three.
 
-| # | Lot | Contenu | Terminé quand |
+| # | Slice | Content | Done when |
 |---|---|---|---|
-| 1 | `runtime-go-driver` | `packages/runtime-go` ([0018](decisions/0018-go-runtime.md)) : un script reconstruit les assets depuis la version de Go épinglée (`compile.wasm`, `link.wasm`, stdlib précompilée, licence BSD). Le pilote fait le travail de `go build` et `go test` : graphe des packages, `importcfg`, `_testmain.go`, cache des archives par hash, conversion `test2json` vers les `TestEvent` ([runtimes](specs/runtimes.md)). Une suite de conformité compare ses résultats à ceux de `go test` natif. Un import hors du jeu précompilé a son code d'erreur, et `template-check` lance les tests des templates Go. | Sur `strategy-go` et les quatre états de ses exercices, la suite de conformité donne les mêmes verts, rouges, messages et `fichier:ligne` que `go test`. Les assets pèsent au plus 12 Mo en brotli. |
-| 2 | `runtime-go-app` | Le runtime `go` dans l'app : worker, barre de progression du premier chargement, cache des assets par Service Worker (R3, une ADR), arrêt d'une boucle infinie et relance, erreurs de compilation situées dans l'éditeur, coloration Go. Le run de santé couvre les templates Go. | `/play/strategy-go` lance Run, les tests et les deux exercices dans Chromium et WebKit. Un rechargement ne retélécharge pas les assets. `strategy-go` et `strategy-base-go` sont `healthy`. |
-| 3 | `compare` | Module `compare` et page `/compare/<name>?a=<lang>&b=<lang>` ([ui §9](specs/ui.md), [manifest §5.3](specs/manifest.md)) : deux colonnes en lecture seule, un tour commun synchronisé par id d'étape, colonne grisée avec le texte de la variante quand une étape manque d'un côté, `Alt+←` / `Alt+→`, une colonne à la fois avec bascule sur mobile, « Ouvrir dans la sandbox » par colonne. Le bouton « Comparer » de la page template s'active. Le lot tranche entre `/compare/<name>` et le `/compare?left=…&right=…` d'`architecture.md`. | Un E2E compare `strategy` en TS et en Go étape par étape : chaque étape ouvre dans les deux colonnes la plage qu'elle ancre. Une étape absente d'un côté affiche son état. |
-| 4 | `catalogue-go` | Les variantes Go prévues au [catalogue](specs/catalogue.md), avec leurs bases, une PR par concept et par vague. (a) Fondamentaux et principes : `composition-over-inheritance-go`, `interface-segregation-go`, `dependency-inversion-go`. (b) Design patterns : `decorator-go`, `adapter-go`. (c) Architectures : `naive-crud-go`, puis `hexagonal-go`, `cqrs-go` et `outbox-go`. Chaque tour reprend les ids de la variante TS. Le guide d'écriture reçoit une section Go. | Les 9 variantes Go sont au registre, `healthy`, et se comparent à leur variante TS sans `W_TOUR_ORDER_DIVERGES`. |
+| 1 | `runtime-go-driver` | `packages/runtime-go` ([0018](decisions/0018-go-runtime.md)): a script rebuilds the assets from the pinned Go version (`compile.wasm`, `link.wasm`, precompiled stdlib, BSD license). The driver does the work of `go build` and `go test`: package graph, `importcfg`, `_testmain.go`, archive cache by hash, `test2json` conversion to `TestEvent` ([runtimes](specs/runtimes.md)). A conformance suite compares its results to those of native `go test`. An import outside the precompiled set has its error code, and `template-check` runs the tests of Go templates. | On `strategy-go` and the four states of its exercises, the conformance suite gives the same greens, reds, messages and `file:line` as `go test`. The assets weigh at most 12 MB in brotli. |
+| 2 | `runtime-go-app` | The `go` runtime in the app: worker, progress bar for the first load, asset caching by Service Worker (R3, an ADR), stopping an infinite loop and restarting, compilation errors located in the editor, Go highlighting. The health run covers Go templates. | `/play/strategy-go` starts Run, the tests and the two exercises in Chromium and WebKit. A reload does not download the assets again. `strategy-go` and `strategy-base-go` are `healthy`. |
+| 3 | `compare` | `compare` module and `/compare/<name>?a=<lang>&b=<lang>` page ([ui §9](specs/ui.md), [manifest §5.3](specs/manifest.md)): two read-only columns, a shared tour synchronized by step id, grayed-out column with the variant's text when a step is missing on one side, `Alt+←` / `Alt+→`, one column at a time with a toggle on mobile, "Open in the sandbox" per column. The template page's "Compare" button becomes active. The slice decides between `/compare/<name>` and the `/compare?left=…&right=…` of `architecture.md`. | An E2E compares `strategy` in TS and in Go step by step: each step opens, in both columns, the range it anchors. A step missing on one side shows its state. |
+| 4 | `catalogue-go` | The Go variants planned in the [catalogue](specs/catalogue.md), with their bases, one PR per concept and per wave. (a) Fundamentals and principles: `composition-over-inheritance-go`, `interface-segregation-go`, `dependency-inversion-go`. (b) Design patterns: `decorator-go`, `adapter-go`. (c) Architectures: `naive-crud-go`, then `hexagonal-go`, `cqrs-go` and `outbox-go`. Each tour reuses the ids of the TS variant. The authoring guide gets a Go section. | The 9 Go variants are in the registry, `healthy`, and compare to their TS variant without `W_TOUR_ORDER_DIVERGES`. |
 
-Le critère de fin du M4 est joué à la fin du lot 3. Firefox et Safari (R2, R7) se vérifient à la main pendant la revue
-du M4.
+The M4 completion criterion is played at the end of slice 3. Firefox and Safari (R2, R7) are checked by hand during the
+M4 review.
 
-État (2026-10-12) : lot 1 livré. `packages/runtime-go` reconstruit les assets avec le Go local
-(`pnpm --filter @typika/runtime-go build:assets`) : 11,9 Mo en brotli avec Go 1.24.5, dont une stdlib de 76 packages.
-`regexp` en est sorti pour tenir sous 12 Mo : `-test.run` cherche donc une sous-chaîne. Le pilote tourne sur un FS en
-mémoire branché sous l'API qu'attend `wasm_exec.js`, compile et linke chaque package avec un cache par hash, génère le
-`_testmain.go`, et convertit la sortie avec un portage de `test2json`. La suite de conformité compare ses événements à
-ceux de `go test -json` natif : sous-tests, tests externes avec `TestMain`, goroutines, panic, `TestMain` qui sort,
-erreurs de compilation, et `strategy-go` avec sa base, le `run` et les quatre états de ses exercices. Les verts, les
-rouges, les messages, les `fichier:ligne` et les sorties sont identiques. Sous Node, `strategy-go` passe ses tests en
-0,65 s, puis en 0,12 s avec le cache. `template-check` lance les exercices Go et refuse un import hors du jeu
-(`E_GO_IMPORT_UNAVAILABLE`). `registry-tools` ne le fait pas encore : il tourne dans le build de l'app, qui n'aura les
-assets Go qu'au lot 2.
+Status (2026-10-12): slice 1 delivered. `packages/runtime-go` rebuilds the assets with the local Go
+(`pnpm --filter @typika/runtime-go build:assets`): 11.9 MB in brotli with Go 1.24.5, including a stdlib of 76
+packages. `regexp` was taken out of it to stay under 12 MB: `-test.run` therefore looks for a substring. The driver
+runs on an in-memory FS plugged in under the API that `wasm_exec.js` expects, compiles and links each package with a
+cache by hash, generates the `_testmain.go`, and converts the output with a port of `test2json`. The conformance suite
+compares its events to those of native `go test -json`: subtests, external tests with `TestMain`, goroutines, panic,
+`TestMain` that exits, compilation errors, and `strategy-go` with its base, the `run` and the four states of its
+exercises. The greens, the reds, the messages, the `file:line` and the outputs are identical. Under Node,
+`strategy-go` passes its tests in 0.65 s, then in 0.12 s with the cache. `template-check` runs the Go exercises and
+refuses an import outside the set (`E_GO_IMPORT_UNAVAILABLE`). `registry-tools` does not do so yet: it runs in the app
+build, which will only have the Go assets in slice 2.
 
-État (2026-10-12) : lot 2 livré. `/play/strategy-go` exécute Run, les tests et les deux exercices dans Chromium et
-WebKit. Le runtime tourne dans un worker gardé pour la session ; Arrêter ou le watchdog le termine, et le run suivant
-en recrée un. La barre d'outils montre le téléchargement des assets et un bouton Arrêter. Une erreur de build est
-soulignée dans l'éditeur, et les fichiers `.go` sont colorés. Les assets sont construits dans l'image Docker, servis en
-brotli et gardés en Cache Storage plutôt que par un Service Worker ([0027](decisions/0027-go-assets-delivery.md)) : un
-rechargement ne les retélécharge pas. Le language service TypeScript ne démarre plus pour un template Go.
-`registry-tools` lance les exercices Go à l'indexation (V9, V11), et `strategy-go` comme `strategy-base-go` sont
-`healthy`.
+Status (2026-10-12): slice 2 delivered. `/play/strategy-go` runs Run, the tests and the two exercises in Chromium and
+WebKit. The runtime runs in a worker kept for the session; Stop or the watchdog terminates it, and the next run creates
+a new one. The toolbar shows the asset download and a Stop button. A build error is underlined in the editor, and
+`.go` files are highlighted. The assets are built in the Docker image, served in brotli and kept in Cache Storage
+rather than by a Service Worker ([0027](decisions/0027-go-assets-delivery.md)): a reload does not download them again.
+The TypeScript language service no longer starts for a Go template. `registry-tools` runs the Go exercises at indexing
+(V9, V11), and `strategy-go` as well as `strategy-base-go` are `healthy`.
 
-État (2026-10-12) : lot 3 livré. `/compare/<name>?a=<langage>&b=<langage>` est retenu plutôt que le
-`/compare?left=…&right=…` d'`architecture.md`, mis à jour : il suit [ui §9](specs/ui.md) et garde le nom du concept
-dans l'URL. Le module `compare` charge les deux variantes depuis l'index et les fichiers du registre, aligne les tours
-par id d'étape, et réutilise l'éditeur en lecture seule, les onglets et la navigation du tour (`Alt+←` / `Alt+→`,
-`#step=`). Une étape absente d'un côté grise la colonne avec « Cette étape n'a pas d'équivalent en <langage> ». La
-page template propose « Comparer avec <langage> » pour chaque variante de l'index ; `strategy-kotlin` y figure, et se
-compare donc déjà en lecture seule avant son runtime (M6). L'E2E parcourt Strategy en TS et en Go étape par étape et
-vérifie la plage ouverte dans chaque colonne. Aucun template ne manque encore d'étape : l'E2E retire une étape du
-manifeste Go à la volée pour couvrir ce cas.
+Status (2026-10-12): slice 3 delivered. `/compare/<name>?a=<lang>&b=<lang>` is chosen over the
+`/compare?left=…&right=…` of `architecture.md`, which is updated: it follows [ui §9](specs/ui.md) and keeps the concept
+name in the URL. The `compare` module loads both variants from the index and the registry files, aligns the tours by
+step id, and reuses the read-only editor, the tabs and the tour navigation (`Alt+←` / `Alt+→`, `#step=`). A step
+missing on one side grays out the column with "This step has no equivalent in <language>". The template page offers
+"Compare with <language>" for each variant in the index; `strategy-kotlin` is among them, and so already compares
+read-only before its runtime (M6). The E2E walks through Strategy in TS and in Go step by step and checks the range
+opened in each column. No template is missing a step yet: the E2E removes a step from the Go manifest on the fly to
+cover this case.
 
-État (2026-10-12) : lot 4, vague (a) livrée. `composition-over-inheritance-go`, `interface-segregation-go` et
-`dependency-inversion-go` sont au registre avec leurs bases, `healthy`, et se comparent à leur variante TS sans
-`W_TOUR_ORDER_DIVERGES` (#46, #47, #48). La base de composition chaîne des structs embarqués derrière une interface
-`Product`, et son tour montre que l'embedding promeut des méthodes sans créer de sous-type ni de liaison tardive. Dans
-l'ISP, `payments` ne déclare plus aucune interface : chaque client déclare la sienne, d'une méthode. Dans le DIP,
-`checkout` déclare `Notifier` et `OrderRepository` et `memstore` importe `checkout`. L'exercice du DIP révèle une
-contrainte propre à Go : un test qui appelle une API absente de la base ne compile pas, donc `start/` déclare cette
-API avec un corps qui ignore ses arguments. Le guide d'écriture l'ajoute à sa section Go (§8.3).
+Status (2026-10-12): slice 4, wave (a) delivered. `composition-over-inheritance-go`, `interface-segregation-go` and
+`dependency-inversion-go` are in the registry with their bases, `healthy`, and compare to their TS variant without
+`W_TOUR_ORDER_DIVERGES` (#46, #47, #48). The composition base chains embedded structs behind a `Product` interface,
+and its tour shows that embedding promotes methods without creating a subtype or late binding. In the ISP, `payments`
+no longer declares any interface: each client declares its own, with one method. In the DIP, `checkout` declares
+`Notifier` and `OrderRepository` and `memstore` imports `checkout`. The DIP exercise reveals a constraint specific to
+Go: a test that calls an API absent from the base does not compile, so `start/` declares that API with a body that
+ignores its arguments. The authoring guide adds this to its Go section (§8.3).
 
-État (2026-10-12) : lot 4, vague (b) livrée. `decorator-go` et `adapter-go` sont au registre avec leurs bases,
-`healthy`, et se comparent à leur variante TS sans `W_TOUR_ORDER_DIVERGES` (#51, #52). Les décorateurs Go sont des
-structs qui embarquent le `Notifier` qu'ils enveloppent, comme un middleware `http.Handler` ; le tour explique ce que
-l'embedding transmet, et le risque d'une méthode transmise sans le comportement du décorateur. L'adapter Go satisfait
-`payments.Gateway` implicitement, vérifié par `var _ Gateway = (*LegacyPayAdapter)(nil)`. Le SDK simulé vit dans
-`internal/legacypay`, pas sous `vendor/`. Les tests qui espionnaient le SDK en TS vérifient ce qu'il détient. Les deux
-exercices `refactor` appliquent la règle Go du guide : `start/` déclare l'API nouvelle avec un corps sans effet.
+Status (2026-10-12): slice 4, wave (b) delivered. `decorator-go` and `adapter-go` are in the registry with their bases,
+`healthy`, and compare to their TS variant without `W_TOUR_ORDER_DIVERGES` (#51, #52). The Go decorators are structs
+that embed the `Notifier` they wrap, like an `http.Handler` middleware; the tour explains what embedding forwards, and
+the risk of a method forwarded without the decorator's behavior. The Go adapter satisfies `payments.Gateway`
+implicitly, checked by `var _ Gateway = (*LegacyPayAdapter)(nil)`. The simulated SDK lives in `internal/legacypay`,
+not under `vendor/`. The tests that spied on the SDK in TS check what it holds. The two `refactor` exercises apply the
+guide's Go rule: `start/` declares the new API with a body that has no effect.
 
-État (2026-10-12) : lot 4, vague (c) livrée, lot 4 terminé. `naive-crud-go`, `hexagonal-go`, `cqrs-go` et `outbox-go`
-sont au registre, `healthy`, et se comparent à leur variante TS sans `W_TOUR_ORDER_DIVERGES` (#55, #56, #57) : les 9
-variantes Go du catalogue y sont. `net/http` n'étant pas dans le jeu précompilé, la base simule le HTTP avec des corps
-JSON. Dans `hexagonal-go`, le cœur déclare ses ports pilotés et `*Service` est le port pilote : chaque adapter pilote
-déclare l'interface qu'il appelle. Dans `cqrs-go`, une commande est une struct traitée par une méthode, sans bus, et
-les read models sont des maps. Dans `outbox-go`, le relais publie après chaque écriture et `Run` le relance dans une
-goroutine arrêtée par un `context`. Reste la revue du M4, avec Firefox et Safari vérifiés à la main.
+Status (2026-10-12): slice 4, wave (c) delivered, slice 4 done. `naive-crud-go`, `hexagonal-go`, `cqrs-go` and
+`outbox-go` are in the registry, `healthy`, and compare to their TS variant without `W_TOUR_ORDER_DIVERGES` (#55, #56,
+#57): the 9 Go variants of the catalogue are there. Since `net/http` is not in the precompiled set, the base simulates
+HTTP with JSON bodies. In `hexagonal-go`, the core declares its driven ports and `*Service` is the driving port: each
+driving adapter declares the interface it calls. In `cqrs-go`, a command is a struct handled by a method, without a
+bus, and the read models are maps. In `outbox-go`, the relay publishes after each write and `Run` restarts it in a
+goroutine stopped by a `context`. Remaining: the M4 review, with Firefox and Safari checked by hand.
 
-Revue (2026-10-12) : le M4 est livré. Le runtime `go` compile et teste dans le navigateur, avec des résultats
-identiques à `go test` natif. Les 9 variantes Go du catalogue sont au registre, `healthy`, et se comparent étape par
-étape à leur variante TS. Strategy en TS et en Go joue le critère de fin. L'index compte 52 entrées. Le contrôle
-complet est vert, avec 70 E2E en dev et 35 en production. Le runtime Go est couvert dans Chromium et dans le WebKit de
-Playwright, et Safari est vérifié à la main sur le build de production. On passe au M6 plutôt qu'au M5 : le M6 se construit en local comme le M4, alors que le
-gist, `npx typika create` et l'embed dans une page tierce supposent un déploiement public, bloqué comme le lot 7 du M3.
-Ce qui reste ouvert :
+Review (2026-10-12): M4 is delivered. The `go` runtime compiles and tests in the browser, with results identical to
+native `go test`. The 9 Go variants of the catalogue are in the registry, `healthy`, and compare step by step to their
+TS variant. Strategy in TS and in Go plays the completion criterion. The index has 52 entries. The full check is green,
+with 70 E2E in dev and 35 in production. The Go runtime is covered in Chromium and in Playwright's WebKit, and Safari
+is checked by hand on the production build. We move to M6 rather than M5: M6 is built locally like M4, whereas the
+gist, `npx typika create` and the embed in a third-party page assume a public deployment, blocked like slice 7 of M3.
+What remains open:
 
-- Firefox n'est pas vérifié (R2, R7, R8). Le Firefox de Playwright (build 1555) ne démarre pas sous macOS 27, même en
-  mode fenêtré, et aucun Firefox n'est installé sur le poste de développement. La vérification passe au M6, qui
-  ajoute un runtime de plus.
-- Le M3 reste ouvert : la publication attend la recherche de marques (R6), l'organisation `typika` et `typika.dev`.
-- La configuration Vercel, `SECURITY.md` et la CI GitHub sont toujours en attente. Le service Kotlin les rend plus
-  pressants : c'est le premier composant qui exécute un compilateur sur du code non fiable.
+- Firefox is not checked (R2, R7, R8). Playwright's Firefox (build 1555) does not start under macOS 27, even in
+  windowed mode, and no Firefox is installed on the development machine. The check moves to M6, which adds one more
+  runtime.
+- M3 stays open: publication waits for the trademark search (R6), the `typika` organization and `typika.dev`.
+- The Vercel configuration, `SECURITY.md` and GitHub CI are still pending. The Kotlin service makes them more pressing:
+  it is the first component that runs a compiler on untrusted code.
 
-## M5 — Partage
+## M5 — Sharing
 
-**Objectif** : sortir les templates de Typika.
+**Goal**: take the templates out of Typika.
 
-Livrables — voir [sharing-and-cli](specs/sharing-and-cli.md) :
+Deliverables (see [sharing-and-cli](specs/sharing-and-cli.md)):
 
-- Embed `/embed/<name>` et snippet copiable.
-- Partage par URL, partage par gist (GitHub OAuth).
-- Export zip, push vers un nouveau dépôt GitHub.
-- CLI `typika create` et `typika validate`.
+- Embed `/embed/<name>` and copyable snippet.
+- Sharing by URL, sharing by gist (GitHub OAuth).
+- Zip export, push to a new GitHub repository.
+- `typika create` and `typika validate` CLI.
 
-Terminé quand : un template est embarqué dans une page tierce et exécutable, et `npx typika create strategy-ts`
-produit un projet qui passe ses tests hors de Typika.
+Done when: a template is embedded in a third-party page and runnable, and `npx typika create strategy-ts` produces a
+project that passes its tests outside Typika.
 
-### Découpage
+### Breakdown
 
-Un lot = une branche `m5/<lot>` et une PR. Tant que la publication attend #92, il n'y a pas d'instance publique ni de
-package npm : les lots 1 à 5 se construisent et se testent en local, comme le M4 et le M6. Une page tierce se simule
-avec un hôte servi sur une autre origine, comme au spike R2. Aujourd'hui, un projet local correspond à un template ou à
-un exercice. Le partage demande des projets indépendants : le lot 1 les apporte.
+One slice = one `m5/<slice>` branch and one PR. As long as publication waits on #92, there is no public instance and no
+npm package: slices 1 to 5 are built and tested locally, like M4 and M6. A third-party page is simulated with a host
+served on another origin, as in spike R2. Today, a local project corresponds to a template or to an exercise. Sharing
+requires independent projects: slice 1 brings them.
 
-| # | Lot | Contenu | Terminé quand |
+| # | Slice | Content | Done when |
 |---|---|---|---|
-| 1 | `local-projects` | Projets locaux ([sharing-and-cli §1](specs/sharing-and-cli.md), [ui §11](specs/ui.md)) : plusieurs projets par template, chacun ouvert par son id. Routes `/p/<projectId>` et `/projects` : liste, ouverture, renommage, duplication, suppression, indicateur d'espace, avertissement au-delà de 80 % du quota, `navigator.storage.persist()` au premier projet créé. | Une copie s'ouvre par `/p/<id>`, garde ses modifications à part de son original après un rechargement, et sa suppression depuis `/projects` la retire. |
-| 2 | `share-url` | `projects.origin` gagne `share-url`, avec une migration IndexedDB testée si le schéma l'exige. Partage par URL `/s#<payload>` ([sharing-and-cli §2](specs/sharing-and-cli.md), [ui §12](specs/ui.md)) : codec versionné (delta contre l'origine épinglée, sinon fichiers complets), seuil de 8 000 caractères avec la raison affichée, bouton Partager dans la sandbox. L'ouverture se fait dans une sandbox éphémère, avec un bandeau d'origine, et devient un projet local à la première modification ou sur « Enregistrer dans mes projets ». Un payload invalide ou d'une version inconnue affiche un écran d'erreur. | Un E2E partage un projet modifié, ouvre le lien dans un contexte neuf et retrouve les mêmes fichiers. Un projet au-delà du seuil n'a pas de lien. Le codec relit chaque version qu'il a émise. |
-| 3 | `export-zip` | Export zip depuis la sandbox et `/projects` ([sharing-and-cli §4](specs/sharing-and-cli.md)), avec l'option « sans les fichiers Typika ». La règle de retrait (§6.4) vit dans `@typika/manifest`, pour que le CLI la reprenne. | Le zip de `strategy-ts`, de `strategy-go` et de `strategy-kotlin`, extrait, passe ses tests avec l'outil natif du langage, avec et sans les fichiers Typika. |
-| 4 | `embed` | `/embed/<name>` ([ui §13](specs/ui.md), [security §3.6](specs/security.md), [0016](decisions/0016-isolation-and-embed.md)) : éditeur et sortie, paramètres d'URL, runtime démarré à la première interaction, `postMessage` validé par schéma, aucune persistance locale, `frame-ancestors` ouvert sur `/embed/*` seulement. « Ouvrir dans Typika » passe l'état courant par un lien du lot 2. Le snippet se copie depuis la page template. Le lot tranche, dans une ADR, quels runtimes tournent en embed : Go n'utilise pas `SharedArrayBuffer`, et Kotlin compile par le relais de l'app. | Un E2E sur le build de production embarque `strategy-ts` dans une page servie sur une autre origine, lance les tests et reçoit `typika:test-result`. Chaque autre route garde `frame-ancestors 'none'`. |
-| 5 | `cli` | `packages/cli`, package `typika` ([sharing-and-cli §6-7](specs/sharing-and-cli.md)) : `typika create` (nom ou ref, `--variant`, `--exercise`, `--keep-tour`, `--registry`, `--force`, `--json`, codes de sortie) et `typika validate` (`--run` s'appuie sur les runners de `template-check`). Les tests passent par un registre servi en local, archives comprises, puisque le dépôt est privé. Le package n'est pas publié sur npm. | `typika create strategy-ts`, lancé contre le registre local, produit un projet qui passe ses tests hors de Typika, et de même pour les variantes Go et Kotlin. `typika validate` signale un template volontairement cassé avec le code `5`. |
-| 6 | `github` | Partage par gist (`/g/<gistId>`) et push vers un nouveau dépôt ([sharing-and-cli §3, §5](specs/sharing-and-cli.md)) : endpoint d'échange OAuth sur le serveur de l'app, jeton en `sessionStorage`, scopes demandés au moment de l'action. Il demande une OAuth App GitHub : celle de développement se crée sur le compte du mainteneur, celle de production sous l'organisation `typika-app`, à la publication (#92). | Un gist secret créé depuis la sandbox se rouvre par `/g/<id>` sans connexion. Un push crée un dépôt dont le `typika.toml` garde `parent`. |
+| 1 | `local-projects` | Local projects ([sharing-and-cli §1](specs/sharing-and-cli.md), [ui §11](specs/ui.md)): several projects per template, each opened by its id. `/p/<projectId>` and `/projects` routes: list, open, rename, duplicate, delete, storage indicator, warning above 80% of the quota, `navigator.storage.persist()` on the first project created. | A copy opens at `/p/<id>`, keeps its changes separate from its original after a reload, and deleting it from `/projects` removes it. |
+| 2 | `share-url` | `projects.origin` gains `share-url`, with a tested IndexedDB migration if the schema requires it. Sharing by URL `/s#<payload>` ([sharing-and-cli §2](specs/sharing-and-cli.md), [ui §12](specs/ui.md)): versioned codec (delta against the pinned origin, otherwise full files), 8,000-character threshold with the reason shown, Share button in the sandbox. Opening happens in an ephemeral sandbox, with an origin banner, and becomes a local project on the first change or on "Save in my projects". An invalid payload or one of an unknown version shows an error screen. | An E2E shares a changed project, opens the link in a fresh context and finds the same files. A project above the threshold has no link. The codec reads back each version it has emitted. |
+| 3 | `export-zip` | Zip export from the sandbox and `/projects` ([sharing-and-cli §4](specs/sharing-and-cli.md)), with the "without the Typika files" option. The removal rule (§6.4) lives in `@typika/manifest`, so that the CLI reuses it. | The zip of `strategy-ts`, of `strategy-go` and of `strategy-kotlin`, extracted, passes its tests with the language's native tool, with and without the Typika files. |
+| 4 | `embed` | `/embed/<name>` ([ui §13](specs/ui.md), [security §3.6](specs/security.md), [0016](decisions/0016-isolation-and-embed.md)): editor and output, URL parameters, runtime started on the first interaction, schema-validated `postMessage`, no local persistence, `frame-ancestors` open on `/embed/*` only. "Open in Typika" passes the current state through a slice 2 link. The snippet is copied from the template page. The slice decides, in an ADR, which runtimes run in embed: Go does not use `SharedArrayBuffer`, and Kotlin compiles through the app's relay. | An E2E on the production build embeds `strategy-ts` in a page served on another origin, runs the tests and receives `typika:test-result`. Every other route keeps `frame-ancestors 'none'`. |
+| 5 | `cli` | `packages/cli`, `typika` package ([sharing-and-cli §6-7](specs/sharing-and-cli.md)): `typika create` (name or ref, `--variant`, `--exercise`, `--keep-tour`, `--registry`, `--force`, `--json`, exit codes) and `typika validate` (`--run` relies on the `template-check` runners). The tests go through a locally served registry, archives included, since the repository is private. The package is not published on npm. | `typika create strategy-ts`, run against the local registry, produces a project that passes its tests outside Typika, and likewise for the Go and Kotlin variants. `typika validate` reports a deliberately broken template with code `5`. |
+| 6 | `github` | Sharing by gist (`/g/<gistId>`) and push to a new repository ([sharing-and-cli §3, §5](specs/sharing-and-cli.md)): OAuth exchange endpoint on the app server, token in `sessionStorage`, scopes requested at the time of the action. It requires a GitHub OAuth App: the development one is created on the maintainer's account, the production one under the `typika-app` organization, at publication (#92). | A secret gist created from the sandbox reopens at `/g/<id>` without signing in. A push creates a repository whose `typika.toml` keeps `parent`. |
 
-Le critère de fin se joue en deux temps. L'embed dans une page tierce est joué au lot 4, et `typika create` contre le
-registre local au lot 5. `npx typika create` contre l'instance publique attend la publication du package et du
-registre (#92).
+The completion criterion is played in two stages. The embed in a third-party page is played in slice 4, and
+`typika create` against the local registry in slice 5. `npx typika create` against the public instance waits for the
+publication of the package and of the registry (#92).
 
-État (2026-10-19) : lot 1 livré. Un template peut avoir plusieurs projets locaux : `/p/<id>` ouvre l'un d'eux dans la
-sandbox, et ses modifications, son reset et l'application d'une solution ne touchent que lui. `/play/<name>` rouvre
-toujours le plus récent. `/projects` liste les projets avec leur template, leur langage, leur exercice et leur date,
-et permet de les ouvrir, de les renommer, de les dupliquer et de les supprimer après confirmation. La page affiche
-l'espace utilisé, et avertit au-delà de 80 % du quota. « Reprendre », sur l'accueil, ouvre maintenant `/p/<id>`. Le
-schéma IndexedDB n'a pas changé : la migration passe au lot 2, avec l'origine `share-url`.
+Status (2026-10-19): slice 1 delivered. A template can have several local projects: `/p/<id>` opens one of them in the
+sandbox, and its changes, its reset and applying a solution only affect it. `/play/<name>` still reopens the most
+recent one. `/projects` lists the projects with their template, their language, their exercise and their date, and
+lets you open, rename, duplicate and delete them after confirmation. The page shows the storage used, and warns above
+80% of the quota. "Resume", on the home page, now opens `/p/<id>`. The IndexedDB schema has not changed: the migration
+moves to slice 2, with the `share-url` origin.
 
-Lot 2 livré : le bouton Partager de la sandbox crée un lien `/s#1.<payload>`, qui porte la ref épinglée du template
-et le delta des fichiers, compressé en `deflate-raw`, ou explique qu'un projet est trop volumineux au-delà de 8 000
-caractères. Le lien s'ouvre dans une sandbox éphémère, avec un bandeau qui renvoie au template. Le projet est
-enregistré à la première modification ou sur demande, sous un id dérivé du payload : rouvrir le lien rouvre la copie
-enregistrée. Un lien d'exercice porte le nom de l'exercice (`x`, ajouté au format). Un payload invalide, plus récent ou
-dont le template est introuvable a son message et un retour aux templates. L'origine `share-url` n'a pas demandé de
-migration, puisque les enregistrements IndexedDB ne sont pas typés par la base. Un lien sans origine (`f` seul) n'est
-pas encore ouvert : il attend les projets `blank` ([sharing-and-cli §2](specs/sharing-and-cli.md)).
+Slice 2 delivered: the sandbox's Share button creates a `/s#1.<payload>` link, which carries the template's pinned ref
+and the files' delta, compressed with `deflate-raw`, or explains that a project is too large above 8,000 characters.
+The link opens in an ephemeral sandbox, with a banner that links back to the template. The project is saved on the
+first change or on request, under an id derived from the payload: reopening the link reopens the saved copy. An
+exercise link carries the exercise name (`x`, added to the format). An invalid payload, a newer one, or one whose
+template cannot be found has its message and a way back to the templates. The `share-url` origin did not require a
+migration, since IndexedDB records are not typed by the database. A link without an origin (`f` alone) is not opened
+yet: it waits for `blank` projects ([sharing-and-cli §2](specs/sharing-and-cli.md)).
 
-Lot 3 livré : Exporter, dans la sandbox et dans `/projects`, télécharge le projet en zip, avec ou sans les fichiers
-Typika (`typika.toml`, `tour/`). Avec eux, `typika.toml` reçoit `parent`, la ref épinglée du template. La règle de
-retrait est `withoutTypikaFiles` de `@typika/manifest`. Les zips de `strategy-ts`, `strategy-go` et `strategy-kotlin`,
-téléchargés depuis l'app et extraits, passent leurs tests avec `npm test`, `go test` et `gradle test`, avec et sans les
-fichiers Typika. Cette vérification est faite à la main : le contrôle local n'a pas toutes les toolchains, et l'E2E
-vérifie le contenu des zips.
+Slice 3 delivered: Export, in the sandbox and in `/projects`, downloads the project as a zip, with or without the Typika
+files (`typika.toml`, `tour/`). With them, `typika.toml` gets `parent`, the template's pinned ref. The removal rule is
+`withoutTypikaFiles` from `@typika/manifest`. The zips of `strategy-ts`, `strategy-go` and `strategy-kotlin`,
+downloaded from the app and extracted, pass their tests with `npm test`, `go test` and `gradle test`, with and without
+the Typika files. This check is done by hand: the local check does not have all the toolchains, and the E2E checks the
+content of the zips.
 
-Lot 4 livré : `/embed/<name>` affiche l'éditeur, la sortie et une barre réduite (fichier, Exécuter, Tests, « Ouvrir
-dans Typika »). L'[ADR 0031](decisions/0031-embed-runtimes.md) y fait tourner les trois runtimes. Le runtime ne
-démarre qu'au premier clic, ou au chargement avec `run=auto`, sauf pour Go. Le language service ne démarre qu'au premier
-focus dans l'éditeur. Sous une page hôte qui n'est pas un contexte sécurisé, l'embed n'exécute rien et dit pourquoi.
-Les paramètres `file`, `lines`, `tour-step`, `panel`, `readonly`, `run`, `theme` et `lang` sont lus ; `panel=preview`
-retombe sur la console, faute de preview en V1. L'embed n'ouvre ni n'écrit aucun projet local, et le cache des
-compilations Kotlin y reste en mémoire. Les messages `typika:ready`, `typika:resize` et `typika:test-result` partent
-vers la page hôte, et `typika:goto-step` et `typika:set-theme` sont validés par schéma ; tout autre message est ignoré.
-« Ouvrir dans Typika » porte l'état courant par un lien `/s#…` du lot 2, ou ouvre `/play/<name>` au-delà du seuil. Le
-thème suit `data-theme` sur la racine, et `prefers-color-scheme` sans lui. Seul `/embed/*` a `frame-ancestors *`. La
-page template copie le snippet d'embed. L'E2E de production embarque `strategy-ts` dans une page d'un autre site, lance
-les tests et reçoit `typika:test-result` ; en dev, Go et Kotlin tournent aussi en embed.
+Slice 4 delivered: `/embed/<name>` shows the editor, the output and a reduced bar (file, Run, Tests, "Open in
+Typika"). [ADR 0031](decisions/0031-embed-runtimes.md) runs the three runtimes there. The runtime only starts on the
+first click, or on load with `run=auto`, except for Go. The language service only starts on the first focus in the
+editor. Under a host page that is not a secure context, the embed runs nothing and says why. The `file`, `lines`,
+`tour-step`, `panel`, `readonly`, `run`, `theme` and `lang` parameters are read; `panel=preview` falls back to the
+console, for lack of a preview in V1. The embed neither opens nor writes any local project, and the Kotlin compilation
+cache stays in memory there. The `typika:ready`, `typika:resize` and `typika:test-result` messages go to the host page,
+and `typika:goto-step` and `typika:set-theme` are schema-validated; any other message is ignored. "Open in Typika"
+carries the current state through a slice 2 `/s#…` link, or opens `/play/<name>` above the threshold. The theme follows
+`data-theme` on the root, and `prefers-color-scheme` without it. Only `/embed/*` has `frame-ancestors *`. The template
+page copies the embed snippet. The production E2E embeds `strategy-ts` in a page of another site, runs the tests and
+receives `typika:test-result`; in dev, Go and Kotlin also run in embed.
 
-Lot 5 livré : `packages/cli` contient le package `typika`, qui n'est pas publié. `typika create` résout un nom dans
-l'index ou une ref `github:`, puis télécharge l'archive de la ref épinglée et l'extrait
-([0032](decisions/0032-cli-archives-and-validate.md)). Il valide le manifeste et écrit le projet sans les fichiers
-Typika, puis affiche les prochaines étapes. Il gère `--variant`, `--exercise` (état initial, énoncé dans
-`EXERCISE.md`), `--keep-tour`, `--force`, `--json`, `--registry` et `--archive-url`, ainsi que les codes de sortie de
-0 à 7. `typika validate` applique les contrôles du manifeste et du workspace, avec les topics de l'index, et compare
-l'ordre du tour à la variante TypeScript. Avec `--run`, il fait tourner les tests et les exercices dans les runners de
-`template-check`, et sort avec `5` dès qu'il trouve une erreur. Les tests du package passent par un registre local
-qui sert l'index et des archives `git archive`. Les projets `strategy-ts`, `strategy-go` et `strategy-kotlin`, créés
-par le CLI, passent leurs tests avec `npm test`, `go test` et `gradle test`. Cette vérification est faite à la main.
+Slice 5 delivered: `packages/cli` contains the `typika` package, which is not published. `typika create` resolves a
+name in the index or a `github:` ref, then downloads the archive of the pinned ref and extracts it
+([0032](decisions/0032-cli-archives-and-validate.md)). It validates the manifest and writes the project without the
+Typika files, then shows the next steps. It handles `--variant`, `--exercise` (initial state, instructions in
+`EXERCISE.md`), `--keep-tour`, `--force`, `--json`, `--registry` and `--archive-url`, as well as exit codes 0 to 7.
+`typika validate` applies the manifest and workspace checks, with the index's topics, and compares the tour order to
+the TypeScript variant. With `--run`, it runs the tests and the exercises in the `template-check` runners, and exits
+with `5` as soon as it finds an error. The package's tests go through a local registry that serves the index and
+`git archive` archives. The `strategy-ts`, `strategy-go` and `strategy-kotlin` projects, created by the CLI, pass their
+tests with `npm test`, `go test` and `gradle test`. This check is done by hand.
 
-Lot 6 coupé en deux PR ([0034](decisions/0034-github-oauth-and-gists.md)) : (a) connexion, gist et `/g/<id>` ; (b)
-push vers un nouveau dépôt.
+Slice 6 split into two PRs ([0034](decisions/0034-github-oauth-and-gists.md)): (a) sign-in, gist and `/g/<id>`; (b)
+push to a new repository.
 
-Lot 6 (a) livré : sur une instance qui a une OAuth App, le dialogue Partager propose un gist. « Se connecter à
-GitHub » part sur GitHub avec le scope `gist`, un `state` et un défi PKCE, puis revient sur `/auth/github/callback`,
-qui échange le code par `POST /api/github/token` et garde le jeton en `sessionStorage`. La sandbox se rouvre sur le
-dialogue. Le gist, secret par défaut, porte les fichiers complets et `typika.share.json`. Re-partager un projet
-enregistré met à jour le même gist. `/g/<id>` ouvre le gist sans connexion, dans une sandbox éphémère, comme un lien
-`/s#…`. Un gist introuvable, illisible, plus récent ou dont le template manque a son message. L'échange refuse un
-autre `Origin` et limite par IP. Les E2E de dev et de production passent par un faux GitHub local
-(`scripts/serve-fake-github.ts`, `TYPIKA_GITHUB_URL`, `TYPIKA_GITHUB_API_URL`). La vérification contre le vrai GitHub,
-avec l'OAuth App de développement, reste à faire à la main.
+Slice 6 (a) delivered: on an instance that has an OAuth App, the Share dialog offers a gist. "Sign in to GitHub" goes
+to GitHub with the `gist` scope, a `state` and a PKCE challenge, then comes back to `/auth/github/callback`, which
+exchanges the code through `POST /api/github/token` and keeps the token in `sessionStorage`. The sandbox reopens on the
+dialog. The gist, secret by default, carries the full files and `typika.share.json`. Re-sharing a saved project
+updates the same gist. `/g/<id>` opens the gist without signing in, in an ephemeral sandbox, like a `/s#…` link. A gist
+that cannot be found, cannot be read, is newer, or whose template is missing has its message. The exchange refuses
+another `Origin` and rate-limits by IP. The dev and production E2E go through a local fake GitHub
+(`scripts/serve-fake-github.ts`, `TYPIKA_GITHUB_URL`, `TYPIKA_GITHUB_API_URL`). The check against the real GitHub, with
+the development OAuth App, remains to be done by hand.
 
-Lot 6 (b) livré : le dialogue Exporter propose de créer un dépôt GitHub. La connexion demande `public_repo` en plus
-des scopes déjà accordés, et le dialogue se rouvre au retour. Le formulaire prend le nom du dépôt, une description et
-l'option des fichiers Typika. Le dépôt, public, reçoit le projet en un seul commit : `typika.toml` y garde `parent`,
-et un README minimal renvoie au template si le projet n'en a pas. Un nom refusé, une session sans le droit, une limite
-d'API ou un envoi incomplet ont leur message, et le formulaire reste rempli. L'échange du code a un débit réglable
-(`TYPIKA_GITHUB_RATE_PER_MINUTE`, `TYPIKA_GITHUB_RATE_BURST`). Le critère de fin du lot est joué contre le faux GitHub
-: un gist secret se rouvre par `/g/<id>` sans connexion, et un push crée un dépôt dont le `typika.toml` garde `parent`.
-Il reste à le jouer contre le vrai GitHub, à la main, et à lier la suggestion « proposer au registre » quand le
-registre sera public (#92).
+Slice 6 (b) delivered: the Export dialog offers to create a GitHub repository. Sign-in requests `public_repo` in
+addition to the scopes already granted, and the dialog reopens on return. The form takes the repository name, a
+description and the Typika files option. The repository, public, receives the project in a single commit:
+`typika.toml` keeps `parent` there, and a minimal README links back to the template if the project does not have one. A
+refused name, a session without the permission, an API limit or an incomplete upload has its message, and the form
+stays filled in. The code exchange has a configurable rate (`TYPIKA_GITHUB_RATE_PER_MINUTE`,
+`TYPIKA_GITHUB_RATE_BURST`). The slice's completion criterion is played against the fake GitHub: a secret gist reopens
+at `/g/<id>` without signing in, and a push creates a repository whose `typika.toml` keeps `parent`. It remains to play
+it against the real GitHub, by hand, and to link the "propose to the registry" suggestion when the registry is public
+(#92).
 
-Revue (2026-11-20) : les six lots du M5 sont livrés. Un projet se partage par lien `/s#…` ou par gist, s'exporte en
-zip ou vers un nouveau dépôt GitHub, et s'embarque par `/embed/<name>` ; `typika create` et `typika validate`
-existent dans `packages/cli`. Le lot 6 a été joué contre le vrai GitHub le 2026-11-20, avec une OAuth App de
-développement : le gist se rouvre par `/g/<id>` et le push crée le dépôt. Le serveur de dev lit depuis
-`apps/web/.env.local` (#118). Au dernier contrôle complet (#117) : 24 tâches Turbo sur 24, 44 E2E en production, et
-124 E2E sur 125 en dev, le dernier étant un timeout Kotlin sous charge qui passe seul. Les E2E n'ont pas été relancés
-après #118. Le critère de fin est joué en local : l'embed tourne dans une page d'un autre site sur le build de
-production, et `typika create`, contre un registre local, produit des projets TS, Go et Kotlin qui passent leurs tests
-natifs. Sa moitié publique (`npx typika create`, une vraie page tierce) attend la publication : le M5 reste ouvert
-jusque-là, comme le M3. On passe au M7, qui prépare cette publication. Ce qui reste ouvert :
+Review (2026-11-20): the six M5 slices are delivered. A project can be shared through a `/s#…` link or a gist, exported
+as a zip or to a new GitHub repository, and embedded through `/embed/<name>`; `typika create` and `typika validate`
+exist in `packages/cli`. Slice 6 was played against the real GitHub on 2026-11-20, with a development OAuth App: the
+gist reopens at `/g/<id>` and the push creates the repository. The dev server reads from `apps/web/.env.local` (#118).
+At the last full check (#117): 24 Turbo tasks out of 24, 44 E2E in production, and 124 E2E out of 125 in dev, the last
+one being a Kotlin timeout under load that passes on its own. The E2E were not rerun after #118. The completion
+criterion is played locally: the embed runs in a page of another site on the production build, and `typika create`,
+against a local registry, produces TS, Go and Kotlin projects that pass their native tests. Its public half
+(`npx typika create`, a real third-party page) waits for publication: M5 stays open until then, like M3. We move to M7,
+which prepares this publication. What remains open:
 
-- La publication attend toujours la recherche de marques (R6) et la réservation de `typika.dev` et de `@typika`
-  (#92). L'OAuth App de production, sous `typika-app`, se crée à ce moment-là.
-- Les projets `blank` n'existent pas. Un lien sans origine (`f` seul) ne s'ouvre donc pas, et un gist doit pointer sur
-  un template de l'index ([sharing-and-cli §1 à §3](specs/sharing-and-cli.md)).
-- Le push ne crée que des dépôts publics, et l'échange OAuth est un handler du serveur Node plutôt qu'une route
-  TanStack ([0034](decisions/0034-github-oauth-and-gists.md)). « Proposer au registre » est une phrase sans lien.
-- `typika validate --run` n'a pas de service de compilation Kotlin par défaut
+- Publication still waits for the trademark search (R6) and the reservation of `typika.dev` and `@typika` (#92). The
+  production OAuth App, under `typika-app`, is created at that point.
+- `blank` projects do not exist. A link without an origin (`f` alone) therefore does not open, and a gist must point to
+  a template in the index ([sharing-and-cli §1 to §3](specs/sharing-and-cli.md)).
+- The push only creates public repositories, and the OAuth exchange is a handler of the Node server rather than a
+  TanStack route ([0034](decisions/0034-github-oauth-and-gists.md)). "Propose to the registry" is a sentence without a
+  link.
+- `typika validate --run` has no default Kotlin compilation service
   ([0032](decisions/0032-cli-archives-and-validate.md)).
-- L'E2E de l'embed ne tourne que dans Chromium ; WebKit a été vérifié au spike de
-  l'[ADR 0031](decisions/0031-embed-runtimes.md). `panel=preview` retombe sur la console.
-- Les tests natifs des zips exportés et des projets créés par le CLI sont vérifiés à la main.
-- Deux E2E de dev sont instables sous charge (#116, et le timeout Kotlin ci-dessus), et l'abort de V8 du serveur de
-  dev ne s'est pas reproduit (#104).
-- La configuration Vercel, `SECURITY.md` et la CI GitHub sont toujours en attente : le M7 les prend.
+- The embed E2E only runs in Chromium; WebKit was checked in the spike of
+  [ADR 0031](decisions/0031-embed-runtimes.md). `panel=preview` falls back to the console.
+- The native tests of the exported zips and of the projects created by the CLI are checked by hand.
+- Two dev E2E are flaky under load (#116, and the Kotlin timeout above), and the V8 abort of the dev server has not
+  reproduced (#104).
+- The Vercel configuration, `SECURITY.md` and GitHub CI are still pending: M7 takes them on.
 
 ## M6 — Kotlin
 
-**Objectif** : le langage POO de référence du catalogue.
+**Goal**: the reference OOP language of the catalogue.
 
-Livrables :
+Deliverables:
 
-- `services/kotlin-compiler` : service maison sur `kotlin-compiler-embeddable`, cible JS ([0019](decisions/0019-kotlin-runtime.md)), avec
-  limites et rate limiting — voir [security](specs/security.md).
+- `services/kotlin-compiler`: in-house service on `kotlin-compiler-embeddable`, JS target
+  ([0019](decisions/0019-kotlin-runtime.md)), with limits and rate limiting: see [security](specs/security.md).
 - `packages/runtime-kotlin`.
-- Variantes Kotlin des 16 concepts.
+- Kotlin variants of the 16 concepts.
 
-Terminé quand : les 16 concepts sont comparables TS / Kotlin, et le service de compilation tient une charge de test
-sans dépasser ses limites.
+Done when: the 16 concepts can be compared TS / Kotlin, and the compilation service holds a test load without
+exceeding its limits.
 
-### Découpage
+### Breakdown
 
-Un lot = une branche `m6/<lot>` et une PR. Le M6 suit le M4 : d'abord le service et le runtime, testés hors de l'app,
-puis leur intégration, puis le catalogue. `strategy-kotlin` et `strategy-base-kotlin` existent depuis le spike R8 et
-servent de référence aux trois premiers lots. Tout tourne en local avec Docker, sans déploiement public.
+One slice = one `m6/<slice>` branch and one PR. M6 follows M4: first the service and the runtime, tested outside the
+app, then their integration, then the catalogue. `strategy-kotlin` and `strategy-base-kotlin` have existed since spike
+R8 and serve as the reference for the first three slices. Everything runs locally with Docker, without a public
+deployment.
 
-| # | Lot | Contenu | Terminé quand |
+| # | Slice | Content | Done when |
 |---|---|---|---|
-| 1 | `kotlin-compiler` | `services/kotlin-compiler` ([0019](decisions/0019-kotlin-runtime.md), [runtimes §6.4](specs/runtimes.md)) : serveur HTTP minimal sur `kotlin-compiler-embeddable`, protocole 1 (`POST /compile`), compilation en deux phases vers un module ES avec source map, stdlib et `kotlin.test` comme seules bibliothèques, compilation de chauffe au démarrage. Limites de [hosting](guides/hosting.md) : corps, concurrence, file, cache mémoire, timeout. Le lot tranche comment interrompre une compilation (processus séparé ou redémarrage du conteneur), dans une ADR. Image durcie de [security §3.3](specs/security.md) : non-root, FS en lecture seule, aucun réseau sortant, logs sans corps. Tests HTTP (Vitest) contre le conteneur. | `strategy-kotlin` et les quatre états de ses exercices compilent. Une erreur répond avec ses diagnostics `fichier:ligne:colonne`. Un corps trop gros reçoit `413`, une file pleine `503`, une compilation qui dépasse le timeout est interrompue sans bloquer les suivantes. |
-| 2 | `runtime-kotlin` | `packages/runtime-kotlin` : client du protocole avec ses erreurs (`429`, `503`, réseau), cache par hash, harness `kotlin.test` (`describe` / `it` / `xit`) qui émet les `TestEvent`, `location` tirée de la source map, `println` capturé en `Stdout`. Une suite de conformité compare ses résultats à ceux de `gradle test` sur JVM. `template-check` lance les templates Kotlin contre le service. | Sur `strategy-kotlin` et les quatre états de ses exercices, la suite de conformité donne les mêmes verts, rouges, messages et `fichier:ligne` que `gradle test`. |
-| 3 | `runtime-kotlin-app` | Le runtime `kotlin` dans l'app : `KOTLIN_COMPILER_URL`, templates Kotlin masqués quand il manque, toasts `429` / `503`, diagnostics du dernier run dans l'éditeur, coloration Kotlin, cache client en IndexedDB, CSP `connect-src`. Profil Docker `kotlin` sur un réseau interne, `/api/kotlin/*` routé par Caddy, rate limiting par IP (R9, une ADR). Le run de santé et `registry-tools` (V9) couvrent Kotlin. Un test de charge mesure le service derrière Caddy. | `/play/strategy-kotlin` lance Run, les tests et les deux exercices dans Chromium et WebKit. Sans service, le hub masque Kotlin. Le test de charge reste dans les limites (`429` / `503` au-delà, aucun crash ni dépassement mémoire). `strategy-kotlin` et sa base sont `healthy`. |
-| 4 | `kotlin-artifacts` | Artefacts précompilés ([runtimes §6.4](specs/runtimes.md)) : `registry-tools` compile chaque template Kotlin à l'indexation et publie l'artefact avec l'index. Le runtime l'utilise tant que le projet n'est pas modifié. | Ouvrir `strategy-kotlin` et lancer ses tests ne fait aucun appel au service. Après une modification, le run suivant le rappelle. |
-| 5 | `catalogue-kotlin` | Les 15 variantes Kotlin restantes du [catalogue](specs/catalogue.md), avec leurs bases, une PR par concept et une PR de registre par vague. (a) Fondamentaux et principes : `composition-over-inheritance-kotlin`, `single-responsibility-kotlin`, `open-closed-kotlin`, `liskov-substitution-kotlin`, `interface-segregation-kotlin`, `dependency-inversion-kotlin`. (b) Design patterns : `observer-kotlin`, `decorator-kotlin`, `factory-method-kotlin`, `adapter-kotlin`. (c) Architectures : `naive-crud-kotlin`, puis `hexagonal-kotlin`, `cqrs-kotlin`, `event-sourcing-kotlin`, `outbox-kotlin` et `state-machine-kotlin`. Chaque tour reprend les ids de la variante TS. Le guide d'écriture complète sa section Kotlin. | Les 16 variantes Kotlin sont au registre, `healthy`, et se comparent à leur variante TS sans `W_TOUR_ORDER_DIVERGES`. |
+| 1 | `kotlin-compiler` | `services/kotlin-compiler` ([0019](decisions/0019-kotlin-runtime.md), [runtimes §6.4](specs/runtimes.md)): minimal HTTP server on `kotlin-compiler-embeddable`, protocol 1 (`POST /compile`), two-phase compilation to an ES module with source map, stdlib and `kotlin.test` as the only libraries, warm-up compilation at startup. Limits from [hosting](guides/hosting.md): body, concurrency, queue, memory cache, timeout. The slice decides how to interrupt a compilation (separate process or container restart), in an ADR. Hardened image from [security §3.3](specs/security.md): non-root, read-only FS, no outbound network, logs without bodies. HTTP tests (Vitest) against the container. | `strategy-kotlin` and the four states of its exercises compile. An error responds with its `file:line:column` diagnostics. A body that is too large gets `413`, a full queue `503`, a compilation that exceeds the timeout is interrupted without blocking the following ones. |
+| 2 | `runtime-kotlin` | `packages/runtime-kotlin`: protocol client with its errors (`429`, `503`, network), cache by hash, `kotlin.test` harness (`describe` / `it` / `xit`) that emits the `TestEvent`, `location` taken from the source map, `println` captured as `Stdout`. A conformance suite compares its results to those of `gradle test` on the JVM. `template-check` runs the Kotlin templates against the service. | On `strategy-kotlin` and the four states of its exercises, the conformance suite gives the same greens, reds, messages and `file:line` as `gradle test`. |
+| 3 | `runtime-kotlin-app` | The `kotlin` runtime in the app: `KOTLIN_COMPILER_URL`, Kotlin templates hidden when it is missing, `429` / `503` toasts, diagnostics of the last run in the editor, Kotlin highlighting, client cache in IndexedDB, CSP `connect-src`. `kotlin` Docker profile on an internal network, `/api/kotlin/*` routed by Caddy, rate limiting by IP (R9, an ADR). The health run and `registry-tools` (V9) cover Kotlin. A load test measures the service behind Caddy. | `/play/strategy-kotlin` starts Run, the tests and the two exercises in Chromium and WebKit. Without the service, the hub hides Kotlin. The load test stays within the limits (`429` / `503` beyond them, no crash or memory overrun). `strategy-kotlin` and its base are `healthy`. |
+| 4 | `kotlin-artifacts` | Precompiled artifacts ([runtimes §6.4](specs/runtimes.md)): `registry-tools` compiles each Kotlin template at indexing and publishes the artifact with the index. The runtime uses it as long as the project is not changed. | Opening `strategy-kotlin` and running its tests makes no call to the service. After a change, the next run calls it again. |
+| 5 | `catalogue-kotlin` | The 15 remaining Kotlin variants of the [catalogue](specs/catalogue.md), with their bases, one PR per concept and one registry PR per wave. (a) Fundamentals and principles: `composition-over-inheritance-kotlin`, `single-responsibility-kotlin`, `open-closed-kotlin`, `liskov-substitution-kotlin`, `interface-segregation-kotlin`, `dependency-inversion-kotlin`. (b) Design patterns: `observer-kotlin`, `decorator-kotlin`, `factory-method-kotlin`, `adapter-kotlin`. (c) Architectures: `naive-crud-kotlin`, then `hexagonal-kotlin`, `cqrs-kotlin`, `event-sourcing-kotlin`, `outbox-kotlin` and `state-machine-kotlin`. Each tour reuses the ids of the TS variant. The authoring guide completes its Kotlin section. | The 16 Kotlin variants are in the registry, `healthy`, and compare to their TS variant without `W_TOUR_ORDER_DIVERGES`. |
 
-Le critère de fin du M6 est joué à la fin du lot 5, le test de charge au lot 3. Firefox (R2, R7, R8) se vérifie
-pendant la revue du M6, à la main ou avec un Playwright qui le lance.
+The M6 completion criterion is played at the end of slice 5, the load test in slice 3. Firefox (R2, R7, R8) is checked
+during the M6 review, by hand or with a Playwright that launches it.
 
-État (2026-10-13) : lot 1 livré. `services/kotlin-compiler` compile avec Kotlin 2.4.21 dans une image JRE 25, non-root,
-qui tourne sur un FS en lecture seule avec un `tmpfs` pour `/tmp`. Le superviseur HTTP confie chaque compilation à un
-processus de compilation chaud, et le tue au timeout ([0028](decisions/0028-kotlin-compilation-workers.md)) : une
-compilation piégée reçoit `504` pendant que l'autre processus continue de compiler. Un processus à court de mémoire
-fait répondre `503`, puis il est relancé. Sur 2 vCPU et 1 Gio, `strategy-kotlin` compile en 0,7 s seul et à 2,4
-compilations par seconde sous charge, avec un pic à 815 Mio. Le cache mémoire passe à 32 Mio par défaut. Une suite
-Vitest lance l'image en conteneur durci : `strategy-kotlin` et les quatre états de ses exercices compilent, les
-diagnostics sont en `fichier:ligne:colonne`, et `400`, `405`, `413`, `503` (file pleine, crash), `504`, CORS, cache et
-logs sans sources sont couverts. La suite demande Docker. Le réseau interne sans accès sortant arrive avec le profil
-Compose du lot 3.
+Status (2026-10-13): slice 1 delivered. `services/kotlin-compiler` compiles with Kotlin 2.4.21 in a JRE 25 image,
+non-root, which runs on a read-only FS with a `tmpfs` for `/tmp`. The HTTP supervisor hands each compilation to a warm
+compilation process, and kills it at the timeout ([0028](decisions/0028-kotlin-compilation-workers.md)): a trapped
+compilation gets `504` while the other process keeps compiling. A process that runs out of memory makes the service
+respond `503`, then it is restarted. On 2 vCPU and 1 GiB, `strategy-kotlin` compiles in 0.7 s alone and at 2.4
+compilations per second under load, with a peak at 815 MiB. The memory cache goes to 32 MiB by default. A Vitest suite
+starts the image in a hardened container: `strategy-kotlin` and the four states of its exercises compile, diagnostics
+are in `file:line:column`, and `400`, `405`, `413`, `503` (full queue, crash), `504`, CORS, cache and logs without
+sources are covered. The suite requires Docker. The internal network without outbound access comes with the Compose
+profile of slice 3.
 
-Lot 2 livré : `packages/runtime-kotlin` compile par le service (client du protocole, erreurs `429`, `503`, `504` et
-réseau, cache LRU en mémoire par hash en attendant IndexedDB au lot 3), puis exécute l'artefact dans un worker neuf
-par run, ou dans un contexte `node:vm` hors navigateur. Le harness `kotlin.test` émet les `TestEvent` par fichier,
-situe chaque échec sur la ligne du test par la source map et capture `println`. La suite de conformité compare
-`strategy-kotlin`, sa base, les quatre états de ses exercices et des fixtures (exceptions, `@Ignore`, package par
-défaut, chaque assertion, erreurs de compilation) à `gradle test`, et `main` à `gradle run` : mêmes verts, rouges,
-`fichier:ligne` et messages, une fois traduits les quatre messages que JUnit 5 formule autrement (§6.4 de
-[runtimes](specs/runtimes.md)). `template-check` lance les exercices Kotlin quand `KOTLIN_COMPILER_URL` est défini.
-Les tests du navigateur passent dans Chromium et WebKit.
+Slice 2 delivered: `packages/runtime-kotlin` compiles through the service (protocol client, `429`, `503`, `504` and
+network errors, in-memory LRU cache by hash until IndexedDB in slice 3), then runs the artifact in a fresh worker per
+run, or in a `node:vm` context outside the browser. The `kotlin.test` harness emits the `TestEvent` per file, locates
+each failure on the test's line through the source map and captures `println`. The conformance suite compares
+`strategy-kotlin`, its base, the four states of its exercises and fixtures (exceptions, `@Ignore`, default package,
+each assertion, compilation errors) to `gradle test`, and `main` to `gradle run`: same greens, reds, `file:line`
+and messages, once the four messages that JUnit 5 phrases differently are translated (§6.4 of
+[runtimes](specs/runtimes.md)). `template-check` runs the Kotlin exercises when `KOTLIN_COMPILER_URL` is set. The
+browser tests pass in Chromium and WebKit.
 
-Lot 3 en trois PR : (a) l'intégration dans l'app, (b) le déploiement (profil Compose, test de charge), (c) le run
-de santé et `registry-tools`. (a) livré : la frame demande chaque compilation à l'app par son `MessagePort`, l'app
-compile avec un cache IndexedDB et appelle `/api/kotlin/compile` sur sa propre origine. Son serveur relaie vers
-`KOTLIN_COMPILER_URL` avec un rate limiting par IP ([0029](decisions/0029-kotlin-relay-rate-limit.md)), en dev comme
-en production ; Caddy n'a pas de route vers le service, contrairement à ce que prévoyait ce lot. La sandbox colore
-Kotlin, souligne les erreurs du dernier run, explique un compilateur saturé (`429`) ou indisponible, et un runtime
-absent de l'instance. Sans service, le hub masque Kotlin une fois hydraté. L'E2E de dev lance le service et passe
-`/play/strategy-kotlin` (Run, tests, erreur de compilation, cache après rechargement, les deux exercices) dans
-Chromium et WebKit.
+Slice 3 in three PRs: (a) the integration into the app, (b) the deployment (Compose profile, load test), (c) the health
+run and `registry-tools`. (a) delivered: the frame asks the app for each compilation through its `MessagePort`, the app
+compiles with an IndexedDB cache and calls `/api/kotlin/compile` on its own origin. Its server relays to
+`KOTLIN_COMPILER_URL` with rate limiting by IP ([0029](decisions/0029-kotlin-relay-rate-limit.md)), in dev as in
+production; Caddy has no route to the service, contrary to what this slice planned. The sandbox highlights Kotlin,
+underlines the errors of the last run, explains a saturated (`429`) or unavailable compiler, and a runtime absent from
+the instance. Without the service, the hub hides Kotlin once hydrated. The dev E2E starts the service and passes
+`/play/strategy-kotlin` (Run, tests, compilation error, cache after reload, the two exercises) in Chromium and WebKit.
 
-(b) livré : le profil Compose `kotlin` lance le service sur un réseau `internal`, avec les protections de
-[security §3.3](specs/security.md). `web` est le seul autre membre de ce réseau, et Compose lui fixe
-`TYPIKA_TRUST_PROXY=true`. Un `X-Forwarded-For` forgé ne contourne pas la limite, puisque Caddy le remplace.
-`.env.example` liste les variables Kotlin. Un processus planté répond `503` avec `Retry-After`, comme une file
-pleine, et le relais en fait autant quand le service ne répond pas en 25 s. Le hub ne montre plus Kotlin pour le
-masquer ensuite : il reste masqué tant que la config n'a pas confirmé le service, prérendu compris. Le test de
-charge (`load-test.ts`, [hosting §4.5](guides/hosting.md)) passe derrière Caddy :
+(b) delivered: the `kotlin` Compose profile starts the service on an `internal` network, with the protections of
+[security §3.3](specs/security.md). `web` is the only other member of this network, and Compose sets
+`TYPIKA_TRUST_PROXY=true` for it. A forged `X-Forwarded-For` does not bypass the limit, since Caddy replaces it.
+`.env.example` lists the Kotlin variables. A crashed process responds `503` with `Retry-After`, like a full queue, and
+the relay does the same when the service does not respond within 25 s. The hub no longer shows Kotlin only to hide it
+afterward: it stays hidden as long as the config has not confirmed the service, prerendering included. The load test
+(`load-test.ts`, [hosting §4.5](guides/hosting.md)) passes behind Caddy:
 
-- une rafale de 30 requêtes d'un même client reçoit 10 `200` et 20 `429` avec `Retry-After` ;
-- la limite levée, 60 compilations simultanées et deux compilations piégées donnent 10 `200`, 50 `503` avec
-  `Retry-After` et deux `504` ;
-- le pic mémoire atteint 829 Mio sur 1 Gio, sans redémarrage ni arrêt pour mémoire, et le service compile de nouveau
-  après la charge.
+- A burst of 30 requests from the same client gets 10 `200` and 20 `429` with `Retry-After`.
+- With the limit lifted, 60 simultaneous compilations and two trapped compilations give 10 `200`, 50 `503` with
+  `Retry-After` and two `504`.
+- The memory peak reaches 829 MiB out of 1 GiB, without a restart or an out-of-memory stop, and the service compiles
+  again after the load.
 
-Ce test joue le cas de [0028](decisions/0028-kotlin-compilation-workers.md) : les deux places restent bloquées par les
-compilations piégées pendant environ 18 s. La suite E2E Kotlin passe sur le build de production derrière Caddy, dans
-WebKit comme dans Chromium, une fois la limite par IP levée : sinon, la suite seule la dépasse.
+This test plays the case of [0028](decisions/0028-kotlin-compilation-workers.md): the two slots stay blocked by the
+trapped compilations for about 18 s. The Kotlin E2E suite passes on the production build behind Caddy, in WebKit as in
+Chromium, once the per-IP limit is lifted: otherwise, the suite alone exceeds it.
 
-(c) livré : `registry-tools build` et `health` lancent les exercices Kotlin (V9) quand `KOTLIN_COMPILER_URL` est
-défini, comme `template-check`. Le build de l'app ne les lance pas, puisqu'il ne dépend pas du service. Le run de santé
-lit `/config.json` de l'instance visée et sonde Kotlin seulement si elle a un compilateur : sinon, les templates
-Kotlin restent sautés plutôt que `broken`. Sur le build de production relié au service, `strategy-kotlin` et
-`strategy-base-kotlin` sont `healthy`. Le run, V9 compris, demande onze compilations au service et tient sous la
-limite par IP ; pour les 16 templates du lot 5, il faudra la lever sur l'instance sondée. Le lot 3 est livré.
+(c) delivered: `registry-tools build` and `health` run the Kotlin exercises (V9) when `KOTLIN_COMPILER_URL` is set,
+like `template-check`. The app build does not run them, since it does not depend on the service. The health run reads
+the target instance's `/config.json` and probes Kotlin only if it has a compiler: otherwise, the Kotlin templates stay
+skipped rather than `broken`. On the production build connected to the service, `strategy-kotlin` and
+`strategy-base-kotlin` are `healthy`. The run, V9 included, asks the service for eleven compilations and stays under
+the per-IP limit; for the 16 templates of slice 5, it will have to be lifted on the probed instance. Slice 3 is
+delivered.
 
-Lot 4 en deux PR : (a) la compilation des artefacts dans `registry-tools`, (b) leur usage dans l'app. (a) livré : avec
-`KOTLIN_COMPILER_URL`, `registry-tools build` compile chaque template Kotlin en modes `test` et `run`, tel que la
-sandbox l'ouvre (sans `exercises/`). Il écrit chaque compilation dans `registry/artifacts/kotlin/<clé>.json`, sous la
-clé du cache client ([runtimes §6.4](specs/runtimes.md)), et supprime les artefacts qu'aucun template ne demande plus.
-Un template qui ne compile pas fait échouer le build ; sans service, le build signale les artefacts manquants ou
-périmés. Ceux de `strategy-kotlin` et de sa base sont commités : 100 à 220 Ko chacun, 18 à 37 Ko compressés, et deux
-builds successifs écrivent les mêmes fichiers.
+Slice 4 in two PRs: (a) compiling the artifacts in `registry-tools`, (b) using them in the app. (a) delivered: with
+`KOTLIN_COMPILER_URL`, `registry-tools build` compiles each Kotlin template in `test` and `run` modes, as the sandbox
+opens it (without `exercises/`). It writes each compilation to `registry/artifacts/kotlin/<key>.json`, under the client
+cache key ([runtimes §6.4](specs/runtimes.md)), and deletes the artifacts that no template requests anymore. A template
+that does not compile makes the build fail; without the service, the build reports missing or stale artifacts. Those of
+`strategy-kotlin` and of its base are committed: 100 to 220 KB each, 18 to 37 KB compressed, and two successive builds
+write the same files.
 
-(b) livré : l'app cherche chaque compilation dans son cache IndexedDB, puis dans `artifacts/kotlin/<clé>.json` à côté
-de l'index du registre, en lecture seule ; un artefact absent ou illisible compte comme absent du cache. Le plugin Vite
-`registry-index` sert ces artefacts en dev et les émet au build, et le serveur de production les sert comme immuables,
-avec un `404` pour un artefact absent. L'E2E de dev ouvre `strategy-kotlin`, lance ses tests et `main` sans aucun appel
-à `/api/kotlin/compile`, puis l'appelle une fois après une modification. Sur le build de production, Chromium et WebKit
-ne font aucun appel. Les exercices ne sont pas précompilés : leur état de départ passe par le service. Le lot 4 est
-livré.
+(b) delivered: the app looks for each compilation in its IndexedDB cache, then in `artifacts/kotlin/<key>.json` next to
+the registry index, read-only; a missing or unreadable artifact counts as absent from the cache. The `registry-index`
+Vite plugin serves these artifacts in dev and emits them at build time, and the production server serves them as
+immutable, with a `404` for a missing artifact. The dev E2E opens `strategy-kotlin`, runs its tests and `main` without
+any call to `/api/kotlin/compile`, then calls it once after a change. On the production build, Chromium and WebKit make
+no call. Exercises are not precompiled: their start state goes through the service. Slice 4 is delivered.
 
-État (2026-10-15) : lot 5, vague (a) livrée. `composition-over-inheritance-kotlin`, `single-responsibility-kotlin`,
-`open-closed-kotlin`, `liskov-substitution-kotlin`, `interface-segregation-kotlin` et `dependency-inversion-kotlin`
-sont au registre avec leurs bases, `healthy` (#67 à #72), avec leurs 24 artefacts précompilés. Les six variantes TS
-listent Kotlin et sont réépinglées. Chaque paire TS / Kotlin a les mêmes `id` d'étapes dans le même ordre, et la
-comparaison s'aligne étape par étape dans le navigateur. Depuis, `template-check` et `registry-tools` émettent
-`W_TOUR_ORDER_DIVERGES` ([manifest §5.3](specs/manifest.md)) : une variante qui ne présente pas les étapes partagées
-avec sa référence TypeScript dans le même ordre est signalée, et aucun template du registre ne l'est.
-Les tours s'appuient sur ce que Kotlin rend explicite : `open` pour hériter, `by` pour déléguer, des fonctions de
-premier niveau sans état, des `fun interface` dont un faux de test est une lambda, et un constructeur primaire qui
-injecte en une ligne. Le LSP écrit ses tests de contrat comme une classe de test abstraite dont hérite la classe de
-test de chaque sous-type. Le hub en dev liste 35 templates ; en production sans service, Kotlin reste masqué.
+Status (2026-10-15): slice 5, wave (a) delivered. `composition-over-inheritance-kotlin`, `single-responsibility-kotlin`,
+`open-closed-kotlin`, `liskov-substitution-kotlin`, `interface-segregation-kotlin` and `dependency-inversion-kotlin`
+are in the registry with their bases, `healthy` (#67 to #72), with their 24 precompiled artifacts. The six TS variants
+list Kotlin and are re-pinned. Each TS / Kotlin pair has the same step `id`s in the same order, and the comparison
+aligns step by step in the browser. Since then, `template-check` and `registry-tools` emit `W_TOUR_ORDER_DIVERGES`
+([manifest §5.3](specs/manifest.md)): a variant that does not present the steps shared with its TypeScript reference in
+the same order is reported, and no template in the registry is.
+The tours rely on what Kotlin makes explicit: `open` to inherit, `by` to delegate, stateless top-level functions,
+`fun interface`s whose test fake is a lambda, and a primary constructor that injects in one line. The LSP writes its
+contract tests as an abstract test class that each subtype's test class inherits from. The hub in dev lists 35
+templates; in production without the service, Kotlin stays hidden.
 
-État (2026-10-15) : lot 5, vague (b) livrée. `observer-kotlin`, `decorator-kotlin`, `factory-method-kotlin` et
-`adapter-kotlin` sont au registre avec leurs bases, `healthy` (#76 à #79), avec leurs 16 artefacts précompilés.
-`observer-ts`, `decorator-ts`, `factory-method-ts`, `adapter-ts` et `adapter-go` listent Kotlin et sont réépinglés.
-Aucun template n'émet `W_TOUR_ORDER_DIVERGES`. Les abonnés de l'Observer sont des lambdas derrière une
-`fun interface`, et `subscribe` rend une fonction de désabonnement. Les décorateurs délèguent avec `: Notifier by
-inner` et n'écrivent que la méthode qu'ils changent. Le créateur du Factory Method garde un `ship` final par défaut,
-avec un `object` par colis. L'Adapter traduit des codes `Int` ouverts en un résultat `sealed`, et son tour explique
-pourquoi une extension function ne remplace pas la classe. Sans bibliothèque de mock, les SDK simulés exposent une
-recherche (`findPayment`, `findCharge`) pour que les tests vérifient ce qui a été envoyé. Le hub en dev liste 39
-templates.
+Status (2026-10-15): slice 5, wave (b) delivered. `observer-kotlin`, `decorator-kotlin`, `factory-method-kotlin` and
+`adapter-kotlin` are in the registry with their bases, `healthy` (#76 to #79), with their 16 precompiled artifacts.
+`observer-ts`, `decorator-ts`, `factory-method-ts`, `adapter-ts` and `adapter-go` list Kotlin and are re-pinned. No
+template emits `W_TOUR_ORDER_DIVERGES`. The Observer's subscribers are lambdas behind a `fun interface`, and
+`subscribe` returns an unsubscribe function. The decorators delegate with `: Notifier by inner` and only write the
+method they change. The Factory Method creator keeps a final `ship` by default, with one `object` per parcel. The
+Adapter translates open `Int` codes into a `sealed` result, and its tour explains why an extension function does not
+replace the class. Without a mocking library, the simulated SDKs expose a lookup (`findPayment`, `findCharge`) so that
+the tests check what was sent. The hub in dev lists 39 templates.
 
-État (2026-10-16) : lot 5, vague (c) livrée. `naive-crud-kotlin`, la base commune, `hexagonal-kotlin`, `cqrs-kotlin`,
-`event-sourcing-kotlin`, `outbox-kotlin` et `state-machine-kotlin` sont au registre, `healthy` (#82 à #86), avec leurs
-12 artefacts précompilés. `hexagonal-ts`, `hexagonal-go`, `cqrs-ts`, `cqrs-go`, `event-sourcing-ts`, `outbox-ts`,
-`outbox-go` et `state-machine-ts` listent Kotlin et sont réépinglés. Les corps HTTP sont des `Map<String, Any?>` ; sur
-Kotlin/JS, `0.5 as? Int` réussit, d'où `wholeNumber` pour lire un entier. Les commandes, les changements et les
-événements sont des hiérarchies `sealed`, que `decide` et `evolve` parcourent avec des `when` exhaustifs ; la
-réhydratation est un `fold`. Le relais de l'outbox est synchrone et piloté par les tests. La machine à états est une
-`sealed class` dont la table de transitions est un `when` exhaustif : un état oublié ne compile pas. Le hub en dev liste
-44 templates.
+Status (2026-10-16): slice 5, wave (c) delivered. `naive-crud-kotlin`, the common base, `hexagonal-kotlin`,
+`cqrs-kotlin`, `event-sourcing-kotlin`, `outbox-kotlin` and `state-machine-kotlin` are in the registry, `healthy` (#82
+to #86), with their 12 precompiled artifacts. `hexagonal-ts`, `hexagonal-go`, `cqrs-ts`, `cqrs-go`,
+`event-sourcing-ts`, `outbox-ts`, `outbox-go` and `state-machine-ts` list Kotlin and are re-pinned. HTTP bodies are
+`Map<String, Any?>`; on Kotlin/JS, `0.5 as? Int` succeeds, hence `wholeNumber` to read an integer. Commands, changes
+and events are `sealed` hierarchies, which `decide` and `evolve` walk with exhaustive `when`s; rehydration is a `fold`.
+The outbox relay is synchronous and driven by the tests. The state machine is a `sealed class` whose transition table
+is an exhaustive `when`: a forgotten state does not compile. The hub in dev lists 44 templates.
 
-Revue (2026-10-19) : le M6 est livré. Les 16 concepts du catalogue ont leur variante Kotlin au registre, et se
-comparent étape par étape à leur variante TS sans `W_TOUR_ORDER_DIVERGES`. L'index compte 78 entrées, dont 28 Kotlin,
-toutes `healthy`. Le service de compilation a tenu son test de charge au lot 3. Les suites de la revue sont fermées
-(#88 à #98) : `registry:build` ne compile plus que les artefacts manquants, et l'état de départ des exercices Kotlin
-est précompilé lui aussi ([0030](decisions/0030-kotlin-exercise-artifacts.md)). Ouvrir un exercice puis lancer ses
-tests ou son programme n'appelle plus le service. `registry/artifacts/kotlin/` compte 101 artefacts, pour 25 Mo. Le
-contrôle complet est vert, avec 88 E2E en dev. On passe au M5, en commençant par ce qui se construit sans déploiement
-public : partage par URL, export zip, `/embed/<name>` et `typika validate`. Ce qui reste ouvert :
+Review (2026-10-19): M6 is delivered. The 16 concepts of the catalogue have their Kotlin variant in the registry, and
+compare step by step to their TS variant without `W_TOUR_ORDER_DIVERGES`. The index has 78 entries, 28 of them Kotlin,
+all `healthy`. The compilation service held its load test in slice 3. The review follow-ups are closed (#88 to #98):
+`registry:build` now only compiles the missing artifacts, and the start state of the Kotlin exercises is precompiled
+too ([0030](decisions/0030-kotlin-exercise-artifacts.md)). Opening an exercise then running its tests or its program
+no longer calls the service. `registry/artifacts/kotlin/` has 101 artifacts, for 25 MB. The full check is green, with
+88 E2E in dev. We move to M5, starting with what can be built without a public deployment: sharing by URL, zip export,
+`/embed/<name>` and `typika validate`. What remains open:
 
-- Firefox sort du périmètre (#97) : le Firefox de Playwright ne démarre toujours pas sous macOS 27. R2, R7 et R8 sont
-  vérifiés dans Chromium et WebKit, et R2 et R7 aussi à la main dans Safari.
-- Le M3 reste ouvert : la publication attend la recherche de marques (R6), l'organisation `typika` et `typika.dev`
-  (#92). Le gist, le push GitHub, `npx typika create` et l'embed dans une page tierce du M5 en dépendent aussi.
-- Le serveur de dev s'est arrêté une fois sur un abort de V8 en envoyant un module de 25 Mo (#104). Il ne s'est pas
-  reproduit.
-- La configuration Vercel, `SECURITY.md` et la CI GitHub sont toujours en attente.
+- Firefox leaves the scope (#97): Playwright's Firefox still does not start under macOS 27. R2, R7 and R8 are checked
+  in Chromium and WebKit, and R2 and R7 also by hand in Safari.
+- M3 stays open: publication waits for the trademark search (R6), the `typika` organization and `typika.dev` (#92).
+  The gist, the GitHub push, `npx typika create` and the embed in a third-party page of M5 depend on it too.
+- The dev server stopped once on a V8 abort while sending a 25 MB module (#104). It has not reproduced.
+- The Vercel configuration, `SECURITY.md` and GitHub CI are still pending.
 
 ## M7 — Publication
 
-**Objectif** : le jour où #92 se débloque, publier ne demande plus que de pousser.
+**Goal**: the day #92 is unblocked, publishing only takes a push.
 
-Livrables :
+Deliverables:
 
-- La bascule vers `typika-app/templates` et `typika-app/registry`, prête sur le `main` courant.
-- La CI GitHub de l'app, `SECURITY.md` et la chaîne d'approvisionnement de [security §5](specs/security.md).
-- Une cible d'hébergement choisie et sa configuration ([hosting](guides/hosting.md)).
-- Les dépôts, l'instance et le package `typika` publics.
+- The cutover to `typika-app/templates` and `typika-app/registry`, ready on the current `main`.
+- The app's GitHub CI, `SECURITY.md` and the supply chain of [security §5](specs/security.md).
+- A chosen hosting target and its configuration ([hosting](guides/hosting.md)).
+- The repositories, the instance and the `typika` package public.
 
-Terminé quand : les critères de fin du M3 et du M5 sont joués sur l'instance publique. Une PR au registre ajoute un
-template sans toucher à l'app, un template tourne dans une page tierce, et `npx typika create strategy-ts` produit un
-projet qui passe ses tests.
+Done when: the M3 and M5 completion criteria are played on the public instance. A PR to the registry adds a template
+without touching the app, a template runs in a third-party page, and `npx typika create strategy-ts` produces a project
+that passes its tests.
 
-### Découpage
+### Breakdown
 
-Un lot = une branche `m7/<lot>` et une PR. Les lots 1 à 3 se font sans rien publier. Le lot 4 demande une décision du
-mainteneur, et le lot 5 attend #92.
+One slice = one `m7/<slice>` branch and one PR. Slices 1 to 3 are done without publishing anything. Slice 4 requires a
+decision from the maintainer, and slice 5 waits for #92.
 
-| # | Lot | Contenu | Terminé quand |
+| # | Slice | Content | Done when |
 |---|---|---|---|
-| 1 | `cutover` | La bascule du lot 7 du M3, préparée en octobre pour 38 entrées sous `typika/…`, est reprise sur le `main` courant : extraction de `templates/` et `registry/` vers `typika-app/…`, 78 entrées réépinglées, artefacts Kotlin publiés à côté de l'index, workflows `validate-pr`, `build-index` et `health` avec Go et Kotlin, branche des sous-modules rebasée. | L'extraction se termine par un `registry-tools build` vert sur les 78 entrées, et la branche des sous-modules passe le contrôle complet. |
-| 2 | `ci` | Le workflow GitHub Actions de l'app ([architecture §9](specs/architecture.md)) : lint, format, types, tests, build, E2E, puis `docker build` et E2E des en-têtes sur l'image. Le lot dit ce qui reste local si les minutes d'un dépôt privé ne suffisent pas. | Une PR affiche un contrôle GitHub vert, et un test cassé exprès le fait échouer. |
-| 3 | `security-policy` | `SECURITY.md` ([security §6](specs/security.md)) et les points de [security §5](specs/security.md) qui ne demandent pas de publication : image de base épinglée par digest, Renovate avec délai d'adoption. | Chaque point de §5 est fait ou rattaché au lot 5. |
-| 4 | `hosting` | Choix de la cible de l'instance publique, dans une ADR : Docker derrière Caddy, la cible principale, ou Vercel avec le service Kotlin à part ([hosting §4 à §6](guides/hosting.md)). Puis sa configuration. | La checklist de [hosting §9](guides/hosting.md) passe sur une instance non publique de la cible retenue. |
-| 5 | `publish` | Après #92 : transfert du dépôt, création des deux dépôts, Pages et Renovate, OAuth App de production, publication du package `typika` avec provenance, instance publique, lien « proposer au registre ». | Le critère de fin du M7. |
+| 1 | `cutover` | The cutover of slice 7 of M3, prepared in October for 38 entries under `typika/…`, is redone on the current `main`: extraction of `templates/` and `registry/` to `typika-app/…`, 78 entries re-pinned, Kotlin artifacts published next to the index, `validate-pr`, `build-index` and `health` workflows with Go and Kotlin, submodules branch rebased. | The extraction ends with a green `registry-tools build` on the 78 entries, and the submodules branch passes the full check. |
+| 2 | `ci` | The app's GitHub Actions workflow ([architecture §9](specs/architecture.md)): lint, format, types, tests, build, E2E, then `docker build` and headers E2E on the image. The slice says what stays local if a private repository's minutes are not enough. | A PR shows a green GitHub check, and a deliberately broken test makes it fail. |
+| 3 | `security-policy` | `SECURITY.md` ([security §6](specs/security.md)) and the items of [security §5](specs/security.md) that do not require publication: base image pinned by digest, Renovate with an adoption delay. | Each item of §5 is done or attached to slice 5. |
+| 4 | `hosting` | Choice of the public instance's target, in an ADR: Docker behind Caddy, the main target, or Vercel with the Kotlin service separate ([hosting §4 to §6](guides/hosting.md)). Then its configuration. | The checklist of [hosting §9](guides/hosting.md) passes on a non-public instance of the chosen target. |
+| 5 | `publish` | After #92: repository transfer, creation of the two repositories, Pages and Renovate, production OAuth App, publication of the `typika` package with provenance, public instance, "propose to the registry" link. | The M7 completion criterion. |
 
-État (2026-11-20) : lot 1 prêt, rien n'est publié. L'extraction donne `typika-app/templates` et `typika-app/registry`
-à partir du `main` courant : les 78 entrées sont réépinglées sur les SHA extraits, les 101 artefacts Kotlin suivent le
-registre, et `registry-tools build` y passe, exercices Go et Kotlin compris. Les workflows des deux dépôts appellent
-l'action `.github/actions/setup` de ce dépôt, qui installe pnpm, Node, le Go épinglé avec ses assets et lance le
-service de compilation Kotlin. `build-index` compile les artefacts Kotlin manquants, les commite dans le registre, puis
-publie l'index et les artefacts sur GitHub Pages. Ces workflows n'ont jamais tourné : `actionlint` les valide, et leur
-premier run aura lieu à la publication. La branche des sous-modules, `m7/registry-repos`, reste locale. Elle porte
-l'ADR 0026 et passe le contrôle complet : 24 tâches Turbo sur 24, 125 E2E en dev, 44 en production, et l'image Docker,
-construite depuis les sous-modules, sert un index de 78 templates. Les E2E de dev de `main`, en attente depuis #118,
-sont repassés : 125 sur 125. Avant la publication, les manifestes des templates doivent nommer le bon compte GitHub
-(#120), ce qui demandera de relancer l'extraction.
+Status (2026-11-20): slice 1 ready, nothing is published. The extraction produces `typika-app/templates` and
+`typika-app/registry` from the current `main`: the 78 entries are re-pinned on the extracted SHAs, the 101 Kotlin
+artifacts follow the registry, and `registry-tools build` passes there, Go and Kotlin exercises included. The workflows
+of both repositories call this repository's `.github/actions/setup` action, which installs pnpm, Node, the pinned Go
+with its assets, and starts the Kotlin compilation service. `build-index` compiles the missing Kotlin artifacts,
+commits them to the registry, then publishes the index and the artifacts on GitHub Pages. These workflows have never
+run: `actionlint` validates them, and their first run will happen at publication. The submodules branch,
+`m7/registry-repos`, stays local. It carries ADR 0026 and passes the full check: 24 Turbo tasks out of 24, 125 E2E in
+dev, 44 in production, and the Docker image, built from the submodules, serves an index of 78 templates. The dev E2E of
+`main`, pending since #118, have been rerun: 125 out of 125. Before publication, the templates' manifests must name the
+right GitHub account (#120), which will require rerunning the extraction.
 
-Lot 2 livré : `.github/workflows/ci.yml` joue le contrôle local sur chaque PR qui touche autre chose que la
-documentation, et à la demande. Le job `check` passe en 11 à 15 minutes : lint, format, les 24 tâches Turbo, puis
-`template-check` et `registry:build` avec le service Kotlin. Le job `e2e` passe en 18 à 26 minutes : les 125 E2E de dev,
-les 44 de production, puis l'image Docker et les E2E de production qui se passent du registre de test. Un test cassé
-exprès fait échouer `check`. C'est aussi le premier run de l'action `setup`, service Kotlin compris. Le runner, plus
-lent et sans cache, a demandé quatre réglages : `--allowOnly` pour le Vitest de référence de la suite de conformité
-(Vitest refuse `.only` quand `CI` est défini), le pré-bundle des dépendances que Vite découvrait en cours de test, une
-tâche Turbo à la fois, et 90 secondes par E2E de dev au lieu de 30. Un run prend 30 à 40 minutes de runner.
+Slice 2 delivered: `.github/workflows/ci.yml` plays the local check on each PR that touches something other than the
+documentation, and on demand. The `check` job passes in 11 to 15 minutes: lint, format, the 24 Turbo tasks, then
+`template-check` and `registry:build` with the Kotlin service. The `e2e` job passes in 18 to 26 minutes: the 125 dev
+E2E, the 44 production ones, then the Docker image and the production E2E that do without the test registry. A
+deliberately broken test makes `check` fail. It is also the first run of the `setup` action, Kotlin service included.
+The runner, slower and without a cache, required four adjustments: `--allowOnly` for the reference Vitest of the
+conformance suite (Vitest refuses `.only` when `CI` is set), pre-bundling the dependencies that Vite discovered during
+tests, one Turbo task at a time, and 90 seconds per dev E2E instead of 30. A run takes 30 to 40 runner minutes.
 
-Lot 3 livré, avec une correction du lot 2 : `grintzdel/typika` est public depuis sa création, contrairement à ce que la
-roadmap supposait. Les minutes d'Actions n'y sont donc pas comptées, et `ci` tourne aussi sur `main`. `SECURITY.md`
-renvoie vers le signalement privé de GitHub, activé sur le dépôt. Les points de [security §5](specs/security.md) :
+Slice 3 delivered, with a correction to slice 2: `grintzdel/typika` has been public since its creation, contrary to
+what the roadmap assumed. Actions minutes are therefore not counted there, and `ci` also runs on `main`. `SECURITY.md`
+points to GitHub's private reporting, enabled on the repository. The items of [security §5](specs/security.md):
 
-| Point | État |
+| Item | Status |
 |---|---|
-| Lockfile et `--frozen-lockfile` en CI | Fait (lot 2). |
-| Délai d'adoption | Fait : `minimumReleaseAge` de sept jours dans pnpm, et `renovate.json` avec le même délai. Un run à blanc de Renovate sur le dépôt lit 22 fichiers et laisse `templates/`, `registry/` et les fixtures de côté. L'installation de l'app Renovate sur le dépôt reste au lot 5. |
-| Assets de runtime | Fait depuis le M4 : servis par l'instance, SHA-256 vérifié pour Go ([0027](decisions/0027-go-assets-delivery.md)). La spec ne parle plus de SRI sur un CDN. |
-| Provenance npm | Lot 5, avec la publication du package `typika`. |
-| Image construite en CI, bases épinglées par digest | Fait : les cinq images du `Dockerfile`, du service Kotlin et de Compose portent un digest, et `ci` construit l'image (lot 2). Renovate épinglera les actions GitHub à son premier passage. |
+| Lockfile and `--frozen-lockfile` in CI | Done (slice 2). |
+| Adoption delay | Done: a seven-day `minimumReleaseAge` in pnpm, and `renovate.json` with the same delay. A Renovate dry run on the repository reads 22 files and leaves `templates/`, `registry/` and the fixtures aside. Installing the Renovate app on the repository stays in slice 5. |
+| Runtime assets | Done since M4: served by the instance, SHA-256 checked for Go ([0027](decisions/0027-go-assets-delivery.md)). The spec no longer mentions SRI on a CDN. |
+| npm provenance | Slice 5, with the publication of the `typika` package. |
+| Image built in CI, bases pinned by digest | Done: the five images of the `Dockerfile`, of the Kotlin service and of Compose carry a digest, and `ci` builds the image (slice 2). Renovate will pin the GitHub actions on its first pass. |
 
-Lot 4 livré : l'instance publique tournera sur un VPS, avec Docker derrière Caddy et le service Kotlin sur la même
-machine ([0035](decisions/0035-public-instance-hosting.md)). La configuration existait ; le lot y ajoute le port
-`443/udp`, que Caddy annonçait pour HTTP/3 sans que Compose le publie. Faute de VPS et de domaines (#92), la checklist
-de [hosting §9](guides/hosting.md) a été jouée sur la pile Compose locale, en HTTPS, avec l'autorité interne de Caddy
-et les sites `localhost` et `typika-run.localhost` ([hosting §4.6](guides/hosting.md)) :
+Slice 4 delivered: the public instance will run on a VPS, with Docker behind Caddy and the Kotlin service on the same
+machine ([0035](decisions/0035-public-instance-hosting.md)). The configuration existed; the slice adds the `443/udp`
+port, which Caddy announced for HTTP/3 without Compose publishing it. For lack of a VPS and domains (#92), the checklist
+of [hosting §9](guides/hosting.md) was played on the local Compose stack, over HTTPS, with Caddy's internal authority
+and the `localhost` and `typika-run.localhost` sites ([hosting §4.6](guides/hosting.md)):
 
-| Point | Résultat |
+| Item | Result |
 |---|---|
-| HTTPS sur les deux domaines | Passe avec l'autorité interne de Caddy. Les certificats publics attendent le lot 5. |
-| Deux sites différents | Passe pour les noms locaux. Les domaines réels attendent #92. |
-| En-têtes de `/play`, `/`, `/embed`, origine runtime qui ne sert pas l'app, `/config.json` sans secret | Passe, à la main et par les E2E de production. |
-| Language service, `crossOriginIsolated`, template TS, Go en brotli | Passe par les E2E de production : 35 sur 35, hors `registry`, `health` et `github`. |
-| Go non retéléchargé après un rechargement | Passe, vérifié par un test jetable. |
-| Avec Kotlin | Un template modifié compile par le relais, le hub liste les 16 variantes, le scénario `rate` passe (10 réponses `200`, 20 `429`), et une connexion sortante depuis le réseau du service échoue. |
-| Sans Kotlin | Aucun template Kotlin dans le hub. |
-| Avec GitHub | Non joué : il faut une OAuth App dont le callback est l'instance. Lot 5, avec l'application de production. |
+| HTTPS on both domains | Passes with Caddy's internal authority. Public certificates wait for slice 5. |
+| Two different sites | Passes for the local names. The real domains wait for #92. |
+| Headers of `/play`, `/`, `/embed`, runtime origin that does not serve the app, `/config.json` without secrets | Passes, by hand and through the production E2E. |
+| Language service, `crossOriginIsolated`, TS template, Go in brotli | Passes through the production E2E: 35 out of 35, excluding `registry`, `health` and `github`. |
+| Go not downloaded again after a reload | Passes, checked by a throwaway test. |
+| With Kotlin | A changed template compiles through the relay, the hub lists the 16 variants, the `rate` scenario passes (10 `200` responses, 20 `429`), and an outbound connection from the service's network fails. |
+| Without Kotlin | No Kotlin template in the hub. |
+| With GitHub | Not played: it needs an OAuth App whose callback is the instance. Slice 5, with the production application. |
 
-Au repos, `web` occupe 30 Mio, Caddy 15 Mio et le service Kotlin 480 Mio sur son plafond de 1 Gio. La taille du VPS
-se choisit au lot 5 : la mémoire que demande la construction de l'image n'est pas mesurée.
+At rest, `web` uses 30 MiB, Caddy 15 MiB and the Kotlin service 480 MiB out of its 1 GiB cap. The VPS size is chosen in
+slice 5: the memory that building the image requires is not measured.
 
 ---
 
-## Après M7 (non planifié)
+## After M7 (not planned)
 
-Pistes, à prioriser le moment venu :
+Ideas, to prioritize when the time comes:
 
-- Projets `blank`, sans template d'origine : ils ouvrent les liens sans origine et les gists libres.
-- Vagues suivantes de design patterns (GoF restants, puis Repository, Unit of Work, Specification, Null Object,
-  Result / Either) — voir [catalogue](specs/catalogue.md).
-- Plus de fondamentaux POO si le premier template trouve son public.
-- Traduction des tours (`tour/<locale>/`).
-- Runner auto-hébergeable pour des langages sans runtime navigateur.
-- Stacks composables.
+- `blank` projects, without an origin template: they open links without an origin and free-standing gists.
+- Next waves of design patterns (remaining GoF, then Repository, Unit of Work, Specification, Null Object,
+  Result / Either): see [catalogue](specs/catalogue.md).
+- More OOP fundamentals if the first template finds its audience.
+- Tour translation (`tour/<locale>/`).
+- Self-hostable runner for languages without a browser runtime.
+- Composable stacks.
 
-## Risques suivis
+## Tracked risks
 
-| # | Risque | Traitement |
+| # | Risk | Handling |
 |---|---|---|
-| R1 | Licence WebContainers | Levé : pas de runtime `node` en V1 ([0017](decisions/0017-node-runtime.md)) |
-| R2 | COOP/COEP casse l'embed | Levé pour `browser-js` ([0016](decisions/0016-isolation-and-embed.md)) ; Safari vérifié, Firefox hors périmètre |
-| R3 | Poids des runtimes | Lazy-load, Cache Storage ([0027](decisions/0027-go-assets-delivery.md)), CDN plus tard — M1 / M4 |
-| R4 | IntelliSense TS dans CodeMirror 6 | Levé : CodeMirror 6 confirmé ([0015](decisions/0015-editor.md)) |
-| R5 | Pourrissement des templates | CI de santé + Renovate — M3 |
-| R6 | Nom du projet | Typika retenu ([0014](decisions/0014-name-typika.md)) ; recherche de marques avant la publication (#92) |
-| R7 | Go dans le navigateur | Levé : toolchain Go en WASM ([0018](decisions/0018-go-runtime.md)) ; Safari vérifié, Firefox hors périmètre |
-| R8 | Service de compilation Kotlin | Levé : service maison, cible JS ([0019](decisions/0019-kotlin-runtime.md)) ; WebKit vérifié, Firefox hors périmètre |
-| R9 | Abus du service de compilation | Levé : limites, isolation et rate limiting par IP ([0028](decisions/0028-kotlin-compilation-workers.md), [0029](decisions/0029-kotlin-relay-rate-limit.md)), test de charge au M6 |
+| R1 | WebContainers license | Cleared: no `node` runtime in V1 ([0017](decisions/0017-node-runtime.md)) |
+| R2 | COOP/COEP breaks the embed | Cleared for `browser-js` ([0016](decisions/0016-isolation-and-embed.md)); Safari checked, Firefox out of scope |
+| R3 | Runtime weight | Lazy-load, Cache Storage ([0027](decisions/0027-go-assets-delivery.md)), CDN later — M1 / M4 |
+| R4 | TS IntelliSense in CodeMirror 6 | Cleared: CodeMirror 6 confirmed ([0015](decisions/0015-editor.md)) |
+| R5 | Template rot | Health CI + Renovate — M3 |
+| R6 | Project name | Typika chosen ([0014](decisions/0014-name-typika.md)); trademark search before publication (#92) |
+| R7 | Go in the browser | Cleared: Go toolchain in WASM ([0018](decisions/0018-go-runtime.md)); Safari checked, Firefox out of scope |
+| R8 | Kotlin compilation service | Cleared: in-house service, JS target ([0019](decisions/0019-kotlin-runtime.md)); WebKit checked, Firefox out of scope |
+| R9 | Compilation service abuse | Cleared: limits, isolation and rate limiting by IP ([0028](decisions/0028-kotlin-compilation-workers.md), [0029](decisions/0029-kotlin-relay-rate-limit.md)), load test in M6 |

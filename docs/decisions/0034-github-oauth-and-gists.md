@@ -1,67 +1,67 @@
-# 0034 — GitHub : OAuth App, échange sur le serveur de l'app, gist lisible
+# 0034 — GitHub: OAuth App, exchange on the app server, readable gist
 
-**Statut** : Acceptée · 2026-11-20 · lot 6 du M5 · complète [sharing-and-cli §3, §5](../specs/sharing-and-cli.md) et
-[security §3.5](../specs/security.md)
+**Status**: Accepted · 2026-11-20 · slice 6 of M5 · complements
+[sharing-and-cli §3, §5](../specs/sharing-and-cli.md) and [security §3.5](../specs/security.md)
 
-## Contexte
+## Context
 
-Le lot 6 apporte le partage par gist et le push vers un nouveau dépôt. Les specs laissaient ouverts le type
-d'application GitHub, la place de l'endpoint d'échange, la façon de revenir dans la sandbox après la connexion, et le
-format d'un projet dans un gist. Il n'y a ni instance publique ni application de production (#92) : tout doit se
-tester sans GitHub.
+Slice 6 brings sharing through a gist and pushing to a new repository. The specs left open the type of GitHub
+application, the location of the exchange endpoint, how to return to the sandbox after signing in, and the format of a
+project in a gist. There is neither a public instance nor a production application (#92): everything must be testable
+without GitHub.
 
-Vérifié le 2026-11-20 : GitHub accepte PKCE (`S256`) pour les OAuth Apps et les GitHub Apps depuis juillet 2025, mais
-l'échange `code` → jeton demande toujours le `client_secret`, et `github.com/login/oauth/access_token` ne répond pas
-en CORS. `api.github.com` répond en CORS.
+Checked on 2026-11-20: GitHub has accepted PKCE (`S256`) for OAuth Apps and GitHub Apps since July 2025, but the
+`code` → token exchange still requires the `client_secret`, and `github.com/login/oauth/access_token` does not answer
+with CORS. `api.github.com` answers with CORS.
 
-## Décision
+## Decision
 
-- **OAuth App.** Scopes demandés à l'action : `gist` pour partager, `public_repo` en plus pour pousser. Jamais `repo`
-  en V1 : le push ne crée que des dépôts publics.
-- **PKCE et `state`.** Le client tire un `state` et un `code_verifier`, gardés en `sessionStorage` le temps de
-  l'aller-retour. Le callback refuse un `state` inconnu.
-- **L'échange vit dans le serveur Node de l'app**, `POST /api/github/token`, comme le relais Kotlin
-  ([0029](0029-kotlin-relay-rate-limit.md)), avec le même middleware en dev. Il refuse un `Origin` autre que l'app,
-  limite par IP, et ne journalise ni le `code` ni le jeton. Il n'existe que si `GITHUB_CLIENT_ID` et
-  `GITHUB_CLIENT_SECRET` sont définis ; `/config.json` publie alors `github.clientId`.
-- **Redirection pleine page, pas de popup.** « Se connecter à GitHub » quitte la page vers GitHub, qui revient sur
-  `/auth/github/callback`. Le callback échange le code, range le jeton en `sessionStorage`, puis retourne à la page de
-  départ, où le dialogue de partage se rouvre.
-- **`TYPIKA_GITHUB_URL` et `TYPIKA_GITHUB_API_URL`** remplacent `https://github.com` et `https://api.github.com`. Les
-  E2E les pointent sur un faux GitHub local (`scripts/serve-fake-github.ts`) ; une instance GitHub Enterprise s'en
-  sert aussi. L'origine de l'API entre dans `connect-src`.
-- **Un gist porte les fichiers complets**, pour qu'il se lise sur GitHub. Un gist est plat : `/` devient `__` dans le
-  nom du fichier, avec un suffixe en cas de collision. `typika.share.json` porte la version du format, le nom, la ref
-  d'origine, le runtime, l'exercice, la table nom de fichier → chemin, et la liste des fichiers vides, que l'API des
-  gists refuse.
-- **`/g/<gistId>`** lit le gist sans connexion, et avec le jeton s'il y en a un. Le projet s'ouvre comme un lien
-  `/s#…` : sandbox éphémère, bandeau, aucune exécution automatique, id local dérivé de l'id du gist. Comme pour un
-  lien, l'origine doit être un template de l'index, en attendant les projets `blank`.
-- **Re-partager** met à jour le gist dont l'id est gardé sur le projet local (`projects.gistId`). Un projet ouvert
-  depuis le gist de quelqu'un d'autre, ou jamais enregistré, crée un nouveau gist.
-- **Deux PR** : (a) connexion, gist et `/g/<id>` ; (b) push vers un nouveau dépôt.
+- **OAuth App.** Scopes requested at the time of the action: `gist` to share, `public_repo` in addition to push. Never
+  `repo` in V1: the push only creates public repositories.
+- **PKCE and `state`.** The client draws a `state` and a `code_verifier`, kept in `sessionStorage` for the round trip.
+  The callback refuses an unknown `state`.
+- **The exchange lives in the app's Node server**, `POST /api/github/token`, like the Kotlin relay
+  ([0029](0029-kotlin-relay-rate-limit.md)), with the same middleware in dev. It refuses an `Origin` other than the
+  app, rate-limits per IP, and logs neither the `code` nor the token. It exists only if `GITHUB_CLIENT_ID` and
+  `GITHUB_CLIENT_SECRET` are defined; `/config.json` then publishes `github.clientId`.
+- **Full-page redirect, no popup.** "Sign in to GitHub" leaves the page for GitHub, which comes back to
+  `/auth/github/callback`. The callback exchanges the code, stores the token in `sessionStorage`, then returns to the
+  starting page, where the share dialog reopens.
+- **`TYPIKA_GITHUB_URL` and `TYPIKA_GITHUB_API_URL`** replace `https://github.com` and `https://api.github.com`. The
+  E2E tests point them to a local fake GitHub (`scripts/serve-fake-github.ts`); a GitHub Enterprise instance uses them
+  too. The API origin enters `connect-src`.
+- **A gist carries the complete files**, so that it can be read on GitHub. A gist is flat: `/` becomes `__` in the
+  file name, with a suffix in case of collision. `typika.share.json` carries the format version, the name, the origin
+  ref, the runtime, the exercise, the file name → path table, and the list of empty files, which the gists API
+  refuses.
+- **`/g/<gistId>`** reads the gist without signing in, and with the token if there is one. The project opens like a
+  `/s#…` link: ephemeral sandbox, banner, no automatic run, local id derived from the gist id. As for a link, the
+  origin must be a template of the index, until `blank` projects exist.
+- **Re-sharing** updates the gist whose id is kept on the local project (`projects.gistId`). A project opened from
+  someone else's gist, or never saved, creates a new gist.
+- **Two PRs**: (a) sign-in, gist and `/g/<id>`; (b) push to a new repository.
 
-## Conséquences
+## Consequences
 
-- Sans application OAuth, rien ne change : le dialogue de partage ne propose que le lien, et `/g/<id>` reste lisible.
-- L'OAuth App de développement se crée à la main sur le compte du mainteneur, avec le callback
-  `http://localhost:3000/auth/github/callback`. Le contrôle local ne parle jamais au vrai GitHub : la vérification
-  contre GitHub se fait à la main, comme les zips du lot 3.
-- La redirection recharge la sandbox. Un projet modifié est déjà enregistré ; un projet partagé non modifié se rouvre
-  par son URL.
-- `public_repo` donne l'écriture sur tous les dépôts publics de l'utilisateur. C'est le plus petit scope d'une OAuth
-  App qui crée un dépôt ; l'UI le dit avant la connexion et donne le lien de révocation.
-- Un fichier de gist tronqué par l'API (plus de 1 Mo) rend le gist illisible pour Typika : écran d'erreur. Les
-  limites d'un projet sont bien en dessous.
+- Without an OAuth application, nothing changes: the share dialog only offers the link, and `/g/<id>` stays readable.
+- The development OAuth App is created by hand on the maintainer's account, with the callback
+  `http://localhost:3000/auth/github/callback`. The local check never talks to the real GitHub: the check against
+  GitHub is done by hand, like the zips of slice 3.
+- The redirect reloads the sandbox. A modified project is already saved; an unmodified shared project reopens through
+  its URL.
+- `public_repo` gives write access to all of the user's public repositories. It is the smallest scope of an OAuth App
+  that creates a repository; the UI says so before signing in and gives the revocation link.
+- A gist file truncated by the API (more than 1 MB) makes the gist unreadable for Typika: error screen. A project's
+  limits are well below that.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **GitHub App** : permissions plus fines, mais créer un dépôt exige d'installer l'app sur le compte avec
-  l'administration des dépôts. C'est une étape de plus, pour un droit plus large que `public_repo`.
-- **Popup** : la sandbox envoie `Cross-Origin-Opener-Policy: same-origin`, qui coupe le lien avec une fenêtre partie
-  sur GitHub. Il faudrait un `BroadcastChannel`, et composer avec les bloqueurs de popups.
-- **Device flow** : sans secret ni callback, mais l'utilisateur recopie un code, et l'endpoint ne répond pas en CORS
-  non plus.
-- **Server route TanStack Start** ([architecture §3.5](../specs/architecture.md)) : le limiteur de débit et l'IP du
-  client vivent dans le serveur Node, comme pour le relais Kotlin.
-- **Un delta dans le gist**, comme dans l'URL : plus petit, mais illisible sur GitHub.
+- **GitHub App**: finer permissions, but creating a repository requires installing the app on the account with
+  repository administration. That is one more step, for a broader right than `public_repo`.
+- **Popup**: the sandbox sends `Cross-Origin-Opener-Policy: same-origin`, which cuts the link with a window that went
+  to GitHub. We would need a `BroadcastChannel`, and to cope with popup blockers.
+- **Device flow**: no secret or callback, but the user copies a code, and the endpoint does not answer with CORS
+  either.
+- **TanStack Start server route** ([architecture §3.5](../specs/architecture.md)): the rate limiter and the client's IP
+  live in the Node server, as for the Kotlin relay.
+- **A delta in the gist**, as in the URL: smaller, but unreadable on GitHub.

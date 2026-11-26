@@ -1,152 +1,151 @@
 # Interface
 
-Statut : brouillon · 2026-10-08 · Voir aussi : [registry](registry.md), [sharing-and-cli](sharing-and-cli.md),
+Status: draft · 2026-10-08 · See also: [registry](registry.md), [sharing-and-cli](sharing-and-cli.md),
 [runtimes](runtimes.md), [catalogue](catalogue.md)
 
-Spécification fonctionnelle de chaque écran. Le design visuel n'est pas couvert ici.
+Functional specification of each screen. Visual design is not covered here.
 
 ## 1. Routes
 
-| Route | Écran |
+| Route | Screen |
 |---|---|
-| `/` | Accueil du hub |
-| `/templates` | Liste à facettes, filtres dans la query string |
-| `/templates/<name>` | Page template |
-| `/play/<name>` | Sandbox ouverte depuis un template (`<name>` = `name` du manifeste, ex. `strategy-ts`) |
-| `/play/<name>?exercise=<id>` | Sandbox en mode exercice |
-| `/play/<name>?panel=diff` | Sandbox ouverte sur le diff depuis la base |
-| `/compare/<name>?a=<lang>&b=<lang>` | Comparaison de deux variantes |
-| `/projects` | Mes projets locaux |
-| `/p/<projectId>` | Projet local |
-| `/s#<payload>` | Projet partagé par URL |
-| `/g/<gistId>` | Projet partagé par gist |
-| `/embed/<name>` | Embed iframe |
+| `/` | Hub home |
+| `/templates` | Faceted list, filters in the query string |
+| `/templates/<name>` | Template page |
+| `/play/<name>` | Sandbox opened from a template (`<name>` = manifest `name`, e.g. `strategy-ts`) |
+| `/play/<name>?exercise=<id>` | Sandbox in exercise mode |
+| `/play/<name>?panel=diff` | Sandbox opened on the diff since the base |
+| `/compare/<name>?a=<lang>&b=<lang>` | Comparison of two variants |
+| `/projects` | My local projects |
+| `/p/<projectId>` | Local project |
+| `/s#<payload>` | Project shared by URL |
+| `/g/<gistId>` | Project shared by gist |
+| `/embed/<name>` | Iframe embed |
 
-Les pages du hub (`/`, `/templates`, `/templates/<name>`) sont prérendues et lisibles sans JavaScript. Les autres sont
-des écrans applicatifs.
+The hub pages (`/`, `/templates`, `/templates/<name>`) are prerendered and readable without JavaScript. The others are
+application screens.
 
-## 2. États transverses
+## 2. Cross-cutting states
 
-Ces états s'appliquent à tous les écrans qui chargent un template ou un runtime.
+These states apply to every screen that loads a template or a runtime.
 
-| État | Comportement |
+| State | Behavior |
 |---|---|
-| **Chargement de l'index** | Squelettes de cartes ; jamais d'écran blanc. |
-| **Chargement d'un runtime lourd** (Go, Kotlin) | Barre de progression avec taille téléchargée / taille totale, nom du runtime, mention « mis en cache pour les prochaines fois ». L'éditeur est utilisable en lecture pendant le chargement ; Run et Test sont désactivés avec la raison en infobulle. |
-| **Runtime indisponible** | Navigateur non compatible (pas de WASM, pas d'isolation cross-origin) ou service de compilation Kotlin désactivé : message explicite, lecture du code et du tour toujours possibles, bouton d'export. |
-| **Erreur de chargement** | Message, cause lisible (réseau, ref introuvable, manifeste invalide), bouton Réessayer. |
-| **Template `degraded`** | Badge orange sur carte et page ; aucune restriction. |
-| **Template `broken`** | Bandeau rouge sur la page template et la sandbox : « Ce template échoue actuellement à la vérification automatique », lien vers le run CI. Ouverture possible. |
-| **Template `deprecated`** | Absent des listes par défaut ; page accessible avec bandeau, bouton « Voir des alternatives » (même topic). |
-| **Hors ligne** | Bandeau discret. Projets locaux et runtimes en cache utilisables ; le hub affiche le dernier index en cache. |
+| **Loading the index** | Card skeletons; never a blank screen. |
+| **Loading a heavy runtime** (Go, Kotlin) | Progress bar with downloaded size / total size, runtime name, a "cached for next time" note. The editor is usable read-only during loading; Run and Test are disabled with the reason in a tooltip. |
+| **Runtime unavailable** | Incompatible browser (no WASM, no cross-origin isolation) or Kotlin compilation service disabled: explicit message, reading the code and the tour still possible, export button. |
+| **Loading error** | Message, readable cause (network, ref not found, invalid manifest), Retry button. |
+| **`degraded` template** | Orange badge on card and page; no restriction. |
+| **`broken` template** | Red banner on the template page and the sandbox: "This template currently fails its automatic check", link to the CI run. Can still be opened. |
+| **`deprecated` template** | Absent from default lists; page reachable with a banner, "See alternatives" button (same topic). |
+| **Offline** | Discreet banner. Local projects and cached runtimes usable; the hub shows the last cached index. |
 
-## 3. Accueil — `/`
+## 3. Home — `/`
 
-Objectif : amener l'apprenant vers un concept en deux clics.
+Goal: bring the learner to a concept in two clicks.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ typika            Templates   Mes projets            [🔍 Rechercher  /] │
+│ typika            Templates   My projects            [🔍 Search      /] │
 ├──────────────────────────────────────────────────────────────────────────┤
-│  Apprenez l'architecture en exécutant du code.                           │
-│  [ Parcourir les templates ]                                             │
+│  Learn architecture by running code.                                     │
+│  [ Browse the templates ]                                                │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ Architecture                                                  Tout voir →│
+│ Architecture                                                   See all → │
 │ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐              │
 │ │ Hexagonal  │ │ CQRS       │ │ Event      │ │ Outbox     │  …           │
 │ │ TS Go Kt   │ │ TS Go Kt   │ │ sourcing   │ │ TS Go Kt   │              │
 │ └────────────┘ └────────────┘ └────────────┘ └────────────┘              │
-│ Principes SOLID                                               Tout voir →│
+│ SOLID principles                                               See all → │
 │ [SRP] [OCP] [LSP] [ISP] [DIP]                                            │
-│ Design patterns          Création · Structure · Comportement Tout voir → │
+│ Design patterns    Creational · Structural · Behavioral        See all → │
 │ [Strategy] [Observer] [Decorator] [Factory Method] [Adapter]             │
-│ Fondamentaux POO                                                         │
-│ [Composition vs héritage]                                                │
+│ OOP fundamentals                                                         │
+│ [Composition vs inheritance]                                             │
 ├──────────────────────────────────────────────────────────────────────────┤
-│ Reprendre : strategy-ts · modifié il y a 2 h               (si projets)  │
+│ Resume: strategy-ts · modified 2 h ago                    (if projects)  │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-- Une carte par **concept**, pas par template : elle liste les langages disponibles ; clic → page du template TS de
-  référence, avec sélecteur de langage. Un concept regroupe un template et ses variantes ; la carte porte le libellé
-  de son premier topic. Les sections suivent l'ordre du vocabulaire du registre.
-- Chaque section mène à la liste filtrée sur sa catégorie (« Tout voir ») ou sur une de ses familles.
-- « Reprendre » n'apparaît que s'il existe des projets locaux ; montre les 3 derniers. Il est lu après l'hydratation,
-  la page prérendue ne le contient pas.
+- One card per **concept**, not per template: it lists the available languages; click → page of the reference TS
+  template, with a language selector. A concept groups a template and its variants; the card carries the label of its
+  first topic. The sections follow the order of the registry vocabulary.
+- Each section leads to the list filtered on its category ("See all") or on one of its families.
+- "Resume" only appears if local projects exist; it shows the last 3. It is read after hydration, the prerendered
+  page does not contain it.
 
-## 4. Liste — `/templates`
+## 4. List — `/templates`
 
-- Filtres à facettes : `topic` (arbre par catégorie puis famille), `language`, `paradigm`, `level`, `framework`,
-  `library`, `useCase`, santé (`healthy`/`degraded` cochés par défaut, `broken` et `deprecated` décochés), catégorie
-  `official`/`community`.
-- Chaque filtre se reflète dans la query string (`?topic=design-pattern/behavioral&language=go&level=intermediate`) ;
-  l'URL est partageable et le bouton retour restaure l'état. Plusieurs valeurs d'une facette sont séparées par des
-  virgules et se combinent en OU ; les facettes se combinent en ET. Un topic filtre sa branche de l'arbre. Le HTML
-  prérendu n'a pas de filtre : la query string s'applique après l'hydratation.
-- Livré aux lots 3, 4 et 6 du M3 : les facettes, la recherche, les compteurs, le tri, l'état vide et la facette de
-  santé. Un template jamais vérifié passe le filtre de santé par défaut, et la query string ne garde `health` que
-  s'il diffère du défaut.
-- Recherche plein texte (`?q=`) dans le champ de l'en-tête, présent sur toutes les pages du hub, combinée aux
-  facettes. Elle porte sur `search.text` de l'index ([registry §3](registry.md)). Chaque mot tapé doit commencer un mot
-  du texte. Sur la liste, la query string suit la frappe sans créer d'entrée d'historique. Ailleurs, et sans
-  JavaScript, le champ envoie un formulaire vers `/templates?q=…`.
-- Compteurs par valeur de facette : le nombre de résultats si l'on ajoutait cette valeur, compte tenu de la recherche
-  et des autres facettes. Une valeur à 0 non cochée est désactivée.
-- Tri (`?sort=`) : pertinence (par défaut pendant une recherche ; un mot entier compte plus qu'un début de mot), ordre
-  du catalogue (par défaut sinon : l'ordre des topics du vocabulaire, puis des langages), récemment mis à jour. Le tri
-  par défaut n'apparaît pas dans l'URL.
-- **État vide** : « Aucun template ne correspond », la recherche et les filtres actifs avec retrait individuel, bouton
-  Réinitialiser.
+- Faceted filters: `topic` (tree by category then family), `language`, `paradigm`, `level`, `framework`,
+  `library`, `useCase`, health (`healthy`/`degraded` checked by default, `broken` and `deprecated` unchecked),
+  `official`/`community` category.
+- Each filter is reflected in the query string (`?topic=design-pattern/behavioral&language=go&level=intermediate`);
+  the URL is shareable and the back button restores the state. Several values of a facet are separated by commas and
+  combine with OR; facets combine with AND. A topic filters its branch of the tree. The prerendered HTML has no
+  filter: the query string applies after hydration.
+- Delivered in slices 3, 4 and 6 of M3: the facets, the search, the counters, the sorting, the empty state and the
+  health facet. A template that was never checked passes the default health filter, and the query string keeps
+  `health` only if it differs from the default.
+- Full-text search (`?q=`) in the header field, present on every hub page, combined with the facets. It covers
+  `search.text` of the index ([registry §3](registry.md)). Each typed word must start a word of the text. On the list,
+  the query string follows the typing without creating a history entry. Elsewhere, and without JavaScript, the field
+  submits a form to `/templates?q=…`.
+- Counters per facet value: the number of results if this value were added, given the search and the other facets. An
+  unchecked value at 0 is disabled.
+- Sorting (`?sort=`): relevance (default during a search; a whole word counts more than a word prefix), catalogue order
+  (default otherwise: the order of the vocabulary's topics, then of the languages), recently updated. The default sort
+  does not appear in the URL.
+- **Empty state**: "No template matches", the active search and filters with individual removal, Reset button.
 
-## 5. Page template — `/templates/<name>`
+## 5. Template page — `/templates/<name>`
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ ← Templates / Design patterns / Comportement                             │
+│ ← Templates / Design patterns / Behavioral                               │
 │ Strategy                                    ● healthy   official  MIT-0  │
 │ Replace a growing switch with interchangeable behaviours.                │
-│ Langage : [TypeScript ▾]   Niveau : intermédiaire                        │
-│ [ ▶ Ouvrir dans la sandbox ]  [ Comparer ▾ ]  [ Exercices ▾ ]            │
+│ Language: [TypeScript ▾]   Level: Intermediate                           │
+│ [ ▶ Open in the sandbox ]  [ Compare ▾ ]  [ Exercises ▾ ]                │
 ├───────────────────────────────────────────┬──────────────────────────────┤
-│ Ce que vous allez voir (tour)             │ Topics                       │
+│ What you will see (tour)                  │ Topics                       │
 │  1. The growing switch                    │  design-pattern/behavioral/… │
 │  2. Extracting the strategy               │  principle/open-closed       │
-│  3. Adding a behaviour without editing    │ Variantes                    │
-│ Avant / après                             │  Kotlin · Go                 │
-│  base : strategy-base   [Voir le diff]    │ Liés                         │
-│ Exercices                                 │  OCP · Hexagonal             │
-│  ◇ add-shipping-rule (refactor)           │ Utiliser hors de Typika     │
+│  3. Adding a behaviour without editing    │ Variants                     │
+│ Before / after                            │  Kotlin · Go                 │
+│  Base: strategy-base   [View the diff]    │ Related                      │
+│ Exercises                                 │  OCP · Hexagonal             │
+│  ◇ add-shipping-rule (refactor)           │ Use outside Typika           │
 │                                           │  npx typika create strat… ⧉ │
 │                                           │ Embed                     ⧉  │
-│                                           │ Mainteneurs · Licence · Ref  │
+│                                           │ Maintainers · License · Ref  │
 └───────────────────────────────────────────┴──────────────────────────────┘
 ```
 
-- Le sélecteur de langage navigue vers la variante (`/templates/<name-variante>`).
-- « Comparer » propose les variantes disponibles → `/compare/<name>?a=<lang>&b=<lang>`.
-- « Voir le diff » ouvre la sandbox sur la vue diff depuis la base (§8).
-- Copie de la commande CLI et du snippet d'embed en un clic, avec confirmation accessible.
-- Si `parent` existe : lien vers le parent et « diff avec le parent ».
-- Livré au lot 3 du M3 : le fil d'Ariane, le sélecteur de langage (liens, utilisables sans JavaScript), le tour, la
-  base avec « Voir le diff », les exercices, les topics, les variantes, les mainteneurs, la licence et la ref. La
-  comparaison est livrée au lot 3 du M4 : un lien « Comparer avec <langage> » par variante présente dans l'index, qui
-  garde le template courant à gauche. La copie du snippet d'embed est livrée au lot 4 du M5. Restent à venir : la
-  commande CLI, les templates liés et le diff avec le parent. Le badge et
-  les bandeaux de santé sont livrés au lot 6 (§2).
+- The language selector navigates to the variant (`/templates/<variant-name>`).
+- "Compare" offers the available variants → `/compare/<name>?a=<lang>&b=<lang>`.
+- "View the diff" opens the sandbox on the diff view since the base (§8).
+- One-click copy of the CLI command and of the embed snippet, with an accessible confirmation.
+- If `parent` exists: link to the parent and "diff with the parent".
+- Delivered in slice 3 of M3: the breadcrumb, the language selector (links, usable without JavaScript), the tour, the
+  base with "View the diff", the exercises, the topics, the variants, the maintainers, the license and the ref.
+  Comparison is delivered in slice 3 of M4: a "Compare with <language>" link per variant present in the index, which
+  keeps the current template on the left. Copying the embed snippet is delivered in slice 4 of M5. Still to come: the
+  CLI command, the related templates and the diff with the parent. The health badge and
+  banners are delivered in slice 6 (§2).
 
 ## 6. Sandbox — `/play/<name>`, `/p/<projectId>`, `/s#…`, `/g/<gistId>`
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ strategy-ts ▾  ● modifié     [▶ Run] [✓ Tests] [⟲ Reset] [Partager ▾] [⋯]│
+│ strategy-ts ▾  ● Modified     [▶ Run] [✓ Tests] [⟲ Reset] [Share ▾] [⋯]  │
 ├────────────┬──────────────────────────────────────┬──────────────────────┤
 │ src/       │ src/pricing/strategy.ts          ✕   │ Tour  Preview  Diff  │
-│  domain/   │  1 export interface PricingStrat…    │ Étape 2 / 5          │
+│  domain/   │  1 export interface PricingStrat…    │ Step 2 / 5           │
 │  pricing/  │  2   price(order: Order): Money      │ Extracting the       │
 │  ●strat…   │  3 }                                 │ strategy             │
 │ tests/     │ ▌4 export class FlatRate implem…     │ The switch in …      │
 │ tour/      │ ▌5   …                               │                      │
-│            │                                      │ [← Préc.] [Suiv. →]  │
+│            │                                      │ [← Previous] [Next →]│
 ├────────────┴──────────────────────────────────────┴──────────────────────┤
 │ Console │ Tests (12 ✓ 1 ✕)                                               │
 │ ✕ pricing › applies shipping rule   expected 12 to be 15  tests/pri…:22  │
@@ -155,214 +154,214 @@ Objectif : amener l'apprenant vers un concept en deux clics.
 
 ### 6.1 Layout
 
-- Trois colonnes redimensionnables : arbre de fichiers, éditeur à onglets, panneau latéral (Tour, Preview, Diff,
-  Exercice). Panneau bas : Console, Tests.
-- Chaque panneau est repliable ; la disposition est mémorisée par appareil.
-- Panneau latéral par défaut : Tour si le template en a un, sinon Preview si le runtime en expose une.
+- Three resizable columns: file tree, tabbed editor, side panel (Tour, Preview, Diff, Exercise). Bottom panel:
+  Console, Tests.
+- Each panel is collapsible; the layout is remembered per device.
+- Default side panel: Tour if the template has one, otherwise Preview if the runtime exposes one.
 
-### 6.2 Fichiers et éditeur
+### 6.2 Files and editor
 
-- Créer, renommer, supprimer, déplacer des fichiers ; indicateur ● sur les fichiers modifiés.
-- Les fichiers propres à Typika (`typika.toml`, `tour/`) sont visibles mais regroupés et en lecture seule par
-  défaut.
-- Autosauvegarde locale à chaque modification (débouncée), pas de bouton Enregistrer. Ouvrir `/play/<name>` crée un
-  projet local au premier changement ; avant, rien n'est persisté. Revenir sur `/play/<name>` rouvre le projet le plus
-  récent de ce template ; Reset le ramène aux fichiers d'origine.
+- Create, rename, delete, move files; ● indicator on modified files.
+- Typika-specific files (`typika.toml`, `tour/`) are visible but grouped and read-only by
+  default.
+- Local autosave on every change (debounced), no Save button. Opening `/play/<name>` creates a local project on the
+  first change; before that, nothing is persisted. Coming back to `/play/<name>` reopens the most recent project of
+  this template; Reset brings it back to the original files.
 
-### 6.3 Exécution et tests
+### 6.3 Running and tests
 
-- **Run** lance `commands.start` ; sortie dans Console. Un nouveau Run interrompt le précédent.
-- **Tests** lance `commands.test` ; le panneau Tests affiche l'arbre suites / tests, durée, statut, message d'échec ;
-  clic sur un test → ouvre le fichier à la ligne de l'assertion.
-- Mode « relancer à la sauvegarde » activable pour les tests.
-- Erreurs de compilation (TS, Go, Kotlin) : soulignées dans l'éditeur et listées dans Console.
+- **Run** launches `commands.start`; output in Console. A new Run interrupts the previous one.
+- **Tests** launches `commands.test`; the Tests panel shows the suites / tests tree, duration, status, failure
+  message; click on a test → opens the file at the line of the assertion.
+- A "rerun on save" mode can be turned on for tests.
+- Compilation errors (TS, Go, Kotlin): underlined in the editor and listed in Console.
 
-### 6.4 Reset et diff de mes modifications
+### 6.4 Reset and diff of my changes
 
-- **Reset** : restaure les fichiers depuis la ref épinglée d'origine, après confirmation listant les fichiers modifiés.
-  Reset d'un seul fichier depuis son menu contextuel.
-- **Diff → Mes modifications** : diff fichier par fichier entre la ref d'origine et l'état courant, côte à côte ou
-  unifié.
+- **Reset**: restores the files from the original pinned ref, after a confirmation listing the modified files.
+  Reset of a single file from its context menu.
+- **Diff → My changes**: file-by-file diff between the original ref and the current state, side by side or
+  unified.
 
 ## 7. Tour
 
-- Liste des étapes dans le panneau Tour ; navigation Préc./Suiv. et accès direct par la liste.
-- Ouvrir une étape ouvre le fichier ancré, fait défiler jusqu'à la plage et la surligne (bordure gauche + fond
-  léger). Plusieurs ancres par étape : onglets ouverts dans l'ordre, la première active.
-- Si l'utilisateur a modifié le fichier et que la plage ne correspond plus, l'étape l'indique (« le code a changé
-  depuis ce tour ») et propose d'ouvrir la version d'origine en lecture seule.
-- L'étape courante est dans l'URL (`#step=<id>`) : partageable, restaurée au rechargement.
-- Les liens d'une étape vers un autre template ouvrent sa page dans un nouvel onglet.
+- List of steps in the Tour panel; Previous/Next navigation and direct access through the list.
+- Opening a step opens the anchored file, scrolls to the range and highlights it (left border + light
+  background). Several anchors per step: tabs opened in order, the first one active.
+- If the user has modified the file and the range no longer matches, the step says so ("the code has changed
+  since this tour") and offers to open the original version read-only.
+- The current step is in the URL (`#step=<id>`): shareable, restored on reload.
+- A step's links to another template open its page in a new tab.
 
-## 8. Diff depuis la base
+## 8. Diff since the base
 
-- Accessible depuis la page template et l'onglet Diff de la sandbox (« Depuis la base »).
-- Liste des fichiers ajoutés / modifiés / supprimés entre `base` et le template, puis diff côte à côte.
-- Annotations : si une étape de tour ancre une plage présente dans le diff, un marqueur renvoie vers l'étape.
-- Lecture seule. Un bouton « Ouvrir la base » ouvre la base dans une sandbox séparée.
-- Dans la sandbox, l'onglet Diff liste les fichiers ; chacun s'ouvre dans un onglet de l'éditeur, pour avoir la
-  largeur d'une vue côte à côte ([0021](../decisions/0021-diff-engine.md)).
+- Reachable from the template page and from the sandbox's Diff tab ("Since the base").
+- List of the files added / modified / deleted between `base` and the template, then a side-by-side diff.
+- Annotations: if a tour step anchors a range present in the diff, a marker links to the step.
+- Read-only. An "Open the base" button opens the base in a separate sandbox.
+- In the sandbox, the Diff tab lists the files; each one opens in an editor tab, to get the width of a side-by-side
+  view ([0021](../decisions/0021-diff-engine.md)).
 
-## 9. Comparaison — `/compare/<name>?a=<lang>&b=<lang>`
+## 9. Comparison — `/compare/<name>?a=<lang>&b=<lang>`
 
-- Deux colonnes : chacune un éditeur en lecture seule avec son arbre réduit, et en tête le langage et le nom de la
-  variante.
-- Un seul panneau Tour commun. Les étapes sont synchronisées **par id d'étape** : passer à l'étape `extract-strategy`
-  ouvre dans chaque colonne le fichier et la plage ancrés par l'étape de même id.
-- Étape absente d'un côté : colonne grisée avec « Cette étape n'a pas d'équivalent en <langage> », et le texte
-  spécifique de la variante s'il existe (cas où le pattern se dissout dans le langage).
-- `a` et `b` absents : `a` = TS, `b` = première variante disponible. Langage inconnu : message et sélecteurs.
-- « Ouvrir dans la sandbox » sur chaque colonne.
-- Livré au lot 3 du M4. `<name>` est n'importe quelle variante du concept ; les langages proposés sont le sien et ceux
-  de ses `[variants]` présents dans l'index. Le panneau Tour montre, pour l'étape courante, le texte de chaque variante
-  sous le nom de son langage : le titre vient de la colonne `a`, et une étape propre à `b` s'insère après celle qui la
-  précède dans son tour. Une étape présente des deux côtés sans code (`the-problem`, `trade-offs`) laisse les
-  colonnes telles quelles. La colonne n'est grisée que si l'étape manque, ou si elle n'a pas de code alors que
-  l'autre côté en a (le pattern s'est dissous) : son texte s'affiche alors dans la colonne. Sous 768 px, une bascule
-  montre un panneau à la fois : colonne `a`, colonne `b` ou Tour.
+- Two columns: each one a read-only editor with its reduced tree, and at the top the language and the name of the
+  variant.
+- A single shared Tour panel. Steps are synchronized **by step id**: going to the `extract-strategy` step
+  opens in each column the file and the range anchored by the step with the same id.
+- Step missing on one side: grayed-out column with "This step has no equivalent in <language>", and the
+  variant-specific text if it exists (case where the pattern dissolves into the language).
+- `a` and `b` missing: `a` = TS, `b` = first available variant. Unknown language: message and selectors.
+- "Open in the sandbox" on each column.
+- Delivered in slice 3 of M4. `<name>` is any variant of the concept; the languages offered are its own and those
+  of its `[variants]` present in the index. The Tour panel shows, for the current step, the text of each variant
+  under the name of its language: the title comes from column `a`, and a step specific to `b` is inserted after the one
+  that precedes it in its tour. A step present on both sides without code (`the-problem`, `trade-offs`) leaves the
+  columns as they are. The column is grayed out only if the step is missing, or if it has no code while the
+  other side has some (the pattern has dissolved): its text then shows in the column. Below 768 px, a toggle
+  shows one panel at a time: column `a`, column `b` or Tour.
 
-## 10. Exercices — `/play/<name>?exercise=<id>`
+## 10. Exercises — `/play/<name>?exercise=<id>`
 
-- Le projet démarre dans l'état initial de l'exercice ; le panneau latéral affiche l'onglet Exercice.
-- Contenu : titre, type (`fix` / `refactor`), énoncé, tests cibles, progression (`3 / 5 tests cibles verts`).
-- **fix** : objectif = les tests cibles passent sans casser les autres.
-- **refactor** : objectif = les tests de la nouvelle exigence passent ; l'énoncé explique pourquoi c'est pénible dans
-  l'état actuel. Validation uniquement par les tests ; la structure du code n'est pas notée.
-- **Validation** : automatique à chaque run de tests ; quand tout est vert, message de réussite et lien vers
-  l'exercice suivant ou le concept lié. État « réussi » mémorisé localement.
-- **Indices** : révélés un par un, dans l'ordre défini par l'auteur.
-- **Solution** : bouton disponible à tout moment, avec confirmation ; ouvre la solution en diff avec le code courant,
-  sans l'écraser. Un bouton séparé l'applique.
-- Recommencer l'exercice = reset vers l'état initial de l'exercice.
+- The project starts in the initial state of the exercise; the side panel shows the Exercise tab.
+- Content: title, kind (`fix` / `refactor`), statement, target tests, progress (`3 / 5 target tests green`).
+- **fix**: goal = the target tests pass without breaking the others.
+- **refactor**: goal = the tests of the new requirement pass; the statement explains why it is painful in
+  the current state. Validation by the tests only; the structure of the code is not graded.
+- **Validation**: automatic on every test run; when everything is green, a success message and a link to
+  the next exercise or the related concept. "Solved" state remembered locally.
+- **Hints**: revealed one by one, in the order defined by the author.
+- **Solution**: button available at any time, with a confirmation; opens the solution as a diff against the current
+  code, without overwriting it. A separate button applies it.
+- Restarting the exercise = reset to the initial state of the exercise.
 
-## 11. Mes projets — `/projects`
+## 11. My projects — `/projects`
 
-- Liste : nom, template d'origine, langage, date de modification, statut d'exercice éventuel.
-- Actions : ouvrir, renommer, dupliquer, exporter (zip), partager, supprimer (confirmation).
-- Indicateur d'espace utilisé et avertissement à l'approche du quota (voir [sharing-and-cli](sharing-and-cli.md)).
-- **État vide** : explication que les projets restent dans ce navigateur, lien vers le hub.
-- **Nouveau projet** : bouton en tête de page, qui ouvre un dialogue à onglets. « Vierge » : nom et langage (TypeScript,
-  JavaScript, Go, Kotlin) ; le squelette a un `typika.toml`, un point d'entrée qui s'exécute et un test qui passe.
-  « Bibliothèque » : recherche dans les templates du catalogue (rôle `template`), le nom suit le titre tant qu'il n'est
-  pas modifié. « Depuis une URL » : `github:owner/repo/chemin[@ref]`, l'URL GitHub d'un dossier (`/tree/<ref>/…`) ou
-  le lien d'un `typika.toml` (`/blob/…`, `raw.githubusercontent.com`) ; une référence du catalogue est lue dans le
-  registre, une autre via l'API GitHub (jeton de la session GitHub s'il y en a une) et épinglée au commit lu.
-  « Importer un fichier » : un `typika.toml` seul reçoit le squelette de son langage (et un point d'entrée à
-  `runtime.entry`), un zip exporté par Typika garde ses fichiers (5 Mo au plus). Les problèmes du manifeste sont listés
-  dans le dialogue. Le projet créé est une copie indépendante (origine `personal`, voir
-  [sharing-and-cli](sharing-and-cli.md)) ; il s'ouvre aussitôt sur `/p/<projectId>`.
-- La page d'un template propose « En faire un projet » : `/projects?new=<name>` ouvre le dialogue sur cet onglet, avec
-  ce template choisi.
+- List: name, origin template, language, modification date, exercise status if any.
+- Actions: open, rename, duplicate, export (zip), share, delete (confirmation).
+- Space used indicator and a warning when nearing the quota (see [sharing-and-cli](sharing-and-cli.md)).
+- **Empty state**: an explanation that projects stay in this browser, a link to the hub.
+- **New project**: button at the top of the page, which opens a tabbed dialog. "Blank": name and language
+  (TypeScript, JavaScript, Go, Kotlin); the skeleton has a `typika.toml`, an entry point that runs and a test that
+  passes. "Library": search in the catalogue templates (role `template`), the name follows the title as long as it is
+  not edited. "From a URL": `github:owner/repo/path[@ref]`, the GitHub URL of a folder (`/tree/<ref>/…`) or
+  the link of a `typika.toml` (`/blob/…`, `raw.githubusercontent.com`); a catalogue reference is read from the
+  registry, any other one through the GitHub API (with the token of the GitHub session if there is one) and pinned to
+  the commit read. "Import a file": a lone `typika.toml` gets the skeleton of its language (and an entry point at
+  `runtime.entry`), a zip exported by Typika keeps its files (5 MB at most). The manifest problems are listed
+  in the dialog. The created project is an independent copy (origin `personal`, see
+  [sharing-and-cli](sharing-and-cli.md)); it opens right away on `/p/<projectId>`.
+- A template page offers "Start a project from it": `/projects?new=<name>` opens the dialog on that tab, with
+  this template chosen.
 
-## 12. Projets partagés — `/s#<payload>`, `/g/<gistId>`
+## 12. Shared projects — `/s#<payload>`, `/g/<gistId>`
 
-- Ouverture en lecture-écriture dans une sandbox **éphémère** : rien n'est enregistré tant que l'utilisateur ne clique
-  pas « Enregistrer dans mes projets » ou ne modifie pas un fichier (création automatique, signalée).
-- Bandeau : « Projet partagé, basé sur <template> » avec lien vers le template d'origine s'il est connu.
-- Payload invalide ou version inconnue, gist introuvable : écran d'erreur avec la cause et lien vers le hub.
+- Opened read-write in an **ephemeral** sandbox: nothing is saved until the user clicks "Save in my projects" or
+  modifies a file (automatic creation, signaled).
+- Banner: "Shared project, based on <template>" with a link to the origin template if it is known.
+- Invalid payload or unknown version, gist not found: error screen with the cause and a link to the hub.
 
 ## 13. Embed — `/embed/<name>`
 
-UI réduite : éditeur + sortie (Console ou Tests), barre minimale avec Run, Tests et « Ouvrir dans Typika ».
+Reduced UI: editor + output (Console or Tests), minimal bar with Run, Tests and "Open in Typika".
 
-| Paramètre | Valeurs | Défaut |
+| Parameter | Values | Default |
 |---|---|---|
-| `file` | chemin | `runtime.entry` |
-| `lines` | `L10-L24` | — (surligne la plage) |
-| `tour-step` | id d'étape | — (affiche l'étape au-dessus de l'éditeur) |
+| `file` | path | `runtime.entry` |
+| `lines` | `L10-L24` | — (highlights the range) |
+| `tour-step` | step id | — (shows the step above the editor) |
 | `panel` | `console`, `tests`, `preview`, `none` | `console` |
 | `readonly` | `true`, `false` | `false` |
 | `run` | `auto`, `click` | `click` |
 | `theme` | `light`, `dark`, `auto` | `auto` |
-| `lang` | `en`, `fr` | langue du navigateur |
-| `height` | — | non supporté : la hauteur est celle de l'iframe |
+| `lang` | `en`, `fr` | browser language |
+| `height` | — | not supported: the height is that of the iframe |
 
-- Le runtime ne démarre qu'à la première interaction (ou `run=auto`), pour ne pas charger des Mo dans une page de
-  blog à l'ouverture. `run=auto` est ignoré pour un template Go, qui télécharge 12 Mo au premier run
+- The runtime starts only on the first interaction (or `run=auto`), so as not to load megabytes into a blog page
+  when it opens. `run=auto` is ignored for a Go template, which downloads 12 MB on the first run
   ([0031](../decisions/0031-embed-runtimes.md)).
-- L'éditeur s'ouvre sans language service TypeScript ; l'IntelliSense se charge à la demande
+- The editor opens without the TypeScript language service; IntelliSense loads on demand
   ([0015](../decisions/0015-editor.md)).
-- Un runtime qui exige l'isolation cross-origin (`SharedArrayBuffer`) ne démarre pas en embed : la barre propose
-  « Ouvrir dans Typika » à la place de Run et Tests ([0016](../decisions/0016-isolation-and-embed.md)). Aucun runtime
-  de la V1 n'est dans ce cas.
-- Sous une page hôte qui n'est pas un contexte sécurisé (`http`), aucun runtime ne démarre : la barre propose
-  « Ouvrir dans Typika » et en donne la raison ([0031](../decisions/0031-embed-runtimes.md)).
-- Aucune persistance locale dans l'embed ; « Ouvrir dans Typika » transfère l'état courant via un partage URL.
+- A runtime that requires cross-origin isolation (`SharedArrayBuffer`) does not start in an embed: the bar offers
+  "Open in Typika" instead of Run and Tests ([0016](../decisions/0016-isolation-and-embed.md)). No V1 runtime
+  is in this case.
+- Under a host page that is not a secure context (`http`), no runtime starts: the bar offers
+  "Open in Typika" and gives the reason ([0031](../decisions/0031-embed-runtimes.md)).
+- No local persistence in the embed; "Open in Typika" transfers the current state through a URL share.
 
 ### postMessage
 
-Origine émettrice : celle de Typika. Le parent doit vérifier `event.origin`.
+Sending origin: Typika's. The parent must check `event.origin`.
 
-| Sens | Message | Usage |
+| Direction | Message | Use |
 |---|---|---|
-| embed → parent | `{ type: 'typika:ready' }` | Embed prêt. |
-| embed → parent | `{ type: 'typika:resize', height }` | Hauteur de contenu souhaitée, si le parent veut adapter l'iframe. |
-| embed → parent | `{ type: 'typika:test-result', passed, failed }` | Fin d'un run de tests. |
-| parent → embed | `{ type: 'typika:goto-step', id }` | Changer d'étape de tour. |
-| parent → embed | `{ type: 'typika:set-theme', theme }` | Suivre le thème du site hôte. |
+| embed → parent | `{ type: 'typika:ready' }` | Embed ready. |
+| embed → parent | `{ type: 'typika:resize', height }` | Desired content height, if the parent wants to adapt the iframe. |
+| embed → parent | `{ type: 'typika:test-result', passed, failed }` | End of a test run. |
+| parent → embed | `{ type: 'typika:goto-step', id }` | Change the tour step. |
+| parent → embed | `{ type: 'typika:set-theme', theme }` | Follow the theme of the host site. |
 
-Aucun message ne permet au parent de lire ou d'écrire le code.
+No message lets the parent read or write the code.
 
-## 14. Raccourcis clavier
+## 14. Keyboard shortcuts
 
-`Mod` = Cmd sur macOS, Ctrl ailleurs. Liste affichée par `?`.
+`Mod` = Cmd on macOS, Ctrl elsewhere. List shown by `?`.
 
-| Raccourci | Action | Portée |
+| Shortcut | Action | Scope |
 |---|---|---|
-| `/` | Focus recherche | Hub |
-| `Mod+K` | Palette : templates, fichiers du projet, commandes | Partout |
+| `/` | Focus search | Hub |
+| `Mod+K` | Palette: templates, project files, commands | Everywhere |
 | `Mod+Enter` | Run | Sandbox |
-| `Mod+Shift+Enter` | Lancer les tests | Sandbox |
-| `Mod+P` | Ouvrir un fichier | Sandbox |
-| `Mod+B` | Afficher / masquer l'arbre | Sandbox |
-| `Mod+J` | Afficher / masquer le panneau bas | Sandbox |
-| `Alt+→` / `Alt+←` | Étape de tour suivante / précédente | Sandbox, comparaison |
-| `Mod+Shift+D` | Onglet Diff | Sandbox |
-| `Esc` | Fermer palette / dialogue ; sortir de l'éditeur (voir §15) | Partout |
+| `Mod+Shift+Enter` | Run the tests | Sandbox |
+| `Mod+P` | Open a file | Sandbox |
+| `Mod+B` | Show / hide the tree | Sandbox |
+| `Mod+J` | Show / hide the bottom panel | Sandbox |
+| `Alt+→` / `Alt+←` | Next / previous tour step | Sandbox, comparison |
+| `Mod+Shift+D` | Diff tab | Sandbox |
+| `Esc` | Close palette / dialog; leave the editor (see §15) | Everywhere |
 
-Les raccourcis ne doivent pas écraser ceux de l'éditeur ni du navigateur ; conflits à vérifier au moment de
-l'implémentation. `Alt+→` / `Alt+←` ne changent pas d'étape quand le focus est dans l'éditeur ou un champ de
-saisie (CodeMirror s'en sert pour avancer d'un mot sur macOS) ; ailleurs, ils remplacent « page précédente » du
-navigateur sous Windows et Linux.
+Shortcuts must not override those of the editor or the browser; conflicts to check at implementation
+time. `Alt+→` / `Alt+←` do not change the step when the focus is in the editor or an input field (CodeMirror uses
+them to move by one word on macOS); elsewhere, they replace the browser's "previous page" on Windows and
+Linux.
 
-## 15. Accessibilité
+## 15. Accessibility
 
-Cible : WCAG 2.2 niveau AA.
+Target: WCAG 2.2 level AA.
 
-- **Clavier** : tout est utilisable sans souris. L'éditeur capture Tab pour l'indentation ; `Esc` puis `Tab` en sort
-  (comportement à documenter dans l'aide).
-- **Ordre de focus** : arbre → éditeur → panneau latéral → panneau bas ; liens d'évitement en tête de page.
-- **Lecteurs d'écran** : régions nommées (landmarks) ; résultats de tests et fin de Run annoncés via une région
-  `aria-live` polie ; changement d'étape de tour annoncé avec son titre ; badges de santé avec texte, pas seulement
-  une couleur.
-- **Contraste** : AA en thèmes clair et sombre, y compris coloration syntaxique et surlignage du tour.
-- **Mouvement** : défilement animé désactivé si `prefers-reduced-motion`.
-- **Diff** : ajouts / suppressions distingués aussi par un signe (`+` / `-`), pas seulement par la couleur.
-- Zoom navigateur jusqu'à 200 % sans perte de fonction.
+- **Keyboard**: everything is usable without a mouse. The editor captures Tab for indentation; `Esc` then `Tab` leaves
+  it (behavior to document in the help).
+- **Focus order**: tree → editor → side panel → bottom panel; skip links at the top of the page.
+- **Screen readers**: named regions (landmarks); test results and the end of a Run announced through a polite
+  `aria-live` region; a tour step change announced with its title; health badges with text, not only
+  a color.
+- **Contrast**: AA in light and dark themes, including syntax highlighting and tour highlighting.
+- **Motion**: animated scrolling disabled if `prefers-reduced-motion`.
+- **Diff**: additions / deletions also distinguished by a sign (`+` / `-`), not only by color.
+- Browser zoom up to 200% without loss of function.
 
-## 16. Responsive et mobile
+## 16. Responsive and mobile
 
-| Largeur | Comportement |
+| Width | Behavior |
 |---|---|
-| ≥ 1024 px | Layout complet. |
-| 640-1023 px | Arbre en tiroir ; panneau latéral en onglet à côté de l'éditeur. |
-| < 640 px | Un panneau à la fois, navigation par onglets en bas : Code, Tour, Sortie. |
+| ≥ 1024 px | Full layout. |
+| 640-1023 px | Tree in a drawer; side panel as a tab next to the editor. |
+| < 640 px | One panel at a time, tab navigation at the bottom: Code, Tour, Output. |
 
-- **Mobile** : hub, page template, tour, comparaison (un panneau à la fois avec bascule : chaque colonne, puis le
-  tour) et diff sont pleinement
-  utilisables.
-- **Édition limitée** : édition possible mais non optimisée ; un message suggère un écran plus large pour les
-  exercices. Runtimes lourds : avertissement de taille de téléchargement avant chargement sur réseau mobile si le
-  navigateur expose l'information.
+- **Mobile**: hub, template page, tour, comparison (one panel at a time with a toggle: each column, then the
+  tour) and diff are fully
+  usable.
+- **Limited editing**: editing is possible but not optimized; a message suggests a wider screen for the
+  exercises. Heavy runtimes: a download size warning before loading on a mobile network if the
+  browser exposes the information.
 
-## 17. Internationalisation
+## 17. Internationalization
 
-- UI en anglais et français ; langue détectée depuis le navigateur, modifiable dans le menu, mémorisée localement.
-- Le contenu des templates (titres, résumés, tours, énoncés) reste en anglais en V1 ; en UI française, un libellé
-  discret l'indique sur la page template.
-- Dates et nombres formatés selon la langue choisie.
-- Aucune chaîne en dur dans les composants ; clés de traduction par module.
-- Livré au lot 5 du M3 : le menu de langue est dans l'en-tête du hub et la barre d'outils de la sandbox. Il reste
-  désactivé jusqu'à l'hydratation, et le choix est gardé dans `localStorage` (`typika:language`), avant la langue du
-  navigateur. Les nombres passent par le formateur `number` d'i18next, les dates par `datetime`, en UTC. La page template
-  montre sa date de mise à jour, et le titre, le résumé et le tour portent `lang="en"`.
+- UI in English and French; language detected from the browser, changeable in the menu, remembered locally.
+- Template content (titles, summaries, tours, statements) stays in English in V1; in the French UI, a discreet
+  label says so on the template page.
+- Dates and numbers formatted according to the chosen language.
+- No hard-coded string in components; translation keys per module.
+- Delivered in slice 5 of M3: the language menu is in the hub header and in the sandbox toolbar. It stays
+  disabled until hydration, and the choice is kept in `localStorage` (`typika:language`), ahead of the browser
+  language. Numbers go through the i18next `number` formatter, dates through `datetime`, in UTC. The template page
+  shows its update date, and the title, the summary and the tour carry `lang="en"`.

@@ -1,22 +1,21 @@
-# 0008 — CodeMirror 6 comme éditeur
+# 0008 — CodeMirror 6 as the editor
 
-**Statut** : Remplacée par [0015](0015-editor.md) · 2026-10-08
+**Status**: Superseded by [0015](0015-editor.md) · 2026-10-08
 
-## Contexte
+## Context
 
-L'éditeur doit fonctionner dans la sandbox et dans l'embed, y compris sur mobile en lecture, avec un bon support de
-TypeScript.
+The editor must work in the sandbox and in the embed, including on mobile for reading, with good TypeScript support.
 
-## Décision
+## Decision
 
-**CodeMirror 6**, avec un language service TypeScript dans un worker.
+**CodeMirror 6**, with a TypeScript language service in a worker.
 
-## Conséquences
+## Consequences
 
-- Léger, modulaire, adapté à l'embed et au mobile.
-- L'IntelliSense TS demande un assemblage (R4).
-- Surlignage des lignes du tour et vue diff à construire sur ses extensions.
+- Light, modular, suited to the embed and to mobile.
+- TS IntelliSense requires assembly (R4).
+- Tour line highlighting and diff view to build on its extensions.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Monaco** : meilleur IntelliSense TS d'emblée, mais lourd et médiocre sur mobile. Retenu si R4 échoue.
+- **Monaco**: better TS IntelliSense out of the box, but heavy and poor on mobile. Chosen if R4 fails.

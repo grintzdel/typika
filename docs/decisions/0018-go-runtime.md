@@ -1,74 +1,74 @@
-# 0018 — Runtime Go : la toolchain Go compilée en WASM
+# 0018 — Go runtime: the Go toolchain compiled to WASM
 
-**Statut** : Acceptée · 2026-10-08 · issue du spike [R7](../spikes.md) · Firefox à vérifier
+**Status**: Accepted · 2026-10-08 · outcome of spike [R7](../spikes.md) · Firefox to check
 
-## Contexte
+## Context
 
-Le runtime `go` doit compiler, exécuter et tester les variantes Go du catalogue dans le navigateur, avec une sortie
-`go test -json` ([runtimes](../specs/runtimes.md)). Deux options étaient en lice. Le spike R7 les a fait tourner sur
-`strategy-go` (10 fichiers, 12 sous-tests, deux exercices) et sur un relais concurrent (goroutines, `context`,
-`t.Parallel`), avec Go 1.24.5.
+The `go` runtime must compile, run and test the Go variants of the catalog in the browser, with a `go test -json`
+output ([runtimes](../specs/runtimes.md)). Two options were in the running. Spike R7 ran them on `strategy-go`
+(10 files, 12 subtests, two exercises) and on a concurrent relay (goroutines, `context`, `t.Parallel`), with
+Go 1.24.5.
 
-**A — Yaegi** (interpréteur, master du 2026-02-09, dernière release en avril 2024, symboles de stdlib Go 1.22) :
-5,7 Mo en brotli, ~180 ms par exécution. Mais il a quatre défauts sur un seul template de dix fichiers :
+**A — Yaegi** (interpreter, master of 2026-02-09, last release in April 2024, Go 1.22 stdlib symbols): 5.7 MB in
+brotli, ~180 ms per run. But it has four defects on a single ten-file template:
 
-- `fmt.Printf("%s", order.Subtotal())` affiche `{%!s(int64=3250) EUR}` au lieu de `32.50 EUR` : la méthode `String()`
-  d'un résultat interprété est perdue. La sortie est fausse, sans aucune erreur.
-- `t.Errorf` situe l'échec dans `value.go:368`, pas dans le fichier de test.
-- Les tests boîte noire (`package checkout_test`) échouent en « import cycle not allowed ».
-- Une `const` qui convertit vers un type déclaré dans un autre fichier du package provoque un panic interne
-  (« incomplete type »).
+- `fmt.Printf("%s", order.Subtotal())` prints `{%!s(int64=3250) EUR}` instead of `32.50 EUR`: the `String()` method of
+  an interpreted result is lost. The output is wrong, without any error.
+- `t.Errorf` places the failure in `value.go:368`, not in the test file.
+- Black-box tests (`package checkout_test`) fail with "import cycle not allowed".
+- A `const` that converts to a type declared in another file of the package causes an internal panic
+  ("incomplete type").
 
-**B — Toolchain** : `cmd/compile` et `cmd/link` de Go, compilés en `js/wasm`, pilotés comme le ferait `go build` /
-`go test` (ordre des packages, `importcfg`, `_testmain.go` généré), sur un FS en mémoire. Le programme produit est un
-binaire `js/wasm` exécuté dans le même worker. Mesures (Playwright, Chromium 156 et WebKit 27.2, worker, page sans COOP
-ni COEP) :
+**B — Toolchain**: Go's `cmd/compile` and `cmd/link`, compiled to `js/wasm`, driven as `go build` / `go test` would
+do it (package order, `importcfg`, generated `_testmain.go`), on an in-memory FS. The program produced is a `js/wasm`
+binary run in the same worker. Measurements (Playwright, Chromium 156 and WebKit 27.2, worker, page without COOP or
+COEP):
 
 | | Chromium | WebKit | Chromium CPU ×4 |
 |---|---|---|---|
-| Build `test` de `strategy-go` (compile ×4 + link) | 250–300 ms | 240–310 ms | 1,1–1,2 s |
-| Build `run` | 430–500 ms | ~310 ms | ~1,7 s |
-| Exécution des tests | 15 ms | 14 ms | 70 ms |
-| Relance après `worker.terminate()` d'une boucle infinie | 270 ms | 475 ms | — |
+| `test` build of `strategy-go` (compile ×4 + link) | 250–300 ms | 240–310 ms | 1.1–1.2 s |
+| `run` build | 430–500 ms | ~310 ms | ~1.7 s |
+| Test run | 15 ms | 14 ms | 70 ms |
+| Restart after `worker.terminate()` of an infinite loop | 270 ms | 475 ms | — |
 
-- **Fidélité native** : mêmes sorties, mêmes rouges et verts que `go test` sur les quatre états d'exercice, messages et
-  `fichier:ligne` exacts, génériques de la stdlib, goroutines, `context`, `t.Parallel`. `-test.v=test2json` produit le
-  flux que `test2json` convertit sans perte.
-- **Pas de `SharedArrayBuffer`** : `crossOriginIsolated` est faux et `SharedArrayBuffer` absent, et tout fonctionne. Le
-  runtime Go tourne donc en embed.
-- **Poids**, en brotli : `compile.wasm` 5,5 Mo, `link.wasm` 1,95 Mo, stdlib précompilée 4,2 Mo (76 packages :
-  `fmt`, `strings`, `sort`, `slices`, `maps`, `sync`, `time`, `context`, `encoding/json`, `testing`…). Total : 11,7 Mo,
-  téléchargés une fois puis servis par le cache du Service Worker. Le `_testmain.go` généré fournit sa propre
-  implémentation de `testDeps` : sans `testing/internal/testdeps`, 44 packages disparaissent (`go/ast`, `internal/fuzz`…).
-- **Mémoire** : 24 à 28 Mio pour `compile`, 96 Mio pour `link`, 8 Mio pour le binaire de test.
-- Les erreurs de compilation sortent au format `fichier:ligne:colonne: message`.
+- **Native fidelity**: same outputs, same reds and greens as `go test` on the four exercise states, exact messages and
+  `file:line`, stdlib generics, goroutines, `context`, `t.Parallel`. `-test.v=test2json` produces the stream that
+  `test2json` converts without loss.
+- **No `SharedArrayBuffer`**: `crossOriginIsolated` is false and `SharedArrayBuffer` absent, and everything works. The
+  Go runtime therefore runs in an embed.
+- **Size**, in brotli: `compile.wasm` 5.5 MB, `link.wasm` 1.95 MB, precompiled stdlib 4.2 MB (76 packages: `fmt`,
+  `strings`, `sort`, `slices`, `maps`, `sync`, `time`, `context`, `encoding/json`, `testing`…). Total: 11.7 MB,
+  downloaded once then served by the Service Worker cache. The generated `_testmain.go` provides its own
+  implementation of `testDeps`: without `testing/internal/testdeps`, 44 packages go away (`go/ast`, `internal/fuzz`…).
+- **Memory**: 24 to 28 MiB for `compile`, 96 MiB for `link`, 8 MiB for the test binary.
+- Compilation errors come out in the `file:line:column: message` format.
 
-## Décision
+## Decision
 
-- **Le runtime `go` embarque la toolchain Go officielle compilée en WASM** (option B). Yaegi est écarté : une sortie
-  fausse sans erreur est inacceptable pour un outil d'apprentissage.
-- **Le runtime fait le travail de la commande `go`** : graphe des packages du module, `importcfg`, découverte des
-  `TestXxx`, génération du `_testmain.go`, compilation et link, cache des archives par hash des sources.
-- **Une version de Go par version des assets.** Le `go.mod` des templates déclare la même version mineure. Monter de
-  version, c'est reconstruire les assets ; les archives de la stdlib et le `testDeps` généré en dépendent.
-- **La stdlib disponible est un jeu précompilé et fermé**, versionné avec les assets. La CI du registre refuse un
-  template qui importe un package hors de ce jeu.
-- **Le runtime Go est autorisé en embed.** Il n'exige pas d'isolation, contrairement à ce que l'ADR
-  [0016](0016-isolation-and-embed.md) laissait ouvert.
+- **The `go` runtime ships the official Go toolchain compiled to WASM** (option B). Yaegi is rejected: a wrong output
+  without an error is unacceptable for a learning tool.
+- **The runtime does the work of the `go` command**: package graph of the module, `importcfg`, discovery of the
+  `TestXxx`, generation of the `_testmain.go`, compile and link, cache of the archives by source hash.
+- **One Go version per asset version.** The `go.mod` of the templates declares the same minor version. Upgrading
+  means rebuilding the assets; the stdlib archives and the generated `testDeps` depend on it.
+- **The available stdlib is a precompiled, closed set**, versioned with the assets. The registry CI refuses a template
+  that imports a package outside this set.
+- **The Go runtime is allowed in an embed.** It does not require isolation, unlike what ADR
+  [0016](0016-isolation-and-embed.md) left open.
 
-## Conséquences
+## Consequences
 
-- Premier chargement lourd (11,7 Mo, ~10 s à 9 Mb/s) : la barre de progression du runtime et le cache sont
-  indispensables (R3). Les runs suivants coûtent 0,3 à 1,2 s selon la machine.
-- Les templates Go sont limités à la bibliothèque standard du jeu précompilé : pas de modules tiers, pas de `cgo`, pas
-  de `go:embed`, pas de serveur `net/http`, pas d'`os/exec`. Le reste du langage est disponible.
-- Le pilote (plan de build, `_testmain.go`, conversion `test2json`) est du code Typika à maintenir et à tester contre
-  `go test` natif, comme la suite de conformité du `test-runner`.
-- La licence BSD de Go s'applique aux assets redistribués : son texte accompagne les fichiers `.wasm` et la stdlib.
-- **À vérifier à la main** : Firefox (Playwright n'a pas pu le lancer).
+- Heavy first load (11.7 MB, ~10 s at 9 Mb/s): the runtime progress bar and the cache are essential (R3). Later runs
+  cost 0.3 to 1.2 s depending on the machine.
+- Go templates are limited to the standard library of the precompiled set: no third-party modules, no `cgo`, no
+  `go:embed`, no `net/http` server, no `os/exec`. The rest of the language is available.
+- The driver (build plan, `_testmain.go`, `test2json` conversion) is Typika code to maintain and to test against
+  native `go test`, like the conformance suite of the `test-runner`.
+- Go's BSD license applies to the redistributed assets: its text comes with the `.wasm` files and the stdlib.
+- **To check by hand**: Firefox (Playwright could not launch it).
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Yaegi** : léger et rapide, mais infidèle à Go sur du code ordinaire, et peu maintenu.
-- **Service de compilation Go** (comme Kotlin) : un serveur à exploiter et à protéger, alors que le navigateur suffit.
-- **Toute la stdlib** : du poids pour des packages qu'aucun template n'utilise ; le jeu s'élargit à la demande.
+- **Yaegi**: light and fast, but unfaithful to Go on ordinary code, and poorly maintained.
+- **Go compilation service** (like Kotlin): a server to operate and protect, when the browser is enough.
+- **The whole stdlib**: weight for packages no template uses; the set grows on demand.

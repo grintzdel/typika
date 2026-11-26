@@ -1,23 +1,22 @@
-# 0007 — Pas de backend métier
+# 0007 — No business backend
 
-**Statut** : Acceptée · 2026-10-08
+**Status**: Accepted · 2026-10-08
 
-## Contexte
+## Context
 
-La stack habituelle comprend Nitro (routes API), Drizzle, Neon, des commands / queries serveur et une authentification.
+The usual stack includes Nitro (API routes), Drizzle, Neon, server commands / queries and authentication.
 
-## Décision
+## Decision
 
-Typika n'a **pas de backend métier** : ni base, ni comptes, ni commands / queries serveur. L'application est un build
-statique (TanStack Start, hub prérendu pour le référencement, sandbox en SPA) plus un unique endpoint
-`POST /api/github/token` pour l'échange OAuth, sans stockage.
+Typika has **no business backend**: no database, no accounts, no server commands / queries. The application is a
+static build (TanStack Start, hub prerendered for search engines, sandbox as a SPA) plus a single endpoint
+`POST /api/github/token` for the OAuth exchange, without storage.
 
-## Conséquences
+## Consequences
 
-- Hébergement trivial (VPS Docker, Vercel ou autre) — voir [hosting](../guides/hosting.md).
-- Les fonctionnalités qui demanderaient un état partagé (likes, commentaires, statistiques) sont exclues ou déléguées à
-  GitHub.
+- Trivial hosting (Docker VPS, Vercel or other) — see [hosting](../guides/hosting.md).
+- Features that would require shared state (likes, comments, statistics) are excluded or delegated to GitHub.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Backend complet sur la stack habituelle** : aucun cas d'usage V1 ne le justifie.
+- **Full backend on the usual stack**: no V1 use case justifies it.

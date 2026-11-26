@@ -1,29 +1,29 @@
-# 0002 — Kotlin via un service de compilation
+# 0002 — Kotlin through a compilation service
 
-**Statut** : Remplacée par [0019](0019-kotlin-runtime.md) · 2026-10-08
+**Status**: Superseded by [0019](0019-kotlin-runtime.md) · 2026-10-08
 
-## Contexte
+## Context
 
-Kotlin est le langage POO de référence du catalogue. Son compilateur est un programme JVM ; aucune version officielle ne
-s'exécute dans le navigateur.
+Kotlin is the reference OOP language of the catalog. Its compiler is a JVM program; no official version runs in the
+browser.
 
-## Décision
+## Decision
 
-Un **service de compilation sans état**, basé sur `kotlin-compiler-server`, compile les sources vers Kotlin/JS ou
-Kotlin/Wasm. Le navigateur exécute le résultat et les tests `kotlin.test`. Le serveur ne fait que compiler.
+A **stateless compilation service**, based on `kotlin-compiler-server`, compiles the sources to Kotlin/JS or
+Kotlin/Wasm. The browser runs the result and the `kotlin.test` tests. The server only compiles.
 
-Garde-fous : conteneur séparé et désactivable, aucun accès réseau sortant, taille de sources bornée, timeout, rate
-limiting par IP, cache par hash des sources.
+Safeguards: separate container that can be disabled, no outbound network access, bounded source size, timeout, per-IP
+rate limiting, cache by source hash.
 
-## Conséquences
+## Consequences
 
-- Exception assumée au principe [0001](0001-browser-first.md), limitée à la compilation.
-- Les templates Kotlin n'utilisent pas d'API propre à la JVM (`java.*`).
-- Une instance sans service de compilation masque les templates Kotlin.
-- Un service à opérer, surveiller et protéger (R9).
+- Accepted exception to the principle of [0001](0001-browser-first.md), limited to compilation.
+- Kotlin templates do not use JVM-specific APIs (`java.*`).
+- An instance without a compilation service hides the Kotlin templates.
+- A service to operate, monitor and protect (R9).
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **`kotlinc` dans le navigateur via une JVM WASM (CheerpJ)** : évaluée dans R8 ; plusieurs dizaines de Mo et
-  compilation lente. Remplace cette décision si R8 la juge acceptable.
-- **Exécution JVM côté serveur** : rejetée, contraire à [0001](0001-browser-first.md).
+- **`kotlinc` in the browser through a WASM JVM (CheerpJ)**: evaluated in R8; several tens of MB and slow compilation.
+  Replaces this decision if R8 finds it acceptable.
+- **JVM execution on the server side**: rejected, contrary to [0001](0001-browser-first.md).

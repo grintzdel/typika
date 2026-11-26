@@ -1,26 +1,26 @@
-# 0006 — Effect Atom plutôt que Redux
+# 0006 — Effect Atom rather than Redux
 
-**Statut** : Acceptée · 2026-10-08
+**Status**: Accepted · 2026-10-08
 
-## Contexte
+## Context
 
-La stack habituelle utilise Redux Toolkit, redux-persist et une outbox pour le local-first, avec des gateways HTTP
-injectés via `extraArgument`. Dans Typika, l'état chaud est le contenu des fichiers et la sortie des process ; il n'y a
-pas de mutation serveur.
+The usual stack uses Redux Toolkit, redux-persist and an outbox for local-first, with HTTP gateways injected through
+`extraArgument`. In Typika, the hot state is the content of the files and the output of the processes; there is no
+server mutation.
 
-## Décision
+## Decision
 
-L'état UI est géré par **Effect Atom** (`@effect-atom/atom-react`), branché directement sur les services Effect fournis
-par Layers côté client. Pas de Redux, pas de redux-persist, pas d'outbox ; les projets sont persistés par un adapter
-IndexedDB derrière un port.
+The UI state is managed by **Effect Atom** (`@effect-atom/atom-react`), plugged directly into the Effect services
+provided by Layers on the client side. No Redux, no redux-persist, no outbox; projects are persisted by an IndexedDB
+adapter behind a port.
 
-## Conséquences
+## Consequences
 
-- Un seul modèle (Effect) du runtime à l'UI ; cohérent avec effect-form déjà utilisé.
-- Les mises à jour fréquentes (frappe, flux de sortie) ne passent pas par un store global sérialisé.
-- Écart assumé avec les règles frontend habituelles ; les presenter hooks et composants purs sont conservés.
+- A single model (Effect) from the runtime to the UI; consistent with effect-form, already in use.
+- Frequent updates (typing, output stream) do not go through a serialized global store.
+- Accepted gap with the usual frontend rules; presenter hooks and pure components are kept.
 
-## Alternatives écartées
+## Rejected alternatives
 
-- **Redux Toolkit** : sérialisation et reducers inadaptés à des fichiers modifiés à chaque frappe ; outbox inutile.
-- **Zustand / état local React** : n'apporte pas l'intégration avec les Streams et Scopes Effect.
+- **Redux Toolkit**: serialization and reducers unsuited to files changed on every keystroke; outbox useless.
+- **Zustand / local React state**: does not bring the integration with Effect Streams and Scopes.

@@ -1,80 +1,80 @@
-# Spec — Manifeste de template (`typika.toml`)
+# Spec — Template manifest (`typika.toml`)
 
-Statut : normatif · schéma `1`, figé le 2026-10-08 · détaille le §5 de la
-[spec de conception](./2026-10-08-typika-v1-design.md)
+Status: normative · schema `1`, frozen on 2026-10-08 · details §5 of the
+[design spec](./2026-10-08-typika-v1-design.md)
 
-Le schéma 1 est figé : toute modification de ce document qui change ce qu'un manifeste valide peut contenir suit les
-règles de versionnement (§10).
+Schema 1 is frozen: any change to this document that changes what a valid manifest can contain follows the
+versioning rules (§10).
 
-Ce document définit le format du manifeste d'un template, des étapes de tour et des exercices, ainsi que les règles de
-validation. Il fait foi pour le package `manifest` (schema Effect partagé entre l'app, le CLI et la CI du registre).
+This document defines the format of a template manifest, of tour steps and of exercises, as well as the validation
+rules. It is authoritative for the `manifest` package (Effect schema shared by the app, the CLI and the registry CI).
 
-Les mots **DOIT**, **NE DOIT PAS**, **DEVRAIT** et **PEUT** ont le sens de la RFC 2119.
+The words **MUST**, **MUST NOT**, **SHOULD** and **MAY** have the meaning of RFC 2119.
 
-## 1. Structure d'un dossier de template
+## 1. Structure of a template folder
 
 ```
 <template>/
-├── typika.toml                 # manifeste (obligatoire)
-├── README.md                    # description longue, en anglais (obligatoire)
-├── LICENSE                      # texte de la licence déclarée (obligatoire)
-├── <sources>                    # disposition propre au langage (voir guide d'auteur)
+├── typika.toml                 # manifest (required)
+├── README.md                    # long description, in English (required)
+├── LICENSE                      # text of the declared license (required)
+├── <sources>                    # language-specific layout (see the authoring guide)
 ├── <tests>
-├── tour/                        # étapes du tour (optionnel)
+├── tour/                        # tour steps (optional)
 │   ├── 01-overview.md
 │   ├── 02-….md
-│   └── <locale>/                # réservé (V2), ignoré en schéma 1
-└── exercises/                   # exercices (optionnel)
-    ├── <fichiers>               # ignorés par Typika (ex. exercises/go.mod, voir guide d'auteur)
+│   └── <locale>/                # reserved (V2), ignored in schema 1
+└── exercises/                   # exercises (optional)
+    ├── <files>                  # ignored by Typika (e.g. exercises/go.mod, see the authoring guide)
     └── <exercise-name>/
-        ├── README.md            # énoncé
-        ├── start/               # surcouche appliquée à l'état de départ
-        └── solution/            # surcouche appliquée à l'état de départ pour obtenir la solution
+        ├── README.md            # statement
+        ├── start/               # overlay applied to the start state
+        └── solution/            # overlay applied to the start state to get the solution
 ```
 
-Fichiers **propres à Typika** : `typika.toml`, `tour/`, `exercises/`. Ce que le CLI en conserve à l'export est défini
-dans [sharing-and-cli.md](./sharing-and-cli.md).
+**Typika-specific** files: `typika.toml`, `tour/`, `exercises/`. What the CLI keeps of them on export is defined
+in [sharing-and-cli.md](./sharing-and-cli.md).
 
-Un template PEUT vivre à la racine d'un repo ou dans un sous-dossier (repo multi-templates).
+A template MAY live at the root of a repo or in a subfolder (multi-template repo).
 
-### Limites de taille (valeurs initiales)
+### Size limits (initial values)
 
-| Limite | Valeur | Raison |
+| Limit | Value | Reason |
 |---|---|---|
-| Nombre de fichiers (hors `exercises/`) | 200 | Chargement dans la sandbox et dans le fragment d'URL. |
-| Taille totale texte | 1 Mo | Idem. |
-| Fichier binaire | images uniquement (`png`, `jpg`, `svg`, `webp`), 200 Ko max chacune | Illustrations de tour. |
+| Number of files (excluding `exercises/`) | 200 | Loading in the sandbox and in the URL fragment. |
+| Total text size | 1 MB | Same. |
+| Binary file | images only (`png`, `jpg`, `svg`, `webp`), 200 KB max each | Tour illustrations. |
 
-Dépassement : avertissement `W_SIZE` en local, erreur à l'entrée dans le registre.
+Exceeded: `W_SIZE` warning locally, error on entry into the registry.
 
-## 2. Champs de premier niveau
+## 2. Top-level fields
 
-| Champ | Type | Requis | Défaut | Contraintes |
+| Field | Type | Required | Default | Constraints |
 |---|---|---|---|---|
-| `schema` | entier | oui | — | `1`. Toute autre valeur → `E_SCHEMA_VERSION_UNSUPPORTED`. |
-| `name` | chaîne | oui | — | Slug kebab-case `^[a-z0-9]+(-[a-z0-9]+)*$`, 3 à 64 caractères. Unique dans le registre. |
-| `title` | chaîne | oui | — | 1 à 80 caractères, anglais. |
-| `summary` | chaîne | oui | — | 1 à 200 caractères, une phrase, anglais. Affiché dans les cartes du hub. |
-| `keywords` | tableau de chaînes | non | `[]` | ≤ 10 mots en minuscules (`^[a-z0-9]+(-[a-z0-9]+)*$`, 32 caractères au plus), anglais. Ajoutés au texte de recherche de l'index : les mots que l'apprenant tape pour décrire son problème, quand le titre et le résumé ne les contiennent pas (`switch` pour Strategy). |
-| `license` | chaîne | oui | — | Identifiant SPDX (`MIT-0`, `MIT`, `Apache-2.0`…). Voir §9. |
-| `authors` | tableau de chaînes | oui | — | ≥ 1 élément, chacun `github:<login>`. |
-| `role` | `"template"` \| `"base"` | non | `"template"` | `base` : template servant uniquement de base de diff (§7). Masqué des listes du hub. |
-| `parent` | ref | non | — | Template dont celui-ci est un remix (§8). Posé automatiquement par l'action « remix ». |
-| `[facets]` | table | oui | — | §3. |
-| `[runtime]` | table | oui | — | §4. |
-| `[commands]` | table | non | dépend du runtime | §4.2. |
-| `[tests]` | table | non | dépend du langage | §4.3. |
-| `[tour]` | table | non | — | §5. |
-| `[base]` | table | non | — | §7. |
-| `[variants]` | table | non | — | §7. |
-| `[[exercises]]` | tableau de tables | non | `[]` | §6. |
-| `[x-*]` | table | non | — | Espace d'extension, ignoré par la validation. Ne DOIT PAS être requis pour qu'un template fonctionne. |
+| `schema` | integer | yes | — | `1`. Any other value → `E_SCHEMA_VERSION_UNSUPPORTED`. |
+| `name` | string | yes | — | Kebab-case slug `^[a-z0-9]+(-[a-z0-9]+)*$`, 3 to 64 characters. Unique in the registry. |
+| `title` | string | yes | — | 1 to 80 characters, English. |
+| `summary` | string | yes | — | 1 to 200 characters, one sentence, English. Shown in the hub cards. |
+| `keywords` | array of strings | no | `[]` | ≤ 10 lowercase words (`^[a-z0-9]+(-[a-z0-9]+)*$`, 32 characters at most), English. Added to the search text of the index: the words the learner types to describe their problem, when the title and the summary do not contain them (`switch` for Strategy). |
+| `license` | string | yes | — | SPDX identifier (`MIT-0`, `MIT`, `Apache-2.0`…). See §9. |
+| `authors` | array of strings | yes | — | ≥ 1 element, each `github:<login>`. |
+| `role` | `"template"` \| `"base"` | no | `"template"` | `base`: template used only as a diff base (§7). Hidden from the hub lists. |
+| `parent` | ref | no | — | Template this one is a remix of (§8). Set automatically by the "remix" action. |
+| `[facets]` | table | yes | — | §3. |
+| `[runtime]` | table | yes | — | §4. |
+| `[commands]` | table | no | depends on the runtime | §4.2. |
+| `[tests]` | table | no | depends on the language | §4.3. |
+| `[tour]` | table | no | — | §5. |
+| `[base]` | table | no | — | §7. |
+| `[variants]` | table | no | — | §7. |
+| `[[exercises]]` | array of tables | no | `[]` | §6. |
+| `[x-*]` | table | no | — | Extension space, ignored by validation. MUST NOT be required for a template to work. |
 
-Toute autre clé → `E_UNKNOWN_FIELD`. La rigueur est volontaire : une faute de frappe (`varaints`) ne doit pas passer
-silencieusement. Elle s'applique à toutes les tables du manifeste (`[facets]`, `[runtime]`, `[[exercises]]`…) et au
-front-matter des étapes (§5.1) ; seul le premier niveau admet `[x-*]`.
+Any other key → `E_UNKNOWN_FIELD`. The strictness is deliberate: a typo (`varaints`) must not pass silently. It
+applies to all the tables of the manifest (`[facets]`, `[runtime]`, `[[exercises]]`…) and to the front matter of the
+steps (§5.1); only the top level accepts `[x-*]`.
 
-## 3. Facettes
+## 3. Facets
 
 ```toml
 [facets]
@@ -87,66 +87,66 @@ level = "intermediate"
 useCase = ["backend"]
 ```
 
-| Facette | Type | Requis | Valeurs |
+| Facet | Type | Required | Values |
 |---|---|---|---|
-| `language` | chaîne | oui | `typescript` \| `javascript` \| `go` \| `kotlin` |
-| `framework` | tableau | non (défaut `[]`) | Slugs du vocabulaire contrôlé du registre ([registry.md](./registry.md)). |
-| `library` | tableau | non (défaut `[]`) | Idem. |
-| `paradigm` | tableau | non (défaut `[]`) | `oop` \| `functional` \| `procedural` \| `reactive` |
-| `topic` | tableau | oui, ≥ 1 | Identifiants de topic (§3.1). Le **premier** est le topic principal : il détermine la catégorie d'affichage dans le hub. |
-| `level` | chaîne | oui | `beginner` \| `intermediate` \| `advanced` |
-| `useCase` | tableau | non (défaut `[]`) | `backend` \| `frontend` \| `fullstack` \| `library` \| `cli` |
+| `language` | string | yes | `typescript` \| `javascript` \| `go` \| `kotlin` |
+| `framework` | array | no (default `[]`) | Slugs from the controlled vocabulary of the registry ([registry.md](./registry.md)). |
+| `library` | array | no (default `[]`) | Same. |
+| `paradigm` | array | no (default `[]`) | `oop` \| `functional` \| `procedural` \| `reactive` |
+| `topic` | array | yes, ≥ 1 | Topic identifiers (§3.1). The **first** one is the primary topic: it determines the display category in the hub. |
+| `level` | string | yes | `beginner` \| `intermediate` \| `advanced` |
+| `useCase` | array | no (default `[]`) | `backend` \| `frontend` \| `fullstack` \| `library` \| `cli` |
 
-### 3.1 Identifiants de topic
+### 3.1 Topic identifiers
 
-| Catégorie | Forme | Exemple |
+| Category | Form | Example |
 |---|---|---|
 | `architecture` | `architecture/<slug>` | `architecture/hexagonal` |
 | `principle` | `principle/<slug>` | `principle/dependency-inversion` |
 | `design-pattern` | `design-pattern/<family>/<slug>`, `family` ∈ `creational` \| `structural` \| `behavioral` \| `other` | `design-pattern/structural/adapter` |
 | `fundamental` | `fundamental/<slug>` | `fundamental/composition-over-inheritance` |
 
-- Les slugs sont en kebab-case.
-- La liste des topics existants est tenue par le registre. Un topic inconnu → `E_INVALID_VALUE` à l'entrée dans le
-  registre, avertissement `W_UNKNOWN_TOPIC` en local (permet d'écrire un template avant d'ouvrir la PR du topic).
-- `other` regroupe les patterns hors GoF (Repository, Unit of Work…).
+- Slugs are in kebab-case.
+- The list of existing topics is kept by the registry. An unknown topic → `E_INVALID_VALUE` on entry into the
+  registry, `W_UNKNOWN_TOPIC` warning locally (lets you write a template before opening the topic PR).
+- `other` groups the non-GoF patterns (Repository, Unit of Work…).
 
-## 4. Runtime, commandes, tests
+## 4. Runtime, commands, tests
 
 ### 4.1 `[runtime]`
 
-| Champ | Type | Requis | Défaut | Contraintes |
+| Field | Type | Required | Default | Constraints |
 |---|---|---|---|---|
-| `kind` | chaîne | oui | — | `browser-js` \| `go` \| `kotlin` |
-| `entry` | chemin | oui | — | Fichier existant, relatif à la racine du template. Point d'entrée de « Run ». |
+| `kind` | string | yes | — | `browser-js` \| `go` \| `kotlin` |
+| `entry` | path | yes | — | Existing file, relative to the template root. Entry point of "Run". |
 
-Compatibilité langage / runtime (sinon `E_RUNTIME_LANGUAGE_MISMATCH`) :
+Language / runtime compatibility (otherwise `E_RUNTIME_LANGUAGE_MISMATCH`):
 
-| `language` | `kind` autorisés |
+| `language` | Allowed `kind` |
 |---|---|
 | `typescript`, `javascript` | `browser-js` |
 | `go` | `go` |
 | `kotlin` | `kotlin` |
 
-Le runtime `node` n'existe pas en schéma 1 ([ADR 0017](../decisions/0017-node-runtime.md)). L'ajouter plus tard
-sera un changement de version (§10).
+The `node` runtime does not exist in schema 1 ([ADR 0017](../decisions/0017-node-runtime.md)). Adding it later
+will be a version change (§10).
 
 ### 4.2 `[commands]`
 
-| Champ | `browser-js` | `go` | `kotlin` |
+| Field | `browser-js` | `go` | `kotlin` |
 |---|---|---|---|
-| `start` | Chemin du fichier à exécuter. Défaut : `runtime.entry`. | Idem. | Idem. |
-| `test` | Identifiant du runner : `"vitest"` (seule valeur, défaut). | `"go test"` (seule valeur, défaut). | `"kotlin.test"` (seule valeur, défaut). |
+| `start` | Path of the file to run. Default: `runtime.entry`. | Same. | Same. |
+| `test` | Runner identifier: `"vitest"` (only value, default). | `"go test"` (only value, default). | `"kotlin.test"` (only value, default). |
 
-La sandbox n'exécute pas de shell : les valeurs ne sont pas des commandes mais des sélecteurs. Le runner `vitest`
-désigne le runner intégré compatible avec un sous-ensemble de l'API Vitest ([runtimes.md](./runtimes.md)).
+The sandbox does not run a shell: the values are not commands but selectors. The `vitest` runner refers to the
+built-in runner compatible with a subset of the Vitest API ([runtimes.md](./runtimes.md)).
 
 ### 4.3 `[tests]`
 
-| Champ | Type | Défaut |
+| Field | Type | Default |
 |---|---|---|
-| `include` | tableau de globs | TS : `["**/*.test.ts"]` · JS : `["**/*.test.js"]` · Go : `["**/*_test.go"]` · Kotlin : `["src/test/kotlin/**/*.kt"]` |
-| `exclude` | tableau de globs | `["exercises/**"]` (toujours ajouté, non retirable) |
+| `include` | array of globs | TS: `["**/*.test.ts"]` · JS: `["**/*.test.js"]` · Go: `["**/*_test.go"]` · Kotlin: `["src/test/kotlin/**/*.kt"]` |
+| `exclude` | array of globs | `["exercises/**"]` (always added, cannot be removed) |
 
 ## 5. Tour
 
@@ -155,13 +155,13 @@ désigne le runner intégré compatible avec un sous-ensemble de l'API Vitest ([
 steps = ["tour/01-overview.md", "tour/02-context.md", "tour/03-strategy.md", "tour/04-trade-offs.md"]
 ```
 
-| Champ | Type | Requis | Contraintes |
+| Field | Type | Required | Constraints |
 |---|---|---|---|
-| `steps` | tableau de chemins | oui si `[tour]` présent | 1 à 12 éléments. Fichiers `.md` existants sous `tour/`. L'ordre du tableau est l'ordre du tour. |
+| `steps` | array of paths | yes if `[tour]` is present | 1 to 12 elements. Existing `.md` files under `tour/`. The order of the array is the order of the tour. |
 
-### 5.1 Front-matter d'une étape
+### 5.1 Front matter of a step
 
-Chaque fichier d'étape commence par un front-matter TOML délimité par `+++` :
+Each step file starts with a TOML front matter delimited by `+++`:
 
 ```markdown
 +++
@@ -175,47 +175,47 @@ also = ["src/checkout/shipping-policy.ts"]
 `ShippingQuote` no longer knows how each option is priced…
 ```
 
-| Champ | Type | Requis | Contraintes |
+| Field | Type | Required | Constraints |
 |---|---|---|---|
-| `id` | chaîne | oui | Slug kebab-case, unique dans le tour. **Stable** : ne change pas quand l'étape est réécrite. Sert à l'alignement entre variantes (§5.3). |
-| `title` | chaîne | oui | 1 à 60 caractères. |
-| `file` | chemin | non | Fichier ouvert à l'affichage de l'étape. Absent → l'étape est du texte seul (ex. `overview`). |
-| `lines` | chaîne | non | `"N"` ou `"N-M"`, 1-indexé, `N ≤ M`, plage ≤ 40 lignes. Requiert `file`. Exclusif avec `region`. |
-| `region` | chaîne | non | Nom d'une région marquée dans `file` (§5.2). Requiert `file`. Exclusif avec `lines`. |
-| `also` | tableau de chemins | non | Fichiers ouverts en onglets secondaires, sans surlignage. |
+| `id` | string | yes | Kebab-case slug, unique in the tour. **Stable**: does not change when the step is rewritten. Used for alignment between variants (§5.3). |
+| `title` | string | yes | 1 to 60 characters. |
+| `file` | path | no | File opened when the step is shown. Absent → the step is text only (e.g. `overview`). |
+| `lines` | string | no | `"N"` or `"N-M"`, 1-indexed, `N ≤ M`, range ≤ 40 lines. Requires `file`. Exclusive with `region`. |
+| `region` | string | no | Name of a region marked in `file` (§5.2). Requires `file`. Exclusive with `lines`. |
+| `also` | array of paths | no | Files opened in secondary tabs, without highlighting. |
 
-Le corps Markdown est en anglais. Liens vers un autre template : `typika:<name>` (résolu par le hub).
+The Markdown body is in English. Links to another template: `typika:<name>` (resolved by the hub).
 
-### 5.2 Ancrage : lignes ou régions
+### 5.2 Anchoring: lines or regions
 
-- **`lines`** : simple, mais casse quand le code bouge. La CI vérifie que la plage existe (`E_TOUR_ANCHOR_OUT_OF_RANGE`) ;
-  elle ne peut pas vérifier qu'elle pointe le bon code.
-- **`region`** : robuste aux modifications. Le code porte des marqueurs de commentaire sur leur propre ligne :
+- **`lines`**: simple, but breaks when the code moves. The CI checks that the range exists (`E_TOUR_ANCHOR_OUT_OF_RANGE`);
+  it cannot check that it points at the right code.
+- **`region`**: robust to changes. The code carries comment markers on their own line:
 
-  | Langage | Ouverture | Fermeture |
+  | Language | Opening | Closing |
   |---|---|---|
   | TS / JS / Go / Kotlin | `// #region tour:<name>` | `// #endregion` |
 
-  Les lignes de marqueurs ne sont pas surlignées. Les marqueurs sont retirés à l'export (cf.
-  [sharing-and-cli.md](./sharing-and-cli.md)). Région introuvable → `E_TOUR_REGION_NOT_FOUND`.
+  The marker lines are not highlighted. The markers are removed on export (see
+  [sharing-and-cli.md](./sharing-and-cli.md)). Region not found → `E_TOUR_REGION_NOT_FOUND`.
 
-Recommandation : `region` pour les templates officiels, `lines` acceptable pour les templates tiers.
+Recommendation: `region` for official templates, `lines` acceptable for third-party templates.
 
-### 5.3 Alignement entre variantes
+### 5.3 Alignment between variants
 
-Le mode comparaison synchronise deux variantes par `id` d'étape. Règles :
+Comparison mode synchronizes two variants by step `id`. Rules:
 
-1. Le tour de la **variante TypeScript** (langue de référence) définit les `id` canoniques d'un concept.
-2. Une variante DEVRAIT reprendre les `id` canoniques. Elle PEUT en omettre (affiché « no equivalent in <language> »)
-   et en ajouter (affichées d'un seul côté).
-3. Les `id` partagés DOIVENT apparaître dans le même ordre relatif que dans la référence. Sinon `W_TOUR_ORDER_DIVERGES`
-   (avertissement : la comparaison se désynchronise).
-4. Quand un pattern se dissout dans le langage, la variante **garde l'étape** et explique pourquoi le code est absent
-   ou réduit. Supprimer l'étape cacherait la leçon.
-5. Les `id` `overview` (première étape) et `trade-offs` (dernière étape) sont obligatoires pour les templates officiels
-   (règle du registre, pas du schéma).
+1. The tour of the **TypeScript variant** (reference language) defines the canonical `id`s of a concept.
+2. A variant SHOULD reuse the canonical `id`s. It MAY omit some (shown as "no equivalent in <language>")
+   and add some (shown on one side only).
+3. Shared `id`s MUST appear in the same relative order as in the reference. Otherwise `W_TOUR_ORDER_DIVERGES`
+   (warning: the comparison goes out of sync).
+4. When a pattern dissolves in the language, the variant **keeps the step** and explains why the code is absent
+   or reduced. Removing the step would hide the lesson.
+5. The `id`s `overview` (first step) and `trade-offs` (last step) are required for official templates
+   (registry rule, not a schema rule).
 
-## 6. Exercices
+## 6. Exercises
 
 ```toml
 [[exercises]]
@@ -226,70 +226,70 @@ from = "base"
 failing = ["tests/pickup-point.test.ts"]
 ```
 
-| Champ | Type | Requis | Défaut | Contraintes |
+| Field | Type | Required | Default | Constraints |
 |---|---|---|---|---|
-| `name` | chaîne | oui | — | Slug kebab-case, unique parmi les exercices du template. Nom du dossier `exercises/<name>/`. |
-| `kind` | `"fix"` \| `"refactor"` | oui | — | §6.1. |
-| `title` | chaîne | oui | — | 1 à 80 caractères, anglais. |
-| `level` | niveau | non | `facets.level` | Même vocabulaire que `facets.level`. |
-| `from` | `"self"` \| `"base"` | non | `"self"` | État de départ avant surcouche : le template lui-même ou sa `base`. `"base"` requiert `[base]`. |
-| `failing` | tableau de chemins | oui | — | ≥ 1. Fichiers de test qui DOIVENT être rouges dans l'état de départ. |
-| `solutionFrom` | `"start"` \| `"self"` | non | `"start"` | État sur lequel `solution/` est appliquée (§6.2). `"self"` requiert `from = "base"`. |
-| `hints` | tableau de chemins | non | `[]` | Fichiers Markdown sous `exercises/<name>/`, dévoilés un par un. |
+| `name` | string | yes | — | Kebab-case slug, unique among the exercises of the template. Name of the `exercises/<name>/` folder. |
+| `kind` | `"fix"` \| `"refactor"` | yes | — | §6.1. |
+| `title` | string | yes | — | 1 to 80 characters, English. |
+| `level` | level | no | `facets.level` | Same vocabulary as `facets.level`. |
+| `from` | `"self"` \| `"base"` | no | `"self"` | Start state before the overlay: the template itself or its `base`. `"base"` requires `[base]`. |
+| `failing` | array of paths | yes | — | ≥ 1. Test files that MUST be red in the start state. |
+| `solutionFrom` | `"start"` \| `"self"` | no | `"start"` | State on which `solution/` is applied (§6.2). `"self"` requires `from = "base"`. |
+| `hints` | array of paths | no | `[]` | Markdown files under `exercises/<name>/`, revealed one by one. |
 
-Contenu attendu de `exercises/<name>/` :
+Expected content of `exercises/<name>/`:
 
-| Élément | Requis | Rôle |
+| Element | Required | Role |
 |---|---|---|
-| `README.md` | oui | Énoncé, en anglais. |
-| `start/` | non | Surcouche appliquée à l'état `from` : fichiers ajoutés ou remplacés (dont les tests `failing`). |
-| `start/.typika-remove` | non | Liste de chemins (un par ligne) supprimés de l'état `from`. |
-| `solution/` | oui | Surcouche qui produit une solution de référence, appliquée selon `solutionFrom` (§6.2). |
+| `README.md` | yes | Statement, in English. |
+| `start/` | no | Overlay applied to the `from` state: files added or replaced (including the `failing` tests). |
+| `start/.typika-remove` | no | List of paths (one per line) removed from the `from` state. |
+| `solution/` | yes | Overlay that produces a reference solution, applied according to `solutionFrom` (§6.2). |
 
-### 6.1 Sémantique des deux types
+### 6.1 Semantics of the two kinds
 
 | | `fix` | `refactor` |
 |---|---|---|
-| Départ typique | `from = "self"`, une partie de l'implémentation retirée | `from = "base"` : le code naïf |
-| État de départ | tests `failing` rouges ; les autres verts | tests existants verts ; tests `failing` (nouvelle exigence) rouges |
-| Ce que l'apprenant fait | Compléter l'implémentation | Restructurer, puis implémenter l'exigence |
-| Leçon | Comprendre la mécanique du pattern | Ressentir pourquoi le pattern existe |
+| Typical start | `from = "self"`, part of the implementation removed | `from = "base"`: the naive code |
+| Start state | `failing` tests red; the others green | existing tests green; `failing` tests (new requirement) red |
+| What the learner does | Complete the implementation | Restructure, then implement the requirement |
+| Lesson | Understand the mechanics of the pattern | Feel why the pattern exists |
 
-### 6.2 État solution
+### 6.2 Solution state
 
-| `solutionFrom` | État solution |
+| `solutionFrom` | Solution state |
 |---|---|
-| `"start"` | état de départ + `solution/` |
-| `"self"` | template + fichiers `failing` de `start/` + `solution/` |
+| `"start"` | start state + `solution/` |
+| `"self"` | template + `failing` files from `start/` + `solution/` |
 
-`"self"` sert les exercices `refactor` partis de la base : leur solution est le template restructuré plus l'exigence.
-Avec `"start"`, `solution/` devrait recopier tous les fichiers que le template change par rapport à la base, copies
-qui divergeraient du template à chaque modification.
+`"self"` serves the `refactor` exercises that start from the base: their solution is the restructured template plus
+the requirement. With `"start"`, `solution/` would have to copy every file the template changes relative to the base,
+copies that would diverge from the template at every change.
 
-### 6.3 Critères de réussite
+### 6.3 Success criteria
 
-Un exercice est **réussi** quand, dans le projet de l'apprenant, **tous** les tests sélectionnés par `[tests]` (y compris
-`failing`) passent. Aucune vérification structurelle en schéma 1 : on ne vérifie pas *comment* l'exigence a été
-implémentée. La pertinence d'un `refactor` repose donc sur la conception de l'exigence (cf. guide d'auteur).
+An exercise is **passed** when, in the learner's project, **all** the tests selected by `[tests]` (including
+`failing`) pass. No structural check in schema 1: we do not check *how* the requirement was implemented. The
+relevance of a `refactor` therefore rests on the design of the requirement (see the authoring guide).
 
-### 6.4 Vérifications de la CI
+### 6.4 CI checks
 
-Pour chaque exercice, la CI du registre DOIT constater :
+For each exercise, the registry CI MUST observe:
 
-1. État de départ : chaque fichier `failing` a au moins un test rouge ; aucun autre test n'est rouge.
-2. État solution (§6.2) : tous les tests sont verts.
+1. Start state: each `failing` file has at least one red test; no other test is red.
+2. Solution state (§6.2): all tests are green.
 
-Seuls les tests comptent. En TypeScript et JavaScript, un état de départ qui ne passe pas le typecheck (un test qui
-utilise une valeur que la base ne connaît pas encore) est valide : l'exécution ignore les types. En Go et en Kotlin,
-les tests sont compilés ensemble : un fichier `failing` qui ne compile pas rend rouges tous les tests, ce qui viole la
-règle 1. Il DOIT donc compiler contre l'état de départ (cf. guide d'auteur).
+Only the tests count. In TypeScript and JavaScript, a start state that does not pass the typecheck (a test that uses
+a value the base does not know yet) is valid: execution ignores types. In Go and Kotlin, the tests are compiled
+together: a `failing` file that does not compile turns all the tests red, which violates rule 1. It MUST therefore
+compile against the start state (see the authoring guide).
 
-Un sous-dossier de `exercises/` qu'aucun `[[exercises]]` ne déclare → `W_EXERCISE_UNDECLARED`. Les fichiers placés
-directement sous `exercises/` ne sont pas des exercices et sont ignorés.
+A subfolder of `exercises/` that no `[[exercises]]` declares → `W_EXERCISE_UNDECLARED`. Files placed directly under
+`exercises/` are not exercises and are ignored.
 
-Échec → template `broken` (voir [registry.md](./registry.md)).
+Failure → template `broken` (see [registry.md](./registry.md)).
 
-## 7. Base et variantes
+## 7. Base and variants
 
 ### 7.1 `[base]`
 
@@ -299,13 +299,13 @@ template = "github:typika-app/templates/strategy-base/ts"
 focus = ["src/checkout/**"]
 ```
 
-| Champ | Type | Requis | Contraintes |
+| Field | Type | Required | Constraints |
 |---|---|---|---|
-| `template` | ref | oui | Template de `role = "base"` (sinon `W_BASE_NOT_BASE_ROLE`). |
-| `focus` | tableau de globs | non | Restreint la vue « diff depuis la base » aux fichiers concernés. Défaut : tous les fichiers hors `tour/` et `exercises/`. |
+| `template` | ref | yes | Template with `role = "base"` (otherwise `W_BASE_NOT_BASE_ROLE`). |
+| `focus` | array of globs | no | Restricts the "diff from the base" view to the relevant files. Default: all files except `tour/` and `exercises/`. |
 
-La base DOIT avoir le même `language` et le même `runtime.kind` que le template (`E_BASE_MISMATCH`). Une base n'a ni
-`[base]`, ni `[variants]`, ni `[tour]` (`E_BASE_FORBIDDEN_FIELD`).
+The base MUST have the same `language` and the same `runtime.kind` as the template (`E_BASE_MISMATCH`). A base has
+no `[base]`, no `[variants]` and no `[tour]` (`E_BASE_FORBIDDEN_FIELD`).
 
 ### 7.2 `[variants]`
 
@@ -315,87 +315,87 @@ kotlin = "github:typika-app/templates/strategy/kotlin"
 go = "github:typika-app/templates/strategy/go"
 ```
 
-- Clés : valeurs de `facets.language`, différentes du langage du template (`E_VARIANT_SELF`).
-- La variante référencée DOIT avoir le langage de sa clé (`E_VARIANT_LANGUAGE_MISMATCH`, vérifié à la résolution).
-- Les variantes DEVRAIENT être symétriques : si A déclare B, B déclare A. Sinon `W_VARIANT_NOT_SYMMETRIC` ; le registre
-  complète le graphe dans l'index pour que la comparaison fonctionne dans les deux sens.
-- Une variante DEVRAIT partager le topic principal du template (`W_VARIANT_TOPIC_DIVERGES`).
+- Keys: values of `facets.language`, different from the language of the template (`E_VARIANT_SELF`).
+- The referenced variant MUST have the language of its key (`E_VARIANT_LANGUAGE_MISMATCH`, checked at resolution).
+- Variants SHOULD be symmetric: if A declares B, B declares A. Otherwise `W_VARIANT_NOT_SYMMETRIC`; the registry
+  completes the graph in the index so that the comparison works both ways.
+- A variant SHOULD share the primary topic of the template (`W_VARIANT_TOPIC_DIVERGES`).
 
-## 8. Références de template
+## 8. Template references
 
 ```
 github:<owner>/<repo>[/<path>][@<ref>]
 ```
 
-| Partie | Contraintes |
+| Part | Constraints |
 |---|---|
-| `owner`, `repo` | Règles de nommage GitHub. |
-| `path` | Sous-dossier contenant `typika.toml`. Pas de `..`, pas de `/` final. |
-| `ref` | Tag, branche ou SHA de commit. |
+| `owner`, `repo` | GitHub naming rules. |
+| `path` | Subfolder containing `typika.toml`. No `..`, no trailing `/`. |
+| `ref` | Tag, branch or commit SHA. |
 
-Résolution :
+Resolution:
 
-- Sans `@ref` : branche par défaut du repo **au moment de l'indexation**.
-- L'index du registre stocke toujours un **SHA de commit** : le hub sert une version figée, reproductible, que la CI de
-  santé a testée.
-- Ref invalide syntaxiquement → `E_INVALID_REF` ; introuvable à la résolution → `E_REF_UNRESOLVABLE`.
+- Without `@ref`: default branch of the repo **at indexing time**.
+- The registry index always stores a **commit SHA**: the hub serves a frozen, reproducible version that the health
+  CI has tested.
+- Syntactically invalid ref → `E_INVALID_REF`; not found at resolution → `E_REF_UNRESOLVABLE`.
 
-`parent` (remix) : posé par l'action « remix » avec le SHA du template d'origine. Il n'a pas d'effet sur l'exécution ;
-le hub l'utilise pour afficher la filiation et le diff avec le parent.
+`parent` (remix): set by the "remix" action with the SHA of the original template. It has no effect on execution;
+the hub uses it to show the lineage and the diff with the parent.
 
-## 9. Licence
+## 9. License
 
-- `license` DOIT être un identifiant SPDX valide (`E_LICENSE_INVALID`).
-- Un fichier `LICENSE` DOIT exister (`E_LICENSE_FILE_MISSING`).
-- Registre : la licence DOIT être approuvée OSI (`E_LICENSE_NOT_OSI`) ; les templates officiels `typika-app/*` DOIVENT
-  être en `MIT-0` (règle de revue).
+- `license` MUST be a valid SPDX identifier (`E_LICENSE_INVALID`).
+- A `LICENSE` file MUST exist (`E_LICENSE_FILE_MISSING`).
+- Registry: the license MUST be OSI-approved (`E_LICENSE_NOT_OSI`); the official `typika-app/*` templates MUST
+  be under `MIT-0` (review rule).
 
-## 10. Versionnement du schéma
+## 10. Schema versioning
 
-- `schema` est un entier. Une version de l'app supporte la version courante **et la précédente**.
-- **Sans changement de version** : ajout d'une valeur à une énumération ouverte par le registre (`framework`,
-  `library`, topics), changement des limites de taille (§1) et des règles propres au registre (§5.3 règle 5, §9).
-- **Avec changement de version** : tout ajout, suppression ou renommage de champ, champ optionnel devenu requis,
-  changement de sémantique ou de défaut, nouvelle erreur `E_` au niveau manifeste ou workspace, ajout d'une valeur aux
-  énumérations fermées (`language`, `runtime.kind`, `kind` d'exercice, `paradigm`, `level`, `useCase`).
-  Un champ ajouté est une nouvelle version parce que la validation refuse les clés inconnues : sans nouvelle version, une app
-  qui ne connaît que l'ancien schéma rejetterait un manifeste valide.
-- Exception : tant qu'aucun manifeste n'est publié hors de ce dépôt (lot 7 du M3), le schéma 1 accueille encore des
-  champs optionnels sans changer de version ([0024](../decisions/0024-manifest-keywords.md)). `keywords` en est un.
-- Un nouvel avertissement `W_` ne change pas la version : il n'empêche pas l'ouverture.
-- Chaque changement de version s'accompagne d'une migration automatique dans le package `manifest`, exposée par le CLI.
-- Le registre refuse les nouvelles entrées dans une version dépréciée et ouvre une PR de migration sur les templates
-  `typika-app/*`.
+- `schema` is an integer. A version of the app supports the current version **and the previous one**.
+- **Without a version change**: adding a value to an enumeration opened by the registry (`framework`,
+  `library`, topics), changing the size limits (§1) and the registry-specific rules (§5.3 rule 5, §9).
+- **With a version change**: any addition, removal or renaming of a field, an optional field made required, a
+  change of semantics or of default, a new `E_` error at the manifest or workspace level, adding a value to the
+  closed enumerations (`language`, `runtime.kind`, exercise `kind`, `paradigm`, `level`, `useCase`).
+  An added field is a new version because validation rejects unknown keys: without a new version, an app
+  that only knows the old schema would reject a valid manifest.
+- Exception: as long as no manifest is published outside this repository (slice 7 of M3), schema 1 still accepts
+  optional fields without a version change ([0024](../decisions/0024-manifest-keywords.md)). `keywords` is one of them.
+- A new `W_` warning does not change the version: it does not prevent opening.
+- Each version change comes with an automatic migration in the `manifest` package, exposed by the CLI.
+- The registry refuses new entries in a deprecated version and opens a migration PR on the `typika-app/*`
+  templates.
 
 ## 11. Validation
 
-Trois niveaux, du plus local au plus global :
+Three levels, from the most local to the most global:
 
-| Niveau | Où | Vérifie |
+| Level | Where | Checks |
 |---|---|---|
-| Manifeste | app, CLI, CI | TOML valide, champs, types, énumérations, formats. |
-| Workspace | CLI, CI | Fichiers référencés (`entry`, étapes, exercices, `LICENSE`, `README.md`), front-matter, ancres, tailles. |
-| Registre | CI du registre | Refs résolubles, base / variantes cohérentes, unicité de `name`, topics connus, licence OSI, exécution des tests et exercices. |
+| Manifest | app, CLI, CI | Valid TOML, fields, types, enumerations, formats. |
+| Workspace | CLI, CI | Referenced files (`entry`, steps, exercises, `LICENSE`, `README.md`), front matter, anchors, sizes. |
+| Registry | registry CI | Resolvable refs, consistent base / variants, uniqueness of `name`, known topics, OSI license, running the tests and exercises. |
 
 ### 11.1 Codes
 
-Les erreurs bloquent ; les avertissements (`W_`) n'empêchent pas l'ouverture dans la sandbox.
+Errors block; warnings (`W_`) do not prevent opening in the sandbox.
 
-| Code | Niveau | Message (anglais, affiché tel quel) |
+| Code | Level | Message (English, shown as is) |
 |---|---|---|
-| `E_TOML_PARSE` | manifeste | `typika.toml is not valid TOML: {detail} (line {line})` |
-| `E_SCHEMA_VERSION_UNSUPPORTED` | manifeste | `Manifest schema {found} is not supported. Supported: {supported}.` |
-| `E_MISSING_FIELD` | manifeste | `Missing required field "{path}".` |
-| `E_UNKNOWN_FIELD` | manifeste | `Unknown field "{path}". Extensions must live under [x-*].` |
-| `E_INVALID_VALUE` | manifeste | `Invalid value for "{path}": {reason}.` |
-| `E_INVALID_REF` | manifeste | `"{ref}" is not a valid template reference (expected github:<owner>/<repo>[/<path>][@<ref>]).` |
-| `E_RUNTIME_LANGUAGE_MISMATCH` | manifeste | `Runtime "{kind}" cannot run language "{language}".` |
-| `E_VARIANT_SELF` | manifeste | `A template cannot declare a variant in its own language ("{language}").` |
-| `E_EXERCISE_DUPLICATE_NAME` | manifeste | `Exercise name "{name}" is used more than once.` |
-| `E_EXERCISE_FROM_BASE_WITHOUT_BASE` | manifeste | `Exercise "{name}" starts from base but the template has no [base].` |
-| `E_EXERCISE_SOLUTION_FROM_SELF` | manifeste | `Exercise "{name}": solutionFrom = "self" requires from = "base".` |
-| `E_LICENSE_INVALID` | manifeste | `"{license}" is not a valid SPDX license identifier.` |
-| `E_BASE_FORBIDDEN_FIELD` | manifeste | `A base template cannot declare [{field}].` |
+| `E_TOML_PARSE` | manifest | `typika.toml is not valid TOML: {detail} (line {line})` |
+| `E_SCHEMA_VERSION_UNSUPPORTED` | manifest | `Manifest schema {found} is not supported. Supported: {supported}.` |
+| `E_MISSING_FIELD` | manifest | `Missing required field "{path}".` |
+| `E_UNKNOWN_FIELD` | manifest | `Unknown field "{path}". Extensions must live under [x-*].` |
+| `E_INVALID_VALUE` | manifest | `Invalid value for "{path}": {reason}.` |
+| `E_INVALID_REF` | manifest | `"{ref}" is not a valid template reference (expected github:<owner>/<repo>[/<path>][@<ref>]).` |
+| `E_RUNTIME_LANGUAGE_MISMATCH` | manifest | `Runtime "{kind}" cannot run language "{language}".` |
+| `E_VARIANT_SELF` | manifest | `A template cannot declare a variant in its own language ("{language}").` |
+| `E_EXERCISE_DUPLICATE_NAME` | manifest | `Exercise name "{name}" is used more than once.` |
+| `E_EXERCISE_FROM_BASE_WITHOUT_BASE` | manifest | `Exercise "{name}" starts from base but the template has no [base].` |
+| `E_EXERCISE_SOLUTION_FROM_SELF` | manifest | `Exercise "{name}": solutionFrom = "self" requires from = "base".` |
+| `E_LICENSE_INVALID` | manifest | `"{license}" is not a valid SPDX license identifier.` |
+| `E_BASE_FORBIDDEN_FIELD` | manifest | `A base template cannot declare [{field}].` |
 | `E_ENTRY_NOT_FOUND` | workspace | `Entry file "{path}" does not exist.` |
 | `E_LICENSE_FILE_MISSING` | workspace | `LICENSE file is missing.` |
 | `E_README_FILE_MISSING` | workspace | `README.md file is missing.` |
@@ -405,36 +405,36 @@ Les erreurs bloquent ; les avertissements (`W_`) n'empêchent pas l'ouverture da
 | `E_TOUR_ANCHOR_OUT_OF_RANGE` | workspace | `Tour step "{id}": lines {lines} are outside "{file}" ({count} lines).` |
 | `E_TOUR_REGION_NOT_FOUND` | workspace | `Tour step "{id}": region "{region}" not found in "{file}".` |
 | `E_EXERCISE_PATH_NOT_FOUND` | workspace | `Exercise "{name}": "{path}" does not exist.` |
-| `E_REF_UNRESOLVABLE` | registre | `Cannot resolve "{ref}": {reason}.` |
-| `E_BASE_MISMATCH` | registre | `Base "{ref}" must use language "{language}" and runtime "{kind}".` |
-| `E_VARIANT_LANGUAGE_MISMATCH` | registre | `Variant "{key}" points to a "{found}" template.` |
-| `E_NAME_TAKEN` | registre | `Template name "{name}" is already registered.` |
-| `E_LICENSE_NOT_OSI` | registre | `License "{license}" is not OSI-approved.` |
-| `E_EXERCISE_START_STATE` | registre | `Exercise "{name}": starting state is wrong ({reason}).` |
-| `E_EXERCISE_SOLUTION_FAILS` | registre | `Exercise "{name}": reference solution does not pass all tests.` |
-| `E_TESTS_FAIL` | registre | `The tests of the template do not pass ({reason}).` |
-| `E_REF_NOT_PINNED` | registre | `Ref "{ref}" must be pinned to a commit SHA.` |
-| `E_ENTRY_NAME_MISMATCH` | registre | `Entry file "{file}" must be named after its template "{name}".` |
-| `E_CATEGORY_MISMATCH` | registre | `An official template must live under github:typika-app/.` |
-| `E_LICENSE_NOT_MIT0` | registre | `An official template must use the MIT-0 license.` |
-| `E_REFACTOR_EXERCISE_MISSING` | registre | `A {category} template needs at least one refactor exercise.` |
-| `E_TOUR_REQUIRED_STEP` | registre | `An official tour must start with "overview" and end with "trade-offs".` |
-| `E_SIZE` | registre | `Template exceeds {limit}: {actual}.` |
-| `E_GO_IMPORT_UNAVAILABLE` | registre | `package {path} is not available: Typika runs Go with the standard library only.` |
+| `E_REF_UNRESOLVABLE` | registry | `Cannot resolve "{ref}": {reason}.` |
+| `E_BASE_MISMATCH` | registry | `Base "{ref}" must use language "{language}" and runtime "{kind}".` |
+| `E_VARIANT_LANGUAGE_MISMATCH` | registry | `Variant "{key}" points to a "{found}" template.` |
+| `E_NAME_TAKEN` | registry | `Template name "{name}" is already registered.` |
+| `E_LICENSE_NOT_OSI` | registry | `License "{license}" is not OSI-approved.` |
+| `E_EXERCISE_START_STATE` | registry | `Exercise "{name}": starting state is wrong ({reason}).` |
+| `E_EXERCISE_SOLUTION_FAILS` | registry | `Exercise "{name}": reference solution does not pass all tests.` |
+| `E_TESTS_FAIL` | registry | `The tests of the template do not pass ({reason}).` |
+| `E_REF_NOT_PINNED` | registry | `Ref "{ref}" must be pinned to a commit SHA.` |
+| `E_ENTRY_NAME_MISMATCH` | registry | `Entry file "{file}" must be named after its template "{name}".` |
+| `E_CATEGORY_MISMATCH` | registry | `An official template must live under github:typika-app/.` |
+| `E_LICENSE_NOT_MIT0` | registry | `An official template must use the MIT-0 license.` |
+| `E_REFACTOR_EXERCISE_MISSING` | registry | `A {category} template needs at least one refactor exercise.` |
+| `E_TOUR_REQUIRED_STEP` | registry | `An official tour must start with "overview" and end with "trade-offs".` |
+| `E_SIZE` | registry | `Template exceeds {limit}: {actual}.` |
+| `E_GO_IMPORT_UNAVAILABLE` | registry | `package {path} is not available: Typika runs Go with the standard library only.` |
 | `W_SIZE` | workspace | `Template exceeds {limit}: {actual}.` |
 | `W_UNKNOWN_TOPIC` | workspace | `Topic "{topic}" is not in the registry vocabulary yet.` |
 | `W_EXERCISE_UNDECLARED` | workspace | `Folder "exercises/{name}" is not declared in [[exercises]].` |
-| `W_TOUR_ORDER_DIVERGES` | registre | `Tour steps {ids} are not in the same order as the reference variant.` |
-| `W_VARIANT_NOT_SYMMETRIC` | registre | `"{other}" does not list this template as a variant.` |
-| `W_VARIANT_TOPIC_DIVERGES` | registre | `Variant "{key}" has a different primary topic.` |
-| `W_BASE_NOT_BASE_ROLE` | registre | `Base "{ref}" does not declare role = "base".` |
+| `W_TOUR_ORDER_DIVERGES` | registry | `Tour steps {ids} are not in the same order as the reference variant.` |
+| `W_VARIANT_NOT_SYMMETRIC` | registry | `"{other}" does not list this template as a variant.` |
+| `W_VARIANT_TOPIC_DIVERGES` | registry | `Variant "{key}" has a different primary topic.` |
+| `W_BASE_NOT_BASE_ROLE` | registry | `Base "{ref}" does not declare role = "base".` |
 
-Le package `manifest` renvoie chaque problème sous la forme d'un `ManifestIssue` (`code`, `path`, `message`). `path` est
-le chemin du champ (`exercises[1].failing`) ou du fichier (`tour/02-context.md`), pour que l'éditeur souligne l'endroit
-fautif. Un manifeste ou un workspace invalide échoue avec une seule `ManifestInvalidError` qui porte tous les problèmes
-trouvés, avertissements compris : l'auteur les voit tous en une fois.
+The `manifest` package returns each problem as a `ManifestIssue` (`code`, `path`, `message`). `path` is the path of
+the field (`exercises[1].failing`) or of the file (`tour/02-context.md`), so that the editor underlines the faulty
+spot. An invalid manifest or workspace fails with a single `ManifestInvalidError` that carries all the problems
+found, warnings included: the author sees them all at once.
 
-## 12. Exemple complet
+## 12. Full example
 
 ```toml
 schema = 1
