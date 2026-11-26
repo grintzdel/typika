@@ -3,6 +3,7 @@ import type * as Effect from 'effect/Effect'
 import type * as Scope from 'effect/Scope'
 
 import type { EditorLanguageServiceError } from '../domain/errors/editor-language-service.error.ts'
+import type { EditorOutdatedError } from '../domain/errors/editor-outdated.error.ts'
 import type { LanguageServiceFiles, TypeScriptProject } from '../domain/language-service.domain-model.ts'
 
 type Remote<T> = {
@@ -18,6 +19,6 @@ export class LanguageServicePort extends Context.Service<
   {
     readonly start: (
       files: LanguageServiceFiles
-    ) => Effect.Effect<LanguageServiceSession, EditorLanguageServiceError, Scope.Scope>
+    ) => Effect.Effect<LanguageServiceSession, EditorLanguageServiceError | EditorOutdatedError, Scope.Scope>
   }
 >()('@typika/web/LanguageServicePort') {}

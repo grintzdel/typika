@@ -147,6 +147,20 @@ test.describe('TypeScript in the editor', () => {
     await expect(languageServiceStatus(page)).toHaveText('', { timeout: LANGUAGE_SERVICE_TIMEOUT })
   })
 
+  test('offers to reload when a redeploy removed the TypeScript worker', async ({ page, context }) => {
+    const isWorker = (url: URL) => url.pathname.endsWith('/language-service.worker.ts')
+    await context.route(isWorker, (route) => route.fulfill({ status: 404 }))
+    await page.goto('/play/strategy-ts')
+
+    await expect(languageServiceStatus(page)).toHaveText('Nouvelle version de Typika', {
+      timeout: LANGUAGE_SERVICE_TIMEOUT,
+    })
+    await context.unroute(isWorker)
+    await page.getByRole('button', { name: 'Recharger' }).click()
+
+    await expect(languageServiceStatus(page)).toHaveText('', { timeout: LANGUAGE_SERVICE_TIMEOUT })
+  })
+
   test('opens the completion typed before TypeScript was ready', async ({ page, context }) => {
     const release = await holdLanguageServiceWorker(context)
     await page.goto('/play/strategy-ts')

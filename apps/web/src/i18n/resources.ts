@@ -323,7 +323,13 @@ export const resources = {
         solutionDiff: '{{name}} (solution)',
         close: 'Close {{name}}',
       },
-      languageService: { label: 'TypeScript', starting: 'Starting TypeScript…', unavailable: 'TypeScript unavailable' },
+      languageService: {
+        label: 'TypeScript',
+        starting: 'Starting TypeScript…',
+        unavailable: 'TypeScript unavailable',
+        outdated: 'New version of Typika',
+        reload: 'Reload',
+      },
       references: {
         label: 'References',
         empty: 'Put the cursor on a TypeScript symbol and press Shift+F12, or Cmd/Ctrl+click its declaration.',
@@ -839,7 +845,13 @@ export const resources = {
         solutionDiff: '{{name}} (solution)',
         close: 'Fermer {{name}}',
       },
-      languageService: { label: 'TypeScript', starting: 'TypeScript démarre…', unavailable: 'TypeScript indisponible' },
+      languageService: {
+        label: 'TypeScript',
+        starting: 'TypeScript démarre…',
+        unavailable: 'TypeScript indisponible',
+        outdated: 'Nouvelle version de Typika',
+        reload: 'Recharger',
+      },
       references: {
         label: 'Références',
         empty:

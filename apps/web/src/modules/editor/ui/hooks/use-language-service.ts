@@ -1,4 +1,5 @@
 import { useAtomValue } from '@effect/atom-react'
+import * as Cause from 'effect/Cause'
 import * as Effect from 'effect/Effect'
 import * as Option from 'effect/Option'
 import * as AsyncResult from 'effect/reactivity/AsyncResult'
@@ -8,7 +9,7 @@ import { languageServiceAtom } from '../../core/atoms/editor.atoms.ts'
 import { isLanguageServiceInput } from '../../core/domain/language-service.domain-model.ts'
 import type { FileStructureRequest } from './use-edit-files.ts'
 
-export type LanguageServiceStatus = 'starting' | 'ready' | 'unavailable' | 'off'
+export type LanguageServiceStatus = 'starting' | 'ready' | 'unavailable' | 'outdated' | 'off'
 
 const offAtom = Atom.make(AsyncResult.success(undefined))
 
@@ -23,7 +24,9 @@ export const useLanguageService = (
       ? 'off'
       : 'ready'
     : AsyncResult.isFailure(result)
-      ? 'unavailable'
+      ? Option.getOrUndefined(Cause.findErrorOption(result.cause))?._tag === 'EditorOutdatedError'
+        ? 'outdated'
+        : 'unavailable'
       : 'starting'
   const handleStructureChange = ({ written, removed }: FileStructureRequest) => {
     if (session === undefined) return
@@ -35,5 +38,6 @@ export const useLanguageService = (
     ]
     void Effect.runPromise(Effect.ignore(Effect.all(updates, { discard: true })))
   }
-  return { session, status, handleStructureChange }
+  const handleReload = () => window.location.reload()
+  return { session, status, handleStructureChange, handleReload }
 }

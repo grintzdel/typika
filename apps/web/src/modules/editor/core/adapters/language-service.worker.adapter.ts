@@ -3,27 +3,37 @@ import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
 
 import { EditorLanguageServiceError } from '../domain/errors/editor-language-service.error.ts'
+import { EditorOutdatedError } from '../domain/errors/editor-outdated.error.ts'
 import type { LanguageServiceFiles } from '../domain/language-service.domain-model.ts'
 import { LanguageServicePort, type LanguageServiceSession } from '../ports/language-service.port.ts'
 import type { LanguageServiceWorkerApi } from './language-service-worker/language-service.worker.ts'
+// oxlint-disable-next-line import/default -- Vite gives a ?worker&url import the built worker's URL
+import languageServiceWorkerUrl from './language-service-worker/language-service.worker.ts?worker&url'
 
 const spawn = Effect.acquireRelease(
-  Effect.sync(
-    () =>
-      new Worker(new URL('./language-service-worker/language-service.worker.ts', import.meta.url), {
-        type: 'module',
-        name: 'typika-language-service',
-      })
-  ),
+  Effect.sync(() => new Worker(languageServiceWorkerUrl, { type: 'module', name: 'typika-language-service' })),
   (worker) => Effect.sync(() => worker.terminate())
 )
 
+const isWorkerGone = Effect.tryPromise(() =>
+  fetch(languageServiceWorkerUrl, { method: 'HEAD', cache: 'no-store' })
+).pipe(
+  Effect.map((response) => response.status === 404),
+  Effect.orElseSucceed(() => false)
+)
+
 const crashOf = (worker: Worker) =>
-  Effect.callback<never, EditorLanguageServiceError>((resume) => {
-    const onError = (event: ErrorEvent) => resume(Effect.fail(new EditorLanguageServiceError({ cause: event.message })))
+  Effect.callback<string>((resume) => {
+    const onError = (event: ErrorEvent) => resume(Effect.succeed(event.message))
     worker.addEventListener('error', onError)
     return Effect.sync(() => worker.removeEventListener('error', onError))
-  })
+  }).pipe(
+    Effect.flatMap((message) =>
+      Effect.flatMap(isWorkerGone, (isGone) =>
+        Effect.fail(isGone ? new EditorOutdatedError() : new EditorLanguageServiceError({ cause: message }))
+      )
+    )
+  )
 
 const call = <A>(request: () => Promise<A>) =>
   Effect.tryPromise({ try: request, catch: (cause) => new EditorLanguageServiceError({ cause }) })

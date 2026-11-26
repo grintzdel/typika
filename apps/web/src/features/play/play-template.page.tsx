@@ -215,7 +215,7 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
               isModified={project.modifiedPaths.length > 0}
               saveFailed={project.saveFailed}
             />
-            <LanguageServiceStatus status={languageService.status} />
+            <LanguageServiceStatus status={languageService.status} onReload={languageService.handleReload} />
             <RunToolbar
               status={runtime.status}
               bootError={runtime.bootError}

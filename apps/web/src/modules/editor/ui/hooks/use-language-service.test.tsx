@@ -10,6 +10,7 @@ import { makeProjectTestLayer } from '../../../project/core/project.test-layer.t
 import { makeFakeRuntime } from '../../../runtime/__tests__/runtime.factory.ts'
 import { makeRuntimeTestLayer } from '../../../runtime/core/runtime.test-layer.ts'
 import { EditorLanguageServiceError } from '../../core/domain/errors/editor-language-service.error.ts'
+import { EditorOutdatedError } from '../../core/domain/errors/editor-outdated.error.ts'
 import { makeLanguageServiceInMemory } from '../../core/editor.test-layer.ts'
 import { LanguageServicePort } from '../../core/ports/language-service.port.ts'
 import { useLanguageService } from './use-language-service.ts'
@@ -102,6 +103,14 @@ describe('useLanguageService', () => {
     )
 
     await waitFor(() => expect(result.current).toMatchObject({ session: undefined, status: 'unavailable' }))
+  })
+
+  it('is outdated when a newer version of Typika removed the language service', async () => {
+    const { result } = renderLanguageService(
+      Layer.succeed(LanguageServicePort, { start: () => Effect.fail(new EditorOutdatedError()) })
+    )
+
+    await waitFor(() => expect(result.current).toMatchObject({ session: undefined, status: 'outdated' }))
   })
 
   it('stays off for a template that TypeScript does not analyze', async () => {
