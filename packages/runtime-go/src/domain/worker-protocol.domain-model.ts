@@ -17,6 +17,7 @@ export type GoWorkerInput =
       readonly namePattern?: string
     }
   | { readonly _tag: 'Run'; readonly files: WorkerFiles; readonly entry: string; readonly args: ReadonlyArray<string> }
+  | { readonly _tag: 'Check'; readonly files: WorkerFiles }
 
 export type GoWorkerOutput =
   | { readonly _tag: 'Ready' }
@@ -26,3 +27,4 @@ export type GoWorkerOutput =
   | { readonly _tag: 'Stderr'; readonly chunk: string }
   | { readonly _tag: 'Exit'; readonly code: number }
   | { readonly _tag: 'BuildFailed'; readonly diagnostics: ReadonlyArray<Diagnostic> }
+  | { readonly _tag: 'Checked'; readonly diagnostics: ReadonlyArray<Diagnostic> }

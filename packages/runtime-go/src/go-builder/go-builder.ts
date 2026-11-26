@@ -169,6 +169,14 @@ export const makeGoBuilder = (toolchain: GoToolchain) => {
       }
     },
     writeFile: (path: string, content: string) => fs.writeFile(path, encoder.encode(content)),
+    compile: async (
+      units: ReadonlyMap<string, BuildUnit>,
+      root: string,
+      language: string
+    ): Promise<ReadonlyArray<Diagnostic>> => {
+      const compiled = await compileUnits(units, root, language)
+      return compiled._tag === 'BuildFailed' ? compiled.diagnostics : []
+    },
     build: async (
       units: ReadonlyMap<string, BuildUnit>,
       root: string,

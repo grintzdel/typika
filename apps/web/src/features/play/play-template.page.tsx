@@ -55,6 +55,7 @@ import { useTemplateProject } from '../../modules/project/ui/hooks/use-template-
 import { OutputPanels, type OutputPanel } from '../../modules/runtime/ui/components/OutputPanels.tsx'
 import { RunToolbar } from '../../modules/runtime/ui/components/RunToolbar.tsx'
 import { useDeleteProjectFiles } from '../../modules/runtime/ui/hooks/use-delete-project-files.ts'
+import { useLiveCheck } from '../../modules/runtime/ui/hooks/use-live-check.ts'
 import { useSandboxRuntime } from '../../modules/runtime/ui/hooks/use-sandbox-runtime.ts'
 import { useWriteProjectFiles } from '../../modules/runtime/ui/hooks/use-write-project-files.ts'
 import { anchorOf, filesOfStep } from '../../modules/tour/core/domain/tour.domain-model.ts'
@@ -105,6 +106,8 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
     },
   })
   const runtime = useSandboxRuntime(projectKey, edits.commitPending)
+  const liveCheck = useLiveCheck(projectKey, edits.editedFiles, edits.commitPending)
+  const buildDiagnostics = liveCheck.diagnostics ?? runtime.diagnostics
   const [panel, setPanel] = useState<OutputPanel>('console')
   const [sideTab, setSideTab] = useState<SideTab | undefined>(initialPanel)
   const [isSolutionShown, setSolutionShown] = useState(false)
@@ -153,7 +156,7 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
   const problems = useProblems({
     session: languageService.session,
     revision: edits.editedFiles,
-    build: runtime.diagnostics,
+    build: buildDiagnostics,
     contentOf,
   })
   const layout = useWorkbenchSizes()
@@ -312,11 +315,12 @@ export const PlayTemplatePage = ({ projectKey, initialPanel }: PlayTemplatePageP
                 highlight={tabs.highlight}
                 diagnostics={
                   editorTab.kind === EditorTabKind.FILE
-                    ? runtime.diagnostics.filter((diagnostic) => diagnostic.location?.file === editorTab.path)
+                    ? buildDiagnostics.filter((diagnostic) => diagnostic.location?.file === editorTab.path)
                     : NO_DIAGNOSTICS
                 }
                 label={t('label')}
                 languageService={languageService.session}
+                projectFiles={currentFiles}
                 reveal={tabs.reveal}
                 onChange={edits.handleChange}
                 onGoTo={tabs.handleReveal}

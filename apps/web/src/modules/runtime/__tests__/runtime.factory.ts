@@ -60,7 +60,7 @@ export const LOCATED_DIAGNOSTIC = {
   location: { file: 'src/main.ts', line: 1, column: 7 },
 }
 
-export const makeFakeRuntime = () => {
+export const makeFakeRuntime = ({ canCheck = false }: { readonly canCheck?: boolean } = {}) => {
   const journal: Array<string> = []
 
   const makeSession = (snapshot: ProjectSnapshot): RuntimeSession => {
@@ -116,6 +116,14 @@ export const makeFakeRuntime = () => {
           }
         ),
       preview: Effect.succeed(Option.none()),
+      ...(canCheck
+        ? {
+            check: Effect.sync(() => {
+              journal.push('checked')
+              return textOf(files.get(projectPath('src/main.ts'))) === 'syntax error' ? [LOCATED_DIAGNOSTIC] : []
+            }),
+          }
+        : {}),
     }
   }
 

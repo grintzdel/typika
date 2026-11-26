@@ -6,6 +6,7 @@ import * as Stream from 'effect/Stream'
 import { appRuntime } from '../../../app/core/app.runtime.ts'
 import { templateProjectAtom } from '../../../project/core/atoms/project.atoms.ts'
 import type { FileWrite } from '../domain/file-write.domain-model.ts'
+import { checkProjectProgram } from '../programs/check-project/check-project.program.ts'
 import { deleteProjectFilesProgram } from '../programs/delete-project-files/delete-project-files.program.ts'
 import { loadRuntimeProgram } from '../programs/load-runtime/load-runtime.program.ts'
 import { runProjectProgram } from '../programs/run-project/run-project.program.ts'
@@ -46,6 +47,12 @@ export const testProjectAtom = Atom.family((name: string) =>
     Stream.unwrap(
       Effect.map(get.result(runtimeSessionAtom(name), LATEST), (session) => testProjectProgram({ session, writes }))
     )
+  )
+)
+
+export const checkProjectAtom = Atom.family((name: string) =>
+  appRuntime.fn((writes: ReadonlyArray<FileWrite>, get) =>
+    Effect.flatMap(get.result(runtimeSessionAtom(name), LATEST), (session) => checkProjectProgram(session, writes))
   )
 )
 

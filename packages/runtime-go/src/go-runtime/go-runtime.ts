@@ -6,6 +6,7 @@ import {
   RuntimeCompileError,
   RuntimeLimit,
   RuntimeProcessError,
+  type Diagnostic,
   type ProcessOutput,
   type RuntimeExecutionError,
   type RuntimeLoadProgress,
@@ -177,9 +178,55 @@ export const makeGoRuntime = (options: GoRuntimeOptions): RuntimePort => {
       const execute = makeForegroundExecution()
       const filesNow = () => [...fs.files()]
 
+      let checker: Promise<GoWorker> | undefined
+      let checking: Promise<unknown> = Promise.resolve()
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => {
+          void checker?.then(
+            (started) => started.terminate(),
+            () => undefined
+          )
+          checker = undefined
+        })
+      )
+
+      const checkOnce = (started: GoWorker) =>
+        new Promise<ReadonlyArray<Diagnostic>>((resolve, reject) => {
+          const unlisten = started.listen(
+            (output) => {
+              if (output._tag === 'Checked') {
+                unlisten()
+                resolve(output.diagnostics)
+              } else if (output._tag === 'Crashed') {
+                unlisten()
+                reject(new RuntimeProcessError({ cause: output.message }))
+              }
+            },
+            (error) => {
+              unlisten()
+              reject(error)
+            }
+          )
+          started.post({ _tag: 'Check', files: filesNow() })
+        })
+
+      const check = Effect.tryPromise({
+        try: () => {
+          checker ??= spawnWorker(loaded)
+          const spawned = checker
+          const next = checking.then(() => spawned.then(checkOnce))
+          checking = next.catch(() => {
+            if (checker === spawned) checker = undefined
+          })
+          return next
+        },
+        catch: (cause) => (cause instanceof RuntimeProcessError ? cause : new RuntimeProcessError({ cause })),
+      })
+
       return {
         fs,
         preview: Effect.succeed(Option.none()),
+        check,
         run: (command) =>
           execute<ProcessOutput>(runTimeoutMs, (queue) =>
             request(
