@@ -30,10 +30,13 @@ export const ProjectsPage = ({ initialTemplate }: { readonly initialTemplate: st
           initialTemplate={newProject.initialTemplate}
           templates={newProject.templates}
           isCreating={newProject.isCreating}
-          hasFailed={newProject.hasFailed}
+          failure={newProject.failure}
           onOpenChange={newProject.handleOpenChange}
           onCreateBlank={newProject.handleCreateBlank}
           onCopyTemplate={newProject.handleCopyTemplate}
+          onImportUrl={newProject.handleImportUrl}
+          onImportFile={newProject.handleImportFile}
+          onTabChange={newProject.handleTabChange}
         />
         <StorageUsage usage={projects.storage} />
         {projects.loadFailed ? (

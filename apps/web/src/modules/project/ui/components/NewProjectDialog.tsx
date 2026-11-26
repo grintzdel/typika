@@ -10,32 +10,72 @@ import { PERSONAL_LANGUAGES } from '../../core/domain/personal-project.domain-mo
 
 export type NewProjectTemplate = { readonly name: string; readonly title: string; readonly language: Language }
 
+export type NewProjectFailure =
+  | { readonly _tag: 'Storage' }
+  | { readonly _tag: 'Url' }
+  | { readonly _tag: 'Unavailable'; readonly reason: 'not-found' | 'rate-limited' | 'too-large' | 'unavailable' }
+  | { readonly _tag: 'Archive'; readonly reason: 'archive' | 'too-large' }
+  | { readonly _tag: 'ManifestMissing' }
+  | { readonly _tag: 'Invalid'; readonly issues: ReadonlyArray<{ readonly path: string; readonly message: string }> }
+
 export type NewProjectDialogProps = {
   readonly isOpen: boolean
   readonly initialTemplate: string | undefined
   readonly templates: ReadonlyArray<NewProjectTemplate>
   readonly isCreating: boolean
-  readonly hasFailed: boolean
+  readonly failure: NewProjectFailure | undefined
   readonly onOpenChange: (isOpen: boolean) => void
   readonly onCreateBlank: (input: { readonly name: string; readonly language: Language }) => void
   readonly onCopyTemplate: (input: { readonly template: string; readonly name: string }) => void
+  readonly onImportUrl: (url: string) => void
+  readonly onImportFile: (file: File) => void
+  readonly onTabChange: () => void
 }
+
+type Status = Pick<NewProjectDialogProps, 'isCreating' | 'failure'>
 
 const FIELD = 'w-full min-h-control-sm rounded-md border border-border-strong bg-surface-raised px-3 text-base'
 const OPTION =
   'flex min-h-target cursor-pointer items-center gap-2 rounded-md px-2 hover:bg-surface-muted has-checked:bg-selected-bg has-checked:text-selected-fg'
 
-type FormProps = Pick<NewProjectDialogProps, 'isCreating' | 'hasFailed'> & {
-  readonly name: string
-  readonly onName: (name: string) => void
+const FailureMessage = ({ failure }: { readonly failure: NewProjectFailure }) => {
+  const { t } = useTranslation('project')
+  return (
+    <div role="alert" className="space-y-1 text-base text-danger-text">
+      {failure._tag === 'Storage' ? <p>{t('create.failed')}</p> : null}
+      {failure._tag === 'Url' ? <p>{t('create.failures.url')}</p> : null}
+      {failure._tag === 'Unavailable' ? <p>{t(`create.failures.${failure.reason}`)}</p> : null}
+      {failure._tag === 'Archive' ? (
+        <p>{t(failure.reason === 'archive' ? 'create.failures.archive' : 'create.failures.archiveTooLarge')}</p>
+      ) : null}
+      {failure._tag === 'ManifestMissing' ? <p>{t('create.failures.manifestMissing')}</p> : null}
+      {failure._tag === 'Invalid' ? (
+        <>
+          <p>{t('create.failures.invalid')}</p>
+          <ul lang="en" className="list-disc space-y-1 pl-5 font-mono text-compact">
+            {failure.issues.map((issue) => (
+              <li key={`${issue.path}:${issue.message}`}>
+                {issue.path === '' ? issue.message : `${issue.path}: ${issue.message}`}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+    </div>
+  )
+}
+
+type FormProps = Status & {
+  readonly name?: string
+  readonly onName?: (name: string) => void
   readonly canSubmit: boolean
   readonly onSubmit: () => void
   readonly children: ReactNode
 }
 
-const CreateForm = ({ name, onName, canSubmit, isCreating, hasFailed, onSubmit, children }: FormProps) => {
+const CreateForm = ({ name, onName, canSubmit, isCreating, failure, onSubmit, children }: FormProps) => {
   const { t } = useTranslation('project')
-  const isValid = canSubmit && name.trim() !== ''
+  const isValid = canSubmit && name?.trim() !== ''
   return (
     <form
       className="space-y-4 pt-4"
@@ -45,15 +85,13 @@ const CreateForm = ({ name, onName, canSubmit, isCreating, hasFailed, onSubmit, 
       }}
     >
       {children}
-      <label className="block space-y-1">
-        <span className="text-base font-semibold">{t('create.name')}</span>
-        <input value={name} onChange={(event) => onName(event.target.value)} className={FIELD} />
-      </label>
-      {hasFailed ? (
-        <p role="alert" className="text-base text-danger-text">
-          {t('create.failed')}
-        </p>
-      ) : null}
+      {name === undefined ? null : (
+        <label className="block space-y-1">
+          <span className="text-base font-semibold">{t('create.name')}</span>
+          <input value={name} onChange={(event) => onName?.(event.target.value)} className={FIELD} />
+        </label>
+      )}
+      {failure === undefined ? null : <FailureMessage failure={failure} />}
       <div className="flex justify-end gap-2">
         <DialogClose render={<Button />}>{t('create.cancel')}</DialogClose>
         <Button type="submit" variant="primary" disabled={!isValid || isCreating}>
@@ -67,7 +105,7 @@ const CreateForm = ({ name, onName, canSubmit, isCreating, hasFailed, onSubmit, 
 const BlankForm = ({
   onCreate,
   ...status
-}: Pick<NewProjectDialogProps, 'isCreating' | 'hasFailed'> & {
+}: Status & {
   readonly onCreate: NewProjectDialogProps['onCreateBlank']
 }) => {
   const { t } = useTranslation('project')
@@ -104,9 +142,10 @@ const LibraryForm = ({
   initialTemplate,
   onCreate,
   ...status
-}: Pick<NewProjectDialogProps, 'isCreating' | 'hasFailed' | 'templates' | 'initialTemplate'> & {
-  readonly onCreate: NewProjectDialogProps['onCopyTemplate']
-}) => {
+}: Status &
+  Pick<NewProjectDialogProps, 'templates' | 'initialTemplate'> & {
+    readonly onCreate: NewProjectDialogProps['onCopyTemplate']
+  }) => {
   const { t } = useTranslation('project')
   const labelId = useId()
   const [query, setQuery] = useState('')
@@ -166,27 +205,86 @@ const LibraryForm = ({
   )
 }
 
+const UrlForm = ({ onImport, ...status }: Status & { readonly onImport: NewProjectDialogProps['onImportUrl'] }) => {
+  const { t } = useTranslation('project')
+  const hintId = useId()
+  const [url, setUrl] = useState('')
+  return (
+    <CreateForm {...status} canSubmit={url.trim() !== ''} onSubmit={() => onImport(url.trim())}>
+      <label className="block space-y-1">
+        <span className="text-base font-semibold">{t('create.url')}</span>
+        <input
+          value={url}
+          onChange={(event) => setUrl(event.target.value)}
+          aria-describedby={hintId}
+          spellCheck={false}
+          autoComplete="off"
+          placeholder="github:owner/repo/path"
+          className={FIELD}
+        />
+      </label>
+      <p id={hintId} className="text-base text-fg-muted">
+        {t('create.urlHint')}
+      </p>
+    </CreateForm>
+  )
+}
+
+const FileForm = ({ onImport, ...status }: Status & { readonly onImport: NewProjectDialogProps['onImportFile'] }) => {
+  const { t } = useTranslation('project')
+  const hintId = useId()
+  const [file, setFile] = useState<File>()
+  return (
+    <CreateForm
+      {...status}
+      canSubmit={file !== undefined}
+      onSubmit={() => {
+        if (file !== undefined) onImport(file)
+      }}
+    >
+      <label className="block space-y-1">
+        <span className="text-base font-semibold">{t('create.file')}</span>
+        <input
+          type="file"
+          accept=".toml,.zip"
+          aria-describedby={hintId}
+          onChange={(event) => setFile(event.target.files?.[0])}
+          className="block w-full text-base file:mr-3 file:min-h-control-sm file:rounded-md file:border file:border-border-strong file:bg-surface-raised file:px-4 file:font-semibold file:text-fg"
+        />
+      </label>
+      <p id={hintId} className="text-base text-fg-muted">
+        {t('create.fileHint')}
+      </p>
+    </CreateForm>
+  )
+}
+
 export const NewProjectDialog = ({
   isOpen,
   initialTemplate,
   templates,
   isCreating,
-  hasFailed,
+  failure,
   onOpenChange,
   onCreateBlank,
   onCopyTemplate,
+  onImportUrl,
+  onImportFile,
+  onTabChange,
 }: NewProjectDialogProps) => {
   const { t } = useTranslation('project')
-  const status = { isCreating, hasFailed }
+  const status = { isCreating, failure }
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogPopup>
         <DialogTitle>{t('create.title')}</DialogTitle>
         <DialogDescription>{t('create.description')}</DialogDescription>
-        <Tabs defaultValue={initialTemplate === undefined ? 'blank' : 'library'}>
+        <Tabs defaultValue={initialTemplate === undefined ? 'blank' : 'library'} onValueChange={onTabChange}>
           <TabsList aria-label={t('create.tabs.label')} className="px-0">
             <Tab value="blank">{t('create.tabs.blank')}</Tab>
             <Tab value="library">{t('create.tabs.library')}</Tab>
+            <Tab value="url">{t('create.tabs.url')}</Tab>
+            <Tab value="file">{t('create.tabs.file')}</Tab>
           </TabsList>
           <TabsPanel value="blank">
             <BlankForm {...status} onCreate={onCreateBlank} />
@@ -198,6 +296,12 @@ export const NewProjectDialog = ({
               initialTemplate={initialTemplate}
               onCreate={onCopyTemplate}
             />
+          </TabsPanel>
+          <TabsPanel value="url">
+            <UrlForm {...status} onImport={onImportUrl} />
+          </TabsPanel>
+          <TabsPanel value="file">
+            <FileForm {...status} onImport={onImportFile} />
           </TabsPanel>
         </Tabs>
       </DialogPopup>

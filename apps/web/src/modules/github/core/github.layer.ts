@@ -1,6 +1,7 @@
 import * as Layer from 'effect/Layer'
 
 import { SharedLayer } from '../../shared/core/shared.layer.ts'
+import { GitHubContentsFetchLayer } from './adapters/github-contents.fetch.adapter.ts'
 import { GitHubGistFetchLayer } from './adapters/github-gist.fetch.adapter.ts'
 import { GitHubRepositoryFetchLayer } from './adapters/github-repository.fetch.adapter.ts'
 import { GitHubSessionStorageLayer } from './adapters/github-session.storage.adapter.ts'
@@ -10,6 +11,7 @@ export const GitHubLayer = Layer.mergeAll(
   GitHubSessionStorageLayer,
   GitHubTokenFetchLayer,
   GitHubGistFetchLayer.pipe(Layer.provide(SharedLayer)),
+  GitHubContentsFetchLayer.pipe(Layer.provide(SharedLayer)),
   GitHubRepositoryFetchLayer.pipe(Layer.provide(SharedLayer)),
   SharedLayer
 )

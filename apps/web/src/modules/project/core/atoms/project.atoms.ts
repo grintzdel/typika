@@ -14,6 +14,7 @@ import { deleteProjectProgram } from '../programs/delete-project/delete-project.
 import { duplicateProjectProgram } from '../programs/duplicate-project/duplicate-project.program.ts'
 import { estimateStorageProgram } from '../programs/estimate-storage/estimate-storage.program.ts'
 import { exportStoredProjectProgram } from '../programs/export-project/export-project.program.ts'
+import { importFileProgram, importFromUrlProgram } from '../programs/import-project/import-project.program.ts'
 import { listCatalogueProgram } from '../programs/list-catalogue/list-catalogue.program.ts'
 import { listProjectsProgram } from '../programs/list-projects/list-projects.program.ts'
 import { listRecentProjectsProgram } from '../programs/list-recent-projects/list-recent-projects.program.ts'
@@ -63,6 +64,12 @@ export const createBlankProjectAtom = appRuntime.fn((input: Parameters<typeof cr
 
 export const copyTemplateAtom = appRuntime.fn((input: Parameters<typeof copyTemplateProgram>[0], get) =>
   refreshingProjects(copyTemplateProgram(input), get)
+)
+
+export const importFromUrlAtom = appRuntime.fn((url: string, get) => refreshingProjects(importFromUrlProgram(url), get))
+
+export const importFileAtom = appRuntime.fn((input: Parameters<typeof importFileProgram>[0], get) =>
+  refreshingProjects(importFileProgram(input), get)
 )
 
 const generationAtom = Atom.family((_name: string) => Atom.make(0))

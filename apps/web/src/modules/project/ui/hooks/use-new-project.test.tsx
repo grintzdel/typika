@@ -9,7 +9,7 @@ import { makeLanguageServiceInMemory } from '../../../editor/core/editor.test-la
 import { makeExerciseProgressInMemory } from '../../../exercise/core/exercise.test-layer.ts'
 import { makeFakeRuntime } from '../../../runtime/__tests__/runtime.factory.ts'
 import { makeRuntimeTestLayer } from '../../../runtime/core/runtime.test-layer.ts'
-import { templateFiles } from '../../__tests__/template.factory.ts'
+import { templateFiles, templateToml } from '../../__tests__/template.factory.ts'
 import { StorageQuotaPort } from '../../core/ports/storage-quota.port.ts'
 import {
   failingProjectStorage,
@@ -80,8 +80,38 @@ describe('useNewProject', () => {
 
     act(() => result.current.handleCreateBlank({ name: 'My sandbox', language: 'go' }))
 
-    await waitFor(() => expect(result.current.hasFailed).toBe(true))
+    await waitFor(() => expect(result.current.failure).toEqual({ _tag: 'Storage' }))
     expect(result.current.isCreating).toBe(false)
     expect(open).not.toHaveBeenCalled()
+  })
+
+  it('opens a project imported from a typika.toml', async () => {
+    const storage = makeProjectStorageInMemory()
+    const { result, open } = renderNewProject(undefined, storage)
+
+    act(() => result.current.handleImportFile(new File([templateToml('pricing-ts')], 'typika.toml')))
+
+    await waitFor(() => expect(open).toHaveBeenCalledOnce())
+    expect([...storage.projects.values()][0]?.record.origin).toMatchObject({ kind: 'personal', name: 'pricing-ts' })
+  })
+
+  it('lists the issues of an imported manifest that is not valid', async () => {
+    const { result } = renderNewProject()
+
+    act(() => result.current.handleImportFile(new File(['name = 3\n'], 'typika.toml')))
+
+    await waitFor(() => expect(result.current.failure?._tag).toBe('Invalid'))
+    const failure = result.current.failure
+    expect(failure?._tag === 'Invalid' && failure.issues.length).toBeGreaterThan(0)
+  })
+
+  it('tells an address that names no template, and forgets it on another tab', async () => {
+    const { result } = renderNewProject()
+
+    act(() => result.current.handleImportUrl('not a template'))
+    await waitFor(() => expect(result.current.failure).toEqual({ _tag: 'Url' }))
+    act(() => result.current.handleTabChange())
+
+    expect(result.current.failure).toBeUndefined()
   })
 })
