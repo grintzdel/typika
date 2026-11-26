@@ -10,14 +10,21 @@ const TEMPLATES = [
 ]
 
 const renderDialog = (props: Partial<NewProjectDialogProps> = {}) => {
-  const handlers = { onOpenChange: vi.fn(), onCreateBlank: vi.fn(), onCopyTemplate: vi.fn() }
+  const handlers = {
+    onOpenChange: vi.fn(),
+    onCreateBlank: vi.fn(),
+    onCopyTemplate: vi.fn(),
+    onImportUrl: vi.fn(),
+    onImportFile: vi.fn(),
+    onTabChange: vi.fn(),
+  }
   render(
     <NewProjectDialog
       isOpen
       initialTemplate={undefined}
       templates={TEMPLATES}
       isCreating={false}
-      hasFailed={false}
+      failure={undefined}
       {...handlers}
       {...props}
     />
@@ -107,8 +114,15 @@ describe('NewProjectDialog', () => {
   })
 
   it('chooses the asked template once the catalogue arrives', () => {
-    const handlers = { onOpenChange: vi.fn(), onCreateBlank: vi.fn(), onCopyTemplate: vi.fn() }
-    const props = { isOpen: true, initialTemplate: 'strategy-ts', isCreating: false, hasFailed: false, ...handlers }
+    const handlers = {
+      onOpenChange: vi.fn(),
+      onCreateBlank: vi.fn(),
+      onCopyTemplate: vi.fn(),
+      onImportUrl: vi.fn(),
+      onImportFile: vi.fn(),
+      onTabChange: vi.fn(),
+    }
+    const props = { isOpen: true, initialTemplate: 'strategy-ts', isCreating: false, failure: undefined, ...handlers }
     const { rerender } = render(<NewProjectDialog {...props} templates={[]} />)
 
     rerender(<NewProjectDialog {...props} templates={TEMPLATES} />)
@@ -124,8 +138,52 @@ describe('NewProjectDialog', () => {
   })
 
   it('says when the project could not be created', () => {
-    const { dialog } = renderDialog({ hasFailed: true })
+    const { dialog } = renderDialog({ failure: { _tag: 'Storage' } })
 
     expect(within(dialog).getByRole('alert').textContent).toBe('Le projet n’a pas pu être créé. Réessayez.')
+  })
+
+  it('imports a template from its address', () => {
+    const { dialog, onImportUrl } = renderDialog()
+    fireEvent.click(within(dialog).getByRole('tab', { name: 'Depuis une URL' }))
+
+    fireEvent.change(within(dialog).getByRole('textbox', { name: 'Adresse du template' }), {
+      target: { value: ' github:octocat/patterns/strategy/ts ' },
+    })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Créer le projet' }))
+
+    expect(onImportUrl).toHaveBeenCalledWith('github:octocat/patterns/strategy/ts')
+  })
+
+  it('imports a typika.toml or a zip file', () => {
+    const { dialog, onImportFile } = renderDialog()
+    fireEvent.click(within(dialog).getByRole('tab', { name: 'Importer un fichier' }))
+    const file = new File(['schema = 1'], 'typika.toml')
+
+    fireEvent.change(within(dialog).getByLabelText('Fichier typika.toml ou zip'), { target: { files: [file] } })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Créer le projet' }))
+
+    expect(onImportFile).toHaveBeenCalledWith(file)
+  })
+
+  it('lists the issues of an invalid manifest', () => {
+    const { dialog } = renderDialog({
+      failure: {
+        _tag: 'Invalid',
+        issues: [{ path: 'facets.level', message: 'Expected "beginner" | "intermediate" | "advanced"' }],
+      },
+    })
+
+    const alert = within(dialog).getByRole('alert')
+    expect(alert.textContent).toContain('Le typika.toml n’est pas valide')
+    expect(within(alert).getByRole('listitem').textContent).toBe(
+      'facets.level: Expected "beginner" | "intermediate" | "advanced"'
+    )
+  })
+
+  it('tells when GitHub limits the requests', () => {
+    const { dialog } = renderDialog({ failure: { _tag: 'Unavailable', reason: 'rate-limited' } })
+
+    expect(within(dialog).getByRole('alert').textContent).toContain('GitHub limite les requêtes anonymes')
   })
 })

@@ -15,19 +15,20 @@ export const createPersonalProjectProgram = ({
   files,
   ref,
 }: {
-  readonly name: string
+  readonly name?: string | undefined
   readonly files: ProjectFiles
   readonly ref?: string | undefined
 }) =>
   Effect.gen(function* () {
     const storage = yield* ProjectStoragePort
     const { manifest } = yield* personalTemplateOf(files, name)
+    const projectName = name ?? manifest.title
     const now = yield* Clock.currentTimeMillis
     const id = yield* Effect.sync(() => crypto.randomUUID())
     yield* storage.saveTemplateEdits({
       project: {
         id,
-        name,
+        name: projectName,
         origin: personalOriginOf(manifest),
         ...(ref === undefined ? {} : { ref }),
         baseline: Object.fromEntries(files),

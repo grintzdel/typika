@@ -1,3 +1,4 @@
+import type { TemplateRef } from '@typika/manifest'
 import type * as Context from 'effect/Context'
 import * as Effect from 'effect/Effect'
 import * as Layer from 'effect/Layer'
@@ -9,6 +10,7 @@ import { GitHubApiError } from './domain/errors/github-api.error.ts'
 import type { Gist, GistDraft } from './domain/gist.domain-model.ts'
 import type { GitHubSession, PendingAuthorization } from './domain/github-oauth.domain-model.ts'
 import type { RepositoryDraft } from './domain/repository.domain-model.ts'
+import { GitHubContentsPort, type GitHubFolder } from './ports/github-contents.port.ts'
 import { GitHubGistPort } from './ports/github-gist.port.ts'
 import { GitHubRepositoryPort } from './ports/github-repository.port.ts'
 import { GitHubSessionPort } from './ports/github-session.port.ts'
@@ -111,17 +113,39 @@ export const makeRepositoriesInMemory = (owner = 'octocat'): InMemoryRepositorie
   }
 }
 
+export type InMemoryContents = Context.Service.Shape<typeof GitHubContentsPort> & {
+  readonly requests: ReadonlyArray<{ readonly ref: TemplateRef; readonly accessToken: string | undefined }>
+}
+
+export const makeContentsInMemory = (
+  folders: Readonly<Record<string, GitHubFolder>> = {},
+  failure?: GitHubApiError
+): InMemoryContents => {
+  const requests: Array<{ readonly ref: TemplateRef; readonly accessToken: string | undefined }> = []
+  return {
+    readFolder: (ref, accessToken) => {
+      requests.push({ ref, accessToken })
+      const folder = folders[`${ref.owner}/${ref.repo}/${ref.path ?? ''}`]
+      if (failure !== undefined) return Effect.fail(failure)
+      return folder === undefined ? Effect.fail(new GitHubApiError({ reason: 'not-found' })) : Effect.succeed(folder)
+    },
+    requests,
+  }
+}
+
 export const makeGitHubTestLayer = ({
   config = GITHUB_TEST_CONFIG,
   sessions = makeGitHubSessionsInMemory(),
   gists = makeGistsInMemory(),
   repositories = makeRepositoriesInMemory(),
+  contents = makeContentsInMemory(),
   exchange = () => Effect.succeed(TEST_GITHUB_SESSION),
 }: {
   readonly config?: PublicConfig
   readonly sessions?: Context.Service.Shape<typeof GitHubSessionPort>
   readonly gists?: Context.Service.Shape<typeof GitHubGistPort>
   readonly repositories?: Context.Service.Shape<typeof GitHubRepositoryPort>
+  readonly contents?: Context.Service.Shape<typeof GitHubContentsPort>
   readonly exchange?: Context.Service.Shape<typeof GitHubTokenPort>['exchange']
 } = {}) =>
   Layer.mergeAll(
@@ -129,5 +153,6 @@ export const makeGitHubTestLayer = ({
     Layer.succeed(GitHubSessionPort, sessions),
     Layer.succeed(GitHubGistPort, gists),
     Layer.succeed(GitHubRepositoryPort, repositories),
+    Layer.succeed(GitHubContentsPort, contents),
     Layer.succeed(GitHubTokenPort, { exchange })
   )

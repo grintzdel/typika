@@ -244,7 +244,12 @@ Objectif : amener l'apprenant vers un concept en deux clics.
 - **Nouveau projet** : bouton en tête de page, qui ouvre un dialogue à onglets. « Vierge » : nom et langage (TypeScript,
   JavaScript, Go, Kotlin) ; le squelette a un `typika.toml`, un point d'entrée qui s'exécute et un test qui passe.
   « Bibliothèque » : recherche dans les templates du catalogue (rôle `template`), le nom suit le titre tant qu'il n'est
-  pas modifié. Le projet créé est une copie indépendante (origine `personal`, voir
+  pas modifié. « Depuis une URL » : `github:owner/repo/chemin[@ref]`, l'URL GitHub d'un dossier (`/tree/<ref>/…`) ou
+  le lien d'un `typika.toml` (`/blob/…`, `raw.githubusercontent.com`) ; une référence du catalogue est lue dans le
+  registre, une autre via l'API GitHub (jeton de la session GitHub s'il y en a une) et épinglée au commit lu.
+  « Importer un fichier » : un `typika.toml` seul reçoit le squelette de son langage (et un point d'entrée à
+  `runtime.entry`), un zip exporté par Typika garde ses fichiers (5 Mo au plus). Les problèmes du manifeste sont listés
+  dans le dialogue. Le projet créé est une copie indépendante (origine `personal`, voir
   [sharing-and-cli](sharing-and-cli.md)) ; il s'ouvre aussitôt sur `/p/<projectId>`.
 - La page d'un template propose « En faire un projet » : `/projects?new=<name>` ouvre le dialogue sur cet onglet, avec
   ce template choisi.
