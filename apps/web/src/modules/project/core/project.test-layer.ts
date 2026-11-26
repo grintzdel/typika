@@ -9,6 +9,7 @@ import { makeGitHubTestLayer } from '../../github/core/github.test-layer.ts'
 import { ProjectFilesUnavailableError } from './domain/errors/project-files-unavailable.error.ts'
 import { ProjectStorageError } from './domain/errors/project-storage.error.ts'
 import { sameOrigin, textOf, type ProjectOrigin, type StoredProject } from './domain/project.domain-model.ts'
+import { byteSizeOf } from './domain/storage-usage.domain-model.ts'
 import { entryOfManifest } from './domain/template-entry.domain-model.ts'
 import { ProjectStoragePort } from './ports/project-storage.port.ts'
 import { StorageQuotaPort } from './ports/storage-quota.port.ts'
@@ -31,6 +32,7 @@ export const makeProjectStorageInMemory = (initial: ReadonlyArray<StoredProject>
     list: Effect.sync(() =>
       [...projects.values()].map((project) => project.record).toSorted((a, b) => b.updatedAt - a.updatedAt)
     ),
+    byteSize: Effect.sync(() => byteSizeOf([...projects.values()].flatMap((project) => [...project.files.values()]))),
     findById: (id) => Effect.sync(() => Option.fromNullishOr(projects.get(id))),
     findByOrigin: (origin) => Effect.sync(() => Option.fromNullishOr(latest(origin))),
     saveTemplateEdits: ({ project, initialFiles, edits, removed = [], match = 'origin' }) =>
@@ -82,6 +84,7 @@ const quotaExceeded = () => Effect.fail(new ProjectStorageError({ cause: new Err
 
 export const failingProjectStorage: ProjectStorage = {
   list: quotaExceeded(),
+  byteSize: quotaExceeded(),
   findById: quotaExceeded,
   findByOrigin: quotaExceeded,
   saveTemplateEdits: quotaExceeded,

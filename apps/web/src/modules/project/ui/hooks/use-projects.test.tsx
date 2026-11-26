@@ -17,7 +17,7 @@ import { useProjects } from './use-projects.ts'
 
 const renderProjects = () => {
   const record = projectRecord({ name: 'sample-ts' })
-  const storage = makeProjectStorageInMemory([{ record, files: projectFiles({}) }])
+  const storage = makeProjectStorageInMemory([{ record, files: projectFiles({ 'src/index.ts': 'export {}' }) }])
   const rendered = renderHook(() => useProjects(), {
     wrapper: makeRegistryWrapper(
       Layer.mergeAll(
@@ -40,7 +40,16 @@ describe('useProjects', () => {
 
     await waitFor(() => expect(namesOf(result.current.projects)).toEqual(['sample-ts']))
     expect(result.current.isLoading).toBe(false)
-    await waitFor(() => expect(result.current.storage).toEqual({ usage: 10, quota: 100, isNearlyFull: false }))
+    await waitFor(() => expect(result.current.storage).toEqual({ usage: 9, quota: 100, isNearlyFull: false }))
+  })
+
+  it('frees the space of a deleted project at once', async () => {
+    const { result, record } = renderProjects()
+    await waitFor(() => expect(result.current.storage?.usage).toBe(9))
+
+    act(() => result.current.handleDelete(record.id))
+
+    await waitFor(() => expect(result.current.storage?.usage).toBe(0))
   })
 
   it('lists a renamed project under its new name', async () => {

@@ -14,6 +14,7 @@ import {
   type ProjectRecord,
   type StoredFile,
 } from '../domain/project.domain-model.ts'
+import { byteSizeOf } from '../domain/storage-usage.domain-model.ts'
 import { ProjectStoragePort } from '../ports/project-storage.port.ts'
 
 const DATABASE_NAME = 'typika'
@@ -127,6 +128,10 @@ export const makeProjectStorageIndexedDb = (factory: IDBFactory): Context.Servic
   return {
     list: transact('readonly', async ({ projects }) =>
       decodeRecords(await settled(projects.getAll())).toSorted((a, b) => b.updatedAt - a.updatedAt)
+    ),
+
+    byteSize: transact('readonly', async ({ files }) =>
+      byteSizeOf(decodeFiles(await settled(files.getAll())).map((file) => file.content))
     ),
 
     findById: (id) =>
