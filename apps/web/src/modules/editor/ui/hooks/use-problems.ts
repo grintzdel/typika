@@ -18,6 +18,10 @@ export const useProblems = ({ session, revision, build, contentOf }: ProblemSour
     problems: [],
   })
 
+  const [published, setPublished] = useState(0)
+
+  useEffect(() => session?.watchDiagnostics?.(() => setPublished((count) => count + 1)), [session])
+
   useEffect(() => {
     if (session === undefined) return
     let isCurrent = true
@@ -27,7 +31,7 @@ export const useProblems = ({ session, revision, build, contentOf }: ProblemSour
     return () => {
       isCurrent = false
     }
-  }, [session, revision])
+  }, [session, revision, published])
 
   const isChecked = session === undefined || analysed.session === session
   const problems = problemsOf({

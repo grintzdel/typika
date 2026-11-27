@@ -6,7 +6,7 @@ import {
   type CompletionContext,
   type CompletionResult,
 } from '@codemirror/autocomplete'
-import { linter, type Diagnostic } from '@codemirror/lint'
+import { forceLinting, linter, type Diagnostic } from '@codemirror/lint'
 import { StateEffect, StateField, type Extension } from '@codemirror/state'
 import { EditorView, hoverTooltip, showTooltip, ViewPlugin, type Tooltip, type ViewUpdate } from '@codemirror/view'
 import * as Effect from 'effect/Effect'
@@ -186,6 +186,14 @@ const fileSync = (session: LanguageServiceSession, path: string) =>
     }
   })
 
+const publishedDiagnostics = (session: LanguageServiceSession, path: string) =>
+  ViewPlugin.define((view) => {
+    const unwatch = session.watchDiagnostics?.((published) => {
+      if (published === path) forceLinting(view)
+    })
+    return { destroy: () => unwatch?.() }
+  })
+
 const diagnostics = (session: LanguageServiceSession, path: string) =>
   linter(
     async (view): Promise<ReadonlyArray<Diagnostic>> => {
@@ -216,6 +224,7 @@ export const typescriptExtensions = (
   fileSync(session, path),
   autocompletion({ override: [completions(session, path)] }),
   diagnostics(session, path),
+  publishedDiagnostics(session, path),
   quickInfo(session, path),
   signatureField,
   signatureHelp(session, path),

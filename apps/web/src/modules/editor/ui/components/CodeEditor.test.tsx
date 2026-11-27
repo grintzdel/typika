@@ -4,6 +4,7 @@ import { I18nextProvider, useTranslation } from 'react-i18next'
 import { describe, expect, it } from 'vitest'
 
 import { i18n } from '../../../../i18n/i18n.ts'
+import type { EditorDiagnostic } from '../../core/domain/language-service.domain-model.ts'
 import type { LanguageServiceSession } from '../../core/ports/language-service.port.ts'
 import { CodeEditor } from './CodeEditor.tsx'
 
@@ -103,5 +104,39 @@ describe('CodeEditor', () => {
     )
 
     await waitFor(() => expect(updates).toContainEqual(['main.go', 'package main']))
+  })
+
+  it('marks the diagnostics the language service publishes after the last edit', async () => {
+    const watchers = new Set<(path: string) => void>()
+    let found: ReadonlyArray<EditorDiagnostic> = []
+    const session: LanguageServiceSession = {
+      ...recordingSession([]),
+      diagnostics: () => Effect.sync(() => found),
+      watchDiagnostics: (listener) => {
+        watchers.add(listener)
+        return () => void watchers.delete(listener)
+      },
+    }
+    const { container } = render(
+      <CodeEditor
+        documentKey="main"
+        path="main.go"
+        content="package main"
+        readOnly={false}
+        highlight={undefined}
+        diagnostics={[]}
+        label="Editor"
+        languageService={session}
+        onChange={() => undefined}
+      />
+    )
+    await waitFor(() => expect(watchers.size).toBe(1))
+
+    found = [{ from: 8, to: 12, severity: 'error', message: 'expected main' }]
+    act(() => {
+      for (const watcher of watchers) watcher('main.go')
+    })
+
+    await waitFor(() => expect(container.querySelector('.cm-lintRange-error')?.textContent).toBe('main'))
   })
 })

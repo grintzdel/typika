@@ -324,6 +324,27 @@ describe('connectLanguageServer', () => {
     ])
   })
 
+  it('tells its watchers which file gopls published diagnostics for until they stop watching', async () => {
+    const gopls = makeFakeGopls()
+    const publish = () =>
+      gopls.notify('textDocument/publishDiagnostics', { uri: `${ROOT}/main.go`, version: 1, diagnostics: [] })
+
+    const paths = await withSession(gopls, (session) =>
+      Effect.gen(function* () {
+        const seen: Array<string> = []
+        const unwatch = session.watchDiagnostics?.((path) => void seen.push(path))
+        publish()
+        yield* Effect.sleep('20 millis')
+        unwatch?.()
+        publish()
+        yield* Effect.sleep('20 millis')
+        return seen
+      })
+    )
+
+    expect(paths).toEqual(['main.go'])
+  })
+
   it('initializes gopls again and reopens the files after a restart', async () => {
     const gopls = makeFakeGopls()
 

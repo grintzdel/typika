@@ -151,7 +151,7 @@ export const connectLanguageServer = (
     const published = new Map<string, Published>()
     const completionItems = new Map<string, ReadonlyMap<string, LspCompletionItem>>()
     const pending = new Map<number, (response: Response) => void>()
-    const listeners = new Set<() => void>()
+    const listeners = new Set<(path: string) => void>()
     let nextId = 1
     let failure: EditorLanguageServiceError | undefined
 
@@ -224,7 +224,7 @@ export const connectLanguageServer = (
         const path = params === undefined ? undefined : pathOf(params.uri)
         if (params !== undefined && path !== undefined) {
           published.set(path, { version: params.version ?? 0, diagnostics: params.diagnostics })
-          for (const listener of listeners) listener()
+          for (const listener of listeners) listener(path)
         }
         return Effect.void
       }
@@ -313,6 +313,10 @@ export const connectLanguageServer = (
         Effect.map(waitForDiagnostics(path), () =>
           (published.get(path)?.diagnostics ?? []).map((diagnostic) => toEditorDiagnostic(textOf(path), diagnostic))
         ),
+      watchDiagnostics: (listener) => {
+        listeners.add(listener)
+        return () => void listeners.delete(listener)
+      },
       projectDiagnostics: () =>
         Effect.sync(() =>
           [...published].flatMap(([path, { diagnostics }]) =>

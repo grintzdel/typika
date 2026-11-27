@@ -13,7 +13,9 @@ type Remote<T> = {
     : never
 }
 
-export type LanguageServiceSession = Remote<Omit<TypeScriptProject, 'setFiles'>>
+export type LanguageServiceSession = Remote<Omit<TypeScriptProject, 'setFiles'>> & {
+  readonly watchDiagnostics?: (listener: (path: string) => void) => () => void
+}
 
 export class LanguageServicePort extends Context.Service<
   LanguageServicePort,
