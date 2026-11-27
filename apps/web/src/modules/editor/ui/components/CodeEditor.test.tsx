@@ -1,8 +1,10 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import * as Effect from 'effect/Effect'
 import { I18nextProvider, useTranslation } from 'react-i18next'
 import { describe, expect, it } from 'vitest'
 
 import { i18n } from '../../../../i18n/i18n.ts'
+import type { LanguageServiceSession } from '../../core/ports/language-service.port.ts'
 import { CodeEditor } from './CodeEditor.tsx'
 
 const LabelledEditor = ({ documentKey }: { readonly documentKey: string }) => {
@@ -38,6 +40,21 @@ const renderInFrench = () => {
   return { instance, rerender }
 }
 
+const recordingSession = (updates: Array<readonly [string, string]>): LanguageServiceSession => ({
+  updateFile: (path, content) => Effect.sync(() => void updates.push([path, content])),
+  removeFile: () => Effect.void,
+  diagnostics: () => Effect.succeed([]),
+  projectDiagnostics: () => Effect.succeed([]),
+  completions: () => Effect.succeed(undefined),
+  completionChanges: () => Effect.succeed([]),
+  completionDetails: () => Effect.succeed(undefined),
+  quickInfo: () => Effect.succeed(undefined),
+  signatureHelp: () => Effect.succeed(undefined),
+  definition: () => Effect.succeed([]),
+  references: () => Effect.succeed(undefined),
+  rename: () => Effect.succeed(undefined),
+})
+
 const openSearch = () => fireEvent.keyDown(screen.getByRole('textbox'), { key: 'f', code: 'KeyF', ctrlKey: true })
 
 describe('CodeEditor', () => {
@@ -66,5 +83,25 @@ describe('CodeEditor', () => {
     rerender('main')
 
     expect(screen.getByRole('textbox', { name: 'Editor' })).toBeDefined()
+  })
+
+  it('hands a Go file to the language service when there is one', async () => {
+    const updates: Array<readonly [string, string]> = []
+
+    render(
+      <CodeEditor
+        documentKey="main"
+        path="main.go"
+        content="package main"
+        readOnly={false}
+        highlight={undefined}
+        diagnostics={[]}
+        label="Editor"
+        languageService={recordingSession(updates)}
+        onChange={() => undefined}
+      />
+    )
+
+    await waitFor(() => expect(updates).toContainEqual(['main.go', 'package main']))
   })
 })

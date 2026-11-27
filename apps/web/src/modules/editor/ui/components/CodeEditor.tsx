@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next'
 
 import { isCompletedLanguage } from '../../core/domain/code-completion.domain-model.ts'
 import {
-  isAnalyzedPath,
+  isServedPath,
   type FileRename,
   type ReferenceSearch,
   type SourceRange,
@@ -63,8 +63,8 @@ const languageServiceExtensions = (
 ): Extension => {
   if (readOnly) return []
   const language = languageOf(path)
-  if (isCompletedLanguage(language)) return basicCompletions(language, path, projectFilesOf)
-  return session === undefined || !isAnalyzedPath(path) ? [] : typescriptExtensions(session, path, handlers)
+  if (session !== undefined && isServedPath(path)) return typescriptExtensions(session, path, handlers)
+  return isCompletedLanguage(language) ? basicCompletions(language, path, projectFilesOf) : []
 }
 
 const localeExtensions = (label: string, phrases: Readonly<Record<string, string>>): Extension => [
@@ -279,7 +279,7 @@ export const CodeEditor = ({
         )
       ),
     })
-    if (!opened.readOnly && isAnalyzedPath(opened.path) && editor.hasFocus && isCompletionPending(editor.state))
+    if (!opened.readOnly && isServedPath(opened.path) && editor.hasFocus && isCompletionPending(editor.state))
       startCompletion(editor)
   }, [languageService])
 

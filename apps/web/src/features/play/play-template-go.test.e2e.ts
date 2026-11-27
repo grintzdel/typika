@@ -80,18 +80,15 @@ test.describe('Go sandbox', () => {
     await expect(results(page).getByText('0 échec')).toBeVisible()
   })
 
-  test('never downloads gopls to run the code or the tests', async ({ page }) => {
-    const downloads: Array<string> = []
-    page.on('request', (request) => {
-      if (GOPLS_ASSETS.test(request.url())) downloads.push(request.url())
-    })
+  test('runs the code and the tests when gopls cannot be downloaded', async ({ page, context }) => {
+    await context.route(GOPLS_ASSETS, (route) => route.abort())
     await open(page)
 
     await page.getByRole('button', { name: 'Exécuter' }).click()
     await expect(consoleRegion(page).getByText('Terminé avec le code 0')).toBeVisible({ timeout: TIMEOUT })
     await runTests(page)
 
-    expect(downloads).toEqual([])
+    await expect(page.getByRole('status', { name: 'gopls' })).toHaveText('gopls indisponible')
   })
 
   test('does not download the Go toolchain again after a reload', async ({ playwright, browserName, baseURL }) => {
@@ -132,35 +129,19 @@ test.describe('Go sandbox', () => {
       async (page) => {
         await open(page)
 
-        const cacheNames = await runtimeFrame(page).evaluate(
-          async ({ dir, names, cacheName }) => {
-            const cache = await caches.open(cacheName)
-            await Promise.all(
-              names.map(async (name) => {
-                const url = new URL(`${dir}${name}`, location.href).href
-                const response = await fetch(url)
-                if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`)
-                await cache.put(url, response)
-              })
-            )
-            return caches.keys()
-          },
-          {
-            dir: `assets/gopls/${manifest.key.slice(0, 16)}/`,
-            names: manifest.files.map((file) => file.name),
-            cacheName: `${GOPLS_ASSET_CACHE_PREFIX}${manifest.key}`,
-          }
-        )
-        expect(cacheNames).toEqual(
-          expect.arrayContaining([expect.stringMatching(/^typika-go-/), `${GOPLS_ASSET_CACHE_PREFIX}${manifest.key}`])
-        )
+        await expect
+          .poll(() => runtimeFrame(page).evaluate(() => caches.keys()), { timeout: TIMEOUT })
+          .toEqual(
+            expect.arrayContaining([expect.stringMatching(/^typika-go-/), `${GOPLS_ASSET_CACHE_PREFIX}${manifest.key}`])
+          )
 
         const downloads: Array<string> = []
         page.on('request', (request) => {
-          if (GO_ASSETS.test(request.url())) downloads.push(request.url())
+          if (GO_ASSETS.test(request.url()) || GOPLS_ASSETS.test(request.url())) downloads.push(request.url())
         })
         await page.reload()
         await waitForRuntime(page)
+        await expect(page.getByRole('status', { name: 'gopls' })).toHaveText('', { timeout: TIMEOUT })
         await runTests(page)
         expect(downloads).toEqual([])
       }
@@ -179,8 +160,13 @@ test.describe('Go sandbox', () => {
     await expect(editor(page).locator('.cm-lintRange-error')).toHaveText('undefinedCall')
   })
 
-  test('completes the keywords, the names of the project and the packages to import', async ({ page }) => {
+  test('keeps completing the keywords, the names of the project and the packages to import without gopls', async ({
+    page,
+    context,
+  }) => {
+    await context.route(GOPLS_ASSETS, (route) => route.abort())
     await open(page)
+    await expect(page.getByRole('status', { name: 'gopls' })).toHaveText('gopls indisponible', { timeout: TIMEOUT })
     await page.getByRole('treeitem', { name: 'main.go' }).click()
     await editor(page).click()
     await page.keyboard.press('ControlOrMeta+End')

@@ -324,9 +324,8 @@ export const resources = {
         close: 'Close {{name}}',
       },
       languageService: {
-        label: 'TypeScript',
-        starting: 'Starting TypeScript…',
-        unavailable: 'TypeScript unavailable',
+        starting: 'Starting {{service}}…',
+        unavailable: '{{service}} unavailable',
         outdated: 'New version of Typika',
         reload: 'Reload',
       },
@@ -846,9 +845,8 @@ export const resources = {
         close: 'Fermer {{name}}',
       },
       languageService: {
-        label: 'TypeScript',
-        starting: 'TypeScript démarre…',
-        unavailable: 'TypeScript indisponible',
+        starting: '{{service}} démarre…',
+        unavailable: '{{service}} indisponible',
         outdated: 'Nouvelle version de Typika',
         reload: 'Recharger',
       },

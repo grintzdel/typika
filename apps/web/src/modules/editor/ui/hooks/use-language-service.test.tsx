@@ -7,7 +7,7 @@ import { makeRegistryWrapper } from '../../../app/__tests__/registry-wrapper.tsx
 import { makeExerciseProgressInMemory } from '../../../exercise/core/exercise.test-layer.ts'
 import { templateFiles, templateToml } from '../../../project/__tests__/template.factory.ts'
 import { makeProjectTestLayer } from '../../../project/core/project.test-layer.ts'
-import { makeFakeRuntime } from '../../../runtime/__tests__/runtime.factory.ts'
+import { LANGUAGE_SERVER_ROOT_URI, makeFakeRuntime } from '../../../runtime/__tests__/runtime.factory.ts'
 import { makeRuntimeTestLayer } from '../../../runtime/core/runtime.test-layer.ts'
 import { EditorLanguageServiceError } from '../../core/domain/errors/editor-language-service.error.ts'
 import { EditorOutdatedError } from '../../core/domain/errors/editor-outdated.error.ts'
@@ -29,14 +29,15 @@ const TEMPLATES = {
 const renderLanguageService = (
   languageService: Layer.Layer<LanguageServicePort>,
   name = 'sample-ts',
-  isStarted = true
+  isStarted = true,
+  runtime = makeFakeRuntime().port
 ) =>
   renderHook((props: { readonly isStarted: boolean }) => useLanguageService(name, props), {
     initialProps: { isStarted },
     wrapper: makeRegistryWrapper(
       Layer.mergeAll(
         makeProjectTestLayer(TEMPLATES),
-        makeRuntimeTestLayer(makeFakeRuntime().port),
+        makeRuntimeTestLayer(runtime),
         languageService,
         makeExerciseProgressInMemory().layer
       )
@@ -62,6 +63,7 @@ describe('useLanguageService', () => {
     const { result } = renderLanguageService(languageService.layer)
 
     await waitFor(() => expect(result.current.status).toBe('ready'))
+    expect(result.current.service).toBe('TypeScript')
     const info = await Effect.runPromise(
       result.current.session?.quickInfo('src/main.ts', 'const '.length) ?? Effect.succeed(undefined)
     )
@@ -90,7 +92,9 @@ describe('useLanguageService', () => {
   })
 
   it('is starting while the language service is not ready', () => {
-    const { result } = renderLanguageService(Layer.succeed(LanguageServicePort, { start: () => Effect.never }))
+    const { result } = renderLanguageService(
+      Layer.succeed(LanguageServicePort, { start: () => Effect.never, connect: () => Effect.never })
+    )
 
     expect(result.current).toMatchObject({ session: undefined, status: 'starting' })
   })
@@ -99,6 +103,7 @@ describe('useLanguageService', () => {
     const { result } = renderLanguageService(
       Layer.succeed(LanguageServicePort, {
         start: () => Effect.fail(new EditorLanguageServiceError({ cause: 'blocked' })),
+        connect: () => Effect.never,
       })
     )
 
@@ -107,7 +112,10 @@ describe('useLanguageService', () => {
 
   it('is outdated when a newer version of Typika removed the language service', async () => {
     const { result } = renderLanguageService(
-      Layer.succeed(LanguageServicePort, { start: () => Effect.fail(new EditorOutdatedError()) })
+      Layer.succeed(LanguageServicePort, {
+        start: () => Effect.fail(new EditorOutdatedError()),
+        connect: () => Effect.never,
+      })
     )
 
     await waitFor(() => expect(result.current).toMatchObject({ session: undefined, status: 'outdated' }))
@@ -119,6 +127,19 @@ describe('useLanguageService', () => {
 
     await waitFor(() => expect(result.current.status).toBe('off'))
     expect(result.current.session).toBeUndefined()
+    expect(languageService.started).toEqual([])
+  })
+
+  it('connects gopls for a Go template whose runtime has a language server', async () => {
+    const languageService = makeLanguageServiceInMemory()
+    const runtime = makeFakeRuntime({ languageServer: true }).port
+
+    const { result } = renderLanguageService(languageService.layer, 'sample-go', true, runtime)
+
+    await waitFor(() => expect(result.current.status).toBe('ready'))
+    expect(result.current.service).toBe('gopls')
+    expect(languageService.connected.map(({ rootUri }) => rootUri)).toEqual([LANGUAGE_SERVER_ROOT_URI])
+    expect(languageService.connected[0]?.files).toMatchObject({ 'main.go': 'package main\n' })
     expect(languageService.started).toEqual([])
   })
 })

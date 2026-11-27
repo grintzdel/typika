@@ -100,10 +100,22 @@ export type TypeScriptProject = {
   readonly rename: (path: string, position: number, newName: string) => ReadonlyArray<FileRename> | undefined
 }
 
+export const LanguageServiceName = {
+  TYPESCRIPT: 'TypeScript',
+  GOPLS: 'gopls',
+} as const
+
+export type LanguageServiceName = (typeof LanguageServiceName)[keyof typeof LanguageServiceName]
+
 const ANALYZED = /\.(?:[cm]?tsx?|[cm]?jsx?)$/
 const CONFIGURATION = /(?:^|\/)(?:tsconfig\.json|package\.json)$/
 const EXERCISES = 'exercises/'
 
 export const isAnalyzedPath = (path: string) => ANALYZED.test(path) && !path.startsWith(EXERCISES)
+
+export const isGoSourcePath = (path: string) => path.endsWith('.go')
+
+export const isServedPath = (path: string) =>
+  isAnalyzedPath(path) || (isGoSourcePath(path) && !path.startsWith(EXERCISES))
 
 export const isLanguageServiceInput = (path: string) => ANALYZED.test(path) || CONFIGURATION.test(path)

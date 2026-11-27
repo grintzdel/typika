@@ -1,3 +1,4 @@
+import type { LanguageServer } from '@typika/runtime-core'
 import * as Context from 'effect/Context'
 import type * as Effect from 'effect/Effect'
 import type * as Scope from 'effect/Scope'
@@ -20,5 +21,9 @@ export class LanguageServicePort extends Context.Service<
     readonly start: (
       files: LanguageServiceFiles
     ) => Effect.Effect<LanguageServiceSession, EditorLanguageServiceError | EditorOutdatedError, Scope.Scope>
+    readonly connect: (
+      server: LanguageServer,
+      files: LanguageServiceFiles
+    ) => Effect.Effect<LanguageServiceSession, EditorLanguageServiceError, Scope.Scope>
   }
 >()('@typika/web/LanguageServicePort') {}
