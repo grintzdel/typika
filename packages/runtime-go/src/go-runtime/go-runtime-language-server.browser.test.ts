@@ -44,6 +44,12 @@ const arrayOf = (value: unknown): ReadonlyArray<unknown> => {
 const fieldsOf = (value: unknown, field: string) =>
   arrayOf(value).flatMap((item) => (isRecord(item) && typeof item[field] === 'string' ? [item[field]] : []))
 
+const settled = <E>(answer: Effect.Effect<unknown, E>, isSettled: (found: unknown) => boolean) =>
+  answer.pipe(
+    Effect.filterOrFail(isSettled, () => new Error('gopls has not settled yet')),
+    Effect.retry({ schedule: Schedule.spaced('500 millis'), times: 40 })
+  )
+
 const withLanguageServer = <A, E>(
   use: (
     lsp: Effect.Success<ReturnType<typeof connectLspClient>>,
@@ -78,27 +84,28 @@ describe('go runtime language server', () => {
   it('completes, finds the definition and the references with gopls', async () => {
     const answers = await withLanguageServer((lsp, _session, uri) =>
       Effect.all({
-        completion: lsp.request('textDocument/completion', {
-          textDocument: { uri },
-          position: after('quoteFor(t, order, checkout.'),
-        }),
-        definition: lsp.request('textDocument/definition', {
-          textDocument: { uri },
-          position: after('quoteFor(t, order, checkout.Stan'),
-        }),
-        references: lsp
-          .request('textDocument/references', {
+        completion: settled(
+          lsp.request('textDocument/completion', {
+            textDocument: { uri },
+            position: after('quoteFor(t, order, checkout.'),
+          }),
+          (found) => fieldsOf(found, 'label').includes('Standard')
+        ),
+        definition: settled(
+          lsp.request('textDocument/definition', {
+            textDocument: { uri },
+            position: after('quoteFor(t, order, checkout.Stan'),
+          }),
+          (found) => fieldsOf(found, 'uri').length > 0
+        ),
+        references: settled(
+          lsp.request('textDocument/references', {
             textDocument: { uri },
             position: after('quoteFor(t, order, checkout.Stan'),
             context: { includeDeclaration: true },
-          })
-          .pipe(
-            Effect.repeat({
-              until: (found) => fieldsOf(found, 'uri').length >= REFERENCES,
-              schedule: Schedule.spaced('500 millis'),
-              times: 20,
-            })
-          ),
+          }),
+          (found) => fieldsOf(found, 'uri').length >= REFERENCES
+        ),
       })
     )
 
@@ -113,10 +120,13 @@ describe('go runtime language server', () => {
     const labels = await withLanguageServer((lsp, session, uri) =>
       session.fs.writeFile(projectPath('internal/checkout/express.go'), 'package checkout\n\nfunc Express() {}\n').pipe(
         Effect.andThen(
-          lsp.request('textDocument/completion', {
-            textDocument: { uri },
-            position: after('quoteFor(t, order, checkout.'),
-          })
+          settled(
+            lsp.request('textDocument/completion', {
+              textDocument: { uri },
+              position: after('quoteFor(t, order, checkout.'),
+            }),
+            (found) => fieldsOf(found, 'label').includes('Express')
+          )
         ),
         Effect.map((completion) => fieldsOf(completion, 'label'))
       )
