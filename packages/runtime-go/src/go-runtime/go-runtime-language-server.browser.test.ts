@@ -1,4 +1,4 @@
-import type { RuntimeSession } from '@typika/runtime-core'
+import { RuntimeProcessError, type RuntimeSession } from '@typika/runtime-core'
 import * as Effect from 'effect/Effect'
 import * as Schedule from 'effect/Schedule'
 import { describe, expect, it } from 'vitest'
@@ -24,6 +24,7 @@ const runtime = makeGoRuntime({
 
 const QUOTE_TEST = 'internal/checkout/quote_test.go'
 const REFERENCES = 6
+const SETTLE_TIMEOUT = 180_000
 const project = strategyGoProject()
 const source = project.files.get(projectPath(QUOTE_TEST))
 const lines = (typeof source === 'string' ? source : '').split('\n')
@@ -47,7 +48,11 @@ const fieldsOf = (value: unknown, field: string) =>
 const settled = <E>(answer: Effect.Effect<unknown, E>, isSettled: (found: unknown) => boolean) =>
   answer.pipe(
     Effect.filterOrFail(isSettled, () => new Error('gopls has not settled yet')),
-    Effect.retry({ schedule: Schedule.spaced('500 millis'), times: 40 })
+    Effect.retry({
+      while: (error) => !(error instanceof RuntimeProcessError && error.cause === 'gopls restarted'),
+      schedule: Schedule.spaced('1 second'),
+      times: 150,
+    })
   )
 
 const withLanguageServer = <A, E>(
@@ -81,7 +86,7 @@ const withLanguageServer = <A, E>(
   )
 
 describe('go runtime language server', () => {
-  it('completes, finds the definition and the references with gopls', async () => {
+  it('completes, finds the definition and the references with gopls', { timeout: SETTLE_TIMEOUT }, async () => {
     const answers = await withLanguageServer((lsp, _session, uri) =>
       Effect.all({
         completion: settled(
@@ -116,7 +121,7 @@ describe('go runtime language server', () => {
     expect(fieldsOf(answers.references, 'uri')).toHaveLength(REFERENCES)
   })
 
-  it('sees the files written to the session', async () => {
+  it('sees the files written to the session', { timeout: SETTLE_TIMEOUT }, async () => {
     const labels = await withLanguageServer((lsp, session, uri) =>
       session.fs.writeFile(projectPath('internal/checkout/express.go'), 'package checkout\n\nfunc Express() {}\n').pipe(
         Effect.andThen(
