@@ -1,0 +1,52 @@
+--- a/tools/internal/gocommand/invoke.go
++++ b/tools/internal/gocommand/invoke.go
+@@ -245,6 +245,9 @@
+ 		appendOverlayFlag()
+ 		goArgs = append(goArgs, i.Args...)
+ 	}
++	if jsGoCommand != nil {
++		return jsGoCommand(goArgs, i.WorkingDir, i.Env, stdout, stderr)
++	}
+ 	cmd := exec.Command("go", goArgs...)
+ 	cmd.Stdout = stdout
+ 	cmd.Stderr = stderr
+--- /dev/null
++++ b/tools/internal/gocommand/invoke_hook.go
+@@ -0,0 +1,5 @@
++package gocommand
++
++import "io"
++
++var jsGoCommand func(args []string, dir string, env []string, stdout, stderr io.Writer) error
+--- /dev/null
++++ b/tools/internal/gocommand/invoke_js.go
+@@ -0,0 +1,29 @@
++//go:build js
++
++package gocommand
++
++import (
++	"fmt"
++	"io"
++	"syscall/js"
++)
++
++func init() {
++	jsGoCommand = func(args []string, dir string, env []string, stdout, stderr io.Writer) error {
++		jsArgs := make([]any, len(args))
++		for k, a := range args {
++			jsArgs[k] = a
++		}
++		jsEnv := make([]any, len(env))
++		for k, e := range env {
++			jsEnv[k] = e
++		}
++		r := js.Global().Call("goplsGoCommand", js.ValueOf(jsArgs), dir, js.ValueOf(jsEnv))
++		io.WriteString(stdout, r.Get("stdout").String())
++		io.WriteString(stderr, r.Get("stderr").String())
++		if code := r.Get("code").Int(); code != 0 {
++			return fmt.Errorf("exit status %d", code)
++		}
++		return nil
++	}
++}

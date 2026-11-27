@@ -302,6 +302,9 @@ The runtime assets (esbuild WASM, Go toolchain) are in the image and served by t
 - **Serving**: `/runtime/assets/go/<key>/` with `Cache-Control: public, max-age=31536000, immutable`. Each file
   has its `.br` version, served with `Content-Encoding: br` when the browser accepts it (11.9 MB instead of 79 MB). A
   proxy placed in front must not recompress a response that already has a `Content-Encoding`; Caddy does not.
+- **gopls**: `/runtime/assets/gopls/<key>/`, same cache headers. Its files are already gzip-compressed (`.gzip`,
+  12.9 MB): serve them as they are, without a `Content-Encoding`. The build downloads gopls's modules from the Go
+  proxy.
 - **Cache**: the browser keeps the Go assets in Cache Storage on the runtime domain; a reload does not download them
   again.
 - The version of the assets is fixed by the version of the app: do not mix them.

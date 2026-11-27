@@ -786,6 +786,14 @@ same packages, same fields. The shim leaves out the test mains (`p.test`), which
 1 came from them: without them, gopls sees 70 standard packages on `strategy-go`, and the closure of `STD_ROOTS` with
 `builtin` has 80. Slice 2 can ship those 80.
 
+Status (2026-11-27): slice 2 delivered. `build:assets` builds gopls v0.20.0 for `js/wasm` from `gopls/go.mod` and the
+two patches of `gopls/patches/`, plus the sources and metadata of the 80 standard packages: 12.9 MB in gzip, in
+`assets/gopls/` with their own key. A rebuild from a clean tree, Go build cache emptied, gives the same SHA-256 (13 s
+and 590 MB at most on an Apple Silicon Mac, modules already downloaded). `loadGoplsAssets` keeps them compressed in
+Cache Storage and decompresses them on load. A `.gz` suffix made Vite's server add `Content-Encoding: gzip`, so the
+files end in `.gzip`. The WebKit quota check in the third-party frame, and the check that Run and the tests do not
+download gopls, run in the E2E of `play-template-go`.
+
 ---
 
 ## After M7 (not planned)

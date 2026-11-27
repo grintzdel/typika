@@ -34,8 +34,9 @@ runs:
         path: ${{ inputs.directory }}/packages/runtime-go/assets
         key: >-
           go-assets-${{ hashFiles(
-            format('{0}/packages/runtime-go/scripts/build-assets.ts', inputs.directory),
-            format('{0}/packages/runtime-go/src/domain/constants/*.ts', inputs.directory)
+            format('{0}/packages/runtime-go/scripts/*.ts', inputs.directory),
+            format('{0}/packages/runtime-go/src/domain/constants/*.ts', inputs.directory),
+            format('{0}/packages/runtime-go/gopls/**', inputs.directory)
           ) }}
     - run: pnpm --filter @typika/runtime-go build:assets
       shell: bash
