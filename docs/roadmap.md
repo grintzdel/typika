@@ -779,6 +779,13 @@ synchronous: slice 4 defers them. Memory reaches 365 to 436 MiB, 308 with `GOMEM
 stops gopls when no Go file is open. gopls loads the test variants, so 118 standard packages instead of 79 (1.25 MB in
 brotli): slice 2 builds that set and checks the WebKit quota in a real third-party frame.
 
+Status (2026-11-27): slice 3 delivered. `makeGoCommand` of `packages/runtime-go` answers the commands gopls runs, and
+`listStdPackages` gives the standard metadata from native `go list`. A conformance suite compares the shim to native
+`go list` on every Go template, its exercise states, and a module with recompiled test dependencies and broken imports:
+same packages, same fields. The shim leaves out the test mains (`p.test`), which gopls skips. The 118 packages of slice
+1 came from them: without them, gopls sees 70 standard packages on `strategy-go`, and the closure of `STD_ROOTS` with
+`builtin` has 80. Slice 2 can ship those 80.
+
 ---
 
 ## After M7 (not planned)
