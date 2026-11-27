@@ -15,6 +15,7 @@ spike.
 | R7 | How to run Go in the browser? | `go` runtime (M4) |
 | R8 | Is the Kotlin compilation service viable? | `kotlin` runtime (M6) |
 | R6 | Is "Typika" free of trademarks? | All communication |
+| R10 | Can gopls run in the browser? | Go IntelliSense (not planned) |
 
 R3 (runtime weight), R5 (rot) and R9 (abuse of the compilation service) are not spikes: they are handled in the
 relevant milestones ([roadmap](roadmap.md)).
@@ -167,3 +168,65 @@ To do: search for registered trademarks in classes 9 and 42 (EUIPO, USPTO, INPI)
 the organization and the package.
 
 Output: ADR 0014 confirmed, or a fallback name (Patternhall, Deigmata) and a rename before M1.
+
+## R10 — gopls in the browser
+
+**Question**: Go and Kotlin files only get keyword, snippet, project-word and import completion
+(`basic-completions.ts`), with no types. Can gopls, compiled to WASM, provide completion, hover, definition and
+references in the editor, the way the TypeScript worker does?
+
+Done (2026-11-27, gopls v0.20.0, Go 1.24.5, Node 26 on an Apple Silicon Mac, no browser yet):
+
+1. `GOOS=js GOARCH=wasm go build golang.org/x/tools/gopls` succeeds, but the binary exits at startup: it hashes its
+   own executable for its file cache (`os.Executable`) and runs the `go` command as a subprocess.
+2. Two patches of a few lines on a copy of `x/tools`: a fixed hash in `filecache.hashExecutable`, and every `go`
+   invocation of `internal/gocommand` sent to a JavaScript function `goplsGoCommand(args, dir, env)`. In the spike,
+   that function runs the native `go`.
+3. gopls driven over LSP on `strategy-go`, from `quote_test.go` (external test package, cross-package imports).
+
+| Request | Time | Result |
+|---|---|---|
+| `initialize` | ~230 ms | ok |
+| Package load | 75–165 ms | the `go list` below |
+| First completion after `checkout.` | 0.5–1.5 s | 11 correct items |
+| Same completion again | 1 ms | same |
+| Members after `quoteFor(...).` | 9 ms | `Shipping`, `Subtotal`, `Total`, then `Subtotal.Add`… |
+| Hover on `quoteFor` | 4 ms | full signature |
+| Definition / references of `Standard` | 1 / 18 ms | 1 / 6 locations |
+
+The first completion type-checks the standard library dependencies from source; later requests stay under 20 ms.
+gopls's linear memory reaches 164 MiB (`compile`: 24–28 MiB, `link`: 96 MiB,
+[0018](decisions/0018-go-runtime.md)).
+
+What an integration needs:
+
+- **Weight**: `gopls.wasm` is 52.7 MB raw, 7.8 MB in brotli (11.5 MB in gzip). The sources of the 79 standard
+  packages behind `STD_ROOTS` for `js/wasm` (547 files) add 1.0 MB in brotli. The first Go load would go from 11.9 to
+  about 20.7 MB.
+- **WebKit quota**: the frame gets about 100 MiB of Cache Storage and the Go assets already take 79 MB
+  ([0027](decisions/0027-go-assets-delivery.md)). gopls has to be stored compressed, for example in gzip, decompressed
+  with `DecompressionStream`.
+- **A `go` command shim** in TypeScript. gopls calls `go env -json`, `go version`, `go list` for the release tags and
+  for `{{context.GOARCH}} {{context.Compiler}}`, `go mod tidy` (can be a no-op), and
+  `go list -e -json=… -compiled=true -test=true -deps=true -- <root>/... builtin`. The last one is the real work: the
+  package graph of the project, which `parse-go-source` and `plan-go-build` already compute, and metadata of the
+  standard packages, precomputed when the assets are built.
+- **Files**: gopls reads the project and `GOROOT/src` through the file system, so the runtime's `memory-fs` with the
+  standard sources, `builtin`, a writable cache directory, and the project files kept in sync with the editor.
+- **Where it runs**: a worker of the runtime frame, whose origin already allows `'wasm-unsafe-eval'`
+  ([security](specs/security.md)); the app origin does not.
+- **Editor side**: `@codemirror/lsp-client`, with LSP messages over `postMessage` or over emulated stdin and stdout.
+- **Maintenance**: the two patches live in a fork of `x/tools`, rebased with each gopls release. No public build of
+  gopls for the browser was found.
+
+To do: measure in Chromium and WebKit, under Playwright, the compilation time of `gopls.wasm`, the first and later
+completions, and the memory on mobile; check Firefox.
+
+Criteria:
+
+- **Go**: first completion under 2 s after the runtime is ready on desktop, later ones under 200 ms, no crash on
+  mobile, quota held.
+- **No-go**: the Go files keep the basic completions; the compiler's live diagnostics remain.
+
+**Status (2026-11-27): feasible.** Results identical to native gopls under Node, with a shim and two patches.
+Browser measurements are pending; no ADR yet.
