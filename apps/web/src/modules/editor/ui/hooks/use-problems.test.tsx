@@ -34,6 +34,24 @@ describe('useProblems', () => {
     expect(result.current.counts).toEqual({ errors: 1, warnings: 0 })
   })
 
+  it('lists again the problems a language service publishes after an edit', async () => {
+    const watchers = new Set<(path: string) => void>()
+    const session = {
+      ...makeLanguageServiceSessionInMemory(FILES),
+      watchDiagnostics: (listener: (path: string) => void) => {
+        watchers.add(listener)
+        return () => void watchers.delete(listener)
+      },
+    }
+    const { result } = renderHook(() => useProblems({ session, revision: 0, build: [], contentOf: () => '' }))
+    await waitFor(() => expect(result.current.isChecked).toBe(true))
+
+    await session.updateFile('src/main.ts', BROKEN).pipe(Effect.runPromise)
+    for (const watcher of watchers) watcher('src/main.ts')
+
+    await waitFor(() => expect(result.current.counts).toEqual({ errors: 1, warnings: 0 }))
+  })
+
   it('lists the build problems without a language service', () => {
     const { result } = renderHook(() =>
       useProblems({
