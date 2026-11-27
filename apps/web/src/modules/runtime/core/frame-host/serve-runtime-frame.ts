@@ -37,6 +37,8 @@ type Current = {
 
 const decodeRequest = Schema.decodeUnknownOption(FrameRequestSchema)
 
+const NO_LANGUAGE_SERVER = new RuntimeProcessError({ cause: 'This runtime has no language server' })
+
 const noSession = (path: string) => () => new RuntimeFsError({ path, reason: 'No runtime session' })
 
 const snapshotOf = (files: Files): Effect.Effect<ProjectSnapshot, RuntimeBootError> => {
@@ -88,7 +90,7 @@ export const serveRuntimeFrame = (
           Effect.onError(() => Scope.close(scope, Exit.void))
         )
         current = { bootId, session, scope }
-        return session.check !== undefined
+        return session
       })
 
     const relay = <A>(id: number, stream: Stream.Stream<A, RuntimeError>, scope: Scope.Scope) =>
@@ -153,10 +155,11 @@ export const serveRuntimeFrame = (
             frameScope
           )
         case 'Boot':
-          return answer(request.id, boot(request.id, request.files), (canCheck) => ({
+          return answer(request.id, boot(request.id, request.files), (session) => ({
             _tag: 'Booted',
             id: request.id,
-            canCheck,
+            canCheck: session.check !== undefined,
+            ...(session.languageServer === undefined ? {} : { languageServerRootUri: session.languageServer.rootUri }),
           }))
         case 'Check':
           return answer(
@@ -195,6 +198,16 @@ export const serveRuntimeFrame = (
               ...(request.files === undefined ? {} : { files: request.files }),
               ...(request.namePattern === undefined ? {} : { namePattern: request.namePattern }),
             })
+          )
+        case 'LanguageServerConnect':
+          return forward(request.id, (session) => session.languageServer?.connect ?? Stream.fail(NO_LANGUAGE_SERVER))
+        case 'LanguageServerSend':
+          return acknowledge(
+            request.id,
+            withSession(
+              () => new RuntimeProcessError({ cause: 'No runtime session' }),
+              (session) => session.languageServer?.send(request.message) ?? Effect.fail(NO_LANGUAGE_SERVER)
+            )
           )
         case 'KotlinCompiled':
         case 'KotlinCompileFailed':

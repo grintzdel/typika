@@ -31,7 +31,11 @@ const registry = makeRuntimeRegistry({
   },
   go: async () => {
     const { makeGoRuntime } = await import('@typika/runtime-go/browser')
-    return makeGoRuntime({ assetsUrl: new URL(goAssets.assetsUrl, location.href).href, manifest: goAssets.manifest })
+    return makeGoRuntime({
+      assetsUrl: new URL(goAssets.assetsUrl, location.href).href,
+      manifest: goAssets.manifest,
+      gopls: { assetsUrl: new URL(goAssets.gopls.assetsUrl, location.href).href, manifest: goAssets.gopls.manifest },
+    })
   },
   ...(config.kotlinCompilerUrl === undefined
     ? {}

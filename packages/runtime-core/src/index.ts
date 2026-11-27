@@ -10,6 +10,12 @@ export { RuntimeFsError } from './domain/errors/runtime-fs.error.ts'
 export { RuntimeProcessError } from './domain/errors/runtime-process.error.ts'
 export { RuntimeTimeoutError } from './domain/errors/runtime-timeout.error.ts'
 export { RuntimeUnsupportedError } from './domain/errors/runtime-unsupported.error.ts'
+export {
+  LanguageServerEventSchema,
+  type LanguageServer,
+  type LanguageServerError,
+  type LanguageServerEvent,
+} from './domain/language-server.domain-model.ts'
 export { ProcessOutputSchema, type ProcessOutput, type RunCommand } from './domain/process.domain-model.ts'
 export {
   ProjectPathSchema,

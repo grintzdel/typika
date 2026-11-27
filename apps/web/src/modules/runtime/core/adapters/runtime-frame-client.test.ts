@@ -17,6 +17,7 @@ import * as Stream from 'effect/Stream'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  LANGUAGE_SERVER_ROOT_URI,
   LOAD_PROGRESS,
   LOCATED_DIAGNOSTIC,
   makeFakeRuntime,
@@ -80,7 +81,58 @@ const checkedBy = (canCheck: boolean) => {
   )
 }
 
+const withLanguageServer = <A, E>(use: (session: RuntimeSession) => Effect.Effect<A, E>) => {
+  const fake = makeFakeRuntime({ languageServer: true })
+  const { client } = connect({ 'browser-js': () => Promise.resolve(fake.port) })
+  return {
+    run: Effect.runPromise(Effect.scoped(Effect.flatMap(client.boot(projectFixture()), use))),
+    journal: fake.journal,
+  }
+}
+
 describe('runtime frame channel', () => {
+  describe('language server', () => {
+    it('relays the messages of the language server of the frame both ways', async () => {
+      const { run } = withLanguageServer((session) =>
+        Effect.gen(function* () {
+          const server = session.languageServer
+          if (server === undefined) return undefined
+          const first = yield* Effect.forkChild(Stream.runHead(server.connect))
+          yield* server.send('{"id":1}')
+          return { rootUri: server.rootUri, first: yield* Fiber.join(first) }
+        })
+      )
+
+      expect(await run).toEqual({
+        rootUri: LANGUAGE_SERVER_ROOT_URI,
+        first: Option.some({ _tag: 'Message', message: '{"id":1}' }),
+      })
+    })
+
+    it('offers no language server when the runtime of the frame has none', async () => {
+      const { run } = withSession((session) => Effect.succeed(session.languageServer))
+
+      expect(await run).toBeUndefined()
+    })
+
+    it('stops the language server in the frame when the client disconnects', async () => {
+      const { run, journal } = withLanguageServer((session) =>
+        Effect.gen(function* () {
+          const server = session.languageServer
+          if (server === undefined) return
+          const fiber = yield* Effect.forkChild(Stream.runDrain(server.connect))
+          yield* Effect.sleep(20)
+          yield* Fiber.interrupt(fiber)
+          yield* Effect.sleep(20)
+        })
+      )
+
+      await run
+
+      expect(journal).toContain('language server stopped')
+    })
+  })
+
   it('checks the files written in the frame when its runtime can check', async () => {
     expect(await checkedBy(true)).toEqual([LOCATED_DIAGNOSTIC])
   })

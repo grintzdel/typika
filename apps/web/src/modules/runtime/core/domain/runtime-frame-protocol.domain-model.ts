@@ -36,6 +36,8 @@ export const FrameRequestSchema = Schema.Union([
     namePattern: Schema.optionalKey(Schema.String),
   }),
   Schema.TaggedStruct('Check', { id: Id }),
+  Schema.TaggedStruct('LanguageServerConnect', { id: Id }),
+  Schema.TaggedStruct('LanguageServerSend', { id: Id, message: Schema.String }),
   Schema.TaggedStruct('Interrupt', { id: Id, target: Id }),
   Schema.TaggedStruct('Shutdown', { id: Id, boot: Id }),
   Schema.TaggedStruct('KotlinCompiled', { callId: Id, compilation: KotlinCompilationSchema }),
@@ -52,7 +54,11 @@ export const RuntimeLoadProgressSchema = Schema.Struct({
 
 export const FrameResponseSchema = Schema.Union([
   Schema.TaggedStruct('Succeeded', { id: Id }),
-  Schema.TaggedStruct('Booted', { id: Id, canCheck: Schema.Boolean }),
+  Schema.TaggedStruct('Booted', {
+    id: Id,
+    canCheck: Schema.Boolean,
+    languageServerRootUri: Schema.optionalKey(Schema.String),
+  }),
   Schema.TaggedStruct('Checked', { id: Id, diagnostics: Schema.Array(DiagnosticSchema) }),
   Schema.TaggedStruct('Emitted', { id: Id, item: Schema.Unknown }),
   Schema.TaggedStruct('Ended', { id: Id }),

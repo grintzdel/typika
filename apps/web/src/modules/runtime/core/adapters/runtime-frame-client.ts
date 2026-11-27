@@ -1,12 +1,14 @@
 import type { RuntimeKind } from '@typika/manifest'
 import {
   KotlinCompilerUnavailableError,
+  LanguageServerEventSchema,
   ProcessOutputSchema,
   RuntimeAssetLoadError,
   RuntimeBootError,
   RuntimeFsError,
   RuntimeProcessError,
   TestEventSchema,
+  type LanguageServerError,
   type ProjectPath,
   type ProjectSnapshot,
   type RuntimeExecutionError,
@@ -50,6 +52,12 @@ const asExecutionError = (error: RuntimeError): RuntimeExecutionError => {
       return new RuntimeProcessError({ cause: error })
   }
 }
+
+const asProcessError = (error: RuntimeError) =>
+  error._tag === 'RuntimeProcessError' ? error : new RuntimeProcessError({ cause: error })
+
+const asLanguageServerError = (error: RuntimeError): LanguageServerError =>
+  error._tag === 'RuntimeAssetLoadError' ? error : asProcessError(error)
 
 const asLoadError =
   (kind: RuntimeKind) =>
@@ -132,11 +140,7 @@ export const makeRuntimeFrameClient = (
     requestAs(nextId++, { _tag: 'Check' }, (response) =>
       response._tag === 'Checked' ? Option.some(response.diagnostics) : Option.none()
     )
-  ).pipe(
-    Effect.mapError((error) =>
-      error._tag === 'RuntimeProcessError' ? error : new RuntimeProcessError({ cause: error })
-    )
-  )
+  ).pipe(Effect.mapError(asProcessError))
 
   const stream = <A, E>(request: Request, schema: Schema.Codec<A, unknown>, asError: (error: RuntimeError) => E) => {
     const decodeItem = Schema.decodeUnknownOption(schema)
@@ -169,7 +173,9 @@ export const makeRuntimeFrameClient = (
     )
   }
 
-  const makeSession = (canCheck: boolean): RuntimeSession => ({
+  type Booted = Extract<FrameResponse, { readonly _tag: 'Booted' }>
+
+  const makeSession = ({ canCheck, languageServerRootUri }: Booted): RuntimeSession => ({
     fs: {
       writeFile: (path, content) => call({ _tag: 'WriteFile', path, content }).pipe(Effect.mapError(asFsError(path))),
       deleteFile: (path) => call({ _tag: 'DeleteFile', path }).pipe(Effect.mapError(asFsError(path))),
@@ -184,6 +190,15 @@ export const makeRuntimeFrameClient = (
     test: (options) => stream({ _tag: 'Test', ...options }, TestEventSchema, asExecutionError),
     preview: Effect.succeed(Option.none()),
     ...(canCheck ? { check } : {}),
+    ...(languageServerRootUri === undefined
+      ? {}
+      : {
+          languageServer: {
+            rootUri: languageServerRootUri,
+            connect: stream({ _tag: 'LanguageServerConnect' }, LanguageServerEventSchema, asLanguageServerError),
+            send: (message) => call({ _tag: 'LanguageServerSend', message }).pipe(Effect.mapError(asProcessError)),
+          },
+        }),
   })
 
   return {
@@ -192,7 +207,7 @@ export const makeRuntimeFrameClient = (
       const bootId = nextId++
       return Effect.acquireRelease(
         requestAs(bootId, { _tag: 'Boot', files: filesOf(snapshot) }, (response) =>
-          response._tag === 'Booted' ? Option.some(response.canCheck) : Option.none()
+          response._tag === 'Booted' ? Option.some(response) : Option.none()
         ).pipe(
           Effect.mapError((error): RuntimeFrameBootError => {
             switch (error._tag) {

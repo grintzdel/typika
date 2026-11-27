@@ -19,15 +19,23 @@ import * as Option from 'effect/Option'
 import * as Queue from 'effect/Queue'
 import * as Stream from 'effect/Stream'
 
-import type { GoAssetManifest } from '../domain/go-assets.domain-model.ts'
+import { GOPLS_ROOT_URI } from '../domain/constants/gopls-workspace.constant.ts'
+import type { GoAssetManifest, GoplsAssetManifest, GoplsAssets } from '../domain/go-assets.domain-model.ts'
 import type { GoWorkerInput, GoWorkerOutput } from '../domain/worker-protocol.domain-model.ts'
+import { makeGoLanguageServer } from '../go-language-server/go-language-server.ts'
 import { loadGoAssets, type GoAssetBytes } from '../load-go-assets/load-go-assets.ts'
+import { loadGoplsAssets } from '../load-gopls-assets/load-gopls-assets.ts'
+import { spawnGopls } from '../spawn-gopls/spawn-gopls.ts'
 
 export { GO_ASSET_CACHE_PREFIX } from '../load-go-assets/load-go-assets.ts'
 
 export type GoRuntimeOptions = {
   readonly assetsUrl: string
   readonly manifest: GoAssetManifest
+  readonly gopls?: {
+    readonly assetsUrl: string
+    readonly manifest: GoplsAssetManifest
+  }
   readonly limits?: {
     readonly runTimeoutMs?: number
     readonly testTimeoutMs?: number
@@ -82,6 +90,17 @@ export const makeGoRuntime = (options: GoRuntimeOptions): RuntimePort => {
   const progressListeners = new Set<(progress: RuntimeLoadProgress) => void>()
   const latestProgress = new Map<string, RuntimeLoadProgress>()
   let assets: Promise<GoAssetBytes> | undefined
+  let goplsAssets: Promise<GoplsAssets> | undefined
+
+  const ensureGoplsAssets = (gopls: NonNullable<GoRuntimeOptions['gopls']>) => {
+    if (goplsAssets !== undefined) return goplsAssets
+    const loading = loadGoplsAssets(gopls.assetsUrl, gopls.manifest, () => undefined)
+    goplsAssets = loading
+    loading.catch(() => {
+      if (goplsAssets === loading) goplsAssets = undefined
+    })
+    return loading
+  }
 
   const ensureAssets = Effect.tryPromise({
     try: () => {
@@ -177,6 +196,19 @@ export const makeGoRuntime = (options: GoRuntimeOptions): RuntimePort => {
 
       const execute = makeForegroundExecution()
       const filesNow = () => [...fs.files()]
+      const { gopls } = options
+      const languageServer =
+        gopls === undefined
+          ? undefined
+          : makeGoLanguageServer({
+              rootUri: GOPLS_ROOT_URI,
+              spawn: spawnGopls(() => ensureGoplsAssets(gopls)),
+              files: filesNow,
+            })
+      const notifying =
+        <A extends ReadonlyArray<unknown>, E>(change: (...args: A) => Effect.Effect<void, E>) =>
+        (...args: A) =>
+          change(...args).pipe(Effect.tap(() => Effect.sync(() => languageServer?.filesChanged())))
 
       let checker: Promise<GoWorker> | undefined
       let checking: Promise<unknown> = Promise.resolve()
@@ -224,7 +256,21 @@ export const makeGoRuntime = (options: GoRuntimeOptions): RuntimePort => {
       })
 
       return {
-        fs,
+        fs: {
+          writeFile: notifying(fs.writeFile),
+          deleteFile: notifying(fs.deleteFile),
+          rename: notifying(fs.rename),
+          sync: notifying(fs.sync),
+        },
+        ...(languageServer === undefined
+          ? {}
+          : {
+              languageServer: {
+                rootUri: languageServer.rootUri,
+                connect: languageServer.connect,
+                send: languageServer.send,
+              },
+            }),
         preview: Effect.succeed(Option.none()),
         check,
         run: (command) =>
