@@ -11,6 +11,13 @@ export const connectLspClient = (server: LanguageServer) =>
   Effect.gen(function* () {
     const pending = new Map<number, (response: Response) => void>()
     let nextId = 1
+    let restarted = false
+
+    const failPending = () => {
+      restarted = true
+      for (const settle of pending.values()) settle({ error: 'gopls restarted' })
+      pending.clear()
+    }
 
     const send = (message: object) => server.send(JSON.stringify({ jsonrpc: '2.0', ...message }))
 
@@ -24,11 +31,15 @@ export const connectLspClient = (server: LanguageServer) =>
     }
 
     yield* Stream.runForEach(server.connect, (event) =>
-      event._tag === 'Message' ? receive(event.message) : Effect.void
+      event._tag === 'Message' ? receive(event.message) : Effect.sync(failPending)
     ).pipe(Effect.forkScoped)
 
     const request = (method: string, params: unknown) =>
       Effect.callback<unknown, RuntimeProcessError>((resume) => {
+        if (restarted) {
+          resume(Effect.fail(new RuntimeProcessError({ cause: 'gopls restarted' })))
+          return
+        }
         const id = nextId++
         pending.set(id, (response) =>
           resume(
