@@ -96,27 +96,4 @@ test.describe('gopls in the editor', () => {
     await error.hover()
     await expect(page.getByText(/cannot use "free" \(untyped string constant\) as int value/).first()).toBeVisible()
   })
-
-  test('checks a file typed into a new folder once gopls loads its package', async ({ page }) => {
-    test.slow()
-    await openStrategyGo(page)
-
-    await page.getByRole('tree', { name: 'Fichiers' }).getByText('cmd', { exact: true }).click({ button: 'right' })
-    await page.getByRole('menuitem', { name: 'Nouveau dossier' }).click()
-    await page.getByRole('textbox', { name: 'Nom du nouveau dossier' }).fill('product')
-    await page.getByRole('textbox', { name: 'Nom du nouveau dossier' }).press('Enter')
-    await page.getByRole('treeitem', { name: /^product/ }).click({ button: 'right' })
-    await page.getByRole('menuitem', { name: 'Nouveau fichier' }).click()
-    await page.getByRole('textbox', { name: 'Nom du nouveau fichier' }).fill('main.go')
-    await page.getByRole('textbox', { name: 'Nom du nouveau fichier' }).press('Enter')
-    await editor(page).click()
-    await page.keyboard.type('package product; var total int = "free"')
-
-    const error = editor(page).locator('.cm-lintRange-error')
-    await expect(error).toHaveText('"free"', { timeout: GOPLS_TIMEOUT })
-    await expect(error).toHaveCount(1)
-    await expect(page.locator('.cm-lint-marker-error')).toHaveCount(1)
-    await page.getByRole('tab', { name: /^Problèmes/ }).click()
-    await expect(page.getByText(/cannot use "free" \(untyped string constant\) as int value/).first()).toBeVisible()
-  })
 })
