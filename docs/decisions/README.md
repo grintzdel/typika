@@ -42,3 +42,4 @@ Statuses: `Proposed` (waiting for a spike), `Accepted`, `Superseded by NNNN`.
 | [0033](0033-github-org-typika-app.md) | GitHub organization: `typika-app` | Accepted |
 | [0034](0034-github-oauth-and-gists.md) | GitHub: OAuth App, exchange on the app server, readable gist | Accepted |
 | [0035](0035-public-instance-hosting.md) | Public instance: Docker behind Caddy on a VPS | Accepted |
+| [0036](0036-go-language-service.md) | Go language service: gopls compiled to WASM | Accepted |

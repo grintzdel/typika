@@ -220,7 +220,7 @@ What an integration needs:
 - **Maintenance**: the two patches live in a fork of `x/tools`, rebased with each gopls release. No public build of
   gopls for the browser was found.
 
-To do (M8 slice 1): measure in Chromium and WebKit, under Playwright, the compilation time of `gopls.wasm`, the first
+Done in M8 slice 1: measure in Chromium and WebKit, under Playwright, the compilation time of `gopls.wasm`, the first
 and later completions, and the memory at CPU ×4.
 
 Criteria:
@@ -229,5 +229,7 @@ Criteria:
   CPU ×4, quota held.
 - **No-go**: the Go files keep the basic completions; the compiler's live diagnostics remain.
 
-**Status (2026-11-27): feasible.** Results identical to native gopls under Node, with a shim and two patches.
-Browser measurements are pending; no ADR yet. Breakdown: [M8](roadmap.md).
+**Conclusion (2026-11-27): Go.** Under Node, then in Chromium and WebKit (M8 slice 1), gopls gives the same answers as
+natively. In the browser, the first completion comes 0.8 to 0.9 s after `initialize`, later requests in under 25 ms,
+and 3.4 to 3.8 s then under 75 ms at CPU ×4. WebKit requires deferred file callbacks, and memory reaches 310 MiB
+with `GOMEMLIMIT`. See [0036](decisions/0036-go-language-service.md).
