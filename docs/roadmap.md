@@ -15,13 +15,16 @@ the next one. The order below is the current plan, not a commitment.
 | **M5** | Sharing | Embed, sharing by URL and gist, export, CLI. |
 | **M6** | Kotlin | Kotlin variants through the compilation service. |
 | **M7** | Publication | The repositories, the instance and the `typika` package are public. |
+| **M8** | Go language service | Completion, hover, go to definition and references in Go files. |
 
 ```
-M0 ──► M1 ──► M2 ──► M3 ──┬──► M4 ──► M6 ──┬──► M7
-                          └──► M5 ─────────┘
+M0 ──► M1 ──► M2 ──► M3 ──┬──► M4 ──┬──► M6 ──┬──► M7
+                          │         └──► M8   │
+                          └──► M5 ────────────┘
 ```
 
-M4 and M5 are independent; M6 depends on M4 (comparison mode). M7 publishes what the others delivered.
+M4 and M5 are independent; M6 depends on M4 (comparison mode). M7 publishes what the others delivered. M8 only needs
+the `go` runtime of M4 and does not wait for M7.
 
 ---
 
@@ -736,6 +739,41 @@ slice 5: the memory that building the image requires is not measured.
 
 ---
 
+## M8 — Go language service
+
+**Goal**: Go files get what TypeScript files have: completion that knows the types, hover, signature help, go to
+definition (`Cmd`/`Ctrl` + click), references, rename and diagnostics while typing. Today they only get keywords,
+snippets, project words and imports (`basic-completions.ts`).
+
+Deliverables:
+
+- gopls compiled to WASM, with the two patches of spike [R10](spikes.md), built from the pinned Go version.
+- A TypeScript shim that answers the `go` commands gopls runs, from the project files and precomputed metadata of the
+  standard library.
+- gopls in a worker of the runtime frame, behind the editor's `LanguageServicePort`, the port the TypeScript worker
+  already implements: the completion, hover, navigation, references panel and Problems panel stay the same code.
+
+Done when: on `/play/strategy-go`, in Chromium and WebKit, `Cmd` + click on `checkout.Standard` opens `standard.go`,
+the completion after `checkout.` lists the package's exported names, and a type error shows in the editor before Run.
+
+Out of scope: Kotlin, which has no language server that runs in the browser.
+
+### Breakdown
+
+One slice = one `m8/<slice>` branch and one PR. Slice 1 decides whether the milestone goes on: on a no-go, Go keeps
+its basic completions and the compiler's live diagnostics. Slices 2 and 3 are independent of each other. Slice 4 needs
+both, and slice 5 needs slice 4.
+
+| # | Slice | Content | Done when |
+|---|---|---|---|
+| 1 | `gopls-browser` | Measure in the browser what R10 measured under Node: the patched gopls and a minimal shim that serves `strategy-go`, in a worker on the runtime origin, driven by Playwright. Compilation time of `gopls.wasm`, `initialize`, first and later completions, memory, in Chromium and WebKit, then at CPU ×4. The slice closes R10 and records the go / no-go in an ADR "Go language service". | The ADR gives the measurements against the R10 criteria: first completion under 2 s on desktop once the runtime is ready, later ones under 200 ms, no crash at CPU ×4, Go assets and gopls within the WebKit quota. |
+| 2 | `gopls-assets` | `build:assets` of `packages/runtime-go` builds `gopls.wasm` from pinned `x/tools` and `gopls` versions, with the patches kept as files in the repository, plus the sources of the standard packages behind `STD_ROOTS`, `builtin` included, and their `go list` metadata for `js/wasm`. The image serves them like the other Go assets ([0027](decisions/0027-go-assets-delivery.md)), but they stay compressed in Cache Storage and are decompressed on load, and they only download when the language service starts. | A rebuild from a clean tree gives the same SHA-256. The Go assets, gopls included, fit in the WebKit quota. A reload does not download gopls again, and Run and the tests never download it. |
+| 3 | `go-command-shim` | A module of `packages/runtime-go` answers the commands gopls runs: `go env -json`, `go version`, the two short `go list` commands, `go mod tidy` as a no-op, and `go list -e -json=… -compiled=true -test=true -deps=true -- <root>/... builtin` from the package graph that `parse-go-source` and `plan-go-build` already build, and from the slice 2 metadata. An unknown command fails with a clear error. A conformance suite compares its answers to those of native `go`. | On every Go template of `templates/` and their exercise states, the fields gopls reads are the same as native `go list` once paths are normalized. |
+| 4 | `gopls-worker` | gopls in its own worker of the runtime frame, started on demand: `memory-fs` holds the project, the standard sources and gopls's cache directory, the shim answers the `go` commands, and LSP messages go through new requests and responses of the frame protocol. File changes reach gopls. A crash restarts it once, then the service reports itself unavailable. | A browser test of `packages/runtime-go` opens `strategy-go`, gets the completion after `checkout.`, the definition of `checkout.Standard` and its six references, in Chromium and WebKit. |
+| 5 | `go-language-service-app` | A Go adapter of `LanguageServicePort`: completions and their details, hover, signature help, definition, references, rename and diagnostics translated from LSP, UTF-16 positions included. `.go` files use it once it is ready, and keep the basic completions while it starts or when it is unavailable. The status indicator names gopls. The embed starts it on demand, like TypeScript. | The M8 completion criterion, in E2E on the production build. |
+
+---
+
 ## After M7 (not planned)
 
 Ideas, to prioritize when the time comes:
@@ -761,3 +799,4 @@ Ideas, to prioritize when the time comes:
 | R7 | Go in the browser | Cleared: Go toolchain in WASM ([0018](decisions/0018-go-runtime.md)); Safari checked, Firefox out of scope |
 | R8 | Kotlin compilation service | Cleared: in-house service, JS target ([0019](decisions/0019-kotlin-runtime.md)); WebKit checked, Firefox out of scope |
 | R9 | Compilation service abuse | Cleared: limits, isolation and rate limiting by IP ([0028](decisions/0028-kotlin-compilation-workers.md), [0029](decisions/0029-kotlin-relay-rate-limit.md)), load test in M6 |
+| R10 | gopls in the browser | Feasible under Node ([spike R10](spikes.md)); browser measurements in M8 slice 1 |

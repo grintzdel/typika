@@ -15,7 +15,7 @@ spike.
 | R7 | How to run Go in the browser? | `go` runtime (M4) |
 | R8 | Is the Kotlin compilation service viable? | `kotlin` runtime (M6) |
 | R6 | Is "Typika" free of trademarks? | All communication |
-| R10 | Can gopls run in the browser? | Go IntelliSense (not planned) |
+| R10 | Can gopls run in the browser? | Go language service (M8) |
 
 R3 (runtime weight), R5 (rot) and R9 (abuse of the compilation service) are not spikes: they are handled in the
 relevant milestones ([roadmap](roadmap.md)).
@@ -215,18 +215,19 @@ What an integration needs:
   standard sources, `builtin`, a writable cache directory, and the project files kept in sync with the editor.
 - **Where it runs**: a worker of the runtime frame, whose origin already allows `'wasm-unsafe-eval'`
   ([security](specs/security.md)); the app origin does not.
-- **Editor side**: `@codemirror/lsp-client`, with LSP messages over `postMessage` or over emulated stdin and stdout.
+- **Editor side**: `@codemirror/lsp-client`, or an adapter of the existing `LanguageServicePort`, which keeps the
+  completion, hover, navigation and references UI that TypeScript uses. M8 takes the adapter.
 - **Maintenance**: the two patches live in a fork of `x/tools`, rebased with each gopls release. No public build of
   gopls for the browser was found.
 
-To do: measure in Chromium and WebKit, under Playwright, the compilation time of `gopls.wasm`, the first and later
-completions, and the memory on mobile; check Firefox.
+To do (M8 slice 1): measure in Chromium and WebKit, under Playwright, the compilation time of `gopls.wasm`, the first
+and later completions, and the memory at CPU ×4.
 
 Criteria:
 
-- **Go**: first completion under 2 s after the runtime is ready on desktop, later ones under 200 ms, no crash on
-  mobile, quota held.
+- **Go**: first completion under 2 s after the runtime is ready on desktop, later ones under 200 ms, no crash at
+  CPU ×4, quota held.
 - **No-go**: the Go files keep the basic completions; the compiler's live diagnostics remain.
 
 **Status (2026-11-27): feasible.** Results identical to native gopls under Node, with a shim and two patches.
-Browser measurements are pending; no ADR yet.
+Browser measurements are pending; no ADR yet. Breakdown: [M8](roadmap.md).
