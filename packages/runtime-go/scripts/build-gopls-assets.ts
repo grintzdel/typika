@@ -39,7 +39,11 @@ const buildKey = async () => {
     ...(await patches()).map((name) => join(patchesDir, name)),
   ]
   const contents = await Promise.all(inputs.map((path) => readFile(path, 'utf8')))
-  return sha256(new TextEncoder().encode([GoRelease.VERSION, ...STD_ROOTS, ...Object.values(GoplsAssetFile), ...contents].join('\n')))
+  return sha256(
+    new TextEncoder().encode(
+      [GoRelease.VERSION, ...STD_ROOTS, ...Object.values(GoplsAssetFile), ...contents].join('\n')
+    )
+  )
 }
 
 const makeWritable = async (dir: string): Promise<void> => {
