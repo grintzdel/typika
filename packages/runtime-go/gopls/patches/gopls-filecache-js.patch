@@ -1,0 +1,20 @@
+--- a/gopls/internal/filecache/filecache.go
++++ b/gopls/internal/filecache/filecache.go
+@@ -32,6 +32,7 @@
+ 	"log"
+ 	"os"
+ 	"path/filepath"
++	"runtime"
+ 	"sort"
+ 	"strings"
+ 	"sync"
+@@ -386,6 +387,9 @@
+ )
+ 
+ func hashExecutable() (hash [32]byte, err error) {
++	if runtime.GOOS == "js" {
++		return sha256.Sum256([]byte("typika-gopls-js-wasm")), nil
++	}
+ 	exe, err := os.Executable()
+ 	if err != nil {
+ 		return hash, err

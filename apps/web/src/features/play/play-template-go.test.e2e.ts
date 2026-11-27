@@ -2,10 +2,13 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type BrowserContext, type Page } from '@playwright/test'
+import { GOPLS_ASSET_CACHE_PREFIX } from '@typika/runtime-go'
+import { readGoplsAssetManifest } from '@typika/runtime-go/node'
 
 const STRATEGY_DIR = join(import.meta.dirname, '..', '..', '..', '..', '..', 'templates', 'strategy', 'go')
 const GO_ASSETS = /\/runtime\/assets\/go\//
+const GOPLS_ASSETS = /\/runtime\/assets\/gopls\//
 const TIMEOUT = 60_000
 
 const editor = (page: Page) => page.getByRole('textbox', { name: 'Éditeur' })
@@ -37,6 +40,27 @@ const replaceFile = async (page: Page, name: string, content: string) => {
 
 const mainSource = () => readFile(join(STRATEGY_DIR, 'cmd', 'shop', 'main.go'), 'utf8')
 
+const runtimeFrame = (page: Page) => {
+  const frame = page.frames().find((candidate) => new URL(candidate.url()).pathname.startsWith('/runtime/'))
+  if (frame === undefined) throw new Error('No runtime frame on the page')
+  return frame
+}
+
+const withPersistentProfile = async (
+  launch: (profile: string) => Promise<BrowserContext>,
+  use: (page: Page) => Promise<void>
+) => {
+  // WebKit empties the Cache Storage of an ephemeral context on reload, so the cache is checked in a real profile.
+  const profile = await mkdtemp(join(tmpdir(), 'typika-go-cache-'))
+  const context = await launch(profile)
+  try {
+    await use(await context.newPage())
+  } finally {
+    await context.close()
+    await rm(profile, { recursive: true, force: true })
+  }
+}
+
 test.describe('Go sandbox', () => {
   test('runs the entry of strategy-go', async ({ page }) => {
     await open(page)
@@ -56,30 +80,91 @@ test.describe('Go sandbox', () => {
     await expect(results(page).getByText('0 échec')).toBeVisible()
   })
 
-  test('does not download the Go toolchain again after a reload', async ({ playwright, browserName, baseURL }) => {
-    // WebKit empties the Cache Storage of an ephemeral context on reload, so the cache is checked in a real profile.
-    const profile = await mkdtemp(join(tmpdir(), 'typika-go-cache-'))
-    const context = await playwright[browserName].launchPersistentContext(profile, {
-      ...(baseURL === undefined ? {} : { baseURL }),
-      locale: 'fr-FR',
+  test('never downloads gopls to run the code or the tests', async ({ page }) => {
+    const downloads: Array<string> = []
+    page.on('request', (request) => {
+      if (GOPLS_ASSETS.test(request.url())) downloads.push(request.url())
     })
-    try {
-      const page = await context.newPage()
-      await open(page)
-      const downloads: Array<string> = []
-      page.on('request', (request) => {
-        if (GO_ASSETS.test(request.url())) downloads.push(request.url())
-      })
+    await open(page)
 
-      await page.reload()
-      await waitForRuntime(page)
-      await runTests(page)
+    await page.getByRole('button', { name: 'Exécuter' }).click()
+    await expect(consoleRegion(page).getByText('Terminé avec le code 0')).toBeVisible({ timeout: TIMEOUT })
+    await runTests(page)
 
-      expect(downloads).toEqual([])
-    } finally {
-      await context.close()
-      await rm(profile, { recursive: true, force: true })
-    }
+    expect(downloads).toEqual([])
+  })
+
+  test('does not download the Go toolchain again after a reload', async ({ playwright, browserName, baseURL }) => {
+    await withPersistentProfile(
+      (profile) =>
+        playwright[browserName].launchPersistentContext(profile, {
+          ...(baseURL === undefined ? {} : { baseURL }),
+          locale: 'fr-FR',
+        }),
+      async (page) => {
+        await open(page)
+        const downloads: Array<string> = []
+        page.on('request', (request) => {
+          if (GO_ASSETS.test(request.url())) downloads.push(request.url())
+        })
+
+        await page.reload()
+        await waitForRuntime(page)
+        await runTests(page)
+
+        expect(downloads).toEqual([])
+      }
+    )
+  })
+
+  test('keeps gopls next to the Go toolchain in the Cache Storage of the runtime frame', async ({
+    playwright,
+    browserName,
+    baseURL,
+  }) => {
+    const manifest = await readGoplsAssetManifest()
+    await withPersistentProfile(
+      (profile) =>
+        playwright[browserName].launchPersistentContext(profile, {
+          ...(baseURL === undefined ? {} : { baseURL }),
+          locale: 'fr-FR',
+        }),
+      async (page) => {
+        await open(page)
+
+        const cacheNames = await runtimeFrame(page).evaluate(
+          async ({ dir, names, cacheName }) => {
+            const cache = await caches.open(cacheName)
+            await Promise.all(
+              names.map(async (name) => {
+                const url = new URL(`${dir}${name}`, location.href).href
+                const response = await fetch(url)
+                if (!response.ok) throw new Error(`${url}: HTTP ${response.status}`)
+                await cache.put(url, response)
+              })
+            )
+            return caches.keys()
+          },
+          {
+            dir: `assets/gopls/${manifest.key.slice(0, 16)}/`,
+            names: manifest.files.map((file) => file.name),
+            cacheName: `${GOPLS_ASSET_CACHE_PREFIX}${manifest.key}`,
+          }
+        )
+        expect(cacheNames).toEqual(
+          expect.arrayContaining([expect.stringMatching(/^typika-go-/), `${GOPLS_ASSET_CACHE_PREFIX}${manifest.key}`])
+        )
+
+        const downloads: Array<string> = []
+        page.on('request', (request) => {
+          if (GO_ASSETS.test(request.url())) downloads.push(request.url())
+        })
+        await page.reload()
+        await waitForRuntime(page)
+        await runTests(page)
+        expect(downloads).toEqual([])
+      }
+    )
   })
 
   test('shows a build error in the console and on the line in the editor', async ({ page }) => {

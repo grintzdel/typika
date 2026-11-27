@@ -424,6 +424,13 @@ catalogue needs it. The templates that require an HTTP server or `npm install` w
   rebuilds them with the local Go, which must be the pinned version: `compile.wasm`, `link.wasm`, `std.pack` (the
   stdlib archives end to end, behind a JSON index), `LICENSE` and `manifest.json` (size, brotli size and
   SHA-256 of each file). 11.9 MB in brotli with Go 1.24.5.
+- **gopls assets**: `build:assets` also builds gopls for `js/wasm`, from the versions pinned in `gopls/go.mod` and the
+  patches of `gopls/patches/` ([0036](../decisions/0036-go-language-service.md)). Next to it: the sources of the
+  standard packages of `STD_ROOTS` with `builtin`, and their `go list` metadata for `js/wasm`. They go in
+  `assets/gopls/` with their own key and `gopls-manifest.json`, so that a gopls update does not invalidate the
+  toolchain. Each file is gzip-compressed, with a `.gzip` suffix that no server turns into a `Content-Encoding`, and
+  stays compressed in Cache Storage (`typika-gopls-<key>`): `DecompressionStream` decompresses it on each load.
+  12.9 MB with gopls v0.20.0, plus `gopls-licenses.txt`. Run and the tests never load them.
 - **Stdlib**: a closed set, defined by its roots in `std-roots.constant.ts` and completed by their dependencies (76
   packages with Go 1.24.5). A template only imports these packages, excluding `internal/`; any other import is a
   compilation error at run time, and `E_GO_IMPORT_UNAVAILABLE` in `template-check` and in the registry.

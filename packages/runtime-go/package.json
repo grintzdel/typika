@@ -8,7 +8,7 @@
     "./browser": "./src/browser.ts"
   },
   "scripts": {
-    "build:assets": "node scripts/build-assets.ts",
+    "build:assets": "node scripts/build-assets.ts && node scripts/build-gopls-assets.ts",
     "typecheck": "tsc",
     "test": "vitest run"
   },
