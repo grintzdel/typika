@@ -3,6 +3,8 @@ import {
   ProjectPathSchema,
   RuntimeCompileError,
   type FileContent,
+  type LanguageServer,
+  type LanguageServerEvent,
   type ProjectPath,
   type ProjectSnapshot,
   type RuntimePort,
@@ -11,6 +13,7 @@ import {
 import * as Cause from 'effect/Cause'
 import * as Effect from 'effect/Effect'
 import * as Option from 'effect/Option'
+import * as Queue from 'effect/Queue'
 import * as Schema from 'effect/Schema'
 import * as Stream from 'effect/Stream'
 
@@ -60,7 +63,33 @@ export const LOCATED_DIAGNOSTIC = {
   location: { file: 'src/main.ts', line: 1, column: 7 },
 }
 
-export const makeFakeRuntime = ({ canCheck = false }: { readonly canCheck?: boolean } = {}) => {
+export const LANGUAGE_SERVER_ROOT_URI = 'file:///work'
+
+const makeEchoLanguageServer = (journal: Array<string>): LanguageServer => {
+  let echo: ((message: string) => void) | undefined
+  const held: Array<string> = []
+  return {
+    rootUri: LANGUAGE_SERVER_ROOT_URI,
+    connect: Stream.callback<LanguageServerEvent>((queue) =>
+      Effect.gen(function* () {
+        echo = (message) => Queue.offerUnsafe(queue, { _tag: 'Message', message })
+        for (const message of held.splice(0)) echo(message)
+        yield* Effect.addFinalizer(() =>
+          Effect.sync(() => {
+            echo = undefined
+            journal.push('language server stopped')
+          })
+        )
+      })
+    ),
+    send: (message) => Effect.sync(() => (echo === undefined ? void held.push(message) : echo(message))),
+  }
+}
+
+export const makeFakeRuntime = ({
+  canCheck = false,
+  languageServer = false,
+}: { readonly canCheck?: boolean; readonly languageServer?: boolean } = {}) => {
   const journal: Array<string> = []
 
   const makeSession = (snapshot: ProjectSnapshot): RuntimeSession => {
@@ -116,6 +145,7 @@ export const makeFakeRuntime = ({ canCheck = false }: { readonly canCheck?: bool
           }
         ),
       preview: Effect.succeed(Option.none()),
+      ...(languageServer ? { languageServer: makeEchoLanguageServer(journal) } : {}),
       ...(canCheck
         ? {
             check: Effect.sync(() => {

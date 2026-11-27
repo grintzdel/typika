@@ -12,6 +12,7 @@ import type { RuntimeCompileError } from './errors/runtime-compile.error.ts'
 import type { RuntimeFsError } from './errors/runtime-fs.error.ts'
 import type { RuntimeProcessError } from './errors/runtime-process.error.ts'
 import type { RuntimeTimeoutError } from './errors/runtime-timeout.error.ts'
+import type { LanguageServer } from './language-server.domain-model.ts'
 import type { ProcessOutput, RunCommand } from './process.domain-model.ts'
 import type { FileContent, ProjectPath, ProjectSnapshot } from './project.domain-model.ts'
 import type { Diagnostic, TestEvent } from './test-event.domain-model.ts'
@@ -52,6 +53,7 @@ export interface RuntimeSession {
   readonly test: (options: TestOptions) => Stream.Stream<TestEvent, RuntimeExecutionError>
   readonly preview: Effect.Effect<Option.Option<PreviewHandle>>
   readonly check?: Effect.Effect<ReadonlyArray<Diagnostic>, RuntimeProcessError>
+  readonly languageServer?: LanguageServer
 }
 
 export interface RuntimePort {

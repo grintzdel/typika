@@ -794,6 +794,14 @@ Cache Storage and decompresses them on load. A `.gz` suffix made Vite's server a
 files end in `.gzip`. The WebKit quota check in the third-party frame, and the check that Run and the tests do not
 download gopls, run in the E2E of `play-template-go`.
 
+Status (2026-11-27): slice 4 delivered. A Go session offers `languageServer`: `connect` starts gopls in its own
+worker of the runtime frame, `send` passes it the client's messages, and the frame carries both with
+`LanguageServerConnect` and `LanguageServerSend`. Writes to the session reach gopls through
+`workspace/didChangeWatchedFiles`. A crash restarts gopls once and emits `Restarted`; a second one makes the service
+unavailable. The browser test of `packages/runtime-go` gets the completion after `checkout.`, the definition of
+`checkout.Standard` and its six references on `strategy-go`, and sees a file written after `didOpen`, in Chromium and
+WebKit. Messages sent before `connect` wait for gopls: without that, the first `initialize` was lost.
+
 ---
 
 ## After M7 (not planned)

@@ -44,7 +44,17 @@ export interface RuntimeSession {
   readonly run: (command: RunCommand) => Stream.Stream<ProcessOutput, RuntimeExecutionError>
   readonly test: (options: TestOptions) => Stream.Stream<TestEvent, RuntimeExecutionError>
   readonly preview: Effect.Effect<Option.Option<PreviewHandle>>
+  readonly check?: Effect.Effect<ReadonlyArray<Diagnostic>, RuntimeProcessError>
+  readonly languageServer?: LanguageServer
 }
+
+export interface LanguageServer {
+  readonly rootUri: string
+  readonly connect: Stream.Stream<LanguageServerEvent, RuntimeProcessError | RuntimeAssetLoadError>
+  readonly send: (message: string) => Effect.Effect<void, RuntimeProcessError>
+}
+
+export type LanguageServerEvent = { readonly _tag: 'Message'; readonly message: string } | { readonly _tag: 'Restarted' }
 
 export interface RuntimeFs {
   readonly writeFile: (path: ProjectPath, content: FileContent) => Effect.Effect<void, RuntimeFsError>
@@ -431,6 +441,17 @@ catalogue needs it. The templates that require an HTTP server or `npm install` w
   toolchain. Each file is gzip-compressed, with a `.gzip` suffix that no server turns into a `Content-Encoding`, and
   stays compressed in Cache Storage (`typika-gopls-<key>`): `DecompressionStream` decompresses it on each load.
   12.9 MB with gopls v0.20.0, plus `gopls-licenses.txt`. Run and the tests never load them.
+- **Language server**: a session of the frame offers `languageServer` when the runtime has gopls assets. `connect`
+  loads them and starts gopls in its own worker; the stream carries the JSON-RPC messages of gopls, `send` those of
+  the client, without the `Content-Length` framing. Messages sent before `connect` wait for gopls. The worker holds
+  the project under `rootUri` (`file:///work`), the standard sources under `/goroot` and gopls's cache in
+  `memory-fs`, defers the file callbacks and sets `GOMEMLIMIT=256MiB` ([0036](../decisions/0036-go-language-service.md)).
+  `makeGoCommand` answers the `go` commands of gopls. A write, rename, delete or sync of the session reaches the
+  worker, which sends gopls `workspace/didChangeWatchedFiles` itself: the client does not. Closing the stream stops
+  gopls, and a new `connect` replaces the previous one. When gopls stops on its own, the session starts it again
+  once and emits `Restarted`: the client sends `initialize` and reopens its documents, and the requests in flight get
+  no answer. A second stop fails the stream, and the session's language server stays unavailable. The frame carries it
+  with the `LanguageServerConnect` and `LanguageServerSend` requests; `Booted` gives `languageServerRootUri`.
 - **Stdlib**: a closed set, defined by its roots in `std-roots.constant.ts` and completed by their dependencies (76
   packages with Go 1.24.5). A template only imports these packages, excluding `internal/`; any other import is a
   compilation error at run time, and `E_GO_IMPORT_UNAVAILABLE` in `template-check` and in the registry.
