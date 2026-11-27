@@ -1,11 +1,10 @@
 import * as Comlink from 'comlink'
 import * as Effect from 'effect/Effect'
-import * as Layer from 'effect/Layer'
 
 import { EditorLanguageServiceError } from '../domain/errors/editor-language-service.error.ts'
 import { EditorOutdatedError } from '../domain/errors/editor-outdated.error.ts'
 import type { LanguageServiceFiles } from '../domain/language-service.domain-model.ts'
-import { LanguageServicePort, type LanguageServiceSession } from '../ports/language-service.port.ts'
+import type { LanguageServiceSession } from '../ports/language-service.port.ts'
 import type { LanguageServiceWorkerApi } from './language-service-worker/language-service.worker.ts'
 // oxlint-disable-next-line import/default -- Vite gives a ?worker&url import the built worker's URL
 import languageServiceWorkerUrl from './language-service-worker/language-service.worker.ts?worker&url'
@@ -53,7 +52,7 @@ const sessionOf = (remote: Comlink.Remote<LanguageServiceWorkerApi>): LanguageSe
   rename: (path, position, newName) => call(() => remote.rename(path, position, newName)),
 })
 
-const start = (files: LanguageServiceFiles) =>
+export const startTypeScriptLanguageService = (files: LanguageServiceFiles) =>
   Effect.gen(function* () {
     const worker = yield* spawn
     const remote = Comlink.wrap<LanguageServiceWorkerApi>(worker)
@@ -63,5 +62,3 @@ const start = (files: LanguageServiceFiles) =>
     )
     return sessionOf(remote)
   })
-
-export const LanguageServiceWorkerLayer = Layer.succeed(LanguageServicePort, { start })

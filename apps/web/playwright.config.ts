@@ -26,7 +26,11 @@ export default defineConfig({
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      testMatch: ['**/play-template-go.test.e2e.ts', '**/play-template-kotlin.test.e2e.ts'],
+      testMatch: [
+        '**/play-template-go.test.e2e.ts',
+        '**/play-template-go-language-service.test.e2e.ts',
+        '**/play-template-kotlin.test.e2e.ts',
+      ],
     },
   ],
   webServer: [

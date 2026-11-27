@@ -8,6 +8,7 @@ import { LanguageServicePort, type LanguageServiceSession } from './ports/langua
 
 export type InMemoryLanguageService = {
   readonly started: ReadonlyArray<LanguageServiceFiles>
+  readonly connected: ReadonlyArray<{ readonly rootUri: string; readonly files: LanguageServiceFiles }>
   readonly layer: Layer.Layer<LanguageServicePort>
 }
 
@@ -35,13 +36,22 @@ export const makeLanguageServiceSessionInMemory = (files: LanguageServiceFiles):
 
 export const makeLanguageServiceInMemory = (): InMemoryLanguageService => {
   const started: Array<LanguageServiceFiles> = []
+  const connected: Array<{ readonly rootUri: string; readonly files: LanguageServiceFiles }> = []
+  const sessionFor = (files: LanguageServiceFiles) => {
+    libraries ??= collectTypeScriptLibraries()
+    return sessionOf(makeTypeScriptProject({ libraries, files }))
+  }
   const layer = Layer.succeed(LanguageServicePort, {
     start: (files) =>
       Effect.sync(() => {
         started.push(files)
-        libraries ??= collectTypeScriptLibraries()
-        return sessionOf(makeTypeScriptProject({ libraries, files }))
+        return sessionFor(files)
+      }),
+    connect: (server, files) =>
+      Effect.sync(() => {
+        connected.push({ rootUri: server.rootUri, files })
+        return sessionFor(files)
       }),
   })
-  return { started, layer }
+  return { started, connected, layer }
 }

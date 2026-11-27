@@ -753,8 +753,9 @@ Deliverables:
 - gopls in a worker of the runtime frame, behind the editor's `LanguageServicePort`, the port the TypeScript worker
   already implements: the completion, hover, navigation, references panel and Problems panel stay the same code.
 
-Done when: on `/play/strategy-go`, in Chromium and WebKit, `Cmd` + click on `checkout.Standard` opens `standard.go`,
-the completion after `checkout.` lists the package's exported names, and a type error shows in the editor before Run.
+Done when: on `/play/strategy-go`, in Chromium and WebKit, `Cmd` + click on `checkout.Standard` opens
+`shipping_option.go`, the completion after `checkout.` lists the package's exported names, and a type error shows in
+the editor before Run.
 
 Out of scope: Kotlin, which has no language server that runs in the browser.
 
@@ -801,6 +802,15 @@ worker of the runtime frame, `send` passes it the client's messages, and the fra
 unavailable. The browser test of `packages/runtime-go` gets the completion after `checkout.`, the definition of
 `checkout.Standard` and its six references on `strategy-go`, and sees a file written after `didOpen`, in Chromium and
 WebKit. Messages sent before `connect` wait for gopls: without that, the first `initialize` was lost.
+
+Status (2026-11-27): slice 5 delivered. `connectLanguageServer` of the editor module adapts LSP to
+`LanguageServicePort`: completions with their details and import edits, hover, signature help, definition, references,
+rename and versioned diagnostics, positions in UTF-16. A `Restarted` from the session fails the pending requests and
+runs the handshake again. `.go` files outside `exercises/` use gopls once it is ready, and keep the basic completions
+until then or when it is unavailable. The status names gopls, and the embed connects it when editing starts, like
+TypeScript. gopls now downloads when a Go project opens; Run and the tests still work when it cannot. The E2E of
+`play-template-go-language-service` checks the M8 criterion in Chromium and WebKit. gopls keeps running when no Go file
+is open.
 
 ---
 
