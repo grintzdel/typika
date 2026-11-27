@@ -1,5 +1,6 @@
 import type { RuntimeSession } from '@typika/runtime-core'
 import * as Effect from 'effect/Effect'
+import * as Schedule from 'effect/Schedule'
 import { describe, expect, it } from 'vitest'
 
 import { connectLspClient } from '../__tests__/lsp-client.ts'
@@ -22,6 +23,7 @@ const runtime = makeGoRuntime({
 })
 
 const QUOTE_TEST = 'internal/checkout/quote_test.go'
+const REFERENCES = 6
 const project = strategyGoProject()
 const source = project.files.get(projectPath(QUOTE_TEST))
 const lines = (typeof source === 'string' ? source : '').split('\n')
@@ -84,11 +86,19 @@ describe('go runtime language server', () => {
           textDocument: { uri },
           position: after('quoteFor(t, order, checkout.Stan'),
         }),
-        references: lsp.request('textDocument/references', {
-          textDocument: { uri },
-          position: after('quoteFor(t, order, checkout.Stan'),
-          context: { includeDeclaration: true },
-        }),
+        references: lsp
+          .request('textDocument/references', {
+            textDocument: { uri },
+            position: after('quoteFor(t, order, checkout.Stan'),
+            context: { includeDeclaration: true },
+          })
+          .pipe(
+            Effect.repeat({
+              until: (found) => fieldsOf(found, 'uri').length >= REFERENCES,
+              schedule: Schedule.spaced('500 millis'),
+              times: 20,
+            })
+          ),
       })
     )
 
@@ -96,7 +106,7 @@ describe('go runtime language server', () => {
     expect(fieldsOf(answers.definition, 'uri')).toEqual([
       expect.stringMatching(/\/internal\/checkout\/shipping_option\.go$/),
     ])
-    expect(fieldsOf(answers.references, 'uri')).toHaveLength(6)
+    expect(fieldsOf(answers.references, 'uri')).toHaveLength(REFERENCES)
   })
 
   it('sees the files written to the session', async () => {
