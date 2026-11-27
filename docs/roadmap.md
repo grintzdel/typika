@@ -772,6 +772,13 @@ both, and slice 5 needs slice 4.
 | 4 | `gopls-worker` | gopls in its own worker of the runtime frame, started on demand: `memory-fs` holds the project, the standard sources and gopls's cache directory, the shim answers the `go` commands, and LSP messages go through new requests and responses of the frame protocol. File changes reach gopls. A crash restarts it once, then the service reports itself unavailable. | A browser test of `packages/runtime-go` opens `strategy-go`, gets the completion after `checkout.`, the definition of `checkout.Standard` and its six references, in Chromium and WebKit. |
 | 5 | `go-language-service-app` | A Go adapter of `LanguageServicePort`: completions and their details, hover, signature help, definition, references, rename and diagnostics translated from LSP, UTF-16 positions included. `.go` files use it once it is ready, and keep the basic completions while it starts or when it is unavailable. The status indicator names gopls. The embed starts it on demand, like TypeScript. | The M8 completion criterion, in E2E on the production build. |
 
+Status (2026-11-27): slice 1 delivered, go ([0036](decisions/0036-go-language-service.md)). In Chromium 156 and WebKit
+27.2, the first completion comes 0.8 to 0.9 s after `initialize`, later requests in under 25 ms; at CPU ×4, 3.4 to
+3.8 s then under 75 ms. Three findings change the next slices. WebKit kills gopls when the file callbacks are
+synchronous: slice 4 defers them. Memory reaches 365 to 436 MiB, 308 with `GOMEMLIMIT=256MiB`: slice 4 sets it and
+stops gopls when no Go file is open. gopls loads the test variants, so 118 standard packages instead of 79 (1.25 MB in
+brotli): slice 2 builds that set and checks the WebKit quota in a real third-party frame.
+
 ---
 
 ## After M7 (not planned)
@@ -799,4 +806,4 @@ Ideas, to prioritize when the time comes:
 | R7 | Go in the browser | Cleared: Go toolchain in WASM ([0018](decisions/0018-go-runtime.md)); Safari checked, Firefox out of scope |
 | R8 | Kotlin compilation service | Cleared: in-house service, JS target ([0019](decisions/0019-kotlin-runtime.md)); WebKit checked, Firefox out of scope |
 | R9 | Compilation service abuse | Cleared: limits, isolation and rate limiting by IP ([0028](decisions/0028-kotlin-compilation-workers.md), [0029](decisions/0029-kotlin-relay-rate-limit.md)), load test in M6 |
-| R10 | gopls in the browser | Feasible under Node ([spike R10](spikes.md)); browser measurements in M8 slice 1 |
+| R10 | gopls in the browser | Cleared: gopls in WASM ([0036](decisions/0036-go-language-service.md)); WebKit needs deferred file callbacks |
