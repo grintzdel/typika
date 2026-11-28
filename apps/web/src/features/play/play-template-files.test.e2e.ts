@@ -46,6 +46,31 @@ test.describe('file tree editing', () => {
     await expect(tree(page).getByRole('treeitem', { name: /^tax\.ts/ })).toHaveCount(0)
   })
 
+  test('moves a file by drag and drop, then a folder from its context menu, and keeps them moved', async ({ page }) => {
+    await openStrategy(page)
+    const item = (path: string) => tree(page).locator(`[data-path="${path}"]`)
+
+    await item('src/main.ts').dragTo(item('src/shop'), { targetPosition: { x: 40, y: 8 } })
+
+    await expect(item('src/shop/main.ts')).toBeFocused()
+    await expect(item('src/main.ts')).toHaveCount(0)
+    await expect(status(page)).toHaveText('Modifié')
+
+    await item('src/checkout').click({ button: 'right', position: { x: 40, y: 8 } })
+    await page.getByRole('menuitem', { name: 'Déplacer…' }).click()
+    const dialog = page.getByRole('dialog', { name: 'Déplacer « checkout »' })
+    await dialog.getByRole('button', { name: 'Racine du projet' }).click()
+
+    await expect(dialog).toHaveCount(0)
+    await expect(item('checkout')).toBeFocused()
+    await expect(item('checkout/checkout.ts')).toBeVisible()
+    await expect(item('src/checkout')).toHaveCount(0)
+
+    await page.reload()
+    await expect(item('checkout/checkout.ts')).toBeVisible()
+    await expect(item('src/shop/main.ts')).toBeVisible()
+  })
+
   test('keeps the Typika files from being renamed or deleted', async ({ page }) => {
     await openStrategy(page)
 
@@ -54,7 +79,7 @@ test.describe('file tree editing', () => {
     await page.keyboard.press('Delete')
 
     await expect(
-      page.getByText('Ce fichier est en lecture seule : il ne peut être ni renommé ni supprimé.')
+      page.getByText('Ce fichier est en lecture seule : il ne peut être ni renommé, ni déplacé, ni supprimé.')
     ).toBeVisible()
     await expect(page.getByRole('textbox', { name: /Nouveau nom/ })).toHaveCount(0)
     await expect(page.getByRole('alertdialog')).toHaveCount(0)

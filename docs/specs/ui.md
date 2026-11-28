@@ -161,7 +161,10 @@ Goal: bring the learner to a concept in two clicks.
 
 ### 6.2 Files and editor
 
-- Create, rename, delete, move files; ● indicator on modified files.
+- Create, rename, delete, move files; ● indicator on modified files. An item moves by drag and drop onto a folder
+  (or onto a file, into its folder) or with **Move…** in its context menu, which lists the folders it can go to.
+- Each file shows an icon of its language or kind (TypeScript, JavaScript, Go, Kotlin, JSON, Markdown, configuration,
+  script, archive, text); folders show an open or closed folder, the Typika group in the accent colour.
 - Typika-specific files (`typika.toml`, `tour/`) are visible but grouped and read-only by
   default.
 - Local autosave on every change (debounced), no Save button. Opening `/play/<name>` creates a local project on the

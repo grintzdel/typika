@@ -1,18 +1,21 @@
 import { useRef, useState } from 'react'
 
 import {
+  checkMove,
   checkNewPath,
   creationFolderOf,
   FileNameIssue,
   filesWithin,
   isEditable,
   isWithin,
+  moveTargetsOf,
   movesOf,
   parentOf,
   type FileMove,
   type FileNameCheck,
   type FileTreeDeletion,
   type FileTreeDraft,
+  type FileTreeMoving,
   type TreeItemRef,
 } from '../../core/domain/file-operations.domain-model.ts'
 import { buildFileTree } from '../../core/domain/file-tree.domain-model.ts'
@@ -32,6 +35,7 @@ export const useFileTreeEditing = ({ paths, onCreateFile, onMove, onDelete }: Fi
   const [issue, setIssue] = useState<FileNameIssue | undefined>(undefined)
   const [focusRequest, setFocusRequest] = useState<{ readonly path: string } | undefined>(undefined)
   const [deletion, setDeletion] = useState<FileTreeDeletion | undefined>(undefined)
+  const [moving, setMoving] = useState<FileTreeMoving | undefined>(undefined)
 
   const setDraft = (next: FileTreeDraft | undefined) => {
     openDraft.current = next
@@ -55,16 +59,19 @@ export const useFileTreeEditing = ({ paths, onCreateFile, onMove, onDelete }: Fi
     if (current._tag === 'Create') {
       if (current.kind === 'folder') setFolders((previous) => [...previous, path])
       else onCreateFile(path)
-    } else if (path !== current.path) {
-      const moves = movesOf(paths, current.path, path)
-      if (moves.length > 0) onMove(moves)
-      setFolders((previous) =>
-        previous.map((folder) =>
-          isWithin(folder, current.path) ? `${path}${folder.slice(current.path.length)}` : folder
-        )
-      )
-    }
+    } else relocate(current.path, path)
     close(path)
+  }
+
+  const relocate = (from: string, to: string) => {
+    if (to === from) return
+    const moves = movesOf(paths, from, to)
+    if (moves.length > 0) onMove(moves)
+    const left = parentOf(from)
+    setFolders((previous) => [
+      ...previous.map((folder) => (isWithin(folder, from) ? `${to}${folder.slice(from.length)}` : folder)),
+      ...(left === '' || previous.includes(left) ? [] : [left]),
+    ])
   }
 
   const refuseReadOnly = (path: string) => {
@@ -113,6 +120,28 @@ export const useFileTreeEditing = ({ paths, onCreateFile, onMove, onDelete }: Fi
       setDeletion(undefined)
     },
     onDeleteCancel: () => setDeletion(undefined),
+    moving,
+    onMoveStart: (path: string, isFolder: boolean) => {
+      if (refuseReadOnly(path)) return
+      const item = { path, isFolder }
+      setMoving({ ...item, folders: moveTargetsOf(item, paths, emptyFolders) })
+    },
+    onMoveTo: (item: TreeItemRef, folder: string) => {
+      const check = checkMove({ item, folder, paths, folders: emptyFolders })
+      if (check._tag === 'Invalid') {
+        setIssue(check.issue)
+        return
+      }
+      setIssue(undefined)
+      setMoving(undefined)
+      if (check.path === item.path) return
+      relocate(item.path, check.path)
+      setFocusRequest({ path: check.path })
+    },
+    onMoveCancel: () => {
+      setIssue(undefined)
+      setMoving(undefined)
+    },
   }
 
   return {
@@ -121,6 +150,7 @@ export const useFileTreeEditing = ({ paths, onCreateFile, onMove, onDelete }: Fi
     handleReset: () => {
       setFolders([])
       setDeletion(undefined)
+      setMoving(undefined)
       close(undefined)
     },
   }

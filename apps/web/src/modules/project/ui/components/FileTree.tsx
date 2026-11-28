@@ -1,4 +1,13 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type DragEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -11,15 +20,20 @@ import {
 import { Button } from '../../../../ui/Button.tsx'
 import { ContextMenu } from '../../../../ui/ContextMenu.tsx'
 import {
+  creationFolderOf,
   isEditable,
   isWithin,
   nameOf,
+  parentOf,
   type FileNameIssue,
   type FileTreeDeletion,
   type FileTreeDraft,
+  type FileTreeMoving,
   type TreeItemRef,
 } from '../../core/domain/file-operations.domain-model.ts'
-import { isTypikaFile, type FileTreeNode } from '../../core/domain/file-tree.domain-model.ts'
+import { isTypikaFile, TYPIKA_GROUP_PATH, type FileTreeNode } from '../../core/domain/file-tree.domain-model.ts'
+import { FileIcon, FolderIcon } from './FileIcon.tsx'
+import { MoveDialog } from './MoveDialog.tsx'
 
 export type FileTreeEditing = {
   readonly draft: FileTreeDraft | undefined
@@ -35,6 +49,10 @@ export type FileTreeEditing = {
   readonly onDelete: (path: string, isFolder: boolean) => void
   readonly onDeleteConfirm: () => void
   readonly onDeleteCancel: () => void
+  readonly moving: FileTreeMoving | undefined
+  readonly onMoveStart: (path: string, isFolder: boolean) => void
+  readonly onMoveTo: (item: TreeItemRef, folder: string) => void
+  readonly onMoveCancel: () => void
 }
 
 export type FileTreeProps = {
@@ -60,6 +78,20 @@ const visibleItems = (
 const ROW = 'flex min-h-target cursor-pointer items-center gap-1 rounded-sm pr-2 text-compact whitespace-nowrap'
 
 const indentOf = (depth: number) => ({ paddingLeft: `${0.5 + depth * 0.75}rem` })
+
+const DRAG_TYPE = 'application/x-typika-path'
+
+const ancestorsOf = (path: string) =>
+  path
+    .split('/')
+    .slice(0, -1)
+    .map((_, index, segments) => segments.slice(0, index + 1).join('/'))
+
+const itemAt = (target: EventTarget): TreeItemRef | undefined => {
+  const item = target instanceof Element ? target.closest<HTMLElement>('[data-path]') : null
+  const path = item?.dataset.path
+  return path === undefined ? undefined : { path, isFolder: item?.dataset.folder === 'true' }
+}
 
 const refOf = (node: FileTreeNode | undefined): TreeItemRef | undefined =>
   node === undefined ? undefined : { path: node.path, isFolder: node._tag === 'Folder' }
@@ -212,13 +244,19 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
   const [seenFocusRequest, setSeenFocusRequest] = useState(editing?.focusRequest)
   const [seenDraft, setSeenDraft] = useState(editing?.draft)
   const [menuTarget, setMenuTarget] = useState<TreeItemRef | undefined>(undefined)
+  const [dragged, setDragged] = useState<TreeItemRef | undefined>(undefined)
+  const [dropFolder, setDropFolder] = useState<string | undefined>(undefined)
   const isMenuActionChosen = useRef(false)
   const items = useRef(new Map<string, HTMLLIElement>())
 
   const draft = editing?.draft
   if (editing?.focusRequest !== seenFocusRequest) {
     setSeenFocusRequest(editing?.focusRequest)
-    if (editing?.focusRequest !== undefined) setPendingFocus(editing.focusRequest.path)
+    if (editing?.focusRequest !== undefined) {
+      setPendingFocus(editing.focusRequest.path)
+      const hidden = ancestorsOf(editing.focusRequest.path).filter((folder) => collapsed.has(folder))
+      if (hidden.length > 0) setCollapsed(new Set([...collapsed].filter((folder) => !hidden.includes(folder))))
+    }
   }
   if (draft !== seenDraft) {
     setSeenDraft(draft)
@@ -310,6 +348,51 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
     event.stopPropagation()
   }
 
+  const dropFolderAt = (event: DragEvent<HTMLElement>) => {
+    if (dragged === undefined || !event.dataTransfer.types.includes(DRAG_TYPE)) return undefined
+    const folder = creationFolderOf(itemAt(event.target))
+    if (folder === parentOf(dragged.path) || (dragged.isFolder && isWithin(folder, dragged.path))) return undefined
+    return folder
+  }
+
+  const endDrag = () => {
+    setDragged(undefined)
+    setDropFolder(undefined)
+  }
+
+  const dragHandlers =
+    editing === undefined
+      ? {}
+      : {
+          onDragStart: (event: DragEvent<HTMLUListElement>) => {
+            const item = itemAt(event.target)
+            if (item === undefined || !isEditable(item.path)) return
+            event.dataTransfer.setData(DRAG_TYPE, item.path)
+            event.dataTransfer.effectAllowed = 'move'
+            setDragged(item)
+          },
+          onDragOver: (event: DragEvent<HTMLUListElement>) => {
+            const folder = dropFolderAt(event)
+            if (folder !== dropFolder) setDropFolder(folder)
+            if (folder === undefined) return
+            event.preventDefault()
+            event.dataTransfer.dropEffect = 'move'
+          },
+          onDragLeave: (event: DragEvent<HTMLUListElement>) => {
+            if (!(event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)))
+              setDropFolder(undefined)
+          },
+          onDrop: (event: DragEvent<HTMLUListElement>) => {
+            const folder = dropFolderAt(event)
+            if (folder !== undefined && dragged !== undefined) {
+              event.preventDefault()
+              editing.onMoveTo(dragged, folder)
+            }
+            endDrag()
+          },
+          onDragEnd: endDrag,
+        }
+
   const issueText = editing?.issue === undefined ? undefined : t(`tree.issues.${editing.issue}`)
 
   const draftInput = (depth: number) => {
@@ -346,6 +429,7 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
     const isExpanded = isFolder && !collapsed.has(node.path)
     const isSelected = node.path === selectedPath
     const isModified = !isFolder && modifiedPaths.includes(node.path)
+    const isDropTarget = isFolder && node.path === dropFolder
     const children =
       isFolder && isExpanded ? (
         <ul role="group">
@@ -375,6 +459,8 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
         role="treeitem"
         data-path={node.path}
         data-folder={isFolder}
+        data-drop-target={isDropTarget ? true : undefined}
+        draggable={editing !== undefined && draft === undefined && isEditable(node.path)}
         tabIndex={node.path === tabStop ? 0 : -1}
         aria-label={label}
         {...(isFolder ? { 'aria-expanded': isExpanded } : { 'aria-selected': isSelected })}
@@ -391,13 +477,18 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
         }}
       >
         <div
-          className={`${ROW} ${isSelected ? 'bg-selected-bg font-semibold text-selected-fg' : 'hover:bg-surface-muted'}`}
+          className={`${ROW} ${isSelected ? 'bg-selected-bg font-semibold text-selected-fg' : 'hover:bg-surface-muted'} ${isDropTarget ? 'outline-2 outline-offset-[-2px] outline-focus-ring outline-dashed' : ''} ${dragged?.path === node.path ? 'opacity-60' : ''}`}
           style={indentOf(depth)}
         >
-          <span aria-hidden="true" className="w-3 text-fg-subtle">
+          <span aria-hidden="true" className="w-3 shrink-0 text-fg-subtle">
             {isFolder ? (isExpanded ? '▾' : '▸') : ''}
           </span>
-          <span>{node.name}</span>
+          {isFolder ? (
+            <FolderIcon isOpen={isExpanded} isTypika={node.path === TYPIKA_GROUP_PATH} />
+          ) : (
+            <FileIcon path={node.path} />
+          )}
+          <span className="pl-0.5">{node.name}</span>
           {isModified ? (
             <span aria-hidden="true" className="ml-auto pl-2 text-sm text-modified">
               ●
@@ -413,15 +504,15 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
     <ul
       role="tree"
       aria-label={t('tree.label')}
-      className="py-2"
+      className={`min-h-full flex-1 py-2 ${dropFolder === '' ? 'outline-2 outline-offset-[-2px] outline-focus-ring outline-dashed' : ''}`}
       onKeyDown={handleKeyDown}
       onContextMenu={(event: MouseEvent<HTMLUListElement>) => {
-        const item = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-path]') : null
-        const path = item?.dataset.path
+        const item = itemAt(event.target)
         isMenuActionChosen.current = false
-        setMenuTarget(path === undefined ? undefined : { path, isFolder: item?.dataset.folder === 'true' })
-        if (path !== undefined) setFocusedPath(path)
+        setMenuTarget(item)
+        if (item !== undefined) setFocusedPath(item.path)
       }}
+      {...dragHandlers}
     >
       {createsIn('') ? draftInput(0) : null}
       {nodes.map((node) => renderNode(node, 0))}
@@ -442,7 +533,7 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex h-full flex-col">
       <div className="flex items-center gap-1 border-b border-border py-1 pr-1 pl-3">
         <span className="flex-1 text-sm font-semibold text-fg-muted">{t('tree.label')}</span>
         <HeaderButton label={t('tree.newFile')} onClick={() => editing.onCreate('file', tabStopItem)}>
@@ -453,7 +544,7 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
         </HeaderButton>
       </div>
       <p role="status" className="px-3 text-sm text-danger-text empty:hidden">
-        {draft === undefined ? issueText : undefined}
+        {draft === undefined && editing.moving === undefined ? issueText : undefined}
       </p>
       <ContextMenu
         trigger={tree}
@@ -466,6 +557,13 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
             disabled: menuTarget === undefined || !isEditable(menuTarget.path),
             onSelect: chosen(() => {
               if (menuTarget !== undefined) editing.onRename(menuTarget.path, menuTarget.isFolder)
+            }),
+          },
+          {
+            label: t('tree.move'),
+            disabled: menuTarget === undefined || !isEditable(menuTarget.path),
+            onSelect: chosen(() => {
+              if (menuTarget !== undefined) editing.onMoveStart(menuTarget.path, menuTarget.isFolder)
             }),
           },
           {
@@ -485,6 +583,12 @@ export const FileTree = ({ nodes, selectedPath, modifiedPaths, onSelect, editing
           editing.onDeleteConfirm()
         }}
         onCancel={editing.onDeleteCancel}
+      />
+      <MoveDialog
+        moving={editing.moving}
+        issue={editing.moving === undefined ? undefined : issueText}
+        onMove={editing.onMoveTo}
+        onCancel={editing.onMoveCancel}
       />
     </div>
   )

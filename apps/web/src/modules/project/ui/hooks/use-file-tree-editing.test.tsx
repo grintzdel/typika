@@ -115,6 +115,102 @@ describe('useFileTreeEditing', () => {
     expect(result.current.editing.draft).toBeUndefined()
   })
 
+  it('moves a file into another folder, then asks to focus it', () => {
+    const { result, onMove } = renderEditing()
+
+    act(() => result.current.editing.onMoveTo({ path: 'src/main.ts', isFolder: false }, 'src/shop'))
+
+    expect(onMove).toHaveBeenCalledExactlyOnceWith([['src/main.ts', 'src/shop/main.ts']])
+    expect(result.current.editing.focusRequest).toEqual({ path: 'src/shop/main.ts' })
+  })
+
+  it('moves every file of a folder, and keeps the folder it leaves', () => {
+    const onMove = vi.fn()
+    const { result, rerender } = renderHook(
+      ({ paths }) => useFileTreeEditing({ paths, onCreateFile: vi.fn(), onMove, onDelete: vi.fn() }),
+      { initialProps: { paths: ['src/shop/money.ts', 'src/shop/order.ts'] } }
+    )
+
+    act(() => result.current.editing.onMoveTo({ path: 'src/shop', isFolder: true }, ''))
+    rerender({ paths: ['shop/money.ts', 'shop/order.ts'] })
+
+    expect(onMove).toHaveBeenCalledExactlyOnceWith([
+      ['src/shop/money.ts', 'shop/money.ts'],
+      ['src/shop/order.ts', 'shop/order.ts'],
+    ])
+    expect(result.current.nodes).toContainEqual({ _tag: 'Folder', name: 'src', path: 'src', children: [] })
+  })
+
+  it('moves an empty folder in the tree alone', () => {
+    const { result, onMove } = renderEditing()
+    act(() => result.current.editing.onCreate('folder', undefined))
+    act(() => result.current.editing.onDraftSubmit('docs'))
+
+    act(() => result.current.editing.onMoveTo({ path: 'docs', isFolder: true }, 'src'))
+
+    expect(onMove).not.toHaveBeenCalled()
+    const [src] = result.current.nodes
+    expect(src?._tag === 'Folder' ? src.children : []).toContainEqual({
+      _tag: 'Folder',
+      name: 'docs',
+      path: 'src/docs',
+      children: [],
+    })
+  })
+
+  it('tells why an item cannot be moved, and moves nothing', () => {
+    const { result, onMove } = renderEditing()
+
+    act(() => result.current.editing.onMoveTo({ path: 'src', isFolder: true }, 'src/shop'))
+    expect(result.current.editing.issue).toBe(FileNameIssue.INSIDE_ITSELF)
+    act(() => result.current.editing.onMoveTo({ path: 'typika.toml', isFolder: false }, 'src'))
+    expect(result.current.editing.issue).toBe(FileNameIssue.READ_ONLY)
+
+    expect(onMove).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when an item is dropped on its own folder', () => {
+    const { result, onMove } = renderEditing()
+
+    act(() => result.current.editing.onMoveTo({ path: 'src/shop/money.ts', isFolder: false }, 'src/shop'))
+
+    expect(onMove).not.toHaveBeenCalled()
+    expect(result.current.editing.issue).toBeUndefined()
+  })
+
+  it('asks where to move an item, among the other folders', () => {
+    const { result, onMove } = renderEditing()
+
+    act(() => result.current.editing.onMoveStart('src/shop/money.ts', false))
+    expect(result.current.editing.moving).toEqual({ path: 'src/shop/money.ts', isFolder: false, folders: ['', 'src'] })
+    act(() => result.current.editing.onMoveTo({ path: 'src/shop/money.ts', isFolder: false }, ''))
+
+    expect(onMove).toHaveBeenCalledExactlyOnceWith([['src/shop/money.ts', 'money.ts']])
+    expect(result.current.editing.moving).toBeUndefined()
+  })
+
+  it('keeps asking where to move an item while its folder is refused', () => {
+    const { result } = renderEditing(['src/main.ts', 'main.ts'])
+
+    act(() => result.current.editing.onMoveStart('src/main.ts', false))
+    act(() => result.current.editing.onMoveTo({ path: 'src/main.ts', isFolder: false }, ''))
+
+    expect(result.current.editing.moving?.path).toBe('src/main.ts')
+    expect(result.current.editing.issue).toBe(FileNameIssue.TAKEN)
+    act(() => result.current.editing.onMoveCancel())
+    expect(result.current.editing.moving).toBeUndefined()
+    expect(result.current.editing.issue).toBeUndefined()
+  })
+
+  it('refuses to move a read-only file', () => {
+    const { result } = renderEditing()
+
+    act(() => result.current.editing.onMoveStart('typika.toml', false))
+
+    expect(result.current.editing.moving).toBeUndefined()
+    expect(result.current.editing.issue).toBe(FileNameIssue.READ_ONLY)
+  })
+
   it('refuses to rename a read-only file', () => {
     const { result } = renderEditing()
 

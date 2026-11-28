@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  checkMove,
   checkNewPath,
   creationFolderOf,
   FileNameIssue,
   filesWithin,
   isEditable,
+  moveTargetsOf,
   movesOf,
   nameOf,
   parentOf,
@@ -97,6 +99,51 @@ describe('movesOf', () => {
       ['src/shop/money.ts', 'src/store/money.ts'],
       ['src/shop/order.ts', 'src/store/order.ts'],
     ])
+  })
+})
+
+const move = (path: string, isFolder: boolean, folder: string) =>
+  checkMove({ item: { path, isFolder }, folder, paths: [...PATHS, 'src/shop/main.ts'], folders: ['docs'] })
+
+describe('checkMove', () => {
+  it('places the item in its new folder, under its own name', () => {
+    expect(move('src/main.ts', false, 'docs')).toEqual({ _tag: 'Valid', path: 'docs/main.ts' })
+    expect(move('src/shop', true, '')).toEqual({ _tag: 'Valid', path: 'shop' })
+  })
+
+  it('keeps the item where it is when it is moved to its own folder', () => {
+    expect(move('src/main.ts', false, 'src')).toEqual({ _tag: 'Valid', path: 'src/main.ts' })
+  })
+
+  it('refuses a folder that already holds an item of this name', () => {
+    expect(move('src/main.ts', false, 'src/shop')).toEqual({ _tag: 'Invalid', issue: FileNameIssue.TAKEN })
+  })
+
+  it('refuses to move a folder inside itself', () => {
+    expect(move('src', true, 'src/shop')).toEqual({ _tag: 'Invalid', issue: FileNameIssue.INSIDE_ITSELF })
+    expect(move('src/shop', true, 'src/shop')).toEqual({ _tag: 'Invalid', issue: FileNameIssue.INSIDE_ITSELF })
+  })
+
+  it('refuses to move the Typika files, or to move anything among them', () => {
+    expect(move('typika.toml', false, 'src')).toEqual({ _tag: 'Invalid', issue: FileNameIssue.READ_ONLY })
+    expect(move('README.md', false, 'tour')).toEqual({ _tag: 'Invalid', issue: FileNameIssue.RESERVED })
+    expect(move('README.md', false, TYPIKA_GROUP_PATH)).toEqual({ _tag: 'Invalid', issue: FileNameIssue.RESERVED })
+  })
+})
+
+describe('moveTargetsOf', () => {
+  it('offers the root and every project folder but the current one', () => {
+    expect(moveTargetsOf({ path: 'src/main.ts', isFolder: false }, PATHS, ['docs/guides'])).toEqual([
+      '',
+      'docs',
+      'docs/guides',
+      'src/shop',
+    ])
+  })
+
+  it('leaves out a moved folder and its own folders', () => {
+    expect(moveTargetsOf({ path: 'src', isFolder: true }, PATHS, ['src/empty'])).toEqual([])
+    expect(moveTargetsOf({ path: 'src/shop', isFolder: true }, PATHS, ['docs'])).toEqual(['', 'docs'])
   })
 })
 
