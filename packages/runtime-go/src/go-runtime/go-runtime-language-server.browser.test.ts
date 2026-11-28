@@ -45,9 +45,12 @@ const arrayOf = (value: unknown): ReadonlyArray<unknown> => {
 const fieldsOf = (value: unknown, field: string) =>
   arrayOf(value).flatMap((item) => (isRecord(item) && typeof item[field] === 'string' ? [item[field]] : []))
 
-const settled = <E>(answer: Effect.Effect<unknown, E>, isSettled: (found: unknown) => boolean) =>
+const settled = <E>(request: string, answer: Effect.Effect<unknown, E>, isSettled: (found: unknown) => boolean) =>
   answer.pipe(
-    Effect.filterOrFail(isSettled, () => new Error('gopls has not settled yet')),
+    Effect.filterOrFail(
+      isSettled,
+      (found) => new Error(`gopls has not settled the ${request} yet: ${JSON.stringify(found).slice(0, 2_000)}`)
+    ),
     Effect.retry({
       while: (error) => !(error instanceof RuntimeProcessError && error.cause === 'gopls restarted'),
       schedule: Schedule.spaced('1 second'),
@@ -90,6 +93,7 @@ describe('go runtime language server', () => {
     const answers = await withLanguageServer((lsp, _session, uri) =>
       Effect.all({
         completion: settled(
+          'completion',
           lsp.request('textDocument/completion', {
             textDocument: { uri },
             position: after('quoteFor(t, order, checkout.'),
@@ -97,6 +101,7 @@ describe('go runtime language server', () => {
           (found) => fieldsOf(found, 'label').includes('Standard')
         ),
         definition: settled(
+          'definition',
           lsp.request('textDocument/definition', {
             textDocument: { uri },
             position: after('quoteFor(t, order, checkout.Stan'),
@@ -104,6 +109,7 @@ describe('go runtime language server', () => {
           (found) => fieldsOf(found, 'uri').length > 0
         ),
         references: settled(
+          'references',
           lsp.request('textDocument/references', {
             textDocument: { uri },
             position: after('quoteFor(t, order, checkout.Stan'),
@@ -126,6 +132,7 @@ describe('go runtime language server', () => {
       session.fs.writeFile(projectPath('internal/checkout/express.go'), 'package checkout\n\nfunc Express() {}\n').pipe(
         Effect.andThen(
           settled(
+            'completion',
             lsp.request('textDocument/completion', {
               textDocument: { uri },
               position: after('quoteFor(t, order, checkout.'),
