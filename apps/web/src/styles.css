@@ -89,6 +89,15 @@
   --color-disabled-fg: var(--disabled-fg);
   --color-skeleton: var(--skeleton);
   --color-backdrop: var(--backdrop);
+  --color-file-typescript: var(--file-typescript);
+  --color-file-javascript: var(--file-javascript);
+  --color-file-go: var(--file-go);
+  --color-file-kotlin: var(--file-kotlin);
+  --color-file-json: var(--file-json);
+  --color-file-markdown: var(--file-markdown);
+  --color-file-config: var(--file-config);
+  --color-file-folder: var(--file-folder);
+  --color-file-folder-fill: var(--file-folder-fill);
 
   --shadow-sm: var(--elevation-sm);
   --shadow-md: var(--elevation-md);
@@ -138,6 +147,15 @@
   --disabled-fg: #7d7467;
   --skeleton: #e9e2d7;
   --backdrop: rgb(33 28 22 / 0.4);
+  --file-typescript: #2f66b3;
+  --file-javascript: #876800;
+  --file-go: #00748d;
+  --file-kotlin: #6b40d0;
+  --file-json: #a0522d;
+  --file-markdown: #4b6475;
+  --file-config: #6b6155;
+  --file-folder: #8a6a35;
+  --file-folder-fill: #f1e4c8;
   --elevation-sm: 0 1px 2px rgb(33 28 22 / 0.06);
   --elevation-md: 0 6px 16px -4px rgb(33 28 22 / 0.12);
   --elevation-xl: 0 24px 48px -12px rgb(33 28 22 / 0.25);
@@ -206,6 +224,15 @@
     --disabled-fg: #8f857a;
     --skeleton: #302a24;
     --backdrop: rgb(0 0 0 / 0.6);
+    --file-typescript: #7fb0f0;
+    --file-javascript: #e5c454;
+    --file-go: #4fc8e3;
+    --file-kotlin: #b49cff;
+    --file-json: #f0a070;
+    --file-markdown: #a3b8c8;
+    --file-config: #ada293;
+    --file-folder: #d6b67f;
+    --file-folder-fill: #4a3d28;
     --elevation-sm: 0 1px 2px rgb(0 0 0 / 0.4);
     --elevation-md: 0 6px 16px -4px rgb(0 0 0 / 0.5);
     --elevation-xl: 0 24px 48px -12px rgb(0 0 0 / 0.6);

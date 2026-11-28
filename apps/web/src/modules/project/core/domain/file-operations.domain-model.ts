@@ -6,6 +6,7 @@ export const FileNameIssue = {
   TAKEN: 'taken',
   RESERVED: 'reserved',
   READ_ONLY: 'read-only',
+  INSIDE_ITSELF: 'inside-itself',
 } as const
 
 export type FileNameIssue = (typeof FileNameIssue)[keyof typeof FileNameIssue]
@@ -19,6 +20,8 @@ export type FileMove = readonly [from: string, to: string]
 export type TreeItemRef = { readonly path: string; readonly isFolder: boolean }
 
 export type FileTreeDeletion = TreeItemRef & { readonly files: ReadonlyArray<string> }
+
+export type FileTreeMoving = TreeItemRef & { readonly folders: ReadonlyArray<string> }
 
 export type FileTreeDraft =
   | { readonly _tag: 'Create'; readonly kind: 'file' | 'folder'; readonly parentPath: string }
@@ -72,4 +75,41 @@ export const movesOf = (paths: ReadonlyArray<string>, from: string, to: string):
 export const creationFolderOf = (item: TreeItemRef | undefined): string => {
   if (item === undefined || !isEditable(item.path)) return ''
   return item.isFolder ? item.path : parentOf(item.path)
+}
+
+export const checkMove = ({
+  item,
+  folder,
+  paths,
+  folders,
+}: {
+  readonly item: TreeItemRef
+  readonly folder: string
+  readonly paths: ReadonlyArray<string>
+  readonly folders: ReadonlyArray<string>
+}): FileNameCheck => {
+  if (!isEditable(item.path)) return { _tag: 'Invalid', issue: FileNameIssue.READ_ONLY }
+  if (folder !== '' && !isEditable(folder)) return { _tag: 'Invalid', issue: FileNameIssue.RESERVED }
+  if (item.isFolder && isWithin(folder, item.path)) return { _tag: 'Invalid', issue: FileNameIssue.INSIDE_ITSELF }
+  return checkNewPath({ parent: folder, name: nameOf(item.path), paths, folders, renamed: item.path })
+}
+
+const ancestorsOf = (path: string): ReadonlyArray<string> =>
+  path
+    .split('/')
+    .slice(0, -1)
+    .map((_, index, segments) => segments.slice(0, index + 1).join('/'))
+
+export const moveTargetsOf = (
+  item: TreeItemRef,
+  paths: ReadonlyArray<string>,
+  folders: ReadonlyArray<string>
+): ReadonlyArray<string> => {
+  const all = new Set([
+    ...paths.filter((path) => !isReserved(path)).flatMap(ancestorsOf),
+    ...folders.flatMap((folder) => [...ancestorsOf(folder), folder]),
+  ])
+  return ['', ...[...all].toSorted()].filter(
+    (folder) => folder !== parentOf(item.path) && !(item.isFolder && isWithin(folder, item.path))
+  )
 }

@@ -99,8 +99,25 @@ const makeEditing = (overrides: Partial<FileTreeEditing> = {}): FileTreeEditing 
   onDelete: vi.fn(),
   onDeleteConfirm: vi.fn(),
   onDeleteCancel: vi.fn(),
+  moving: undefined,
+  onMoveStart: vi.fn(),
+  onMoveTo: vi.fn(),
+  onMoveCancel: vi.fn(),
   ...overrides,
 })
+
+const fakeDataTransfer = () => {
+  const data = new Map<string, string>()
+  return {
+    dropEffect: 'none',
+    effectAllowed: 'all',
+    get types() {
+      return [...data.keys()]
+    },
+    setData: (type: string, value: string) => data.set(type, value),
+    getData: (type: string) => data.get(type) ?? '',
+  }
+}
 
 const renderEditable = (editing: FileTreeEditing, paths = ['src/main.ts', 'src/shop/money.ts', 'typika.toml']) =>
   render(
@@ -216,7 +233,7 @@ describe('FileTree editing', () => {
     renderEditable(makeEditing({ issue: FileNameIssue.READ_ONLY }))
 
     expect(screen.getByRole('status').textContent).toBe(
-      'Ce fichier est en lecture seule : il ne peut être ni renommé ni supprimé.'
+      'Ce fichier est en lecture seule : il ne peut être ni renommé, ni déplacé, ni supprimé.'
     )
   })
 
@@ -308,6 +325,112 @@ describe('FileTree editing', () => {
 
     await waitFor(() => expect(editing.onDeleteCancel).toHaveBeenCalledOnce())
     expect(editing.onDeleteConfirm).not.toHaveBeenCalled()
+  })
+
+  it('moves an item from its context menu', async () => {
+    const editing = makeEditing()
+    renderEditable(editing)
+
+    fireEvent.contextMenu(screen.getByRole('treeitem', { name: 'money.ts' }))
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Déplacer…' }))
+
+    expect(editing.onMoveStart).toHaveBeenCalledWith('src/shop/money.ts', false)
+  })
+
+  it('disables the move of a Typika file in its context menu', async () => {
+    renderEditable(makeEditing())
+
+    fireEvent.contextMenu(screen.getByRole('treeitem', { name: 'typika.toml, lecture seule' }))
+
+    expect((await screen.findByRole('menuitem', { name: 'Déplacer…' })).getAttribute('aria-disabled')).toBe('true')
+  })
+
+  it('offers the folders an item can move to, the root first', async () => {
+    const editing = makeEditing({ moving: { path: 'src/shop/money.ts', isFolder: false, folders: ['', 'src'] } })
+    renderEditable(editing)
+
+    const dialog = await screen.findByRole('dialog', { name: 'Déplacer « money.ts »' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Racine du projet' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'src' }))
+
+    expect(editing.onMoveTo).toHaveBeenNthCalledWith(1, { path: 'src/shop/money.ts', isFolder: false }, '')
+    expect(editing.onMoveTo).toHaveBeenNthCalledWith(2, { path: 'src/shop/money.ts', isFolder: false }, 'src')
+  })
+
+  it('explains in the move dialog why a folder is refused, and cancels the move', async () => {
+    const editing = makeEditing({
+      moving: { path: 'src/main.ts', isFolder: false, folders: [''] },
+      issue: FileNameIssue.TAKEN,
+    })
+    renderEditable(editing)
+
+    const dialog = await screen.findByRole('dialog', { name: 'Déplacer « main.ts »' })
+    expect(within(dialog).getByRole('alert').textContent).toBe('Un fichier ou un dossier porte déjà ce nom.')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Annuler' }))
+
+    await waitFor(() => expect(editing.onMoveCancel).toHaveBeenCalledOnce())
+  })
+
+  it('moves a dragged item into the folder it is dropped on', () => {
+    const editing = makeEditing()
+    renderEditable(editing)
+    const dataTransfer = fakeDataTransfer()
+
+    fireEvent.dragStart(screen.getByRole('treeitem', { name: 'main.ts' }), { dataTransfer })
+    fireEvent.dragOver(screen.getByRole('treeitem', { name: 'shop' }), { dataTransfer })
+    expect(screen.getByRole('treeitem', { name: 'shop' }).dataset.dropTarget).toBe('true')
+    fireEvent.drop(screen.getByRole('treeitem', { name: 'shop' }), { dataTransfer })
+
+    expect(editing.onMoveTo).toHaveBeenCalledExactlyOnceWith({ path: 'src/main.ts', isFolder: false }, 'src/shop')
+    expect(screen.getByRole('treeitem', { name: 'shop' }).dataset.dropTarget).toBeUndefined()
+  })
+
+  it('drops an item dragged onto a file into the folder of that file', () => {
+    const editing = makeEditing()
+    renderEditable(editing)
+    const dataTransfer = fakeDataTransfer()
+
+    fireEvent.dragStart(screen.getByRole('treeitem', { name: 'money.ts' }), { dataTransfer })
+    fireEvent.drop(screen.getByRole('treeitem', { name: 'typika.toml, lecture seule' }), { dataTransfer })
+
+    expect(editing.onMoveTo).toHaveBeenCalledExactlyOnceWith({ path: 'src/shop/money.ts', isFolder: false }, '')
+  })
+
+  it('keeps the Typika files from being dragged', () => {
+    renderEditable(makeEditing())
+
+    expect(screen.getByRole('treeitem', { name: 'typika.toml, lecture seule' }).getAttribute('draggable')).toBe('false')
+    expect(screen.getByRole('treeitem', { name: 'main.ts' }).getAttribute('draggable')).toBe('true')
+  })
+
+  it('refuses to drop a folder inside itself', () => {
+    const editing = makeEditing()
+    renderEditable(editing)
+    const dataTransfer = fakeDataTransfer()
+
+    fireEvent.dragStart(screen.getByRole('treeitem', { name: 'src' }), { dataTransfer })
+    const accepted = fireEvent.dragOver(screen.getByRole('treeitem', { name: 'money.ts' }), { dataTransfer })
+
+    expect(accepted).toBe(true)
+    expect(screen.getByRole('treeitem', { name: 'shop' }).dataset.dropTarget).toBeUndefined()
+  })
+
+  it('opens the folders on the way to a moved item', async () => {
+    const editing = makeEditing()
+    const { rerender } = renderEditable(editing)
+    fireEvent.click(screen.getByRole('treeitem', { name: 'shop' }))
+
+    rerender(
+      <FileTree
+        nodes={buildFileTree(['src/shop/main.ts', 'src/shop/money.ts', 'typika.toml'])}
+        selectedPath={undefined}
+        modifiedPaths={[]}
+        onSelect={vi.fn()}
+        editing={makeEditing({ focusRequest: { path: 'src/shop/main.ts' } })}
+      />
+    )
+
+    await waitFor(() => expect(document.activeElement?.getAttribute('data-path')).toBe('src/shop/main.ts'))
   })
 
   it('moves the focus to the next item once the deleted one is gone', async () => {
