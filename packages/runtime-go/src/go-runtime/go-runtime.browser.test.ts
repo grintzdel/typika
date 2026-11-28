@@ -3,6 +3,7 @@ import {
   RuntimeCompileError,
   RuntimeTimeoutError,
   type ProcessOutput,
+  type RuntimePort,
   type RuntimeSession,
   type TestEvent,
 } from '@typika/runtime-core'
@@ -25,12 +26,21 @@ if (!isAssetManifest(fetchedManifest)) throw new Error(`Malformed ${manifestUrl.
 const assetManifest = fetchedManifest
 const LOADED_ASSETS = [GoAssetFile.COMPILE, GoAssetFile.LINK, GoAssetFile.STD]
 
-const runtime = makeGoRuntime({ assetsUrl, manifest: assetManifest, limits: { runTimeoutMs: 5_000 } })
+const SHORT_RUN_LIMIT_MS = 5_000
+
+// The run limit also covers the build, and a cold worker under CI load takes about 6 s to build strategy-go.
+const runtime = makeGoRuntime({ assetsUrl, manifest: assetManifest })
+const shortLimitRuntime = makeGoRuntime({
+  assetsUrl,
+  manifest: assetManifest,
+  limits: { runTimeoutMs: SHORT_RUN_LIMIT_MS },
+})
 
 const withSession = <A, E>(
   overrides: Parameters<typeof strategyGoProject>[0],
-  use: (session: RuntimeSession) => Effect.Effect<A, E>
-) => Effect.runPromise(Effect.scoped(Effect.flatMap(runtime.boot(strategyGoProject(overrides)), use)))
+  use: (session: RuntimeSession) => Effect.Effect<A, E>,
+  on: RuntimePort = runtime
+) => Effect.runPromise(Effect.scoped(Effect.flatMap(on.boot(strategyGoProject(overrides)), use)))
 
 const collectRun = (session: RuntimeSession) =>
   Stream.runCollect(session.run({ command: 'cmd/shop/main.go', args: [] }))
@@ -137,19 +147,22 @@ describe('go runtime', () => {
   }, 30_000)
 
   it('stops an endless program at the time limit, then runs again', async () => {
-    const outcome = await withSession({ 'cmd/shop/main.go': endlessMain }, (session) =>
-      Effect.gen(function* () {
-        const stopped = yield* Effect.exit(collectRun(session))
-        yield* session.fs.writeFile(projectPath('cmd/shop/main.go'), helloMain)
-        const again = yield* collectRun(session)
-        return { stopped, again }
-      })
+    const outcome = await withSession(
+      { 'cmd/shop/main.go': endlessMain },
+      (session) =>
+        Effect.gen(function* () {
+          const stopped = yield* Effect.exit(collectRun(session))
+          yield* session.fs.writeFile(projectPath('cmd/shop/main.go'), helloMain)
+          const again = yield* collectRun(session)
+          return { stopped, again }
+        }),
+      shortLimitRuntime
     )
     expect(Exit.isFailure(outcome.stopped) && Cause.findErrorOption(outcome.stopped.cause)).toMatchObject({
-      value: new RuntimeTimeoutError({ limitMs: 5_000 }),
+      value: new RuntimeTimeoutError({ limitMs: SHORT_RUN_LIMIT_MS }),
     })
     expect(stdoutOf(outcome.again)).toBe('hello\n')
-  }, 30_000)
+  })
 })
 
 const brokenTest = `package checkout
